@@ -1,0 +1,37 @@
+{
+  "app": {
+    "name": "CarveOut",
+    "tagline": "Dedica tiempo a lo que importa."
+  },
+  "nav": {
+    "home": "Inicio",
+    "workout": "Entrenamiento",
+    "routine": "Mi Día",
+    "stretching": "Estirar",
+    "meditation": "Meditar",
+    "stats": "Estadísticas",
+    "settings": "Ajustes"
+  },
+  "pillars": {
+    "workout": "Entrenamiento",
+    "routine": "Mi Día",
+    "stretching": "Estiramientos",
+    "meditation": "Meditación"
+  },
+  "onboarding": {
+    "welcome": "Bienvenido a CarveOut",
+    "choosePillars": "¿Qué pilares te importan?",
+    "choosePrimary": "¿Cuál es tu enfoque principal?",
+    "chooseTheme": "Elige tu color",
+    "chooseGoal": "¿Cuál es tu objetivo?"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "done": "Listo",
+    "next": "Siguiente",
+    "back": "Atrás",
+    "start": "Empezar",
+    "finish": "Terminar"
+  }
+}

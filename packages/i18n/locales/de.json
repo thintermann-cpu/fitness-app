@@ -1,0 +1,37 @@
+{
+  "app": {
+    "name": "CarveOut",
+    "tagline": "Carve dir Zeit für das, was zählt."
+  },
+  "nav": {
+    "home": "Start",
+    "workout": "Training",
+    "routine": "Mein Tag",
+    "stretching": "Dehnen",
+    "meditation": "Meditation",
+    "stats": "Statistiken",
+    "settings": "Einstellungen"
+  },
+  "pillars": {
+    "workout": "Training",
+    "routine": "Mein Tag",
+    "stretching": "Dehnen",
+    "meditation": "Meditation"
+  },
+  "onboarding": {
+    "welcome": "Willkommen bei CarveOut",
+    "choosePillars": "Welche Bereiche sind dir wichtig?",
+    "choosePrimary": "Was ist dein Hauptfokus?",
+    "chooseTheme": "Wähle deine Farbe",
+    "chooseGoal": "Was ist dein Ziel?"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "done": "Fertig",
+    "next": "Weiter",
+    "back": "Zurück",
+    "start": "Starten",
+    "finish": "Abschließen"
+  }
+}

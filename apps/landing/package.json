@@ -1,0 +1,10 @@
+{
+  "name": "@carveout/landing",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Landing page — Phase 2'",
+    "build": "echo 'Landing page — Phase 2'",
+    "lint": "echo 'Landing page — Phase 2'"
+  }
+}
