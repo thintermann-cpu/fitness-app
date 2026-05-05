@@ -6,10 +6,10 @@ import { AppShell } from './components/layout/AppShell'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { OnboardingPage } from './pages/OnboardingPage'
+import { RoutinePage } from './pages/RoutinePage'
 
 const Home = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Home</div>
 const Workout = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Workout</div>
-const Routine = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>My Day</div>
 const Stretching = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Stretching</div>
 const Meditation = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Meditation</div>
 const Settings = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Settings</div>
@@ -56,7 +56,7 @@ function AppContent() {
         <Route element={<AppShell />}>
           <Route path="/" element={<Home />} />
           <Route path="/workout" element={<Workout />} />
-          <Route path="/routine" element={<Routine />} />
+          <Route path="/routine" element={<RoutinePage />} />
           <Route path="/stretching" element={<Stretching />} />
           <Route path="/meditation" element={<Meditation />} />
           <Route path="/settings" element={<Settings />} />
