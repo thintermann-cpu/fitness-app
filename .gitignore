@@ -43,3 +43,11 @@ coverage/
 
 # Lokale Projektordner (Arbeitsverzeichnisse, nicht im Repo)
 wod-tracker-project-final/
+
+# Turborepo
+.turbo/
+apps/*/.turbo/
+packages/*/.turbo/
+
+# Turbo cache
+.turbo

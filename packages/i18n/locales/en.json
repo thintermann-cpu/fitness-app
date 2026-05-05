@@ -1,0 +1,37 @@
+{
+  "app": {
+    "name": "CarveOut",
+    "tagline": "Carve out time for what matters."
+  },
+  "nav": {
+    "home": "Home",
+    "workout": "Workout",
+    "routine": "My Day",
+    "stretching": "Stretch",
+    "meditation": "Meditate",
+    "stats": "Stats",
+    "settings": "Settings"
+  },
+  "pillars": {
+    "workout": "Workout",
+    "routine": "My Day",
+    "stretching": "Stretching",
+    "meditation": "Meditation"
+  },
+  "onboarding": {
+    "welcome": "Welcome to CarveOut",
+    "choosePillars": "Which pillars matter to you?",
+    "choosePrimary": "What's your primary focus?",
+    "chooseTheme": "Choose your color",
+    "chooseGoal": "What's your goal?"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "done": "Done",
+    "next": "Next",
+    "back": "Back",
+    "start": "Start",
+    "finish": "Finish"
+  }
+}
