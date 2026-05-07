@@ -3,6 +3,13 @@ import { useAuthStore } from '../store/authStore'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 
+const PILLARS = [
+  { id: 'workout',    label: 'Workout',    emoji: '🏋️', color: '#E8642A' },
+  { id: 'routine',    label: 'Mein Tag',   emoji: '📋', color: '#4A90D9' },
+  { id: 'stretching', label: 'Stretching', emoji: '🤸', color: '#7BC67E' },
+  { id: 'meditation', label: 'Meditation', emoji: '🧘', color: '#9B7FD4' },
+] as const
+
 const LANGUAGES = [
   { id: 'de', label: 'Deutsch', flag: '🇩🇪' },
   { id: 'en', label: 'English', flag: '🇬🇧' },
@@ -43,6 +50,7 @@ export function SettingsPage() {
   // ── Profil section state ──
   const [displayName,   setDisplayName]   = useState(profile?.display_name ?? '')
   const [language,      setLanguage]      = useState(profile?.language ?? 'de')
+  const [primaryPillar, setPrimaryPillar] = useState(profile?.primary_pillar ?? '')
   const [savingProfile, setSavingProfile] = useState(false)
   const [savedProfile,  setSavedProfile]  = useState(false)
 
@@ -55,12 +63,13 @@ export function SettingsPage() {
     if (!profile) return
     setDisplayName(profile.display_name ?? '')
     setLanguage(profile.language ?? 'de')
+    setPrimaryPillar(profile.primary_pillar ?? '')
     setEquipment(profile.equipment ?? [])
   }, [profile])
 
   const handleSaveProfile = async () => {
     setSavingProfile(true)
-    await updateProfile({ display_name: displayName.trim() || null, language })
+    await updateProfile({ display_name: displayName.trim() || null, language, primary_pillar: primaryPillar || null })
     setSavingProfile(false)
     setSavedProfile(true)
     setTimeout(() => setSavedProfile(false), 2000)
@@ -91,7 +100,7 @@ export function SettingsPage() {
         <div>
           <h2 className="font-semibold text-base">Profil</h2>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Name und Sprache
+            Name, Sprache und Fokus
           </p>
         </div>
 
@@ -119,6 +128,27 @@ export function SettingsPage() {
               >
                 <span className="text-xl">{lang.flag}</span>
                 <span className="text-xs font-medium">{lang.label}</span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {PILLARS.map((p) => {
+            const selected = primaryPillar === p.id
+            return (
+              <button
+                key={p.id}
+                onClick={() => setPrimaryPillar(p.id)}
+                className="rounded-2xl p-4 text-left transition-transform active:scale-95"
+                style={{
+                  backgroundColor: selected ? p.color + '22' : 'var(--color-bg-card)',
+                  border: `2px solid ${selected ? p.color : 'transparent'}`,
+                  color: 'var(--color-text)',
+                }}
+              >
+                <div className="text-2xl mb-1">{p.emoji}</div>
+                <div className="font-semibold text-sm">{p.label}</div>
               </button>
             )
           })}
