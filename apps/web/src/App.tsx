@@ -10,8 +10,8 @@ import { RoutinePage } from './pages/RoutinePage'
 import { WorkoutPage } from './pages/WorkoutPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { HomePage } from './pages/HomePage'
+import { StretchingPage } from './pages/StretchingPage'
 
-const Stretching = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Stretching</div>
 const Meditation = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Meditation</div>
 
 const queryClient = new QueryClient({
@@ -72,7 +72,7 @@ function AppContent() {
           <Route path="/workout"          element={<WorkoutPage />} />
           <Route path="/workout/:wodName" element={<WorkoutPage />} />
           <Route path="/routine"          element={<RoutinePage />} />
-          <Route path="/stretching"       element={<Stretching />} />
+          <Route path="/stretching"       element={<StretchingPage />} />
           <Route path="/meditation"       element={<Meditation />} />
           <Route path="/settings"         element={<SettingsPage />} />
         </Route>
