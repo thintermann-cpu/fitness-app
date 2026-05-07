@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from './store/authStore'
 import { AppShell } from './components/layout/AppShell'
@@ -8,11 +8,11 @@ import { RegisterPage } from './pages/RegisterPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { RoutinePage } from './pages/RoutinePage'
 import { WorkoutPage } from './pages/WorkoutPage'
+import { SettingsPage } from './pages/SettingsPage'
 
 const Home       = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Home</div>
 const Stretching = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Stretching</div>
 const Meditation = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Meditation</div>
-const Settings   = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Settings</div>
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,7 +21,9 @@ const queryClient = new QueryClient({
 })
 
 function ProtectedLayout() {
-  const { user, loading } = useAuthStore()
+  const { user, loading, profile } = useAuthStore()
+  const location = useLocation()
+
   if (loading) {
     return (
       <div
@@ -32,7 +34,15 @@ function ProtectedLayout() {
       </div>
     )
   }
-  return user ? <Outlet /> : <Navigate to="/login" replace />
+
+  if (!user) return <Navigate to="/login" replace />
+
+  // Not yet onboarded — send to /onboarding (avoid redirect loop)
+  if (!profile?.primary_pillar && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />
+  }
+
+  return <Outlet />
 }
 
 function AuthLayout() {
@@ -64,7 +74,7 @@ function AppContent() {
           <Route path="/routine"          element={<RoutinePage />} />
           <Route path="/stretching"       element={<Stretching />} />
           <Route path="/meditation"       element={<Meditation />} />
-          <Route path="/settings"         element={<Settings />} />
+          <Route path="/settings"         element={<SettingsPage />} />
         </Route>
       </Route>
     </Routes>
