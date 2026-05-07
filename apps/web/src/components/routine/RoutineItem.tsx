@@ -4,6 +4,11 @@ interface Props {
   routine: Routine
   isCompleted: boolean
   onToggle: () => void
+  onEdit: () => void
+  onMoveUp?: () => void
+  onMoveDown?: () => void
+  isFirst: boolean
+  isLast: boolean
 }
 
 function linkIcon(url: string): string {
@@ -12,7 +17,16 @@ function linkIcon(url: string): string {
   return '🔗'
 }
 
-export function RoutineItem({ routine, isCompleted, onToggle }: Props) {
+export function RoutineItem({
+  routine,
+  isCompleted,
+  onToggle,
+  onEdit,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
+}: Props) {
   const hasLink = !!routine.link_url
 
   return (
@@ -20,7 +34,7 @@ export function RoutineItem({ routine, isCompleted, onToggle }: Props) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 11,
+        gap: 8,
         padding: '11px 13px',
         background: isCompleted ? 'rgba(74,144,217,0.12)' : 'rgba(255,255,255,0.04)',
         border: `1px solid ${isCompleted ? 'rgba(74,144,217,0.36)' : 'rgba(255,255,255,0.07)'}`,
@@ -28,8 +42,43 @@ export function RoutineItem({ routine, isCompleted, onToggle }: Props) {
         transition: 'all 0.2s',
       }}
     >
+      {/* Move up/down arrows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+        <button
+          onClick={onMoveUp}
+          disabled={isFirst}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: isFirst ? 'rgba(255,255,255,0.1)' : '#5a5248',
+            cursor: isFirst ? 'default' : 'pointer',
+            fontSize: 9,
+            padding: '2px 4px',
+            lineHeight: 1,
+          }}
+        >
+          ▲
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={isLast}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: isLast ? 'rgba(255,255,255,0.1)' : '#5a5248',
+            cursor: isLast ? 'default' : 'pointer',
+            fontSize: 9,
+            padding: '2px 4px',
+            lineHeight: 1,
+          }}
+        >
+          ▼
+        </button>
+      </div>
+
+      {/* Main area — tap opens edit */}
       <div
-        onClick={onToggle}
+        onClick={onEdit}
         style={{ display: 'flex', alignItems: 'center', gap: 11, flex: 1, cursor: 'pointer' }}
       >
         <span style={{ fontSize: 19, opacity: isCompleted ? 1 : 0.5 }}>{routine.icon}</span>
@@ -63,8 +112,9 @@ export function RoutineItem({ routine, isCompleted, onToggle }: Props) {
             {linkIcon(routine.link_url!)}
           </a>
         )}
+        {/* Checkbox — tap toggles completion */}
         <div
-          onClick={onToggle}
+          onClick={e => { e.stopPropagation(); onToggle() }}
           style={{
             width: 22,
             height: 22,
