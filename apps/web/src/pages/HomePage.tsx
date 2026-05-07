@@ -60,6 +60,10 @@ export function HomePage() {
   const greeting  = firstName ? `Hi ${firstName} 👋` : 'Hi 👋'
 
   const primaryPillar = profile?.primary_pillar
+  const activePillars = profile?.active_pillars?.length
+    ? profile.active_pillars
+    : ['workout', 'routine', 'stretching', 'meditation']
+  const visiblePillars = PILLARS.filter(p => activePillars.includes(p.id))
 
   return (
     <div
@@ -76,7 +80,7 @@ export function HomePage() {
 
       {/* ── Pillar cards ── */}
       <section className="grid grid-cols-2 gap-3">
-        {PILLARS.map((p) => {
+        {visiblePillars.map((p) => {
           const isPrimary = primaryPillar === p.id
           return (
             <button

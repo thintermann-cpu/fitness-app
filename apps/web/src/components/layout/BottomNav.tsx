@@ -1,15 +1,24 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useAuthStore } from '../../store/authStore'
+
+const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 const NAV_ITEMS = [
-  { path: '/workout',    icon: '💪', label: 'Workout',  color: '#E8642A' },
-  { path: '/routine',    icon: '📋', label: 'Routine',  color: '#4A90D9' },
-  { path: '/stretching', icon: '🧘', label: 'Stretch',  color: '#7BC67E' },
-  { path: '/meditation', icon: '🧠', label: 'Focus',    color: '#9B7FD4' },
-  { path: '/settings',   icon: '⚙️', label: 'Settings', color: null },
+  { path: '/workout',    icon: '💪', label: 'Workout',  color: '#E8642A', pillarId: 'workout' },
+  { path: '/routine',    icon: '📋', label: 'Routine',  color: '#4A90D9', pillarId: 'routine' },
+  { path: '/stretching', icon: '🧘', label: 'Stretch',  color: '#7BC67E', pillarId: 'stretching' },
+  { path: '/meditation', icon: '🧠', label: 'Focus',    color: '#9B7FD4', pillarId: 'meditation' },
+  { path: '/settings',   icon: '⚙️', label: 'Settings', color: null,      pillarId: null },
 ] as const
 
 export function BottomNav() {
   const { pathname } = useLocation()
+  const { profile } = useAuthStore()
+  const activePillars = profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
+
+  const visibleItems = NAV_ITEMS.filter(item =>
+    item.pillarId === null || activePillars.includes(item.pillarId)
+  )
 
   return (
     <nav
@@ -21,7 +30,7 @@ export function BottomNav() {
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      {NAV_ITEMS.map(({ path, icon, label, color }) => {
+      {visibleItems.map(({ path, icon, label, color }) => {
         const isActive = pathname === path
         const activeColor = color ?? 'var(--color-text)'
 

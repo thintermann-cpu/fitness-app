@@ -16,22 +16,28 @@ export interface Routine {
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6]
 const WEEKDAYS = [1, 2, 3, 4, 5]
+const MON_WED_FRI = [1, 3, 5]
 
-const SEED_ROUTINES: Array<Omit<Routine, 'id'>> = [
-  { category: 'morning', name: 'Supplements',    icon: '💊', time: '05:05', link_url: null, active_days: ALL_DAYS, sort_order: 0 },
-  { category: 'morning', name: 'Workout',         icon: '🏋️', time: '05:15', link_url: null, active_days: ALL_DAYS, sort_order: 1 },
-  { category: 'morning', name: 'Stretching',      icon: '🧘', time: '05:40', link_url: null, active_days: ALL_DAYS, sort_order: 2 },
-  { category: 'morning', name: 'Meditation',      icon: '🧠', time: '05:55', link_url: null, active_days: ALL_DAYS, sort_order: 3 },
-  { category: 'morning', name: 'Frühstück',       icon: '🥗', time: '07:00', link_url: null, active_days: ALL_DAYS, sort_order: 4 },
-  { category: 'morning', name: 'Supplements 2',   icon: '💊', time: '07:15', link_url: null, active_days: ALL_DAYS, sort_order: 5 },
-  { category: 'day',     name: 'Wasser',          icon: '💧', time: '12:00', link_url: null, active_days: ALL_DAYS, sort_order: 0 },
-  { category: 'day',     name: 'Mittagessen',     icon: '🥗', time: '12:30', link_url: null, active_days: WEEKDAYS, sort_order: 1 },
-  { category: 'day',     name: 'Spaziergang',     icon: '🥾', time: '13:00', link_url: null, active_days: ALL_DAYS, sort_order: 2 },
-  { category: 'day',     name: 'Waschen',         icon: '🛁', time: '18:00', link_url: null, active_days: WEEKDAYS, sort_order: 3 },
-  { category: 'evening', name: 'Zähne putzen',    icon: '🦷', time: '21:30', link_url: null, active_days: ALL_DAYS, sort_order: 0 },
-  { category: 'evening', name: 'Abend-Meditation',icon: '🌙', time: '22:00', link_url: null, active_days: ALL_DAYS, sort_order: 1 },
-  { category: 'evening', name: 'Schlafenszeit',   icon: '🛌', time: '22:30', link_url: null, active_days: ALL_DAYS, sort_order: 2 },
-]
+export const SUGGESTED_ROUTINES: Record<string, Array<Omit<Routine, 'id'>>> = {
+  de: [
+    { category: 'morning', name: 'Morgenroutine',        icon: '🌅', time: '07:00', link_url: null, active_days: WEEKDAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Post-Workout Stretch',  icon: '💪', time: '12:00', link_url: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'evening', name: 'Abend-Reflexion',       icon: '📖', time: '21:00', link_url: null, active_days: ALL_DAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Wasser trinken',        icon: '💧', time: '12:00', link_url: null, active_days: ALL_DAYS,    sort_order: 1 },
+  ],
+  en: [
+    { category: 'morning', name: 'Morning Routine',       icon: '🌅', time: '07:00', link_url: null, active_days: WEEKDAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Post-Workout Stretch',  icon: '💪', time: '12:00', link_url: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'evening', name: 'Evening Reflection',    icon: '📖', time: '21:00', link_url: null, active_days: ALL_DAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Drink Water',           icon: '💧', time: '12:00', link_url: null, active_days: ALL_DAYS,    sort_order: 1 },
+  ],
+  es: [
+    { category: 'morning', name: 'Rutina Matutina',                    icon: '🌅', time: '07:00', link_url: null, active_days: WEEKDAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Estiramiento Post-Entrenamiento',    icon: '💪', time: '12:00', link_url: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'evening', name: 'Reflexión Vespertina',               icon: '📖', time: '21:00', link_url: null, active_days: ALL_DAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Beber Agua',                         icon: '💧', time: '12:00', link_url: null, active_days: ALL_DAYS,    sort_order: 1 },
+  ],
+}
 
 async function getUserId(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser()
@@ -56,16 +62,7 @@ export function useRoutines() {
 
       if (error) throw error
 
-      if (!data || data.length === 0) {
-        const { data: seeded, error: seedErr } = await supabase
-          .from('routines')
-          .insert(SEED_ROUTINES.map(r => ({ ...r, user_id: uid })))
-          .select()
-        if (seedErr) throw seedErr
-        return (seeded ?? []) as Routine[]
-      }
-
-      return data.map(r => ({ ...r, active_days: r.active_days ?? ALL_DAYS })) as Routine[]
+      return (data ?? []).map(r => ({ ...r, active_days: r.active_days ?? ALL_DAYS })) as Routine[]
     },
   })
 

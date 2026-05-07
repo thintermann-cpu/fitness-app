@@ -1,35 +1,185 @@
 import { useState } from 'react'
 import type { Routine, Category } from '../../hooks/useRoutines'
+import { SUGGESTED_ROUTINES } from '../../hooks/useRoutines'
 import type { RoutineLog } from '../../hooks/useRoutineLogs'
 import { RoutineItem } from './RoutineItem'
+
+type Lang = 'de' | 'en' | 'es'
 
 interface Props {
   routines: Routine[]
   logs: RoutineLog[]
   onToggle: (routineId: string, isCompleted: boolean) => void
+  onEdit: (routine: Routine) => void
+  onSwapOrder: (a: Routine, b: Routine) => void
+  onCreateSuggested: (routine: Omit<Routine, 'id'>) => void
+  onCreateAll: (routines: Array<Omit<Routine, 'id'>>) => void
   selectedDay: number
+  lang: Lang
+  isLoading: boolean
 }
 
 const CATEGORIES: Category[] = ['morning', 'day', 'evening']
-const CATEGORY_LABELS: Record<Category, string> = {
-  morning: '🌅 Morgen',
-  day: '☀️ Tag',
-  evening: '🌙 Abend',
+
+const T = {
+  de: {
+    morning: '🌅 Morgen',
+    day: '☀️ Tag',
+    evening: '🌙 Abend',
+    noItems: 'Keine Aufgaben für heute',
+    loading: 'Lädt…',
+    suggestions: 'Vorgeschlagene Routinen',
+    addAll: 'Alle hinzufügen',
+    add: 'Hinzufügen',
+    daily: 'täglich',
+    monFri: 'Mo-Fr',
+    monWedFri: 'Mo/Mi/Fr',
+  },
+  en: {
+    morning: '🌅 Morning',
+    day: '☀️ Day',
+    evening: '🌙 Evening',
+    noItems: 'No tasks for today',
+    loading: 'Loading…',
+    suggestions: 'Suggested Routines',
+    addAll: 'Add all',
+    add: 'Add',
+    daily: 'daily',
+    monFri: 'Mon-Fri',
+    monWedFri: 'Mon/Wed/Fri',
+  },
+  es: {
+    morning: '🌅 Mañana',
+    day: '☀️ Día',
+    evening: '🌙 Tarde',
+    noItems: 'Sin tareas para hoy',
+    loading: 'Cargando…',
+    suggestions: 'Rutinas sugeridas',
+    addAll: 'Agregar todo',
+    add: 'Agregar',
+    daily: 'diario',
+    monFri: 'Lun-Vie',
+    monWedFri: 'Lun/Mié/Vie',
+  },
+} as const
+
+const DAY_LABELS: Record<Lang, string[]> = {
+  de: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
+  en: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+  es: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'],
 }
 
-export function RoutineList({ routines, logs, onToggle, selectedDay }: Props) {
+interface DayFormatStrings { daily: string; monFri: string; monWedFri: string }
+
+function formatActiveDays(days: number[], lang: Lang, t: DayFormatStrings): string {
+  if (days.length === 7) return t.daily
+  if (days.length === 5 && [1, 2, 3, 4, 5].every(d => days.includes(d))) return t.monFri
+  if (days.length === 3 && [1, 3, 5].every(d => days.includes(d))) return t.monWedFri
+  return [...days].sort((a, b) => a - b).map(d => DAY_LABELS[lang][d]).join('/')
+}
+
+export function RoutineList({
+  routines,
+  logs,
+  onToggle,
+  onEdit,
+  onSwapOrder,
+  onCreateSuggested,
+  onCreateAll,
+  selectedDay,
+  lang,
+  isLoading,
+}: Props) {
   const [activeCategory, setActiveCategory] = useState<Category>('morning')
+  const t = T[lang] ?? T.de
 
   const completedIds = new Set(logs.filter(l => l.completed).map(l => l.routine_id))
 
   const getItems = (cat: Category) =>
     routines
       .filter(r => r.category === cat && r.active_days.includes(selectedDay))
-      .sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99'))
+      .sort((a, b) => a.sort_order - b.sort_order)
+
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: 32, color: '#4a4238' }}>{t.loading}</div>
+    )
+  }
+
+  if (routines.length === 0) {
+    const suggestions = SUGGESTED_ROUTINES[lang] ?? SUGGESTED_ROUTINES.de
+    const catLabel: Record<Category, string> = { morning: t.morning, day: t.day, evening: t.evening }
+    return (
+      <div>
+        <div style={{ fontSize: 12, color: '#6a6258', marginBottom: 12, letterSpacing: 0.5 }}>
+          {t.suggestions}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
+          {suggestions.map((s, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '13px 15px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 12,
+              }}
+            >
+              <span style={{ fontSize: 22 }}>{s.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, color: '#c0b8a8' }}>{s.name}</div>
+                <div style={{ fontSize: 11, color: '#5a5248', marginTop: 2 }}>
+                  {catLabel[s.category]} · {formatActiveDays(s.active_days, lang, t)}
+                </div>
+              </div>
+              <button
+                onClick={() => onCreateSuggested(s)}
+                style={{
+                  padding: '6px 12px',
+                  background: 'rgba(74,144,217,0.15)',
+                  border: '1px solid rgba(74,144,217,0.3)',
+                  borderRadius: 8,
+                  color: '#4A90D9',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {t.add}
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={() => onCreateAll(suggestions)}
+          style={{
+            width: '100%',
+            padding: 12,
+            background: 'rgba(74,144,217,0.15)',
+            border: '1px solid rgba(74,144,217,0.3)',
+            borderRadius: 12,
+            color: '#4A90D9',
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          {t.addAll}
+        </button>
+      </div>
+    )
+  }
 
   const items = getItems(activeCategory)
   const doneCount = items.filter(r => completedIds.has(r.id)).length
   const pct = items.length > 0 ? Math.round((doneCount / items.length) * 100) : 0
+
+  const catLabel: Record<Category, string> = { morning: t.morning, day: t.day, evening: t.evening }
 
   return (
     <div>
@@ -57,7 +207,7 @@ export function RoutineList({ routines, logs, onToggle, selectedDay }: Props) {
                 position: 'relative',
               }}
             >
-              {CATEGORY_LABELS[cat]}
+              {catLabel[cat]}
               {complete && (
                 <span style={{ position: 'absolute', top: 4, right: 6, fontSize: 9, color: '#6fcf6f' }}>
                   ✓
@@ -75,15 +225,20 @@ export function RoutineList({ routines, logs, onToggle, selectedDay }: Props) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
         {items.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 24, color: '#4a4238', fontSize: 13 }}>
-            Keine Aufgaben für heute
+            {t.noItems}
           </div>
         ) : (
-          items.map(routine => (
+          items.map((routine, idx) => (
             <RoutineItem
               key={routine.id}
               routine={routine}
               isCompleted={completedIds.has(routine.id)}
               onToggle={() => onToggle(routine.id, completedIds.has(routine.id))}
+              onEdit={() => onEdit(routine)}
+              onMoveUp={idx > 0 ? () => onSwapOrder(routine, items[idx - 1]) : undefined}
+              onMoveDown={idx < items.length - 1 ? () => onSwapOrder(routine, items[idx + 1]) : undefined}
+              isFirst={idx === 0}
+              isLast={idx === items.length - 1}
             />
           ))
         )}

@@ -1,15 +1,20 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useRoutines } from '../hooks/useRoutines'
+import type { Routine } from '../hooks/useRoutines'
 import { useRoutineLogs, useWeekLogs, useToggleRoutineLog } from '../hooks/useRoutineLogs'
 import { useDailyLog } from '../hooks/useDailyLog'
 import { useTodos } from '../hooks/useTodos'
+import { useAuthStore } from '../store/authStore'
 import { RoutineList } from '../components/routine/RoutineList'
+import { RoutineEditModal } from '../components/routine/RoutineEditModal'
 import { WaterTracker } from '../components/routine/WaterTracker'
 import { MoodCheck } from '../components/routine/MoodCheck'
 import { TodoList } from '../components/routine/TodoList'
 import { WeekView } from '../components/routine/WeekView'
 
 type Tab = 'routinen' | 'todo' | 'woche'
+type Lang = 'de' | 'en' | 'es'
 
 function toLocalDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -33,50 +38,70 @@ const DAYS_FULL  = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', '
 const WATER_STEP = 400
 const WATER_MAX  = 5600
 
+const QUICK_LINKS = [
+  { id: 'workout',    emoji: '💪', label: { de: 'Workout',    en: 'Workout',    es: 'Workout'      }, route: '/workout' },
+  { id: 'stretching', emoji: '🧘', label: { de: 'Stretching', en: 'Stretching', es: 'Estiramientos' }, route: '/stretching' },
+  { id: 'meditation', emoji: '🧠', label: { de: 'Meditation', en: 'Meditation', es: 'Meditación'   }, route: '/meditation' },
+] as const
+
+type QuickLinkId = 'workout' | 'stretching' | 'meditation'
+
+const TABS: Record<Lang, Array<[Tab, string]>> = {
+  de: [['routinen', '📋 Routinen'], ['todo', '✅ To-Do'], ['woche', '📊 Woche']],
+  en: [['routinen', '📋 Routines'], ['todo', '✅ To-Do'], ['woche', '📊 Week']],
+  es: [['routinen', '📋 Rutinas'], ['todo', '✅ Tareas'], ['woche', '📊 Semana']],
+}
+
+const T_QUICK: Record<Lang, string> = {
+  de: 'Schnellzugriff',
+  en: 'Quick Access',
+  es: 'Acceso rápido',
+}
+
+const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
+
 export function RoutinePage() {
   const today    = new Date()
   const todayStr = toLocalDateStr(today)
   const todayDow = today.getDay()
 
-  const [tab, setTab]             = useState<Tab>('routinen')
-  const [selectedDay, setSelDay]  = useState(todayDow)
+  const { profile } = useAuthStore()
+  const lang = ((profile?.language ?? 'de') as Lang)
+  const activePillars = profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
+
+  const navigate = useNavigate()
+
+  const [tab, setTab]           = useState<Tab>('routinen')
+  const [selectedDay, setSelDay] = useState(todayDow)
+  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
 
   const weekDates = getCurrentWeekDates()
 
-  const { routines, isLoading } = useRoutines()
-  const { data: logsRaw }       = useRoutineLogs(todayStr)
+  const { routines, isLoading, create, update, remove } = useRoutines()
+  const { data: logsRaw }     = useRoutineLogs(todayStr)
   const { log: dailyLog, setWater, setMood } = useDailyLog(todayStr)
   const { todos, add: addTodo, complete: completeTodo, remove: removeTodo, clearDone } = useTodos()
-  const { data: weekLogsRaw }   = useWeekLogs(weekDates)
-  const toggleLog               = useToggleRoutineLog(todayStr)
+  const { data: weekLogsRaw } = useWeekLogs(weekDates)
+  const toggleLog             = useToggleRoutineLog(todayStr)
 
-  const todayLogs = logsRaw  ?? []
+  const todayLogs = logsRaw     ?? []
   const weekLogs  = weekLogsRaw ?? []
   const waterMl   = dailyLog?.water_ml ?? 0
 
-  // Compute weekly completion per day for the header strip
   const weekPcts = DAYS_SHORT.map((_, i) => {
-    const dow = i // 0=So, 1=Mo, ...
-    // find matching weekDates entry
-    const dateIdx = weekDates.findIndex(d => {
-      const date = new Date(d + 'T00:00:00')
-      return date.getDay() === dow
-    })
+    const dateIdx = weekDates.findIndex(d => new Date(d + 'T00:00:00').getDay() === i)
     if (dateIdx < 0) return 0
-    const date = weekDates[dateIdx]
-    const active = routines.filter(r => r.active_days.includes(dow))
+    const date   = weekDates[dateIdx]
+    const active = routines.filter(r => r.active_days.includes(i))
     if (active.length === 0) return 0
-    const done = weekLogs.filter(l => l.date === date && l.completed)
-    const doneIds = new Set(done.map(l => l.routine_id))
+    const doneIds = new Set(weekLogs.filter(l => l.date === date && l.completed).map(l => l.routine_id))
     return Math.round(active.filter(r => doneIds.has(r.id)).length / active.length * 100)
   })
 
-  // Overall today progress
-  const todayActive = routines.filter(r => r.active_days.includes(todayDow))
+  const todayActive  = routines.filter(r => r.active_days.includes(todayDow))
   const todayDoneIds = new Set(todayLogs.filter(l => l.completed).map(l => l.routine_id))
-  const todayDone = todayActive.filter(r => todayDoneIds.has(r.id)).length
+  const todayDone    = todayActive.filter(r => todayDoneIds.has(r.id)).length
 
-  // Streak: consecutive days (ending today) at 100%
   const streak = (() => {
     let s = 0
     for (let i = todayDow; i >= 0; i--) {
@@ -86,27 +111,13 @@ export function RoutinePage() {
     return s
   })()
 
-  const handleToggle = (routineId: string, isCompleted: boolean) => {
-    toggleLog.mutate({ routineId, isCompleted })
+  const handleSwapOrder = (a: Routine, b: Routine) => {
+    update({ id: a.id, sort_order: b.sort_order })
+    update({ id: b.id, sort_order: a.sort_order })
   }
 
-  const handleAddWater = () => {
-    setWater(Math.min(waterMl + WATER_STEP, WATER_MAX))
-  }
-
-  const handleRemoveWater = () => {
-    setWater(Math.max(waterMl - WATER_STEP, 0))
-  }
-
-  const handleSaveMood = (mood: string, comment: string) => {
-    setMood({ mood, mood_comment: comment })
-  }
-
-  const TABS: Array<[Tab, string]> = [
-    ['routinen', '📋 Routinen'],
-    ['todo',     '✅ To-Do'],
-    ['woche',    '📊 Woche'],
-  ]
+  const tabs = TABS[lang] ?? TABS.de
+  const quickLinks = QUICK_LINKS.filter(ql => activePillars.includes(ql.id as QuickLinkId))
 
   return (
     <div
@@ -119,6 +130,17 @@ export function RoutinePage() {
         margin: '0 auto',
       }}
     >
+      {/* Edit modal */}
+      {editingRoutine && (
+        <RoutineEditModal
+          routine={editingRoutine}
+          lang={lang}
+          onSave={update}
+          onDelete={remove}
+          onBack={() => setEditingRoutine(null)}
+        />
+      )}
+
       {/* Header */}
       <div
         style={{
@@ -132,11 +154,9 @@ export function RoutinePage() {
             <div style={{ fontSize: 11, letterSpacing: 3, color: '#6a6258', textTransform: 'uppercase' }}>
               {DAYS_FULL[todayDow]}
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <h1 style={{ margin: '2px 0 0', fontSize: 21, fontWeight: 400, color: '#f0e8d8' }}>
-                Mein Tag
-              </h1>
-            </div>
+            <h1 style={{ margin: '2px 0 0', fontSize: 21, fontWeight: 400, color: '#f0e8d8' }}>
+              Mein Tag
+            </h1>
           </div>
           <div style={{ display: 'flex', gap: 7 }}>
             {streak > 0 && (
@@ -153,7 +173,7 @@ export function RoutinePage() {
                 🔥{streak}T
               </div>
             )}
-            {isLoading ? null : (
+            {!isLoading && (
               <div
                 style={{
                   background: 'rgba(255,255,255,0.04)',
@@ -203,9 +223,40 @@ export function RoutinePage() {
         </div>
       </div>
 
+      {/* Quick access chips */}
+      {quickLinks.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px 0', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, color: '#5a5248', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
+            {T_QUICK[lang]}:
+          </span>
+          {quickLinks.map(ql => (
+            <button
+              key={ql.id}
+              onClick={() => navigate(ql.route)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '5px 11px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 20,
+                color: '#9a9288',
+                fontSize: 12,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              <span>{ql.emoji}</span>
+              <span>{ql.label[lang]}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Main tabs */}
-      <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)' }}>
-        {TABS.map(([key, label]) => (
+      <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', marginTop: quickLinks.length > 0 ? 8 : 0 }}>
+        {tabs.map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -231,34 +282,35 @@ export function RoutinePage() {
         {/* ── Routinen ── */}
         {tab === 'routinen' && (
           <>
-            {/* Mood + Water side by side */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'stretch' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <MoodCheck
                   mood={dailyLog?.mood ?? null}
                   moodComment={dailyLog?.mood_comment ?? null}
-                  onSave={handleSaveMood}
+                  onSave={(mood, comment) => setMood({ mood, mood_comment: comment })}
                 />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <WaterTracker
                   waterMl={waterMl}
-                  onAdd={handleAddWater}
-                  onRemove={handleRemoveWater}
+                  onAdd={() => setWater(Math.min(waterMl + WATER_STEP, WATER_MAX))}
+                  onRemove={() => setWater(Math.max(waterMl - WATER_STEP, 0))}
                 />
               </div>
             </div>
 
-            {isLoading ? (
-              <div style={{ textAlign: 'center', padding: 32, color: '#4a4238' }}>Lädt…</div>
-            ) : (
-              <RoutineList
-                routines={routines}
-                logs={todayLogs}
-                onToggle={handleToggle}
-                selectedDay={selectedDay}
-              />
-            )}
+            <RoutineList
+              routines={routines}
+              logs={todayLogs}
+              onToggle={(routineId, isCompleted) => toggleLog.mutate({ routineId, isCompleted })}
+              onEdit={setEditingRoutine}
+              onSwapOrder={handleSwapOrder}
+              onCreateSuggested={create}
+              onCreateAll={suggestions => suggestions.forEach(s => create(s))}
+              selectedDay={selectedDay}
+              lang={lang}
+              isLoading={isLoading}
+            />
           </>
         )}
 
