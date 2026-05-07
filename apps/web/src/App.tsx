@@ -9,8 +9,8 @@ import { OnboardingPage } from './pages/OnboardingPage'
 import { RoutinePage } from './pages/RoutinePage'
 import { WorkoutPage } from './pages/WorkoutPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { HomePage } from './pages/HomePage'
 
-const Home       = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Home</div>
 const Stretching = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Stretching</div>
 const Meditation = () => <div className="p-4" style={{ color: 'var(--color-text)' }}>Meditation</div>
 
@@ -68,7 +68,7 @@ function AppContent() {
       <Route element={<ProtectedLayout />}>
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route element={<AppShell />}>
-          <Route path="/"                 element={<Home />} />
+          <Route path="/"                 element={<HomePage />} />
           <Route path="/workout"          element={<WorkoutPage />} />
           <Route path="/workout/:wodName" element={<WorkoutPage />} />
           <Route path="/routine"          element={<RoutinePage />} />

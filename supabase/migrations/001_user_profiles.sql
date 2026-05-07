@@ -1,12 +1,13 @@
 -- Create user_profiles table
 CREATE TABLE IF NOT EXISTS public.user_profiles (
-  id            UUID        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  display_name  TEXT,
+  id             UUID        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  display_name   TEXT,
+  language       TEXT        NOT NULL DEFAULT 'en',
   primary_pillar TEXT,
   active_pillars TEXT[]      NOT NULL DEFAULT ARRAY[]::TEXT[],
-  equipment     TEXT[]      NOT NULL DEFAULT ARRAY[]::TEXT[],
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  equipment      TEXT[]      NOT NULL DEFAULT ARRAY[]::TEXT[],
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;

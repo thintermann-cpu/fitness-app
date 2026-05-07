@@ -5,9 +5,17 @@ import { useAuthStore } from '../store/authStore'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 
+const TOTAL_STEPS = 4
+
+const LANGUAGES = [
+  { id: 'de', label: 'Deutsch',  flag: '🇩🇪' },
+  { id: 'en', label: 'English',  flag: '🇬🇧' },
+  { id: 'es', label: 'Español',  flag: '🇪🇸' },
+] as const
+
 const PILLARS = [
   { id: 'workout',    label: 'Workout',    emoji: '🏋️', color: '#E8642A' },
-  { id: 'routine',    label: 'Routine',    emoji: '📋', color: '#4A90D9' },
+  { id: 'routine',    label: 'Mein Tag',   emoji: '📋', color: '#4A90D9' },
   { id: 'stretching', label: 'Stretching', emoji: '🤸', color: '#7BC67E' },
   { id: 'meditation', label: 'Meditation', emoji: '🧘', color: '#9B7FD4' },
 ] as const
@@ -19,30 +27,31 @@ const EQUIPMENT_OPTIONS = [
   { id: 'outdoor',    label: 'Outdoor',    emoji: '🌲' },
 ] as const
 
-type StepKey = 0 | 1 | 2
-
 export function OnboardingPage() {
   const navigate = useNavigate()
   const { user, fetchProfile } = useAuthStore()
 
-  const [step, setStep]               = useState<StepKey>(0)
-  const [animKey, setAnimKey]         = useState(0)
-  const [displayName, setDisplayName] = useState('')
-  const [primaryPillar, setPrimaryPillar] = useState<string | null>(null)
-  const [equipment, setEquipment]     = useState<string[]>([])
-  const [saving, setSaving]           = useState(false)
-  const [error, setError]             = useState<string | null>(null)
+  const [step, setStep]       = useState(0)
+  const [animKey, setAnimKey] = useState(0)
 
-  const advance = (next: StepKey) => {
-    setStep(next)
+  // Step data
+  const [displayName,   setDisplayName]   = useState('')
+  const [language,      setLanguage]      = useState('de')
+  const [primaryPillar, setPrimaryPillar] = useState<string | null>(null)
+  const [equipment,     setEquipment]     = useState<string[]>([])
+
+  const [saving, setSaving] = useState(false)
+  const [error,  setError]  = useState<string | null>(null)
+
+  const advance = () => {
+    setStep((s) => s + 1)
     setAnimKey((k) => k + 1)
   }
 
-  const toggleEquipment = (id: string) => {
+  const toggleEquipment = (id: string) =>
     setEquipment((prev) =>
       prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id]
     )
-  }
 
   const handleFinish = async () => {
     if (!user || !primaryPillar) return
@@ -54,6 +63,7 @@ export function OnboardingPage() {
       .upsert({
         id: user.id,
         display_name: displayName.trim() || null,
+        language,
         primary_pillar: primaryPillar,
         active_pillars: [primaryPillar],
         equipment,
@@ -83,13 +93,12 @@ export function OnboardingPage() {
           className="h-full transition-all duration-500"
           style={{
             backgroundColor: 'var(--color-primary)',
-            width: `${((step + 1) / 3) * 100}%`,
+            width: `${((step + 1) / TOTAL_STEPS) * 100}%`,
           }}
         />
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 max-w-md mx-auto w-full">
-        {/* Animated step content */}
         <div key={animKey} className="step-enter w-full space-y-8">
 
           {/* ── Step 0: Name ── */}
@@ -110,28 +119,72 @@ export function OnboardingPage() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 autoFocus
-                onKeyDown={(e) => e.key === 'Enter' && advance(1)}
+                onKeyDown={(e) => e.key === 'Enter' && advance()}
               />
 
-              <Button
-                className="w-full"
-                onClick={() => advance(1)}
-              >
+              <Button className="w-full" onClick={advance}>
                 Weiter
               </Button>
             </>
           )}
 
-          {/* ── Step 1: Primary Pillar ── */}
+          {/* ── Step 1: Language ── */}
           {step === 1 && (
             <>
               <div className="text-center space-y-3">
-                <div className="text-5xl">🎯</div>
+                <div className="text-5xl">🌍</div>
                 <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
                   Hallo {firstName}!
                 </h1>
                 <p style={{ color: 'var(--color-text-muted)' }}>
-                  Was ist dein Hauptfokus?
+                  Welche Sprache bevorzugst du?
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {LANGUAGES.map((lang) => {
+                  const selected = language === lang.id
+                  return (
+                    <button
+                      key={lang.id}
+                      onClick={() => setLanguage(lang.id)}
+                      className="rounded-2xl px-5 py-4 flex items-center gap-4 transition-transform active:scale-[0.98]"
+                      style={{
+                        backgroundColor: selected
+                          ? 'var(--color-primary)' + '22'
+                          : 'var(--color-bg-card)',
+                        border: `2px solid ${selected ? 'var(--color-primary)' : 'transparent'}`,
+                        color: 'var(--color-text)',
+                      }}
+                    >
+                      <span className="text-3xl">{lang.flag}</span>
+                      <span className="font-semibold">{lang.label}</span>
+                      {selected && (
+                        <span className="ml-auto text-sm" style={{ color: 'var(--color-primary)' }}>
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <Button className="w-full" onClick={advance}>
+                Weiter
+              </Button>
+            </>
+          )}
+
+          {/* ── Step 2: Primary Pillar ── */}
+          {step === 2 && (
+            <>
+              <div className="text-center space-y-3">
+                <div className="text-5xl">🎯</div>
+                <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+                  Dein Hauptfokus
+                </h1>
+                <p style={{ color: 'var(--color-text-muted)' }}>
+                  Was treibt dich an?
                 </p>
               </div>
 
@@ -144,9 +197,7 @@ export function OnboardingPage() {
                       onClick={() => setPrimaryPillar(p.id)}
                       className="rounded-2xl p-5 text-left transition-transform active:scale-95"
                       style={{
-                        backgroundColor: selected
-                          ? p.color + '22'
-                          : 'var(--color-bg-card)',
+                        backgroundColor: selected ? p.color + '22' : 'var(--color-bg-card)',
                         border: `2px solid ${selected ? p.color : 'transparent'}`,
                         color: 'var(--color-text)',
                       }}
@@ -158,18 +209,14 @@ export function OnboardingPage() {
                 })}
               </div>
 
-              <Button
-                className="w-full"
-                disabled={!primaryPillar}
-                onClick={() => advance(2)}
-              >
+              <Button className="w-full" disabled={!primaryPillar} onClick={advance}>
                 Weiter
               </Button>
             </>
           )}
 
-          {/* ── Step 2: Equipment ── */}
-          {step === 2 && (
+          {/* ── Step 3: Equipment ── */}
+          {step === 3 && (
             <>
               <div className="text-center space-y-3">
                 <div className="text-5xl">⚙️</div>
@@ -191,7 +238,7 @@ export function OnboardingPage() {
                       className="rounded-2xl p-5 text-left transition-transform active:scale-95"
                       style={{
                         backgroundColor: selected
-                          ? 'var(--color-primary)' + '22'
+                          ? 'var(--color-primary)22'
                           : 'var(--color-bg-card)',
                         border: `2px solid ${selected ? 'var(--color-primary)' : 'transparent'}`,
                         color: 'var(--color-text)',
@@ -210,11 +257,7 @@ export function OnboardingPage() {
                 </p>
               )}
 
-              <Button
-                className="w-full"
-                loading={saving}
-                onClick={handleFinish}
-              >
+              <Button className="w-full" loading={saving} onClick={handleFinish}>
                 Los geht's 🚀
               </Button>
             </>

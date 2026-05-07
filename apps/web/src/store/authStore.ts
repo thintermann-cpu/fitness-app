@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 export interface DbProfile {
   id: string
   display_name: string | null
+  language: string
   primary_pillar: string | null
   active_pillars: string[]
   equipment: string[]
