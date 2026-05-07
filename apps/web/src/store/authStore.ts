@@ -6,10 +6,10 @@ interface AuthState {
   user: User | null
   session: Session | null
   loading: boolean
-  initialize: () => void
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  initialize: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -17,28 +17,33 @@ export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   loading: true,
 
-  initialize: () => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      set({ session, user: session?.user ?? null, loading: false })
-    })
-
-    supabase.auth.onAuthStateChange((_event, session) => {
-      set({ session, user: session?.user ?? null, loading: false })
-    })
-  },
-
   signIn: async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error?.message ?? null }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw error
+    set({ user: data.user, session: data.session })
   },
 
   signUp: async (email, password) => {
-    const { error } = await supabase.auth.signUp({ email, password })
-    return { error: error?.message ?? null }
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    if (error) throw error
+    set({ user: data.user, session: data.session })
   },
 
   signOut: async () => {
     await supabase.auth.signOut()
     set({ user: null, session: null })
+  },
+
+  initialize: async () => {
+    const { data } = await supabase.auth.getSession()
+    set({
+      session: data.session,
+      user: data.session?.user ?? null,
+      loading: false,
+    })
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      set({ session, user: session?.user ?? null })
+    })
   },
 }))

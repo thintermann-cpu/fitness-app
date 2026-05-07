@@ -1,0 +1,86 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '../lib/supabase'
+
+export interface Todo {
+  id: string
+  list_name: string
+  text: string
+  completed: boolean
+  created_at: string
+}
+
+async function getUserId(): Promise<string | null> {
+  const { data: { user } } = await supabase.auth.getUser()
+  return user?.id ?? null
+}
+
+export function useTodos() {
+  const queryClient = useQueryClient()
+
+  const query = useQuery({
+    queryKey: ['todos'],
+    queryFn: async (): Promise<Todo[]> => {
+      const uid = await getUserId()
+      if (!uid) return []
+      const { data, error } = await supabase
+        .from('todos')
+        .select('*')
+        .eq('user_id', uid)
+        .order('created_at')
+      if (error) throw error
+      return (data ?? []) as Todo[]
+    },
+  })
+
+  const addMutation = useMutation({
+    mutationFn: async ({ list_name, text }: { list_name: string; text: string }) => {
+      const uid = await getUserId()
+      if (!uid) throw new Error('Not authenticated')
+      const { error } = await supabase
+        .from('todos')
+        .insert({ user_id: uid, list_name, text, completed: false })
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+  })
+
+  const completeMutation = useMutation({
+    mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
+      const { error } = await supabase.from('todos').update({ completed }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('todos').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+  })
+
+  const clearDoneMutation = useMutation({
+    mutationFn: async (listName: string) => {
+      const uid = await getUserId()
+      if (!uid) return
+      const { error } = await supabase
+        .from('todos')
+        .delete()
+        .eq('user_id', uid)
+        .eq('list_name', listName)
+        .eq('completed', true)
+      if (error) throw error
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+  })
+
+  return {
+    todos: query.data ?? [],
+    isLoading: query.isLoading,
+    add: addMutation.mutate,
+    complete: completeMutation.mutate,
+    remove: deleteMutation.mutate,
+    clearDone: clearDoneMutation.mutate,
+  }
+}
