@@ -21,6 +21,14 @@ function numOrNull(value) {
   return isNaN(n) ? esc(value) : String(n);
 }
 
+// Converts "Barbell, Pull-up Bar" → ARRAY['Barbell','Pull-up Bar']
+function escArray(value) {
+  if (value === null || value === undefined || value === '') return 'NULL';
+  const items = String(value).split(',').map((s) => s.trim()).filter(Boolean);
+  if (items.length === 0) return 'NULL';
+  return `ARRAY[${items.map((s) => `'${s.replace(/'/g, "''")}'`).join(',')}]`;
+}
+
 let jsonPath = null;
 for (const p of JSON_PATHS) {
   if (fs.existsSync(p)) { jsonPath = p; break; }
@@ -47,19 +55,18 @@ COMMIT;
 
 const statements = wods.map((w) => {
   return (
-    `INSERT INTO wods (id, name, kategorie, typ, beschreibung, uebungen, equipment, dauer, runden, reps, gewicht, schwierigkeit, skal_leicht, skal_schwer, quelle) VALUES (\n` +
-    `  ${numOrNull(w.id)},\n` +
+    `INSERT INTO wods (name, category, type, description, exercises, equipment, difficulty, estimated_minutes, runden, reps, gewicht, skal_leicht, skal_schwer, quelle) VALUES (\n` +
     `  ${esc(w.name)},\n` +
     `  ${esc(w.kategorie)},\n` +
     `  ${esc(w.typ)},\n` +
     `  ${esc(w.beschreibung)},\n` +
     `  ${esc(w.uebungen)},\n` +
-    `  ${esc(w.equipment)},\n` +
+    `  ${escArray(w.equipment)},\n` +
+    `  ${esc(w.schwierigkeit)},\n` +
     `  ${numOrNull(w.dauer)},\n` +
-    `  ${numOrNull(w.runden)},\n` +
+    `  ${esc(w.runden)},\n` +
     `  ${esc(w.reps)},\n` +
     `  ${esc(w.gewicht)},\n` +
-    `  ${esc(w.schwierigkeit)},\n` +
     `  ${esc(w.skal_leicht)},\n` +
     `  ${esc(w.skal_schwer)},\n` +
     `  ${esc(w.quelle)}\n` +
