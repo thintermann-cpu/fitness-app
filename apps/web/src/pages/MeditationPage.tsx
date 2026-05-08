@@ -97,10 +97,11 @@ export function MeditationPage() {
   const [selectedMeditation, setSelectedMeditation] = useState<Meditation | null>(null)
   const [selectedTechnique,  setSelectedTechnique]  = useState<BreathworkTechnique | null>(null)
 
-  const { data: meditations = [], isLoading: medsLoading }   = useMeditations()
-  const { data: techniques  = [], isLoading: techsLoading }  = useBreathworkTechniques()
+  const { data: meditations = [], isLoading: medsLoading, isError: medsError }   = useMeditations()
+  const { data: techniques  = [], isLoading: techsLoading, isError: techsError }  = useBreathworkTechniques()
 
   const isLoading = medsLoading || techsLoading
+  const isError   = medsError   || techsError
 
   const filtered = catFilter === 'all'
     ? meditations
@@ -274,6 +275,11 @@ export function MeditationPage() {
                 <div className="flex justify-center py-12">
                   <span className="text-sm text-[var(--color-text-muted)]">{t.loading}</span>
                 </div>
+              ) : isError ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <span className="text-4xl">⚠️</span>
+                  <p className="text-sm text-[var(--color-text-muted)]">Daten konnten nicht geladen werden.</p>
+                </div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                   <span className="text-4xl">🧘</span>
@@ -299,6 +305,11 @@ export function MeditationPage() {
             {isLoading ? (
               <div className="flex justify-center py-12">
                 <span className="text-sm text-[var(--color-text-muted)]">{t.loading}</span>
+              </div>
+            ) : isError ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <span className="text-4xl">⚠️</span>
+                <p className="text-sm text-[var(--color-text-muted)]">Daten konnten nicht geladen werden.</p>
               </div>
             ) : (
               <>

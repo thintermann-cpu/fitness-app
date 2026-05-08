@@ -21,7 +21,7 @@ export function WodList({ onSelectWod, equipmentFilter }: Props) {
 
   const activeFilterCount = [type, category, difficulty].filter(Boolean).length
 
-  const { data, isLoading, isFetching } = useWods({
+  const { data, isLoading, isFetching, isError } = useWods({
     type:            type || undefined,
     category:        category || undefined,
     difficulty:      difficulty || undefined,
@@ -94,6 +94,11 @@ export function WodList({ onSelectWod, equipmentFilter }: Props) {
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-24 rounded-[var(--radius-md)] bg-[var(--color-bg-card)] animate-pulse" />
           ))}
+        </div>
+      ) : isError ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-3">
+          <span className="text-4xl">⚠️</span>
+          <p className="text-sm text-[var(--color-text-muted)]">WODs konnten nicht geladen werden.</p>
         </div>
       ) : (
         <div className="space-y-3">

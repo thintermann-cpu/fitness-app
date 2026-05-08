@@ -106,6 +106,15 @@ async function fetchLocalWods(filters: WodFilters): Promise<{ data: Wod[]; count
   return { data, count }
 }
 
+const SUPABASE_TIMEOUT_MS = 5000
+
+function raceTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ])
+}
+
 export function useWods(filters: WodFilters = {}) {
   return useQuery({
     queryKey: ['wods', filters],
@@ -122,15 +131,20 @@ export function useWods(filters: WodFilters = {}) {
       if (filters.search) query = query.ilike('name', `%${filters.search}%`)
 
       const page = filters.page ?? 0
-      const { data, count, error } = await query
-        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
-        .order('name')
+      const result = await raceTimeout(
+        query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1).order('name'),
+        SUPABASE_TIMEOUT_MS,
+      )
 
-      if (error) return fetchLocalWods(filters)
+      if (!result || result.error) {
+        if (result?.error) console.error('[useWods]', result.error.message)
+        return fetchLocalWods(filters)
+      }
 
-      return { data: (data ?? []) as Wod[], count: count ?? 0 }
+      return { data: (result.data ?? []) as Wod[], count: result.count ?? 0 }
     },
     staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 }
 
@@ -143,15 +157,20 @@ export function useWod(name: string) {
         return wods.find((w) => w.name === name) ?? null
       }
 
-      const { data, error } = await supabase.from('wods').select('*').eq('name', name).single()
+      const result = await raceTimeout(
+        supabase.from('wods').select('*').eq('name', name).single(),
+        SUPABASE_TIMEOUT_MS,
+      )
 
-      if (error) {
+      if (!result || result.error) {
+        if (result?.error) console.error('[useWod]', result.error.message)
         const wods = await loadLocalWods()
         return wods.find((w) => w.name === name) ?? null
       }
 
-      return data as Wod
+      return result.data as Wod
     },
     enabled: Boolean(name),
+    retry: false,
   })
 }

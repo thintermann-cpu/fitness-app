@@ -99,10 +99,14 @@ export function useMeditations() {
         .select('*')
         .order('duration_min')
 
-      if (error) throw error
+      if (error) {
+        console.error('[useMeditations]', error.message)
+        throw error
+      }
       return ((data ?? []) as RawMeditation[]).map((r) => mapMeditation(r, lang))
     },
     staleTime: 10 * 60 * 1000,
+    retry: 1,
   })
 }
 
@@ -117,9 +121,13 @@ export function useBreathworkTechniques() {
         .select('*')
         .order('difficulty')
 
-      if (error) throw error
+      if (error) {
+        console.error('[useBreathworkTechniques]', error.message)
+        throw error
+      }
       return ((data ?? []) as RawBreathworkTechnique[]).map((r) => mapTechnique(r, lang))
     },
     staleTime: 10 * 60 * 1000,
+    retry: 1,
   })
 }
