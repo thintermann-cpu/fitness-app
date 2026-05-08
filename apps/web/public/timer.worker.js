@@ -1,16 +1,10 @@
 // Accurate interval timer using drift-corrected setTimeout scheduling.
-// Messages in:  { type: 'start', mode, durationMs }
+// Messages in:  { type: 'start', mode, durationMs, tabataWorkMs?, tabataRestMs?, tabataRounds?, emomIntervalMs? }
 //               { type: 'pause' } | { type: 'resume' } | { type: 'reset' }
 // Messages out: { type: 'tick', elapsed, remaining, phase, interval }
 //               { type: 'complete' }
 //               { type: 'beep', beepType: 'start'|'interval'|'end' }
 //               { type: 'reset' }
-
-const TABATA_WORK_MS  = 20_000
-const TABATA_REST_MS  = 10_000
-const TABATA_CYCLE_MS = TABATA_WORK_MS + TABATA_REST_MS
-const TABATA_ROUNDS   = 8
-const TABATA_TOTAL_MS = TABATA_CYCLE_MS * TABATA_ROUNDS
 
 let state         = 'idle'  // idle | running | paused
 let mode          = 'fortime'
@@ -19,6 +13,12 @@ let startTime     = 0       // Date.now() when run began (offset by paused time)
 let pausedElapsed = 0
 let tickId        = null
 
+// Configurable params — set on each 'start' message
+let tabataWorkMs   = 20_000
+let tabataRestMs   = 10_000
+let tabataRounds   = 8
+let emomIntervalMs = 60_000
+
 // Track previous tick values for edge detection (beep on transitions)
 let prevInterval  = 0
 let prevPhase     = 'work'
@@ -26,13 +26,17 @@ let prevPhase     = 'work'
 self.onmessage = ({ data }) => {
   switch (data.type) {
     case 'start':
-      mode          = data.mode
-      durationMs    = data.durationMs
-      startTime     = Date.now()
-      pausedElapsed = 0
-      prevInterval  = 0
-      prevPhase     = 'work'
-      state         = 'running'
+      mode           = data.mode
+      durationMs     = data.durationMs
+      tabataWorkMs   = data.tabataWorkMs   ?? 20_000
+      tabataRestMs   = data.tabataRestMs   ?? 10_000
+      tabataRounds   = data.tabataRounds   ?? 8
+      emomIntervalMs = data.emomIntervalMs ?? 60_000
+      startTime      = Date.now()
+      pausedElapsed  = 0
+      prevInterval   = 0
+      prevPhase      = 'work'
+      state          = 'running'
       clearTimeout(tickId)
       scheduleTick()
       self.postMessage({ type: 'beep', beepType: 'start' })
@@ -68,7 +72,7 @@ function scheduleTick() {
   const elapsed = Date.now() - startTime
   const info    = computeTick(elapsed)
 
-  // Detect interval/phase transitions and emit beep signals
+  // Detect interval transitions and emit beep signals
   if (prevInterval !== 0 && info.interval !== prevInterval) {
     self.postMessage({ type: 'beep', beepType: 'interval' })
   }
@@ -85,24 +89,26 @@ function scheduleTick() {
   }
 
   // Schedule next tick aligned to the next 100 ms boundary
-  const drift   = elapsed % 100
-  const nextMs  = drift === 0 ? 100 : 100 - drift
+  const drift  = elapsed % 100
+  const nextMs = drift === 0 ? 100 : 100 - drift
   tickId = setTimeout(scheduleTick, nextMs)
 }
 
 function computeTick(elapsed) {
   if (mode === 'tabata') {
-    const remaining = Math.max(0, TABATA_TOTAL_MS - elapsed)
-    const pos       = elapsed % TABATA_CYCLE_MS
-    const phase     = pos < TABATA_WORK_MS ? 'work' : 'rest'
-    const interval  = Math.min(Math.floor(elapsed / TABATA_CYCLE_MS) + 1, TABATA_ROUNDS)
-    const complete  = elapsed >= TABATA_TOTAL_MS
+    const cycleMs   = tabataWorkMs + tabataRestMs
+    const totalMs   = cycleMs * tabataRounds
+    const remaining = Math.max(0, totalMs - elapsed)
+    const pos       = elapsed % cycleMs
+    const phase     = pos < tabataWorkMs ? 'work' : 'rest'
+    const interval  = Math.min(Math.floor(elapsed / cycleMs) + 1, tabataRounds)
+    const complete  = elapsed >= totalMs
     return { elapsed, remaining, phase, interval, complete }
   }
 
   if (mode === 'emom') {
     const remaining = Math.max(0, durationMs - elapsed)
-    const interval  = Math.floor(elapsed / 60_000) + 1
+    const interval  = Math.floor(elapsed / emomIntervalMs) + 1
     const complete  = elapsed >= durationMs
     return { elapsed, remaining, phase: 'work', interval, complete }
   }
@@ -113,6 +119,13 @@ function computeTick(elapsed) {
     return { elapsed, remaining, phase: 'work', interval: 1, complete }
   }
 
-  // fortime — count up, user stops manually
-  return { elapsed, remaining: 0, phase: 'work', interval: 1, complete: false }
+  // fortime — count up; durationMs > 0 means there's a cap
+  const complete = durationMs > 0 && elapsed >= durationMs
+  return {
+    elapsed,
+    remaining: durationMs > 0 ? Math.max(0, durationMs - elapsed) : 0,
+    phase: 'work',
+    interval: 1,
+    complete,
+  }
 }

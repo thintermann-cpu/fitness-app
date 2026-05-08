@@ -15,7 +15,10 @@ const PILLAR_COLOR = '#9B7FD4'
 type Lang     = 'de' | 'en' | 'es'
 type Tab      = 'meditate' | 'breathwork' | 'history'
 type View     = 'list' | 'session' | 'breathwork_session' | 'custom_timer' | 'custom_breathwork_session'
-type Category = 'all' | 'mindfulness' | 'body_scan' | 'sleep' | 'focus' | 'stress_relief' | 'morning' | 'visualization' | 'movement'
+type Category  = 'all' | 'mindfulness' | 'body_scan' | 'sleep' | 'focus' | 'stress_relief' | 'morning' | 'visualization' | 'movement'
+type DurFilter = 0 | 5 | 10 | 15 | 20 | 30
+
+const DUR_OPTIONS: DurFilter[] = [0, 5, 10, 15, 20, 30]
 
 const T = {
   de: {
@@ -90,9 +93,10 @@ export function MeditationPage() {
   const lang    = ((profile?.language ?? 'en') as Lang)
   const t       = T[lang]
 
-  const [tab,      setTab]      = useState<Tab>('meditate')
-  const [view,     setView]     = useState<View>('list')
+  const [tab,       setTab]       = useState<Tab>('meditate')
+  const [view,      setView]      = useState<View>('list')
   const [catFilter, setCatFilter] = useState<Category>('all')
+  const [durFilter, setDurFilter] = useState<DurFilter>(0)
 
   const [selectedMeditation, setSelectedMeditation] = useState<Meditation | null>(null)
   const [selectedTechnique,  setSelectedTechnique]  = useState<BreathworkTechnique | null>(null)
@@ -103,9 +107,13 @@ export function MeditationPage() {
   const isLoading = medsLoading || techsLoading
   const isError   = medsError   || techsError
 
-  const filtered = catFilter === 'all'
+  const catFiltered = catFilter === 'all'
     ? meditations
     : meditations.filter((m) => m.category === catFilter)
+
+  const filtered = durFilter === 0
+    ? catFiltered
+    : catFiltered.filter((m) => m.duration_min <= durFilter)
 
   const handleSelectMeditation = (m: Meditation) => {
     setSelectedMeditation(m)
@@ -250,7 +258,7 @@ export function MeditationPage() {
         {tab === 'meditate' && (
           <>
             {/* Category filter chips */}
-            <div className="px-4 py-3 flex gap-2 overflow-x-auto scrollbar-none">
+            <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-none">
               {CATEGORIES.map((cat) => {
                 const label = (t as Record<string, string>)[cat] ?? cat
                 return (
@@ -268,6 +276,24 @@ export function MeditationPage() {
                   </button>
                 )
               })}
+            </div>
+
+            {/* Duration filter chips */}
+            <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-none">
+              {DUR_OPTIONS.map((dur) => (
+                <button
+                  key={dur}
+                  onClick={() => setDurFilter(dur)}
+                  className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                  style={
+                    durFilter === dur
+                      ? { backgroundColor: PILLAR_COLOR, color: 'white' }
+                      : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }
+                  }
+                >
+                  {dur === 0 ? t.all : `≤ ${dur} min`}
+                </button>
+              ))}
             </div>
 
             <div className="px-4 space-y-3">
