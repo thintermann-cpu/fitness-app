@@ -17,6 +17,18 @@ ALTER TABLE public.user_profiles
 -- RLS Policies for admin access
 -- ============================================================
 
+-- SECURITY DEFINER function to read the current user's role without
+-- triggering RLS (avoids infinite recursion when called from a policy
+-- that itself lives on user_profiles).
+CREATE OR REPLACE FUNCTION public.get_my_role()
+RETURNS TEXT
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT role FROM public.user_profiles WHERE id = auth.uid();
+$$;
+
 -- Allow admins/moderators to read ALL user profiles
 -- (normal users can only read their own row via existing policy)
 DROP POLICY IF EXISTS "Admins can read all profiles" ON public.user_profiles;
@@ -24,9 +36,7 @@ CREATE POLICY "Admins can read all profiles"
   ON public.user_profiles
   FOR SELECT
   USING (
-    (
-      SELECT role FROM public.user_profiles WHERE id = auth.uid()
-    ) IN ('admin', 'moderator')
+    public.get_my_role() IN ('admin', 'moderator')
   );
 
 -- ============================================================
