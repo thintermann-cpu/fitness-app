@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(ls /c/Python*)",
+      "Read(//usr/**)",
+      "PowerShell(Get-Command python, py, python3 -ErrorAction SilentlyContinue)",
+      "PowerShell($env:PATH -split ';' | Where-Object { $_ -match 'python' -or $_ -match 'Python' })"
+    ]
+  }
+}

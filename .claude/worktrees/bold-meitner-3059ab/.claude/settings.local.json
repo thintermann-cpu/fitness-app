@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(node_modules\\\\.bin\\\\tsc -b --noEmit)",
+      "Bash(./node_modules/.bin/tsc -b --noEmit)",
+      "Bash(ls \"C:\\\\Projects\\\\fitness_app\" 2>&1)",
+      "Bash(npm install *)",
+      "Bash(\"../../node_modules/.bin/tsc\" -b --noEmit)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"C:\\\\Projects\\\\fitness_app\\\\node_modules\\\\@supabase\" 2>/dev/null && echo \"found at root\" || echo \"not found at root\")",
+      "Bash(ls \"C:\\\\Projects\\\\fitness_app\\\\apps\\\\web\\\\node_modules\\\\@supabase\" 2>/dev/null && echo \"found in web\" || echo \"not found in web\")",
+      "Bash(find \"C:\\\\Projects\\\\fitness_app\" -name \"supabase-js\" -maxdepth 6 2>/dev/null | head -5 || echo \"none found\")"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(node_modules\\\\.bin\\\\tsc -b)",
+      "Bash(./node_modules/.bin/tsc -b)",
+      "Bash(find \"C:\\\\Projects\\\\fitness_app\\\\.claude\\\\worktrees\\\\nifty-margulis-a3b063\" -name \"tsc\" -type f 2>/dev/null | head -5; find \"/c/Projects/fitness_app\" -name \"tsc\" -not -path \"*/worktrees/*\" 2>/dev/null | head -5)",
+      "Bash(git commit -m ' *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)"
+    ]
+  }
+}

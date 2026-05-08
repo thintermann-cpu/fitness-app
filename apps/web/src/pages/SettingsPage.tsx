@@ -29,7 +29,7 @@ const LOCATION_OPTIONS: { id: WorkoutLocation; label: string; emoji: string }[] 
 
 const EQUIPMENT_ITEMS = [
   'Barbell', 'Dumbbells', 'Kettlebell', 'Pull-up Bar',
-  'Rings', 'Rower', 'Bike', 'Resistance Bands', 'Jump Rope', 'Box',
+  'Rings', 'Rower', 'Bike', 'Resistance Bands', 'Jump Rope', 'Box', 'Laufen',
 ]
 
 type Lang = 'de' | 'en' | 'es'
@@ -381,5 +381,3 @@ export function SettingsPage() {
         <SaveButton loading={savingPillars} saved={savedPillars} onClick={handleSavePillars} />
       </section>
     </div>
-  )
-}

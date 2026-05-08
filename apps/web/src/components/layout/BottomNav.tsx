@@ -22,7 +22,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 flex items-stretch"
+      className="fixed bottom-0 left-0 right-0 flex items-stretch lg:hidden"
       style={{
         backgroundColor: 'var(--color-bg-card)',
         borderTop: '1px solid var(--color-bg-elevated)',
@@ -58,5 +58,3 @@ export function BottomNav() {
         )
       })}
     </nav>
-  )
-}

@@ -8,7 +8,7 @@ export const DEFAULT_EQUIPMENT_BY_LOCATION: Record<WorkoutLocation, string[]> = 
   home:       ['Dumbbells', 'Kettlebell', 'Pull-up Bar', 'Resistance Bands'],
   gym:        ['Barbell', 'Dumbbells', 'Pull-up Bar', 'Rings', 'Rower', 'Bike', 'Kettlebell'],
   bodyweight: [],
-  outdoor:    ['Pull-up Bar'],
+  outdoor:    ['Pull-up Bar', 'Laufen'],
 }
 
 export interface DbProfile {
@@ -19,6 +19,8 @@ export interface DbProfile {
   active_pillars: string[]
   equipment: string[]
   equipment_by_location: Record<WorkoutLocation, string[]> | null
+  role: 'admin' | 'moderator' | 'user' | null
+  subscription_status: string | null
   created_at: string
   updated_at: string
 }
@@ -99,8 +101,4 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     })
 
     supabase.auth.onAuthStateChange(async (_event, session) => {
-      const profile = session?.user ? await loadProfile(session.user.id) : null
-      set({ session, user: session?.user ?? null, profile })
-    })
-  },
-}))
+      const profile = session?.user ? await loadProfile(session.use

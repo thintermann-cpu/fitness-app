@@ -1,0 +1,33 @@
+name: Deploy to Hetzner
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build
+        run: |
+          cd app
+          npm install
+          npm run build
+      - name: Copy build to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 178.105.63.185
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "app/dist/*"
+          target: "/var/www/carveout"
+          strip_components: 2
+      - name: Reload Nginx
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 178.105.63.185
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: systemctl reload nginx

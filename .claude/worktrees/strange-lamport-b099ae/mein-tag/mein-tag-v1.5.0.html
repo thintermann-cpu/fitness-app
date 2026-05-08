@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <!-- PWA: iOS installierbar -->
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Mein Tag"/>
+  <meta name="theme-color" content="#1a1a2e"/>
+  <title>Mein Tag v1.5.0</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#0f0f1a; }
+    #root { max-width:480px; margin:0 auto; }
+  </style>
+  <!-- PWA: Manifest als inline data-URI -->
+  <script>
+    (function(){
+      var icon="data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#1a1a2e" rx="12"/><circle cx="50" cy="36" r="16" fill="#d4af37"/><path d="M18 72L50 36 82 72z" fill="#d4af37" opacity=".45"/><rect x="36" y="58" width="28" height="20" fill="#d4af37" opacity=".35"/></svg>');
+      var mf=JSON.stringify({name:"Mein Tag",short_name:"Mein Tag",start_url:".",display:"standalone",orientation:"portrait",background_color:"#0f0f1a",theme_color:"#1a1a2e",icons:[{src:icon,sizes:"512x512",type:"image/svg+xml",purpose:"any maskable"}]});
+      var lnk=document.createElement("link");lnk.rel="manifest";lnk.href="data:application/manifest+json,"+encodeURIComponent(mf);document.head.appendChild(lnk);
+      var al=document.createElement("link");al.rel="apple-touch-icon";al.href=icon;document.head.appendChild(al);
+    })();
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- PWA: Service Worker via Blob-URL (Offline-Cache für Chrome/Android; iOS nutzt die apple-meta-tags) -->
+  <script>
+    if('serviceWorker' in navigator){
+      var swCode=[
+        "const CACHE='mein-tag-v1.5';",
+        "self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll([location.href])));});",
+        "self.addEventListener('activate',e=>{e.waitUntil(clients.claim());});",
+        "self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});"
+      ].join('\n');
+      var blob=new Blob([swCode],{type:'text/javascript'});
+      var blobUrl=URL.createObjectURL(blob);
+      navigator.serviceWorker.register(blobUrl).catch(function(){});
+    }
+  </script>
+
+  <!-- React + Babel from CDN — no install needed -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+// App version - bump to force fresh defaults on next load
+const APP_VERSION = "1.5.0";
+const VER_KEY     = "app_ver";
+
+// ─── constants ────────────────────────────────────────────────────────────────
+const DAYS       = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+const DAYS_FULL  = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+const ALL_DAYS   = [0,1,2,3,4,5,6];
+const WEEKDAYS   = [1,2,3,4,5];
+const WEEKEND    = [0,6];
+const ICONS      = ["💊","🏋️","🧘","🧠","🥗","🦷","🌙","💧","📖","🏃","🚴","🧴","☕","🥤","🍎","💪","🛌","✍️","🎯","🔥","🧹","👔","🛁","🧺","🥾"];
+const MOODS      = [
+  {emoji:"😄",label:"Super",    color:"#6fcf6f"},
+  {emoji:"🙂",label:"Gut",      color:"#a8d87a"},
+  {emoji:"😐",label:"Ok",       color:"#d4af37"},
+  {emoji:"😔",label:"Müde",     color:"#e08c50"},
+  {emoji:"😤",label:"Gestresst",color:"#e06060"},
+];
+const RTABS      = ["morning","day","evening"];
+const RTAB_LABEL = {morning:"🌅 Morgen",day:"☀️ Tag",evening:"🌙 Abend"};
+const DFLT_WATER = {goal:2.8, step:4}; // goal in L, step in dl
+
+// ─── default routines ─────────────────────────────────────────────────────────
+// Meditation-Links: Link wird später durch Meditation-Pillar-App ersetzt
+const MEDIT_LINK = "https://www.serinity.app";
+const DFLT = {
+  morning:[
+    {id:"supp1",   label:"Supplements (1)",   icon:"💊", time:"05:05", link:"",         activeDays:ALL_DAYS},
+    {id:"workout", label:"Workout",            icon:"🏋️", time:"05:15", link:"",         activeDays:ALL_DAYS},
+    {id:"stretch", label:"Stretching",         icon:"🧘", time:"05:40", link:"",         activeDays:ALL_DAYS},
+    {id:"medit",   label:"Meditation",         icon:"🧠", time:"05:55", link:MEDIT_LINK, activeDays:ALL_DAYS},
+    {id:"breakf",  label:"Gesundes Frühstück", icon:"🥗", time:"07:00", link:"",         activeDays:ALL_DAYS},
+    {id:"supp2",   label:"Supplements (2)",    icon:"💊", time:"07:15", link:"",         activeDays:ALL_DAYS},
+  ],
+  day:[
+    {id:"water",   label:"Wasser 2L+",         icon:"💧", time:"12:00", link:"",         activeDays:ALL_DAYS},
+    {id:"lunch",   label:"Mittagessen",         icon:"🥗", time:"12:30", link:"",         activeDays:WEEKDAYS},
+    {id:"walk",    label:"Spaziergang",         icon:"🥾", time:"13:00", link:"",         activeDays:ALL_DAYS},
+    {id:"wash",    label:"Waschen / Hygiene",   icon:"🛁", time:"18:00", link:"",         activeDays:WEEKDAYS},
+  ],
+  evening:[
+    {id:"teeth",   label:"Zähne putzen",        icon:"🦷", time:"21:30", link:"",         activeDays:ALL_DAYS},
+    {id:"med_eve", label:"Abend-Meditation",     icon:"🌙", time:"22:00", link:MEDIT_LINK, activeDays:ALL_DAYS},
+    {id:"sleep",   label:"Schlafenszeit",        icon:"🛌", time:"22:30", link:"",         activeDays:ALL_DAYS},
+  ],
+};
+const DEFAULT_LISTS = ["Privat","Arbeit","Einkauf","Sport","Sonstiges"];
+
+// ─── storage ──────────────────────────────────────────────────────────────────
+const LS = {
+  load:(k,fb)=>{ try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb;}catch{return fb;} },
+  save:(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch{} },
+};
+
+// ─── migration v1.4.0 (_v6) → v1.5.0 (_v7) ──────────────────────────────────
+function migrateV6toV7(){
+  [["ch_v6","ch_v7"],["ls_v6","ls_v7"],["td_v6","td_v7"],
+   ["wt_v6","wt_v7"],["mo_v6","mo_v7"],["rTab_v5","rTab_v6"]
+  ].forEach(([o,n])=>{
+    if(LS.load(n,null)===null){ const v=LS.load(o,null); if(v!==null) LS.save(n,v); }
+  });
+}
+
+// Run migration before React mounts if version changed
+(function(){
+  const storedVer=LS.load(VER_KEY,null);
+  if(storedVer && storedVer!==APP_VERSION) migrateV6toV7();
+})();
+
+// ─── data export / import ─────────────────────────────────────────────────────
+function exportData(){
+  const keys=["rt_v7","ch_v7","ls_v7","td_v7","wt_v7","mo_v7","rTab_v6","wc_v7",VER_KEY];
+  const data={};
+  keys.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) data[k]=JSON.parse(v); });
+  data.__exported=new Date().toISOString();
+  data.__appVersion=APP_VERSION;
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download=`mein-tag-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function importData(file,onDone){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      // Handle both v1.5.0 (_v7) and v1.4.0 (_v6) backups
+      const keyMap={"rt_v7":"rt_v6","ch_v7":"ch_v6","ls_v7":"ls_v6","td_v7":"td_v6","wt_v7":"wt_v6","mo_v7":"mo_v6","rTab_v6":"rTab_v5"};
+      const v7Keys=["rt_v7","ch_v7","ls_v7","td_v7","wt_v7","mo_v7","rTab_v6","wc_v7",VER_KEY];
+      v7Keys.forEach(k=>{
+        if(data[k]!=null) localStorage.setItem(k,JSON.stringify(data[k]));
+        else if(keyMap[k]&&data[keyMap[k]]!=null) localStorage.setItem(k,JSON.stringify(data[keyMap[k]]));
+      });
+      onDone(true,data.__exported||"?");
+    }catch{ onDone(false,""); }
+  };
+  reader.readAsText(file);
+}
+
+// ─── style helpers ────────────────────────────────────────────────────────────
+const BG   = "linear-gradient(135deg,#0f0f1a 0%,#1a1a2e 50%,#16213e 100%)";
+const card = (on,r=12)=>({
+  background: on?"rgba(212,175,55,0.12)":"rgba(255,255,255,0.04)",
+  border:     on?"1px solid rgba(212,175,55,0.36)":"1px solid rgba(255,255,255,0.07)",
+  borderRadius:r,
+});
+const INP  = {width:"100%",padding:"10px 12px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:"#e8e0d4",fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box"};
+const GOLD = (x={})=>({padding:"10px 16px",background:"rgba(212,175,55,0.18)",border:"1px solid rgba(212,175,55,0.36)",borderRadius:8,color:"#d4af37",fontSize:13,cursor:"pointer",fontFamily:"inherit",...x});
+
+// ─── Link suggestions (erweitert um Serinity) ────────────────────────────────
+const LINK_SUGGESTIONS=[
+  {l:"🎵 Spotify",      u:"https://open.spotify.com/search/meditation"},
+  {l:"▶ YouTube",       u:"https://www.youtube.com/results?search_query=10+minuten+meditation"},
+  {l:"🧘 Serinity",     u:"https://www.serinity.app"},
+  {l:"⏱ Insight Timer", u:"https://insighttimer.com"},
+];
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+function Modal({title,onClose,children}){
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",zIndex:400,display:"flex",alignItems:"flex-end"}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{width:"100%",maxHeight:"90vh",overflowY:"auto",background:"#1c1c30",borderTop:"1px solid rgba(255,255,255,0.12)",borderRadius:"18px 18px 0 0",padding:20}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <span style={{fontSize:16,color:"#f0e8d8"}}>{title}</span>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"#7a7268",fontSize:22,cursor:"pointer",lineHeight:1}}>×</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── DayPicker ────────────────────────────────────────────────────────────────
+function DayPicker({value,onChange}){
+  return(
+    <div style={{display:"flex",gap:4}}>
+      {DAYS.map((d,i)=>{
+        const on=(value||[]).includes(i);
+        return(
+          <button key={i} onClick={()=>onChange(on?(value||[]).filter(x=>x!==i):[...(value||[]),i])} style={{
+            flex:1,padding:"6px 2px",...card(on,6),
+            color:on?"#d4af37":"#5a5248",fontSize:11,cursor:"pointer",fontFamily:"inherit",
+          }}>{d}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── IconPicker ───────────────────────────────────────────────────────────────
+function IconPicker({selected,onSelect}){
+  return(
+    <div style={{marginTop:6}}>
+      <div style={{fontSize:11,color:"#6a6258",marginBottom:6}}>Icon</div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+        {ICONS.map(ic=>(
+          <button key={ic} onClick={()=>onSelect(ic)} style={{...card(ic===selected,7),padding:"6px 8px",fontSize:17,cursor:"pointer"}}>{ic}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Water Tracker (waterGoal / waterStep als Props) ─────────────────────────
+function WaterTracker({water,onAdd,onRemove,compact,waterGoal,waterStep}){
+  const pct    = Math.min(water/waterGoal*100,100);
+  const liters = (water/10).toFixed(1);
+  const glasses= Math.round(water/waterStep);
+  const maxG   = Math.round(waterGoal/waterStep);
+  if(compact) return(
+    <div style={{...card(false),padding:"10px 11px",height:"100%",display:"flex",flexDirection:"column",gap:6}}>
+      <div style={{fontSize:9,letterSpacing:2,color:"#6a6258",textTransform:"uppercase"}}>💧 Wasser</div>
+      <div style={{fontSize:15,color:pct>=100?"#6fcf6f":"#5ab4e8",lineHeight:1}}>
+        {liters}<span style={{fontSize:10,color:"#5a5248"}}>/{(waterGoal/10).toFixed(1)}L</span>
+      </div>
+      <div style={{height:4,background:"rgba(255,255,255,0.05)",borderRadius:2,overflow:"hidden"}}>
+        <div style={{height:"100%",width:`${pct}%`,borderRadius:2,transition:"width 0.4s",background:pct>=100?"linear-gradient(90deg,#6fcf6f,#a0e8a0)":"linear-gradient(90deg,#2e86c1,#5ab4e8)"}}/>
+      </div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:2}}>
+        {Array.from({length:maxG}).map((_,i)=><span key={i} style={{fontSize:10,opacity:i<glasses?1:0.15}}>🥛</span>)}
+      </div>
+      <div style={{display:"flex",gap:5,marginTop:"auto"}}>
+        <button onClick={onRemove} disabled={water===0} style={{flex:1,padding:"5px 0",borderRadius:6,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",color:"#9a9288",fontSize:14,cursor:water===0?"default":"pointer"}}>−</button>
+        <button onClick={onAdd} style={{flex:1,padding:"5px 0",borderRadius:6,background:"rgba(90,180,232,0.2)",border:"1px solid rgba(90,180,232,0.4)",color:"#5ab4e8",fontSize:16,cursor:"pointer"}}>+</button>
+      </div>
+      {pct>=100&&<div style={{fontSize:9,color:"#6fcf6f",textAlign:"center"}}>Ziel erreicht 🎉</div>}
+    </div>
+  );
+  return(
+    <div style={{...card(false),padding:"14px 16px",marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div>
+          <div style={{fontSize:10,letterSpacing:2,color:"#6a6258",textTransform:"uppercase"}}>Wasser</div>
+          <div style={{fontSize:20,color:pct>=100?"#6fcf6f":"#5ab4e8",marginTop:2}}>
+            {liters}L <span style={{fontSize:12,color:"#5a5248"}}>/ {(waterGoal/10).toFixed(1)}L</span>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <button onClick={onRemove} disabled={water===0} style={{width:34,height:34,borderRadius:"50%",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",color:"#9a9288",fontSize:18,cursor:water===0?"default":"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+          <button onClick={onAdd} style={{width:40,height:40,borderRadius:"50%",background:"rgba(90,180,232,0.2)",border:"1px solid rgba(90,180,232,0.4)",color:"#5ab4e8",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+        </div>
+      </div>
+      <div style={{height:7,background:"rgba(255,255,255,0.05)",borderRadius:4,overflow:"hidden",marginBottom:8}}>
+        <div style={{height:"100%",width:`${pct}%`,borderRadius:4,transition:"width 0.4s",background:pct>=100?"linear-gradient(90deg,#6fcf6f,#a0e8a0)":"linear-gradient(90deg,#2e86c1,#5ab4e8)"}}/>
+      </div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:3}}>
+        {Array.from({length:maxG}).map((_,i)=><span key={i} style={{fontSize:13,opacity:i<glasses?1:0.15}}>🥛</span>)}
+      </div>
+      {pct>=100&&<div style={{marginTop:6,fontSize:11,color:"#6fcf6f",textAlign:"center"}}>Tagesziel erreicht 🎉</div>}
+    </div>
+  );
+}
+
+// ─── Mood Check ───────────────────────────────────────────────────────────────
+function MoodCheck({moodData,onSave,bottomRef,compact}){
+  const [sel,setSel]     = useState(moodData?.mood??null);
+  const [comment,setCom] = useState(moodData?.comment??"");
+  const [saved,setSaved] = useState(!!moodData?.mood);
+
+  const save=()=>{
+    if(!sel) return;
+    onSave({mood:sel,comment});
+    setSaved(true);
+    setTimeout(()=>bottomRef?.current?.scrollIntoView({behavior:"smooth"}),100);
+  };
+
+  if(compact) return(
+    <div style={{...card(false),padding:"10px 11px",height:"100%",display:"flex",flexDirection:"column",gap:6}}>
+      <div style={{fontSize:9,letterSpacing:2,color:"#6a6258",textTransform:"uppercase"}}>😊 Befinden</div>
+      <div style={{display:"flex",gap:3}}>
+        {MOODS.map(m=>(
+          <button key={m.label} onClick={()=>{setSel(m.label);setSaved(false);}} style={{
+            flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,
+            padding:"5px 2px",borderRadius:7,cursor:"pointer",
+            background:sel===m.label?`${m.color}22`:"rgba(255,255,255,0.04)",
+            border:sel===m.label?`1px solid ${m.color}88`:"1px solid rgba(255,255,255,0.07)",
+          }}>
+            <span style={{fontSize:14}}>{m.emoji}</span>
+            <span style={{fontSize:8,color:sel===m.label?m.color:"#4a4238"}}>{m.label}</span>
+          </button>
+        ))}
+      </div>
+      {sel&&!saved&&(
+        <div style={{display:"flex",flexDirection:"column",gap:5}}>
+          <input value={comment} onChange={e=>setCom(e.target.value)} placeholder="Kommentar..." style={{...INP,fontSize:11,padding:"6px 8px"}}/>
+          <button onClick={save} style={GOLD({padding:"6px",width:"100%",fontSize:11})}>OK ↓</button>
+        </div>
+      )}
+      {saved&&moodData?.mood&&(
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:"auto"}}>
+          <span style={{fontSize:11,color:"#7a7268"}}>
+            {MOODS.find(m=>m.label===moodData.mood)?.emoji} {moodData.mood}
+            {moodData.comment&&<div style={{fontSize:10,color:"#5a5248",marginTop:1}}>{moodData.comment}</div>}
+          </span>
+          <button onClick={()=>setSaved(false)} style={{background:"none",border:"none",color:"#4a4238",fontSize:10,cursor:"pointer"}}>✎</button>
+        </div>
+      )}
+    </div>
+  );
+
+  return(
+    <div style={{...card(false),padding:"14px 16px",marginBottom:12}}>
+      <div style={{fontSize:10,letterSpacing:2,color:"#6a6258",textTransform:"uppercase",marginBottom:10}}>Wie geht's dir heute?</div>
+      <div style={{display:"flex",gap:5,marginBottom:10}}>
+        {MOODS.map(m=>(
+          <button key={m.label} onClick={()=>{setSel(m.label);setSaved(false);}} style={{
+            flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,
+            padding:"8px 4px",borderRadius:10,cursor:"pointer",
+            background:sel===m.label?`${m.color}22`:"rgba(255,255,255,0.04)",
+            border:sel===m.label?`1px solid ${m.color}88`:"1px solid rgba(255,255,255,0.07)",
+          }}>
+            <span style={{fontSize:18}}>{m.emoji}</span>
+            <span style={{fontSize:9,color:sel===m.label?m.color:"#5a5248"}}>{m.label}</span>
+          </button>
+        ))}
+      </div>
+      {sel&&!saved&&(
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <input value={comment} onChange={e=>setCom(e.target.value)} placeholder="Optionaler Kommentar..." style={{...INP,fontSize:12}}/>
+          <button onClick={save} style={GOLD({padding:9,width:"100%"})}>Speichern ↓</button>
+        </div>
+      )}
+      {saved&&moodData?.mood&&(
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:12,color:"#7a7268"}}>
+            {MOODS.find(m=>m.label===moodData.mood)?.emoji} {moodData.mood}
+            {moodData.comment&&<span style={{color:"#5a5248"}}> — {moodData.comment}</span>}
+          </span>
+          <button onClick={()=>setSaved(false)} style={{background:"none",border:"none",color:"#4a4238",fontSize:11,cursor:"pointer"}}>✎</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════════════════════════════════
+function App(){
+  const today    = new Date().getDay();
+  const todayKey = new Date().toDateString();
+
+  // ── state ──────────────────────────────────────────────────────
+  const [activeDay,setActiveDay] = useState(today);
+  const [tab,setTab]             = useState("routines");
+  const [rTab,setRTab]           = useState(()=>LS.load("rTab_v6","morning"));
+
+  const [routines,setRoutines] = useState(()=>{
+    const storedVer=LS.load(VER_KEY,null);
+    const saved    =LS.load("rt_v7",null);
+    if(storedVer!==APP_VERSION){
+      LS.save(VER_KEY,APP_VERSION);
+      const base=saved||LS.load("rt_v6",null);
+      if(base){
+        // Smart merge: keep existing, append new DFLT items not yet present
+        const merged={};
+        for(const type of ["morning","day","evening"]){
+          const existingIds=new Set((base[type]||[]).map(i=>i.id));
+          const newItems   =(DFLT[type]||[]).filter(i=>!existingIds.has(i.id));
+          merged[type]     =[...(base[type]||[]),...newItems];
+        }
+        LS.save("rt_v7",merged);
+        return merged;
+      } else {
+        LS.save("rt_v7",DFLT);
+        return DFLT;
+      }
+    }
+    return saved??DFLT;
+  });
+
+  const [checks,  setChecks]  = useState(()=>LS.load("ch_v7",{}));
+  const [lists,   setLists]   = useState(()=>LS.load("ls_v7",DEFAULT_LISTS));
+  const [todos,   setTodos]   = useState(()=>LS.load("td_v7",{}));
+  const [curList, setCurList] = useState(null);
+  const [water,   setWater]   = useState(()=>LS.load("wt_v7",{}));
+  const [moods,   setMoods]   = useState(()=>LS.load("mo_v7",{}));
+  const [waterCfg,setWaterCfg]= useState(()=>LS.load("wc_v7",DFLT_WATER));
+
+  // derived water values (dynamic from config)
+  const waterGoal = Math.round(waterCfg.goal*10); // in dl
+  const waterStep = waterCfg.step;                // in dl
+
+  // config / modal state
+  const [cfgTab,   setCfgTab]   = useState("morning");
+  const [editItem, setEditItem] = useState(null);
+  const [addType,  setAddType]  = useState(null);
+  const [showIcons,setShowIcons]= useState(false);
+  const [newItem,  setNewItem]  = useState({label:"",icon:"🎯",time:"",link:"",activeDays:ALL_DAYS});
+  const [listModal,setListModal]= useState(false);
+  const [newListNm,setNewListNm]= useState("");
+  const [newTodo,  setNewTodo]  = useState("");
+  const [moodDetailDay,setMoodDetailDay]= useState(null); // for mood detail in stats tab
+
+  const bottomRef  = useRef(null);
+  const importRef  = useRef(null);
+  const [importMsg,setImportMsg]= useState(null);
+
+  useEffect(()=>{ if(!curList||!lists.includes(curList)) setCurList(lists[0]); },[lists]);
+  useEffect(()=>{ LS.save("rt_v7",routines);  },[routines]);
+  useEffect(()=>{ LS.save("ch_v7",checks);    },[checks]);
+  useEffect(()=>{ LS.save("ls_v7",lists);     },[lists]);
+  useEffect(()=>{ LS.save("td_v7",todos);     },[todos]);
+  useEffect(()=>{ LS.save("wt_v7",water);     },[water]);
+  useEffect(()=>{ LS.save("mo_v7",moods);     },[moods]);
+  useEffect(()=>{ LS.save("rTab_v6",rTab);    },[rTab]);
+  useEffect(()=>{ LS.save("wc_v7",waterCfg);  },[waterCfg]);
+
+  // ── auto-advance routine tab ────────────────────────────────────
+  const getActiveItems=useCallback((type,day)=>{
+    return (routines[type]||[]).filter(i=>(i.activeDays||ALL_DAYS).includes(day));
+  },[routines]);
+
+  const tabDone=useCallback((type,day)=>{
+    const items=getActiveItems(type,day);
+    if(items.length===0) return true;
+    return items.every(i=>!!checks[`${day}-${i.id}`]);
+  },[getActiveItems,checks]);
+
+  useEffect(()=>{
+    if(activeDay!==today) return;
+    for(const t of RTABS){ if(!tabDone(t,today)){ setRTab(t); return; } }
+    setRTab("evening");
+  },[checks,activeDay]); // eslint-disable-line
+
+  // ── helpers ─────────────────────────────────────────────────────
+  const isChecked=(d,id)=>!!checks[`${d}-${id}`];
+  const toggle   =(d,id)=>setChecks(p=>({...p,[`${d}-${id}`]:!p[`${d}-${id}`]}));
+
+  const countDone=(type,d)=>getActiveItems(type,d).filter(i=>isChecked(d,i.id)).length;
+  const countAll =(type,d)=>getActiveItems(type,d).length;
+  const totalAll =d=>RTABS.reduce((s,t)=>s+countAll(t,d),0);
+  const totalDone=d=>RTABS.reduce((s,t)=>s+countDone(t,d),0);
+
+  const dayKey  =d=>{ const dt=new Date(); dt.setDate(dt.getDate()-(today-d)); return dt.toDateString(); };
+  const getWater=d=>water[dayKey(d)]||0;
+  const addWater=()=>setWater(p=>({...p,[todayKey]:Math.min((p[todayKey]||0)+waterStep,waterGoal*2)}));
+  const remWater=()=>setWater(p=>({...p,[todayKey]:Math.max((p[todayKey]||0)-waterStep,0)}));
+
+  const todayMood=moods[todayKey]||null;
+  const saveMood =data=>setMoods(p=>({...p,[todayKey]:data}));
+
+  const saveEdit=()=>{
+    if(!editItem) return;
+    setRoutines(p=>({...p,[editItem.type]:p[editItem.type].map(i=>i.id===editItem.item.id?editItem.item:i)}));
+    setEditItem(null); setShowIcons(false);
+  };
+  const delItem=()=>{
+    setRoutines(p=>({...p,[editItem.type]:p[editItem.type].filter(i=>i.id!==editItem.item.id)}));
+    setEditItem(null);
+  };
+  const addItem=()=>{
+    if(!newItem.label.trim()) return;
+    setRoutines(p=>({...p,[addType]:[...(p[addType]||[]),{...newItem,id:`c_${Date.now()}`,label:newItem.label.trim()}]}));
+    setNewItem({label:"",icon:"🎯",time:"",link:"",activeDays:ALL_DAYS});
+    setAddType(null); setShowIcons(false);
+  };
+
+  const addTodo  =()=>{ if(!newTodo.trim()||!curList) return; setTodos(p=>({...p,[curList]:[...(p[curList]||[]),{id:Date.now(),text:newTodo.trim(),done:false}]})); setNewTodo(""); };
+  const togTodo  =id=>setTodos(p=>({...p,[curList]:(p[curList]||[]).map(t=>t.id===id?{...t,done:!t.done}:t)}));
+  const delTodo  =id=>setTodos(p=>({...p,[curList]:(p[curList]||[]).filter(t=>t.id!==id)}));
+  const clearDone=()=>setTodos(p=>({...p,[curList]:(p[curList]||[]).filter(t=>!t.done)}));
+
+  const addList=()=>{ if(!newListNm.trim()||lists.includes(newListNm.trim())) return; setLists(p=>[...p,newListNm.trim()]); setNewListNm(""); };
+  const delList=n=>{ setLists(p=>p.filter(l=>l!==n)); setTodos(p=>{const c={...p};delete c[n];return c;}); };
+
+  const weekPct=DAYS.map((_,i)=>{ const t=totalAll(i); return t>0?Math.round(totalDone(i)/t*100):0; });
+  const streak =(()=>{ let s=0; for(let i=today;i>=0;i--){ if(weekPct[i]===100)s++;else break;} return s; })();
+
+  const rItems  =getActiveItems(rTab,activeDay).slice().sort((a,b)=>(a.time||"99:99").localeCompare(b.time||"99:99"));
+  const curTodos=todos[curList]||[];
+
+  const linkIcon=l=>{
+    if(!l) return null;
+    if(l.includes("spotify"))  return "🎵";
+    if(l.includes("youtube"))  return "▶";
+    if(l.includes("serinity")) return "🧘";
+    return "🔗";
+  };
+
+  // ───────────────────────────────────────────────────────────────
+  // RENDER
+  // ───────────────────────────────────────────────────────────────
+  return(
+    <div style={{minHeight:"100vh",background:BG,fontFamily:"'Georgia','Times New Roman',serif",color:"#e8e0d4"}}>
+
+      {/* ── HEADER ── */}
+      <div style={{background:"rgba(255,255,255,0.04)",borderBottom:"1px solid rgba(255,255,255,0.08)",padding:"18px 18px 0"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div>
+            <div style={{fontSize:11,letterSpacing:3,color:"#8a7f6e",textTransform:"uppercase"}}>{DAYS_FULL[today]}</div>
+            <div style={{display:"flex",alignItems:"baseline",gap:8}}>
+              <h1 style={{margin:"2px 0 0",fontSize:21,fontWeight:400,color:"#f0e8d8"}}>Mein Tag</h1>
+              <span style={{fontSize:9,color:"#4a4238",letterSpacing:1}}>v{APP_VERSION}</span>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:7}}>
+            {streak>0&&<div style={{background:"rgba(255,100,50,0.15)",border:"1px solid rgba(255,100,50,0.3)",borderRadius:20,padding:"5px 11px",fontSize:11,color:"#ff8855"}}>🔥{streak}T</div>}
+            <div style={{...card(false),borderRadius:20,padding:"5px 11px",fontSize:11,color:"#d4af37"}}>{totalDone(today)}/{totalAll(today)}</div>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:3}}>
+          {DAYS.map((d,i)=>(
+            <button key={i} onClick={()=>setActiveDay(i)} style={{
+              flex:1,padding:"5px 1px 7px",background:"transparent",border:"none",
+              borderBottom:activeDay===i?"2px solid #d4af37":"2px solid transparent",
+              color:activeDay===i?"#d4af37":i===today?"#a09080":"#5a5248",
+              fontSize:11,cursor:"pointer",fontFamily:"inherit",fontWeight:activeDay===i?600:400,
+            }}>
+              <div>{d}</div>
+              <div style={{marginTop:2,height:3,borderRadius:2,background:`linear-gradient(90deg,#d4af37 ${weekPct[i]}%,rgba(255,255,255,0.06) ${weekPct[i]}%)`}}/>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── MAIN TABS ── */}
+      <div style={{display:"flex",background:"rgba(0,0,0,0.2)"}}>
+        {[["routines","📋 Routinen"],["todos","✅ To-Do"],["stats","📊 Woche"],["config","⚙️ Config"]].map(([k,l])=>(
+          <button key={k} onClick={()=>setTab(k)} style={{
+            flex:1,padding:12,background:"transparent",border:"none",
+            borderBottom:tab===k?"2px solid #d4af37":"2px solid transparent",
+            color:tab===k?"#d4af37":"#6a6258",fontSize:11,cursor:"pointer",fontFamily:"inherit",
+          }}>{l}</button>
+        ))}
+      </div>
+
+      <div style={{padding:18}}>
+
+        {/* ══════════ ROUTINEN ══════════ */}
+        {tab==="routines"&&<>
+          <div style={{display:"flex",gap:8,marginBottom:14,alignItems:"stretch"}}>
+            <div style={{flex:1,minWidth:0}}>
+              <MoodCheck moodData={todayMood} onSave={saveMood} bottomRef={bottomRef} compact/>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <WaterTracker water={getWater(today)} onAdd={addWater} onRemove={remWater} compact waterGoal={waterGoal} waterStep={waterStep}/>
+            </div>
+          </div>
+
+          <div style={{display:"flex",gap:7,marginBottom:16}}>
+            {RTABS.map(k=>{
+              const done=countDone(k,activeDay),all=countAll(k,activeDay);
+              const complete=all>0&&done===all;
+              return(
+                <button key={k} onClick={()=>setRTab(k)} style={{
+                  flex:1,padding:"9px 4px",...card(rTab===k),
+                  color:rTab===k?"#d4af37":complete?"#6fcf6f":"#7a7268",
+                  fontSize:11,cursor:"pointer",fontFamily:"inherit",position:"relative",
+                }}>
+                  {RTAB_LABEL[k]}
+                  {complete&&<span style={{position:"absolute",top:4,right:6,fontSize:9,color:"#6fcf6f"}}>✓</span>}
+                  <div style={{fontSize:10,color:"inherit",opacity:0.7,marginTop:2}}>{done}/{all}</div>
+                </button>
+              );
+            })}
+          </div>
+
+          {rItems.length===0&&(
+            <div style={{textAlign:"center",padding:24,color:"#4a4238",fontSize:13}}>
+              Keine Aufgaben für heute ({DAYS_FULL[activeDay]})
+            </div>
+          )}
+
+          <div style={{display:"flex",flexDirection:"column",gap:9}}>
+            {rItems.map((item,idx)=>{
+              const done=isChecked(activeDay,item.id);
+              const lbl=linkIcon(item.link);
+              return(
+                <div key={item.id} style={{
+                  display:"flex",alignItems:"center",gap:11,padding:"11px 13px",
+                  ...card(done),transition:"all 0.2s",
+                  animation:`slideIn 0.22s ease ${idx*0.04}s both`,
+                }}>
+                  <div onClick={()=>toggle(activeDay,item.id)} style={{display:"flex",alignItems:"center",gap:11,flex:1,cursor:"pointer"}}>
+                    <div style={{fontSize:19,opacity:done?1:0.5}}>{item.icon}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:14,color:done?"#e8d99a":"#9a9288"}}>{item.label}</div>
+                      {item.time&&<div style={{fontSize:11,color:"#5a5248",marginTop:1}}>⏰ {item.time}</div>}
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:5,alignItems:"center"}}>
+                    {lbl&&(
+                      <a href={item.link} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{padding:"4px 9px",background:"rgba(100,180,255,0.12)",border:"1px solid rgba(100,180,255,0.25)",borderRadius:6,color:"#88c8ff",fontSize:13,textDecoration:"none"}}>{lbl}</a>
+                    )}
+                    <div onClick={()=>toggle(activeDay,item.id)} style={{width:21,height:21,borderRadius:"50%",flexShrink:0,cursor:"pointer",border:done?"none":"2px solid rgba(255,255,255,0.15)",background:done?"#d4af37":"transparent",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11}}>{done&&"✓"}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{marginTop:13,height:3,background:"rgba(255,255,255,0.06)",borderRadius:2}}>
+            <div style={{height:"100%",borderRadius:2,transition:"width 0.4s",background:"linear-gradient(90deg,#d4af37,#f0d060)",width:`${rItems.length?rItems.filter(i=>isChecked(activeDay,i.id)).length/rItems.length*100:0}%`}}/>
+          </div>
+          <div ref={bottomRef} style={{height:1}}/>
+        </>}
+
+        {/* ══════════ TO-DO ══════════ */}
+        {tab==="todos"&&<>
+          <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:13}}>
+            {lists.map(l=>{
+              const c=(todos[l]||[]).filter(t=>!t.done).length;
+              return(
+                <button key={l} onClick={()=>setCurList(l)} style={{padding:"6px 11px",...card(curList===l,20),color:curList===l?"#d4af37":"#7a7268",fontSize:12,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}>
+                  {l}{c>0&&<span style={{background:curList===l?"#d4af37":"#3a3228",color:curList===l?"#1a1208":"#8a8278",borderRadius:10,padding:"1px 5px",fontSize:10}}>{c}</span>}
+                </button>
+              );
+            })}
+            <button onClick={()=>setListModal(true)} style={{padding:"6px 11px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,color:"#5a5248",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>⚙</button>
+          </div>
+          <div style={{display:"flex",gap:9,marginBottom:13}}>
+            <input value={newTodo} onChange={e=>setNewTodo(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addTodo()} placeholder="Aufgabe hinzufügen..." style={{...INP,flex:1}}/>
+            <button onClick={addTodo} style={GOLD({padding:"10px 15px",fontSize:18,lineHeight:1})}>+</button>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {curTodos.length===0&&<div style={{textAlign:"center",padding:26,color:"#4a4238",fontSize:13}}>Keine Aufgaben 🎉</div>}
+            {curTodos.map(t=>(
+              <div key={t.id} style={{display:"flex",alignItems:"center",gap:11,padding:"11px 13px",background:t.done?"rgba(255,255,255,0.02)":"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:10,opacity:t.done?0.5:1}}>
+                <div onClick={()=>togTodo(t.id)} style={{width:20,height:20,borderRadius:5,flexShrink:0,border:t.done?"none":"2px solid rgba(255,255,255,0.15)",background:t.done?"#d4af37":"transparent",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:11}}>{t.done&&"✓"}</div>
+                <div style={{flex:1,fontSize:13,color:t.done?"#5a5248":"#c8bfb0",textDecoration:t.done?"line-through":"none"}}>{t.text}</div>
+                <button onClick={()=>delTodo(t.id)} style={{background:"none",border:"none",color:"#4a4238",cursor:"pointer",fontSize:15}}>×</button>
+              </div>
+            ))}
+          </div>
+          {curTodos.filter(t=>t.done).length>0&&(
+            <button onClick={clearDone} style={{marginTop:11,width:"100%",padding:9,background:"transparent",border:"1px solid rgba(255,255,255,0.06)",borderRadius:8,color:"#4a4238",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
+              Erledigte löschen ({curTodos.filter(t=>t.done).length})
+            </button>
+          )}
+        </>}
+
+        {/* ══════════ STATISTIK ══════════ */}
+        {tab==="stats"&&<>
+          <div style={{fontSize:11,letterSpacing:2,color:"#6a6258",textTransform:"uppercase",marginBottom:13}}>Diese Woche</div>
+          <div style={{display:"flex",gap:5,alignItems:"flex-end",height:105,marginBottom:22}}>
+            {DAYS.map((d,i)=>{
+              const p=weekPct[i],isT=i===today;
+              return(
+                <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+                  <div style={{fontSize:10,color:p===100?"#d4af37":"#5a5248",minHeight:13}}>{p>0?`${p}%`:""}</div>
+                  <div style={{width:"100%",borderRadius:"4px 4px 0 0",background:"rgba(255,255,255,0.04)",height:68,display:"flex",alignItems:"flex-end",overflow:"hidden"}}>
+                    <div style={{width:"100%",borderRadius:"4px 4px 0 0",height:`${p}%`,transition:"height 0.5s",background:p===100?"linear-gradient(180deg,#f0d060,#d4af37)":isT?"rgba(212,175,55,0.45)":"rgba(212,175,55,0.22)"}}/>
+                  </div>
+                  <div style={{fontSize:11,color:isT?"#d4af37":"#5a5248",fontWeight:isT?600:400}}>{d}</div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9,marginBottom:18}}>
+            {[["🏆 Beste",""+Math.max(...weekPct)+"%"],["📅 Heute",""+weekPct[today]+"%"],["🔥 Streak",`${streak} Tag${streak!==1?"e":""}`],["📊 Ø Woche",`${Math.round(weekPct.reduce((a,b)=>a+b,0)/7)}%`]].map(([l,v])=>(
+              <div key={l} style={{padding:"13px 15px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:11}}>
+                <div style={{fontSize:11,color:"#6a6258",marginBottom:3}}>{l}</div>
+                <div style={{fontSize:21,color:"#d4af37"}}>{v}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* wasser */}
+          <div style={{fontSize:11,letterSpacing:2,color:"#6a6258",textTransform:"uppercase",marginBottom:9}}>Wasser</div>
+          <div style={{display:"flex",gap:5,marginBottom:18}}>
+            {DAYS.map((d,i)=>{
+              const p=Math.min(getWater(i)/waterGoal*100,100);
+              return(
+                <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+                  <div style={{width:"100%",borderRadius:"4px 4px 0 0",background:"rgba(255,255,255,0.04)",height:44,display:"flex",alignItems:"flex-end",overflow:"hidden"}}>
+                    <div style={{width:"100%",height:`${p}%`,transition:"height 0.4s",background:p>=100?"linear-gradient(180deg,#a0e8a0,#6fcf6f)":"linear-gradient(180deg,#5ab4e8,#2e86c1)"}}/>
+                  </div>
+                  <div style={{fontSize:10,color:i===today?"#5ab4e8":"#4a4238"}}>{d}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* stimmung — klick auf Emoji zeigt Detail */}
+          <div style={{fontSize:11,letterSpacing:2,color:"#6a6258",textTransform:"uppercase",marginBottom:9}}>Stimmung</div>
+          <div style={{display:"flex",gap:5,marginBottom:6}}>
+            {DAYS.map((d,i)=>{
+              const key=dayKey(i),md=moods[key],mood=md?MOODS.find(m=>m.label===md.mood):null;
+              const expanded=moodDetailDay===i;
+              return(
+                <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+                  <div
+                    onClick={()=>mood&&setMoodDetailDay(expanded?null:i)}
+                    style={{fontSize:17,opacity:mood?1:0.15,cursor:mood?"pointer":"default",transition:"transform 0.15s",transform:expanded?"scale(1.3)":"scale(1)"}}
+                  >{mood?mood.emoji:"😶"}</div>
+                  <div style={{fontSize:10,color:i===today?"#d4af37":"#4a4238"}}>{d}</div>
+                </div>
+              );
+            })}
+          </div>
+          {/* mood detail inline expand */}
+          {moodDetailDay!==null&&(()=>{
+            const key=dayKey(moodDetailDay),md=moods[key],mood=md?MOODS.find(m=>m.label===md.mood):null;
+            if(!mood||!md) return null;
+            return(
+              <div style={{marginBottom:14,padding:"11px 14px",background:`${mood.color}18`,border:`1px solid ${mood.color}44`,borderRadius:10,display:"flex",alignItems:"flex-start",gap:11}}>
+                <span style={{fontSize:24,lineHeight:1.2}}>{mood.emoji}</span>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,color:mood.color,fontWeight:600}}>{mood.label}</div>
+                  {md.comment&&<div style={{fontSize:12,color:"#9a9288",marginTop:3,lineHeight:1.4}}>{md.comment}</div>}
+                  <div style={{fontSize:10,color:"#4a4238",marginTop:4}}>{DAYS_FULL[moodDetailDay]}</div>
+                </div>
+                <button onClick={()=>setMoodDetailDay(null)} style={{background:"none",border:"none",color:"#4a4238",fontSize:17,cursor:"pointer",lineHeight:1,flexShrink:0}}>×</button>
+              </div>
+            );
+          })()}
+
+          {/* per-day details */}
+          <div style={{fontSize:11,letterSpacing:2,color:"#6a6258",textTransform:"uppercase",marginBottom:9}}>Details</div>
+          {DAYS.map((d,i)=>{
+            const done=totalDone(i),total=totalAll(i),p=total>0?Math.round(done/total*100):0;
+            return(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:11,marginBottom:7,cursor:"pointer"}} onClick={()=>{setActiveDay(i);setTab("routines");}}>
+                <div style={{width:26,fontSize:12,color:i===today?"#d4af37":"#6a6258",fontWeight:i===today?600:400}}>{d}</div>
+                <div style={{flex:1,height:5,background:"rgba(255,255,255,0.05)",borderRadius:3,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${p}%`,background:p===100?"#d4af37":"rgba(212,175,55,0.4)",borderRadius:3,transition:"width 0.4s"}}/>
+                </div>
+                <div style={{fontSize:12,color:"#5a5248",width:36,textAlign:"right"}}>{done}/{total}</div>
+              </div>
+            );
+          })}
+        </>}
+
+        {/* ══════════ CONFIG ══════════ */}
+        {tab==="config"&&<>
+          <div style={{fontSize:11,letterSpacing:2,color:"#6a6258",textTransform:"uppercase",marginBottom:13}}>Routinen konfigurieren</div>
+
+          {/* category tabs */}
+          <div style={{display:"flex",gap:7,marginBottom:16}}>
+            {RTABS.map(k=>(
+              <button key={k} onClick={()=>setCfgTab(k)} style={{
+                flex:1,padding:"8px 4px",...card(cfgTab===k),
+                color:cfgTab===k?"#d4af37":"#7a7268",fontSize:11,cursor:"pointer",fontFamily:"inherit",
+              }}>{RTAB_LABEL[k]}</button>
+            ))}
+          </div>
+
+          {/* item list */}
+          <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+            {(routines[cfgTab]||[]).map(item=>(
+              <div key={item.id} style={{padding:"11px 13px",...card(false),cursor:"pointer"}} onClick={()=>{setEditItem({type:cfgTab,item:{...item,activeDays:item.activeDays||ALL_DAYS}});setShowIcons(false);}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                  <span style={{fontSize:18}}>{item.icon}</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,color:"#c8bfb0"}}>{item.label}</div>
+                    {item.time&&<div style={{fontSize:11,color:"#5a5248"}}>⏰ {item.time}</div>}
+                  </div>
+                  <span style={{fontSize:12,color:"#4a4238"}}>✎</span>
+                </div>
+                <div style={{display:"flex",gap:3}}>
+                  {DAYS.map((d,i)=>{
+                    const on=(item.activeDays||ALL_DAYS).includes(i);
+                    return <span key={i} style={{fontSize:10,padding:"2px 5px",borderRadius:4,background:on?"rgba(212,175,55,0.2)":"rgba(255,255,255,0.04)",color:on?"#d4af37":"#3a3228"}}>{d}</span>;
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={()=>{setAddType(cfgTab);setShowIcons(false);}} style={GOLD({width:"100%",padding:11})}>
+            + Neue Aufgabe für {RTAB_LABEL[cfgTab]}
+          </button>
+
+          {/* ─── Wasser-Einstellungen ─── */}
+          <div style={{marginTop:22,padding:"14px 15px",...card(false)}}>
+            <div style={{fontSize:11,letterSpacing:2,color:"#6a6258",textTransform:"uppercase",marginBottom:12}}>Wasser-Einstellungen</div>
+            <div style={{display:"flex",flexDirection:"column",gap:11}}>
+              <div>
+                <div style={{fontSize:11,color:"#7a7268",marginBottom:5}}>Tagesziel (Liter)</div>
+                <input
+                  type="number" min="0.5" max="10" step="0.1"
+                  value={waterCfg.goal}
+                  onChange={e=>setWaterCfg(p=>({...p,goal:Math.max(0.5,parseFloat(e.target.value)||DFLT_WATER.goal)}))}
+                  style={INP}
+                />
+                <div style={{fontSize:10,color:"#4a4238",marginTop:3}}>Aktuell: {waterCfg.goal.toFixed(1)} L ({waterGoal} dl)</div>
+              </div>
+              <div>
+                <div style={{fontSize:11,color:"#7a7268",marginBottom:5}}>Schrittgrösse (dl pro Tap)</div>
+                <input
+                  type="number" min="1" max="20" step="1"
+                  value={waterCfg.step}
+                  onChange={e=>setWaterCfg(p=>({...p,step:Math.max(1,parseInt(e.target.value)||DFLT_WATER.step)}))}
+                  style={INP}
+                />
+                <div style={{fontSize:10,color:"#4a4238",marginTop:3}}>Aktuell: {waterCfg.step} dl = {(waterCfg.step/10).toFixed(1)} L pro Tap</div>
+              </div>
+            </div>
+          </div>
+
+          {/* export / import */}
+          <div style={{marginTop:16,padding:"13px 15px",...card(false)}}>
+            <div style={{fontSize:11,letterSpacing:2,color:"#6a6258",textTransform:"uppercase",marginBottom:10}}>Datensicherung</div>
+            <div style={{fontSize:12,color:"#5a5248",marginBottom:12,lineHeight:1.5}}>
+              Vor einem Update: exportieren. Nach dem Update: importieren — alle Daten bleiben erhalten.
+            </div>
+            <div style={{display:"flex",gap:9}}>
+              <button onClick={exportData} style={GOLD({flex:1,padding:11,fontSize:12})}>⬇ Exportieren</button>
+              <button onClick={()=>importRef.current?.click()} style={{flex:1,padding:11,background:"rgba(100,200,100,0.12)",border:"1px solid rgba(100,200,100,0.3)",borderRadius:8,color:"#80c880",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>⬆ Importieren</button>
+            </div>
+            <input ref={importRef} type="file" accept=".json" style={{display:"none"}}
+              onChange={e=>{
+                const f=e.target.files?.[0];
+                if(!f) return;
+                importData(f,(ok,date)=>{
+                  setImportMsg({ok,date});
+                  e.target.value="";
+                  if(ok) setTimeout(()=>window.location.reload(),1200);
+                });
+              }}
+            />
+            {importMsg&&(
+              <div style={{marginTop:10,padding:"8px 12px",borderRadius:8,fontSize:12,
+                background:importMsg.ok?"rgba(100,200,100,0.1)":"rgba(255,80,80,0.1)",
+                border:importMsg.ok?"1px solid rgba(100,200,100,0.3)":"1px solid rgba(255,80,80,0.2)",
+                color:importMsg.ok?"#80c880":"#ff8080",
+              }}>
+                {importMsg.ok?`✓ Importiert (${importMsg.date.slice(0,10)}) — App wird neu geladen…`:"✗ Fehler beim Lesen der Datei"}
+              </div>
+            )}
+          </div>
+        </>}
+
+      </div>{/* end padding wrapper */}
+
+      {/* ══ MODAL: Edit Item ══ */}
+      {editItem&&(
+        <Modal title="Aufgabe bearbeiten" onClose={()=>{setEditItem(null);setShowIcons(false);}}>
+          <div style={{display:"flex",flexDirection:"column",gap:11}}>
+            <div style={{display:"flex",gap:9}}>
+              <button onClick={()=>setShowIcons(p=>!p)} style={{padding:"9px 13px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,fontSize:19,cursor:"pointer"}}>{editItem.item.icon}</button>
+              <input value={editItem.item.label} onChange={e=>setEditItem(p=>({...p,item:{...p.item,label:e.target.value}}))} placeholder="Name" style={{...INP,flex:1}}/>
+            </div>
+            {showIcons&&<IconPicker selected={editItem.item.icon} onSelect={ic=>{setEditItem(p=>({...p,item:{...p.item,icon:ic}}));setShowIcons(false);}}/>}
+            <div>
+              <div style={{fontSize:11,color:"#6a6258",marginBottom:4}}>Uhrzeit</div>
+              <input type="time" value={editItem.item.time||""} onChange={e=>setEditItem(p=>({...p,item:{...p.item,time:e.target.value}}))} style={INP}/>
+            </div>
+            <div>
+              <div style={{fontSize:11,color:"#6a6258",marginBottom:4}}>Link</div>
+              <input value={editItem.item.link||""} onChange={e=>setEditItem(p=>({...p,item:{...p.item,link:e.target.value}}))} placeholder="Spotify / App-Link..." style={INP}/>
+              <div style={{display:"flex",gap:5,marginTop:5,flexWrap:"wrap"}}>
+                {LINK_SUGGESTIONS.map(x=>(
+                  <button key={x.l} onClick={()=>setEditItem(p=>({...p,item:{...p.item,link:x.u}}))} style={{padding:"3px 8px",background:"rgba(100,180,255,0.1)",border:"1px solid rgba(100,180,255,0.2)",borderRadius:5,color:"#88c8ff",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>{x.l}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{fontSize:11,color:"#6a6258",marginBottom:6}}>Aktiv an Tagen</div>
+              <DayPicker value={editItem.item.activeDays||ALL_DAYS} onChange={v=>setEditItem(p=>({...p,item:{...p.item,activeDays:v}}))}/>
+              <div style={{display:"flex",gap:5,marginTop:6}}>
+                {[{l:"Alle",v:ALL_DAYS},{l:"Mo–Fr",v:WEEKDAYS},{l:"Sa–So",v:WEEKEND}].map(x=>(
+                  <button key={x.l} onClick={()=>setEditItem(p=>({...p,item:{...p.item,activeDays:x.v}}))} style={{flex:1,padding:"5px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,color:"#8a8278",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>{x.l}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{display:"flex",gap:9,marginTop:3}}>
+              <button onClick={saveEdit} style={GOLD({flex:1,padding:11})}>Speichern</button>
+              <button onClick={delItem} style={{flex:1,padding:11,background:"rgba(255,80,80,0.1)",border:"1px solid rgba(255,80,80,0.2)",borderRadius:8,color:"#ff8080",fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Löschen</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ══ MODAL: Add Item ══ */}
+      {addType&&(
+        <Modal title={`Neue Aufgabe – ${RTAB_LABEL[addType]}`} onClose={()=>{setAddType(null);setShowIcons(false);}}>
+          <div style={{display:"flex",flexDirection:"column",gap:11}}>
+            <div style={{display:"flex",gap:9}}>
+              <button onClick={()=>setShowIcons(p=>!p)} style={{padding:"9px 13px",background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,fontSize:19,cursor:"pointer"}}>{newItem.icon}</button>
+              <input value={newItem.label} onChange={e=>setNewItem(p=>({...p,label:e.target.value}))} placeholder="Name" style={{...INP,flex:1}}/>
+            </div>
+            {showIcons&&<IconPicker selected={newItem.icon} onSelect={ic=>{setNewItem(p=>({...p,icon:ic}));setShowIcons(false);}}/>}
+            <div>
+              <div style={{fontSize:11,color:"#6a6258",marginBottom:4}}>Uhrzeit</div>
+              <input type="time" value={newItem.time} onChange={e=>setNewItem(p=>({...p,time:e.target.value}))} style={INP}/>
+            </div>
+            <div>
+              <div style={{fontSize:11,color:"#6a6258",marginBottom:4}}>Link (optional)</div>
+              <input value={newItem.link} onChange={e=>setNewItem(p=>({...p,link:e.target.value}))} placeholder="https://..." style={INP}/>
+            </div>
+            <div>
+              <div style={{fontSize:11,color:"#6a6258",marginBottom:6}}>Aktiv an Tagen</div>
+              <DayPicker value={newItem.activeDays} onChange={v=>setNewItem(p=>({...p,activeDays:v}))}/>
+              <div style={{display:"flex",gap:5,marginTop:6}}>
+                {[{l:"Alle",v:ALL_DAYS},{l:"Mo–Fr",v:WEEKDAYS},{l:"Sa–So",v:WEEKEND}].map(x=>(
+                  <button key={x.l} onClick={()=>setNewItem(p=>({...p,activeDays:x.v}))} style={{flex:1,padding:"5px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,color:"#8a8278",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>{x.l}</button>
+                ))}
+              </div>
+            </div>
+            <button onClick={addItem} style={GOLD({padding:11})}>Hinzufügen</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ══ MODAL: Lists ══ */}
+      {listModal&&(
+        <Modal title="Listen verwalten" onClose={()=>setListModal(false)}>
+          <div style={{display:"flex",flexDirection:"column",gap:9}}>
+            {lists.map(l=>(
+              <div key={l} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 13px",...card(false)}}>
+                <span style={{fontSize:14,color:"#c8bfb0"}}>{l}</span>
+                {lists.length>1&&<button onClick={()=>delList(l)} style={{background:"none",border:"none",color:"#5a3028",fontSize:16,cursor:"pointer"}}>×</button>}
+              </div>
+            ))}
+            <div style={{display:"flex",gap:9,marginTop:3}}>
+              <input value={newListNm} onChange={e=>setNewListNm(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addList()} placeholder="Neue Liste..." style={{...INP,flex:1}}/>
+              <button onClick={addList} style={GOLD({padding:"10px 15px"})}>+</button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      <style>{`
+        @keyframes slideIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+        input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(0.6)}
+        input[type="number"]{-moz-appearance:textfield}
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none}
+        input::placeholder{color:#3a3228}
+        *{box-sizing:border-box}
+      `}</style>
+    </div>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App/>);
+  </script>
+</body>
+</html>

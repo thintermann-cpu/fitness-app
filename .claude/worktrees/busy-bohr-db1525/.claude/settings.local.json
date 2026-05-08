@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const d=require\\('./wod-tracker/data/wods.json'\\); console.log\\('Count:', d.length\\); console.log\\('First:', JSON.stringify\\(d[0], null, 2\\)\\); console.log\\('Last:', JSON.stringify\\(d[d.length-1], null, 2\\)\\);\")",
+      "Bash(node -e \"const d=require\\('./wod-tracker/data/wods.json'\\); const names=new Set\\(d.map\\(w=>w.name\\)\\); const open=d.filter\\(w=>w.kategorie==='CrossFit Open'\\).map\\(w=>w.name\\); console.log\\('Open WODs count:', open.length\\); console.log\\('Open WODs:', open.slice\\(0,30\\).join\\(', '\\)\\); console.log\\('Max ID:', Math.max\\(...d.map\\(w=>parseInt\\(w.id\\)\\)\\)\\);\")",
+      "Bash(node -e \"const d=require\\('./wod-tracker/data/wods.json'\\); const names=d.map\\(w=>w.name\\); console.log\\(JSON.stringify\\(names\\)\\);\")",
+      "Bash(node -e \"const d=require\\('./wod-tracker/data/wods.json'\\); const open=d.filter\\(w=>w.kategorie==='CrossFit Open'\\).map\\(w=>w.name\\); console.log\\(open.join\\(', '\\)\\);\")",
+      "Bash(node -e \"const s=require\\('fs'\\).readFileSync\\('./wod-tracker/add_wods.js','utf8'\\); const mA=s.match\\(/const blockA = \\\\[[\\\\s\\\\S]*?\\\\];/\\); const mB=s.match\\(/const blockB = \\\\[[\\\\s\\\\S]*?\\\\];/\\); console.log\\('blockA lines:', \\(mA?.[0]||''\\).split\\('\\\\n'\\).length\\); console.log\\('blockB lines:', \\(mB?.[0]||''\\).split\\('\\\\n'\\).length\\);\")",
+      "Bash(node wod-tracker/add_wods.js)",
+      "Bash(node -e \"const d=require\\('./wod-tracker/data/wods.json'\\); const cats=[...new Set\\(d.map\\(w=>w.kategorie\\)\\)]; cats.forEach\\(c=>console.log\\(c+': '+d.filter\\(w=>w.kategorie===c\\).length\\)\\); console.log\\('\\\\nTotal:', d.length\\);\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
+    ]
+  }
+}

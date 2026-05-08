@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'rea
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuthStore } from './store/authStore'
 import { AppShell } from './components/layout/AppShell'
+import { AdminLayout } from './components/layout/AdminLayout'
+import AdminRoute from './components/AdminRoute'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { OnboardingPage } from './pages/OnboardingPage'
@@ -12,6 +14,10 @@ import { SettingsPage } from './pages/SettingsPage'
 import { HomePage } from './pages/HomePage'
 import { StretchingPage } from './pages/StretchingPage'
 import { MeditationPage } from './pages/MeditationPage'
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
+import { AdminUsersPage } from './pages/admin/AdminUsersPage'
+import { AdminTasksPage } from './pages/admin/AdminTasksPage'
+import { AdminPlaceholderPage } from './pages/admin/AdminPlaceholderPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,8 +42,12 @@ function ProtectedLayout() {
 
   if (!user) return <Navigate to="/login" replace />
 
-  // Not yet onboarded — send to /onboarding (avoid redirect loop)
-  if (!profile?.primary_pillar && location.pathname !== '/onboarding') {
+  // Not yet onboarded — send to /onboarding (avoid redirect loop, skip for admin)
+  if (
+    !profile?.primary_pillar &&
+    location.pathname !== '/onboarding' &&
+    !location.pathname.startsWith('/admin')
+  ) {
     return <Navigate to="/onboarding" replace />
   }
 
@@ -71,21 +81,4 @@ function AppContent() {
           <Route path="/workout"          element={<WorkoutPage />} />
           <Route path="/workout/:wodName" element={<WorkoutPage />} />
           <Route path="/routine"          element={<RoutinePage />} />
-          <Route path="/stretching"       element={<StretchingPage />} />
-          <Route path="/meditation"       element={<MeditationPage />} />
-          <Route path="/settings"         element={<SettingsPage />} />
-        </Route>
-      </Route>
-    </Routes>
-  )
-}
-
-export default function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
-    </QueryClientProvider>
-  )
-}
+          <Route p

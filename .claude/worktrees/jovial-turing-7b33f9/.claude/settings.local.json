@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path . -Recurse -Depth 3 -Force -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch 'node_modules|\\\\.git' } | Select-Object FullName, PSIsContainer | ForEach-Object { if \\($_.PSIsContainer\\) { \"DIR:  $\\($_.FullName\\)\" } else { \"FILE: $\\($_.FullName\\)\" } } | Sort-Object | Head -150)",
+      "Bash(npm install *)",
+      "Bash(../../node_modules/.bin/vite build *)",
+      "Bash(git -C /c/Projects/fitness_app/.claude/worktrees/jovial-turing-7b33f9 add apps/web/src/App.tsx apps/web/src/index.css apps/web/src/pages/OnboardingPage.tsx apps/web/src/store/authStore.ts apps/web/src/pages/SettingsPage.tsx supabase/migrations/)",
+      "Bash(git -C /c/Projects/fitness_app/.claude/worktrees/jovial-turing-7b33f9 commit -m ' *)",
+      "Bash(../../node_modules/.bin/tsc -b)",
+      "Bash(pwd && ls ../../node_modules/.bin/tsc 2>/dev/null || ls /c/Projects/fitness_app/.claude/worktrees/jovial-turing-7b33f9/node_modules/.bin/tsc 2>/dev/null || echo \"not found\")",
+      "Bash(git -C /c/Projects/fitness_app/.claude/worktrees/jovial-turing-7b33f9 add apps/web/src/App.tsx apps/web/src/pages/OnboardingPage.tsx apps/web/src/pages/HomePage.tsx apps/web/src/pages/SettingsPage.tsx apps/web/src/store/authStore.ts supabase/migrations/001_user_profiles.sql)",
+      "Bash(/c/Projects/fitness_app/.claude/worktrees/jovial-turing-7b33f9/node_modules/.bin/tsc -b)",
+      "Bash(/c/Projects/fitness_app/.claude/worktrees/jovial-turing-7b33f9/node_modules/.bin/vite build *)",
+      "Bash(git -C /c/Projects/fitness_app/.claude/worktrees/jovial-turing-7b33f9 add apps/web/src/pages/SettingsPage.tsx)",
+      "Bash(git -C /c/Projects/fitness_app status)",
+      "Bash(git -C /c/Projects/fitness_app log --oneline -3)"
+    ]
+  }
+}

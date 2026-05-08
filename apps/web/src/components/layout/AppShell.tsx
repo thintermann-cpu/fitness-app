@@ -1,13 +1,11 @@
 import { Outlet } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
+import { Sidebar } from './Sidebar'
 
 export function AppShell() {
   return (
-    <div className="flex flex-col min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
-      <main className="flex-1 overflow-y-auto" style={{ paddingBottom: '60px' }}>
-        <Outlet />
-      </main>
-      <BottomNav />
-    </div>
-  )
-}
+    <div className="flex min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
+      {/* Fixed sidebar – only visible on lg+ */}
+      <Sidebar />
+
+      {/* Content area: offset by sidebar width on deskto

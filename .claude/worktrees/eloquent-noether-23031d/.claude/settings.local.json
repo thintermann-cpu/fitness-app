@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(timeout 15 npx vite build)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git fetch *)",
+      "Bash(git -C /c/Projects/fitness_app status)",
+      "Bash(git -C /c/Projects/fitness_app log --oneline)",
+      "Bash(git -C /c/Projects/fitness_app add .github/workflows/deploy.yml)",
+      "Bash(git -C /c/Projects/fitness_app commit -m ' *)"
+    ]
+  }
+}

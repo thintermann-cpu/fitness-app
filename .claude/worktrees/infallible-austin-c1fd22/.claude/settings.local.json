@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const d = require\\('./apps/web/public/wods.json'\\); console.log\\('Total WODs:', d.length\\); console.log\\('Keys:', Object.keys\\(d[0]\\)\\); console.log\\('Last entry:', JSON.stringify\\(d[d.length-1], null, 2\\)\\)\")",
+      "Bash(node scripts/generate-wod-sql.js)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git -C \"C:\\\\Projects\\\\fitness_app\" remote -v)",
+      "Bash(git -C \"C:\\\\Projects\\\\fitness_app\" add scripts/generate-wod-sql.js scripts/wods-seed.sql)",
+      "Bash(git -C 'C:\\\\Projects\\\\fitness_app' commit -m ' *)",
+      "Bash(git -C \"C:\\\\Projects\\\\fitness_app\" push origin main)",
+      "Bash(git -C \"C:\\\\Projects\\\\fitness_app\" merge --ff-only claude/infallible-austin-c1fd22)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
