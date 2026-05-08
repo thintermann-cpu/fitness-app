@@ -15,6 +15,8 @@ function readLocalHistory(): WodHistoryEntry[] {
 export function useHighscores(wodName: string) {
   return useQuery({
     queryKey: ['highscores', wodName],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     queryFn: async (): Promise<WodHistoryEntry[]> => {
       if (!isSupabaseConfigured) {
         const all = readLocalHistory()

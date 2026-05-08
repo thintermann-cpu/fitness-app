@@ -32,6 +32,8 @@ export function useMeditationLogs() {
 
   const query = useQuery({
     queryKey: ['meditation_logs', user?.id ?? 'anon'],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     queryFn: async (): Promise<MeditationLog[]> => {
       if (!user) return readLocal()
 

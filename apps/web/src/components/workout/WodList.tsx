@@ -1,74 +1,86 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useWods } from '../../hooks/useWods'
 import { WodCard } from './WodCard'
 
-const TYPES = ['', 'AMRAP', 'ForTime', 'EMOM', 'Tabata']
-const CATEGORIES = ['', 'Girl WOD', 'Hero WOD', 'Other Benchmark', 'CrossFit Open', 'HomeWOD', 'Core WOD']
+const TYPES       = ['', 'AMRAP', 'ForTime', 'EMOM', 'Tabata']
+const CATEGORIES  = ['', 'Girl WOD', 'Hero WOD', 'Other Benchmark', 'CrossFit Open', 'HomeWOD', 'Core WOD']
 const DIFFICULTIES = ['', 'Beginner', 'Intermediate', 'Advanced']
 
 interface Props {
   onSelectWod: (wodName: string) => void
+  equipmentFilter?: string[]
 }
 
-export function WodList({ onSelectWod }: Props) {
+export function WodList({ onSelectWod, equipmentFilter }: Props) {
   const [search, setSearch]         = useState('')
   const [type, setType]             = useState('')
   const [category, setCategory]     = useState('')
   const [difficulty, setDifficulty] = useState('')
   const [page, setPage]             = useState(0)
+  const [filterOpen, setFilterOpen] = useState(false)
+
+  const activeFilterCount = [type, category, difficulty].filter(Boolean).length
 
   const { data, isLoading, isFetching } = useWods({
-    type:       type || undefined,
-    category:   category || undefined,
-    difficulty: difficulty || undefined,
-    search:     search || undefined,
+    type:            type || undefined,
+    category:        category || undefined,
+    difficulty:      difficulty || undefined,
+    search:          search || undefined,
     page,
+    equipmentFilter: equipmentFilter?.length ? equipmentFilter : undefined,
   })
 
-  const wods  = data?.data  ?? []
-  const total = data?.count ?? 0
+  const wods    = data?.data  ?? []
+  const total   = data?.count ?? 0
   const hasMore = (page + 1) * 20 < total
 
-  function handleFilterChange(setter: (v: string) => void) {
+  const handleFilterChange = useCallback((setter: (v: string) => void) => {
     return (v: string) => { setter(v); setPage(0) }
+  }, [])
+
+  const resetFilters = () => {
+    setType('')
+    setCategory('')
+    setDifficulty('')
+    setPage(0)
   }
 
   return (
     <div className="space-y-4">
-      {/* Search */}
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
-          🔍
-        </span>
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(0) }}
-          placeholder="Search WODs…"
-          className="w-full bg-[var(--color-bg-card)] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[#E8642A] text-sm"
-        />
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-        <FilterChips
-          label="Type"
-          options={TYPES}
-          value={type}
-          onChange={handleFilterChange(setType)}
-        />
-        <FilterChips
-          label="Cat"
-          options={CATEGORIES}
-          value={category}
-          onChange={handleFilterChange(setCategory)}
-        />
-        <FilterChips
-          label="Level"
-          options={DIFFICULTIES}
-          value={difficulty}
-          onChange={handleFilterChange(setDifficulty)}
-        />
+      {/* Search + Filter row */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
+            🔍
+          </span>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(0) }}
+            placeholder="Search WODs…"
+            className="w-full bg-[var(--color-bg-card)] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[#E8642A] text-sm"
+          />
+        </div>
+        <button
+          onClick={() => setFilterOpen(true)}
+          className="relative flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border transition-colors"
+          style={{
+            backgroundColor: activeFilterCount > 0 ? '#E8642A20' : 'var(--color-bg-card)',
+            borderColor:     activeFilterCount > 0 ? '#E8642A60' : 'rgba(255,255,255,0.08)',
+            color:           activeFilterCount > 0 ? '#E8642A'   : 'var(--color-text-muted)',
+          }}
+        >
+          <span>⚙</span>
+          <span>Filter</span>
+          {activeFilterCount > 0 && (
+            <span
+              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center text-white"
+              style={{ backgroundColor: '#E8642A' }}
+            >
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Count */}
@@ -101,33 +113,90 @@ export function WodList({ onSelectWod }: Props) {
           {isFetching ? 'Loading…' : 'Load more'}
         </button>
       )}
+
+      {/* Filter bottom sheet */}
+      {filterOpen && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col justify-end"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setFilterOpen(false)}
+        >
+          <div
+            className="rounded-t-2xl p-5 space-y-5 max-h-[80vh] overflow-y-auto"
+            style={{ backgroundColor: 'var(--color-bg-card)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Handle */}
+            <div className="w-10 h-1 rounded-full bg-white/20 mx-auto" />
+
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-[var(--color-text)]">Filter</h3>
+              {activeFilterCount > 0 && (
+                <button onClick={resetFilters} className="text-xs text-[#E8642A] font-medium">
+                  Reset
+                </button>
+              )}
+            </div>
+
+            <FilterSection
+              label="Type"
+              options={TYPES}
+              value={type}
+              onChange={handleFilterChange(setType)}
+            />
+            <FilterSection
+              label="Category"
+              options={CATEGORIES}
+              value={category}
+              onChange={handleFilterChange(setCategory)}
+            />
+            <FilterSection
+              label="Difficulty"
+              options={DIFFICULTIES}
+              value={difficulty}
+              onChange={handleFilterChange(setDifficulty)}
+            />
+
+            <button
+              onClick={() => setFilterOpen(false)}
+              className="w-full py-3.5 rounded-xl bg-[#E8642A] text-white font-bold text-sm"
+            >
+              Show {total > 0 ? `${total} ` : ''}WODs
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-interface FilterChipsProps {
+interface FilterSectionProps {
   label: string
   options: string[]
   value: string
   onChange: (v: string) => void
 }
 
-function FilterChips({ label, options, value, onChange }: FilterChipsProps) {
+function FilterSection({ label, options, value, onChange }: FilterSectionProps) {
   return (
-    <div className="flex gap-1.5 shrink-0">
-      {options.map((opt) => (
-        <button
-          key={opt}
-          onClick={() => onChange(opt)}
-          className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-            value === opt
-              ? 'bg-[#E8642A] text-white'
-              : 'bg-white/8 text-[var(--color-text-muted)] hover:bg-white/12'
-          }`}
-        >
-          {opt || `All ${label}s`}
-        </button>
-      ))}
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((opt) => (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+            style={
+              value === opt
+                ? { backgroundColor: '#E8642A', color: 'white' }
+                : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'var(--color-text-muted)' }
+            }
+          >
+            {opt || `All ${label}s`}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

@@ -25,6 +25,7 @@ export interface WodFilters {
   difficulty?: string
   search?: string
   page?: number
+  equipmentFilter?: string[]
 }
 
 const PAGE_SIZE = 20
@@ -90,6 +91,12 @@ async function fetchLocalWods(filters: WodFilters): Promise<{ data: Wod[]; count
         w.name.toLowerCase().includes(q) ||
         w.exercises.toLowerCase().includes(q) ||
         w.description.toLowerCase().includes(q),
+    )
+  }
+  if (filters.equipmentFilter?.length) {
+    const allowed = new Set(filters.equipmentFilter.map((e) => e.toLowerCase()))
+    wods = wods.filter(
+      (w) => w.equipment.length === 0 || w.equipment.every((eq) => allowed.has(eq.toLowerCase())),
     )
   }
 

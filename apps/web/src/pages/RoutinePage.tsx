@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useRoutines } from '../hooks/useRoutines'
 import type { Routine } from '../hooks/useRoutines'
 import { useRoutineLogs, useWeekLogs, useToggleRoutineLog } from '../hooks/useRoutineLogs'
@@ -38,27 +37,11 @@ const DAYS_FULL  = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', '
 const WATER_STEP = 400
 const WATER_MAX  = 5600
 
-const QUICK_LINKS = [
-  { id: 'workout',    emoji: '💪', label: { de: 'Workout',    en: 'Workout',    es: 'Workout'      }, route: '/workout' },
-  { id: 'stretching', emoji: '🧘', label: { de: 'Stretching', en: 'Stretching', es: 'Estiramientos' }, route: '/stretching' },
-  { id: 'meditation', emoji: '🧠', label: { de: 'Meditation', en: 'Meditation', es: 'Meditación'   }, route: '/meditation' },
-] as const
-
-type QuickLinkId = 'workout' | 'stretching' | 'meditation'
-
 const TABS: Record<Lang, Array<[Tab, string]>> = {
   de: [['routinen', '📋 Routinen'], ['todo', '✅ To-Do'], ['woche', '📊 Woche']],
   en: [['routinen', '📋 Routines'], ['todo', '✅ To-Do'], ['woche', '📊 Week']],
   es: [['routinen', '📋 Rutinas'], ['todo', '✅ Tareas'], ['woche', '📊 Semana']],
 }
-
-const T_QUICK: Record<Lang, string> = {
-  de: 'Schnellzugriff',
-  en: 'Quick Access',
-  es: 'Acceso rápido',
-}
-
-const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 export function RoutinePage() {
   const today    = new Date()
@@ -67,9 +50,6 @@ export function RoutinePage() {
 
   const { profile } = useAuthStore()
   const lang = ((profile?.language ?? 'de') as Lang)
-  const activePillars = profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
-
-  const navigate = useNavigate()
 
   const [tab, setTab]           = useState<Tab>('routinen')
   const [selectedDay, setSelDay] = useState(todayDow)
@@ -117,7 +97,6 @@ export function RoutinePage() {
   }
 
   const tabs = TABS[lang] ?? TABS.de
-  const quickLinks = QUICK_LINKS.filter(ql => activePillars.includes(ql.id as QuickLinkId))
 
   return (
     <div
@@ -223,39 +202,8 @@ export function RoutinePage() {
         </div>
       </div>
 
-      {/* Quick access chips */}
-      {quickLinks.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px 0', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 10, color: '#5a5248', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
-            {T_QUICK[lang]}:
-          </span>
-          {quickLinks.map(ql => (
-            <button
-              key={ql.id}
-              onClick={() => navigate(ql.route)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '5px 11px',
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 20,
-                color: '#9a9288',
-                fontSize: 12,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
-              <span>{ql.emoji}</span>
-              <span>{ql.label[lang]}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Main tabs */}
-      <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', marginTop: quickLinks.length > 0 ? 8 : 0 }}>
+      <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', marginTop: 0 }}>
         {tabs.map(([key, label]) => (
           <button
             key={key}

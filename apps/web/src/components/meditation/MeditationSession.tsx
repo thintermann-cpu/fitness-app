@@ -105,8 +105,8 @@ export function MeditationSession({ meditation, lang, onFinish }: Props) {
   // Start session: gong + background
   const handleStart = useCallback(() => {
     setStarted(true)
-    audio.playGong()
-    audio.startBackground(sound)
+    void audio.playGong()
+    void audio.startBackground(sound)
     startTimeRef.current = Date.now()
   }, [audio, sound])
 
@@ -114,7 +114,7 @@ export function MeditationSession({ meditation, lang, onFinish }: Props) {
   const handleSoundChange = useCallback((s: SoundKey) => {
     setSound(s)
     if (started && !paused) {
-      audio.startBackground(s)
+      void audio.startBackground(s)
     }
   }, [audio, started, paused])
 
@@ -263,7 +263,7 @@ export function MeditationSession({ meditation, lang, onFinish }: Props) {
               if (next) {
                 audio.stopBackground()
               } else {
-                audio.startBackground(sound)
+                void audio.startBackground(sound)
               }
             }}
             className="flex-1 py-3 rounded-[var(--radius-md)] text-sm font-semibold border border-white/10 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"

@@ -6,19 +6,19 @@ export function useAudio() {
   const ctxRef    = useRef<AudioContext | null>(null)
   const stopBgRef = useRef<(() => void) | null>(null)
 
-  const getCtx = useCallback((): AudioContext => {
+  const getCtxReady = useCallback(async (): Promise<AudioContext> => {
     if (!ctxRef.current || ctxRef.current.state === 'closed') {
       ctxRef.current = new AudioContext()
     }
     if (ctxRef.current.state === 'suspended') {
-      void ctxRef.current.resume()
+      await ctxRef.current.resume()
     }
     return ctxRef.current
   }, [])
 
-  const playGong = useCallback(() => {
+  const playGong = useCallback(async () => {
     try {
-      const ctx = getCtx()
+      const ctx = await getCtxReady()
       const osc = ctx.createOscillator()
       const g   = ctx.createGain()
       osc.connect(g)
@@ -31,11 +31,11 @@ export function useAudio() {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 4.5)
     } catch {}
-  }, [getCtx])
+  }, [getCtxReady])
 
-  const playBeep = useCallback(() => {
+  const playBeep = useCallback(async () => {
     try {
-      const ctx = getCtx()
+      const ctx = await getCtxReady()
       const osc = ctx.createOscillator()
       const g   = ctx.createGain()
       osc.connect(g)
@@ -47,11 +47,11 @@ export function useAudio() {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 0.3)
     } catch {}
-  }, [getCtx])
+  }, [getCtxReady])
 
-  const playComplete = useCallback(() => {
+  const playComplete = useCallback(async () => {
     try {
-      const ctx   = getCtx()
+      const ctx   = await getCtxReady()
       const notes = [880, 698, 523]
       notes.forEach((freq, i) => {
         const osc = ctx.createOscillator()
@@ -68,7 +68,7 @@ export function useAudio() {
         osc.stop(t + 1.2)
       })
     } catch {}
-  }, [getCtx])
+  }, [getCtxReady])
 
   const stopBackground = useCallback(() => {
     if (stopBgRef.current) {
@@ -77,8 +77,7 @@ export function useAudio() {
     }
   }, [])
 
-  const startBackground = useCallback((sound: SoundKey) => {
-    // Stop existing background first (inline to avoid circular dep)
+  const startBackground = useCallback(async (sound: SoundKey) => {
     if (stopBgRef.current) {
       try { stopBgRef.current() } catch {}
       stopBgRef.current = null
@@ -86,7 +85,7 @@ export function useAudio() {
     if (!sound || sound === 'silence') return
 
     try {
-      const ctx = getCtx()
+      const ctx = await getCtxReady()
 
       if (sound === 'bowl') {
         const osc = ctx.createOscillator()
@@ -152,7 +151,7 @@ export function useAudio() {
         } catch {}
       }
     } catch {}
-  }, [getCtx])
+  }, [getCtxReady])
 
   const cleanup = useCallback(() => {
     if (stopBgRef.current) {

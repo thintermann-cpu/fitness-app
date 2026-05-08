@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/authStore'
+import type { WorkoutLocation } from '../store/authStore'
+import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 
@@ -18,12 +20,17 @@ const LANGUAGES = [
   { id: 'es', label: 'Español', flag: '🇪🇸' },
 ] as const
 
-const EQUIPMENT_OPTIONS = [
+const LOCATION_OPTIONS: { id: WorkoutLocation; label: string; emoji: string }[] = [
   { id: 'home',       label: 'Home',       emoji: '🏠' },
   { id: 'gym',        label: 'Gym',        emoji: '🏋️' },
   { id: 'bodyweight', label: 'Bodyweight', emoji: '🤸' },
   { id: 'outdoor',    label: 'Outdoor',    emoji: '🌲' },
-] as const
+]
+
+const EQUIPMENT_ITEMS = [
+  'Barbell', 'Dumbbells', 'Kettlebell', 'Pull-up Bar',
+  'Rings', 'Rower', 'Bike', 'Resistance Bands', 'Jump Rope', 'Box',
+]
 
 type Lang = 'de' | 'en' | 'es'
 
@@ -81,6 +88,14 @@ export function SettingsPage() {
   const [savingEquip, setSavingEquip] = useState(false)
   const [savedEquip,  setSavedEquip]  = useState(false)
 
+  // ── Equipment per location state ──
+  const [equipByLoc, setEquipByLoc] = useState<Record<WorkoutLocation, string[]>>(
+    profile?.equipment_by_location ?? DEFAULT_EQUIPMENT_BY_LOCATION
+  )
+  const [activeLocTab, setActiveLocTab] = useState<WorkoutLocation>('home')
+  const [savingEquipLoc, setSavingEquipLoc] = useState(false)
+  const [savedEquipLoc,  setSavedEquipLoc]  = useState(false)
+
   // ── Active pillars section state ──
   const [activePillars,   setActivePillars]   = useState<string[]>(
     profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
@@ -95,6 +110,7 @@ export function SettingsPage() {
     setPrimaryPillar(profile.primary_pillar ?? '')
     setEquipment(profile.equipment ?? [])
     setActivePillars(profile.active_pillars?.length ? profile.active_pillars : ALL_PILLARS)
+    setEquipByLoc(profile.equipment_by_location ?? DEFAULT_EQUIPMENT_BY_LOCATION)
   }, [profile])
 
   const handleSaveProfile = async () => {
@@ -114,6 +130,20 @@ export function SettingsPage() {
     setSavingEquip(false)
     setSavedEquip(true)
     setTimeout(() => setSavedEquip(false), 2000)
+  }
+
+  const toggleEquipByLoc = (loc: WorkoutLocation, item: string) =>
+    setEquipByLoc(prev => ({
+      ...prev,
+      [loc]: prev[loc].includes(item) ? prev[loc].filter(e => e !== item) : [...prev[loc], item],
+    }))
+
+  const handleSaveEquipLoc = async () => {
+    setSavingEquipLoc(true)
+    await updateProfile({ equipment_by_location: equipByLoc })
+    setSavingEquipLoc(false)
+    setSavedEquipLoc(true)
+    setTimeout(() => setSavedEquipLoc(false), 2000)
   }
 
   const togglePillar = (id: string) => {
@@ -210,7 +240,7 @@ export function SettingsPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {EQUIPMENT_OPTIONS.map((opt) => {
+          {LOCATION_OPTIONS.map((opt) => {
             const selected = equipment.includes(opt.id)
             return (
               <button
@@ -231,6 +261,56 @@ export function SettingsPage() {
         </div>
 
         <SaveButton loading={savingEquip} saved={savedEquip} onClick={handleSaveEquip} />
+      </section>
+
+      {/* ── Equipment pro Trainingsort ── */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="font-semibold text-base">Equipment pro Trainingsort</h2>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            Welches Equipment hast du pro Ort verfügbar?
+          </p>
+        </div>
+
+        {/* Location tabs */}
+        <div className="flex gap-1">
+          {LOCATION_OPTIONS.map((loc) => (
+            <button
+              key={loc.id}
+              onClick={() => setActiveLocTab(loc.id)}
+              className="flex-1 py-2 rounded-xl text-xs font-semibold transition-colors"
+              style={{
+                backgroundColor: activeLocTab === loc.id ? '#E8642A' : 'var(--color-bg-card)',
+                color:           activeLocTab === loc.id ? 'white' : 'var(--color-text-muted)',
+              }}
+            >
+              {loc.emoji} {loc.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Equipment checkboxes for active location */}
+        <div className="flex flex-wrap gap-2">
+          {EQUIPMENT_ITEMS.map((item) => {
+            const selected = (equipByLoc[activeLocTab] ?? []).includes(item)
+            return (
+              <button
+                key={item}
+                onClick={() => toggleEquipByLoc(activeLocTab, item)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+                style={{
+                  backgroundColor: selected ? '#E8642A20' : 'var(--color-bg-card)',
+                  border:          `1.5px solid ${selected ? '#E8642A' : 'transparent'}`,
+                  color:           selected ? '#E8642A' : 'var(--color-text-muted)',
+                }}
+              >
+                {item}
+              </button>
+            )
+          })}
+        </div>
+
+        <SaveButton loading={savingEquipLoc} saved={savedEquipLoc} onClick={handleSaveEquipLoc} />
       </section>
 
       {/* ── Aktive Pillars ── */}

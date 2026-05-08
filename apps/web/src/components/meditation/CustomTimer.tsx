@@ -139,7 +139,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
     totalSecRef.current    = total
     lastIntervalRef.current = 0
 
-    audio.playGong()
+    void audio.playGong()
 
     if (prepSec > 0) {
       setPrepLeft(prepSec)
@@ -148,7 +148,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
     } else {
       setTimeLeft(total)
       setStatus('running')
-      audio.startBackground(sound)
+      void audio.startBackground(sound)
       startTimeRef.current = Date.now()
     }
   }, [durationMin, prepSec, sound, audio])
@@ -160,7 +160,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
     if (status === 'prep') {
       if (prepLeft <= 0) {
         setStatus('running')
-        audio.startBackground(sound)
+        void audio.startBackground(sound)
         startTimeRef.current = Date.now()
         return
       }
@@ -171,7 +171,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
     if (status === 'running') {
       if (timeLeft <= 0) {
         audio.stopBackground()
-        audio.playComplete()
+        void audio.playComplete()
         const durationMinActual = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
         addLog.mutate({ session_type: 'custom_timer', duration_min: durationMinActual })
         setStatus('done')
@@ -183,7 +183,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
         const elapsed = totalSecRef.current - timeLeft
         const nextBeat = lastIntervalRef.current + intervalMin * 60
         if (elapsed >= nextBeat && elapsed > 0) {
-          audio.playBeep()
+          void audio.playBeep()
           lastIntervalRef.current = nextBeat
         }
       }
@@ -267,7 +267,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
               if (next === 'paused') {
                 audio.stopBackground()
               } else {
-                audio.startBackground(sound)
+                void audio.startBackground(sound)
               }
               setStatus(next)
             }}
@@ -279,7 +279,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
           <button
             onClick={() => {
               audio.stopBackground()
-              audio.playComplete()
+              void audio.playComplete()
               const durationMinActual = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
               addLog.mutate({ session_type: 'custom_timer', duration_min: durationMinActual })
               setStatus('done')

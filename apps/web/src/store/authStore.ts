@@ -2,6 +2,15 @@ import { create } from 'zustand'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 
+export type WorkoutLocation = 'home' | 'gym' | 'bodyweight' | 'outdoor'
+
+export const DEFAULT_EQUIPMENT_BY_LOCATION: Record<WorkoutLocation, string[]> = {
+  home:       ['Dumbbells', 'Kettlebell', 'Pull-up Bar', 'Resistance Bands'],
+  gym:        ['Barbell', 'Dumbbells', 'Pull-up Bar', 'Rings', 'Rower', 'Bike', 'Kettlebell'],
+  bodyweight: [],
+  outdoor:    ['Pull-up Bar'],
+}
+
 export interface DbProfile {
   id: string
   display_name: string | null
@@ -9,6 +18,7 @@ export interface DbProfile {
   primary_pillar: string | null
   active_pillars: string[]
   equipment: string[]
+  equipment_by_location: Record<WorkoutLocation, string[]> | null
   created_at: string
   updated_at: string
 }

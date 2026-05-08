@@ -27,6 +27,8 @@ export function useRoutineLogs(date: string) {
       if (error) throw error
       return (data ?? []) as RoutineLog[]
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   })
 }
 
@@ -45,6 +47,8 @@ export function useWeekLogs(weekDates: string[]) {
       if (error) throw error
       return (data ?? []) as RoutineLog[]
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   })
 }
 

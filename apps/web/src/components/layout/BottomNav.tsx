@@ -5,7 +5,7 @@ const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 const NAV_ITEMS = [
   { path: '/workout',    icon: '💪', label: 'Workout',  color: '#E8642A', pillarId: 'workout' },
-  { path: '/routine',    icon: '📋', label: 'Routine',  color: '#4A90D9', pillarId: 'routine' },
+  { path: '/routine',    icon: '📋', label: 'Routine',  color: '#4A90D9', pillarId: null },
   { path: '/stretching', icon: '🧘', label: 'Stretch',  color: '#7BC67E', pillarId: 'stretching' },
   { path: '/meditation', icon: '🧠', label: 'Focus',    color: '#9B7FD4', pillarId: 'meditation' },
   { path: '/settings',   icon: '⚙️', label: 'Settings', color: null,      pillarId: null },

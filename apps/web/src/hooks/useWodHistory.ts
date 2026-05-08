@@ -29,6 +29,8 @@ export function useWodHistory(wodName?: string) {
 
   const query = useQuery({
     queryKey: ['wod_history', wodName ?? '_all'],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     queryFn: async (): Promise<WodHistoryEntry[]> => {
       if (!isSupabaseConfigured) {
         const all = readLocal()

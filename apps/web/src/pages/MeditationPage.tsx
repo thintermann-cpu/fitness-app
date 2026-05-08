@@ -2,18 +2,19 @@ import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useMeditations, useBreathworkTechniques } from '../hooks/useMeditations'
 import type { Meditation, BreathworkTechnique } from '../hooks/useMeditations'
-import { MeditationCard }    from '../components/meditation/MeditationCard'
-import { MeditationSession } from '../components/meditation/MeditationSession'
-import { BreathworkCard }    from '../components/meditation/BreathworkCard'
-import { BreathworkSession } from '../components/meditation/BreathworkSession'
-import { CustomTimer }       from '../components/meditation/CustomTimer'
-import { MeditationHistory } from '../components/meditation/MeditationHistory'
+import { MeditationCard }         from '../components/meditation/MeditationCard'
+import { MeditationSession }      from '../components/meditation/MeditationSession'
+import { BreathworkCard }         from '../components/meditation/BreathworkCard'
+import { BreathworkSession }      from '../components/meditation/BreathworkSession'
+import { CustomTimer }            from '../components/meditation/CustomTimer'
+import { CustomBreathworkEditor } from '../components/meditation/CustomBreathworkEditor'
+import { MeditationHistory }      from '../components/meditation/MeditationHistory'
 
 const PILLAR_COLOR = '#9B7FD4'
 
 type Lang     = 'de' | 'en' | 'es'
 type Tab      = 'meditate' | 'breathwork' | 'history'
-type View     = 'list' | 'session' | 'breathwork_session' | 'custom_timer'
+type View     = 'list' | 'session' | 'breathwork_session' | 'custom_timer' | 'custom_breathwork_session'
 type Category = 'all' | 'mindfulness' | 'body_scan' | 'sleep' | 'focus' | 'stress_relief' | 'morning' | 'visualization' | 'movement'
 
 const T = {
@@ -172,6 +173,27 @@ export function MeditationPage() {
     )
   }
 
+  if (view === 'custom_breathwork_session' && selectedTechnique) {
+    return (
+      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
+        <div className="flex-1 px-4 py-6 pb-24 max-w-lg mx-auto w-full overflow-y-auto">
+          <button
+            onClick={handleBackFromSession}
+            className="mb-4 flex items-center gap-1 text-sm font-semibold"
+            style={{ color: PILLAR_COLOR }}
+          >
+            ← {t.tabBreathwork}
+          </button>
+          <BreathworkSession
+            technique={selectedTechnique}
+            lang={lang}
+            onFinish={handleFinishSession}
+          />
+        </div>
+      </div>
+    )
+  }
+
   if (view === 'custom_timer') {
     return (
       <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
@@ -280,6 +302,22 @@ export function MeditationPage() {
               </div>
             ) : (
               <>
+                {/* Custom breathwork editor (inline) */}
+                <CustomBreathworkEditor
+                  lang={lang}
+                  onStart={(technique) => {
+                    setSelectedTechnique(technique)
+                    setView('custom_breathwork_session')
+                  }}
+                />
+
+                {/* Divider */}
+                <div className="border-t border-white/8 pt-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)] mb-3">
+                    Techniken
+                  </p>
+                </div>
+
                 {/* Custom timer CTA */}
                 <button
                   onClick={() => setView('custom_timer')}

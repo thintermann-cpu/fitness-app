@@ -93,7 +93,7 @@ export function BreathworkSession({ technique, lang, onFinish }: Props) {
   cyclesRef.current = cyclesDone
 
   const endSession = useCallback(() => {
-    audio.playComplete()
+    void audio.playComplete()
     const durationMin = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
     addLog.mutate({
       technique_id: technique.id,
@@ -104,7 +104,7 @@ export function BreathworkSession({ technique, lang, onFinish }: Props) {
   }, [audio, addLog, technique.id])
 
   const handleStart = useCallback(() => {
-    audio.playBeep()
+    void audio.playBeep()
     startTimeRef.current = Date.now()
     setCyclesDone(0)
     setPhaseRemaining(technique.inhale_sec)
@@ -152,7 +152,7 @@ export function BreathworkSession({ technique, lang, onFinish }: Props) {
       endSession()
     } else {
       setCyclesDone(nextCycles)
-      audio.playBeep()
+      void audio.playBeep()
       setPhase('inhale')
       setPhaseRemaining(technique.inhale_sec)
     }

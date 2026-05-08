@@ -64,6 +64,8 @@ export function useRoutines() {
 
       return (data ?? []).map(r => ({ ...r, active_days: r.active_days ?? ALL_DAYS })) as Routine[]
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   })
 
   const createMutation = useMutation({
