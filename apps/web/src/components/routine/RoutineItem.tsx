@@ -113,11 +113,11 @@ export function RoutineItem({
           </a>
         )}
         {/* Checkbox — tap toggles completion */}
-        <div
+        <button
           onClick={e => { e.stopPropagation(); onToggle() }}
           style={{
-            width: 22,
-            height: 22,
+            width: 28,
+            height: 28,
             borderRadius: '50%',
             flexShrink: 0,
             cursor: 'pointer',
@@ -126,12 +126,14 @@ export function RoutineItem({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 11,
+            fontSize: 12,
             color: 'white',
+            padding: 0,
+            touchAction: 'manipulation',
           }}
         >
           {isCompleted && '✓'}
-        </div>
+        </button>
       </div>
     </div>
   )

@@ -44,7 +44,18 @@ export function useDailyLog(date: string) {
         .upsert({ user_id: uid, date, water_ml }, { onConflict: 'user_id,date' })
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['daily_log', date] }),
+    onMutate: async (water_ml) => {
+      await queryClient.cancelQueries({ queryKey: ['daily_log', date] })
+      const previous = queryClient.getQueryData<DailyLog | null>(['daily_log', date])
+      queryClient.setQueryData<DailyLog | null>(['daily_log', date], (old) =>
+        old ? { ...old, water_ml } : { id: 'opt', date, water_ml, mood: null, mood_comment: null }
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      queryClient.setQueryData(['daily_log', date], context?.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['daily_log', date] }),
   })
 
   const setMood = useMutation({

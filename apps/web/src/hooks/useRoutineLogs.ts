@@ -76,7 +76,24 @@ export function useToggleRoutineLog(date: string) {
         if (error) throw error
       }
     },
-    onSuccess: () => {
+    onMutate: async ({ routineId, isCompleted }) => {
+      await queryClient.cancelQueries({ queryKey: ['routine_logs', date] })
+      const previous = queryClient.getQueryData<RoutineLog[]>(['routine_logs', date])
+      queryClient.setQueryData<RoutineLog[]>(['routine_logs', date], (old = []) => {
+        if (isCompleted) {
+          return old.filter(l => l.routine_id !== routineId)
+        }
+        return [
+          ...old.filter(l => l.routine_id !== routineId),
+          { id: 'opt', routine_id: routineId, date, completed: true },
+        ]
+      })
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      queryClient.setQueryData(['routine_logs', date], context?.previous)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['routine_logs'] })
       queryClient.invalidateQueries({ queryKey: ['routine_logs_week'] })
     },

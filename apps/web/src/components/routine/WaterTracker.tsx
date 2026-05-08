@@ -63,13 +63,14 @@ export function WaterTracker({ waterMl, onAdd, onRemove }: Props) {
           disabled={waterMl === 0}
           style={{
             flex: 1,
-            padding: '5px 0',
+            padding: '8px 0',
             borderRadius: 6,
             background: 'rgba(255,255,255,0.06)',
             border: '1px solid rgba(255,255,255,0.1)',
             color: '#9a9288',
             fontSize: 14,
             cursor: waterMl === 0 ? 'default' : 'pointer',
+            touchAction: 'manipulation',
           }}
         >
           −
@@ -78,13 +79,14 @@ export function WaterTracker({ waterMl, onAdd, onRemove }: Props) {
           onClick={onAdd}
           style={{
             flex: 1,
-            padding: '5px 0',
+            padding: '8px 0',
             borderRadius: 6,
             background: 'rgba(74,144,217,0.2)',
             border: '1px solid rgba(74,144,217,0.4)',
             color: '#4A90D9',
             fontSize: 16,
             cursor: 'pointer',
+            touchAction: 'manipulation',
           }}
         >
           +
