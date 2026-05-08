@@ -81,4 +81,35 @@ function AppContent() {
           <Route path="/workout"          element={<WorkoutPage />} />
           <Route path="/workout/:wodName" element={<WorkoutPage />} />
           <Route path="/routine"          element={<RoutinePage />} />
-          <Route p
+          <Route path="/stretching"       element={<StretchingPage />} />
+          <Route path="/meditation"       element={<MeditationPage />} />
+          <Route path="/settings"         element={<SettingsPage />} />
+        </Route>
+      </Route>
+
+      {/* Admin area — AdminRoute handles auth + role check */}
+      <Route
+        path="/admin"
+        element={<AdminRoute><AdminLayout /></AdminRoute>}
+      >
+        <Route index                   element={<AdminDashboardPage />} />
+        <Route path="users"            element={<AdminUsersPage />} />
+        <Route path="push"             element={<AdminPlaceholderPage title="Push Reminders" />} />
+        <Route path="emails"           element={<AdminPlaceholderPage title="Emails" />} />
+        <Route path="feedback"         element={<AdminPlaceholderPage title="Feedback" />} />
+        <Route path="wods"             element={<AdminPlaceholderPage title="WODs" />} />
+        <Route path="tasks"            element={<AdminTasksPage />} />
+      </Route>
+    </Routes>
+  )
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </QueryClientProvider>
+  )
+}
