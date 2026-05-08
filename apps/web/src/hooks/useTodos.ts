@@ -30,6 +30,8 @@ export function useTodos() {
       if (error) throw error
       return (data ?? []) as Todo[]
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   })
 
   const addMutation = useMutation({
@@ -46,7 +48,9 @@ export function useTodos() {
 
   const completeMutation = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
-      const { error } = await supabase.from('todos').update({ completed }).eq('id', id)
+      const uid = await getUserId()
+      if (!uid) throw new Error('Not authenticated')
+      const { error } = await supabase.from('todos').update({ completed }).eq('id', id).eq('user_id', uid)
       if (error) throw error
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
@@ -54,7 +58,9 @@ export function useTodos() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('todos').delete().eq('id', id)
+      const uid = await getUserId()
+      if (!uid) throw new Error('Not authenticated')
+      const { error } = await supabase.from('todos').delete().eq('id', id).eq('user_id', uid)
       if (error) throw error
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),

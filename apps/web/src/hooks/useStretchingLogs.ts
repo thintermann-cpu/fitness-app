@@ -30,6 +30,8 @@ export function useStretchingLogs() {
 
   const query = useQuery({
     queryKey: ['stretching_logs', user?.id ?? 'anon'],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     queryFn: async (): Promise<StretchingLog[]> => {
       if (!user) return readLocal()
 

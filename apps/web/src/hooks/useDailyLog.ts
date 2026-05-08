@@ -31,6 +31,8 @@ export function useDailyLog(date: string) {
       if (error) throw error
       return data as DailyLog | null
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   })
 
   const setWater = useMutation({
