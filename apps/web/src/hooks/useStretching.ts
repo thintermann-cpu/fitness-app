@@ -13,6 +13,8 @@ interface RawExercise {
   difficulty: string
   duration_sec: number
   equipment: string[]
+  bilateral?: boolean
+  image_key?: string | null
 }
 
 interface RawRoutine {
@@ -34,6 +36,8 @@ export interface StretchingExercise {
   difficulty: string
   duration_sec: number
   equipment: string[]
+  bilateral: boolean
+  image_key: string | null
 }
 
 export interface StretchingRoutine {
@@ -67,6 +71,8 @@ function mapExercise(raw: RawExercise, lang: Lang): StretchingExercise {
     difficulty: raw.difficulty,
     duration_sec: raw.duration_sec,
     equipment: raw.equipment ?? [],
+    bilateral: raw.bilateral ?? false,
+    image_key: raw.image_key ?? null,
   }
 }
 

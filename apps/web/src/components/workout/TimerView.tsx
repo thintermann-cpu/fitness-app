@@ -6,6 +6,7 @@ interface Props {
   initialMode?: TimerMode
   initialMinutes?: number
   onComplete?: () => void
+  bilateral?: boolean
 }
 
 interface TickData {
@@ -51,13 +52,15 @@ function beep(type: 'start' | 'interval' | 'end') {
   }
 }
 
-export function TimerView({ initialMode, initialMinutes, onComplete }: Props) {
+export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }: Props) {
   const [mode, setMode]           = useState<TimerMode>(initialMode ?? 'fortime')
   const [minutes, setMinutes]     = useState(initialMinutes ?? 20)
   const [isRunning, setIsRunning] = useState(false)
   const [isPaused, setIsPaused]   = useState(false)
   const [tick, setTick]           = useState<TickData>({ elapsed: 0, remaining: 0, phase: 'work', interval: 1 })
   const [isComplete, setIsComplete] = useState(false)
+  const [showSideSwitch, setShowSideSwitch] = useState(false)
+  const sideSwitchShownRef = useRef(false)
 
   const workerRef = useRef<Worker | null>(null)
   const onCompleteRef = useRef(onComplete)
@@ -97,6 +100,24 @@ export function TimerView({ initialMode, initialMinutes, onComplete }: Props) {
       setIsComplete(false)
     }
   }, [mode, minutes, isRunning, isPaused])
+
+  // Bilateral side-switch: show overlay at halfway point (countdown modes only)
+  useEffect(() => {
+    if (!bilateral || !isRunning || mode === 'fortime' || sideSwitchShownRef.current) return
+    const durationMs = mode === 'tabata' ? 240_000 : minutes * 60_000
+    const halfMs = durationMs / 2
+    if (tick.remaining > 0 && tick.remaining <= halfMs) {
+      sideSwitchShownRef.current = true
+      setShowSideSwitch(true)
+      const id = window.setTimeout(() => setShowSideSwitch(false), 3000)
+      return () => clearTimeout(id)
+    }
+  }, [bilateral, isRunning, mode, minutes, tick.remaining])
+
+  // Reset side-switch flag on new run
+  useEffect(() => {
+    if (!isRunning) sideSwitchShownRef.current = false
+  }, [isRunning])
 
   const handleStart = useCallback(() => {
     const durationMs = mode === 'tabata' ? 240_000 : minutes * 60_000
@@ -184,6 +205,16 @@ export function TimerView({ initialMode, initialMinutes, onComplete }: Props) {
       {/* Mode description */}
       {!isRunning && !isPaused && (
         <p className="text-sm text-[var(--color-text-muted)] text-center">{modeInfo.description}</p>
+      )}
+
+      {/* Bilateral side-switch overlay */}
+      {showSideSwitch && (
+        <div className="flex flex-col items-center gap-1 animate-pulse">
+          <span className="text-3xl">⇄</span>
+          <span className="text-sm font-bold text-amber-400 tracking-wide uppercase">
+            Seiten wechseln
+          </span>
+        </div>
       )}
 
       {/* Main time display */}
