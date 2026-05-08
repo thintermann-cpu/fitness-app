@@ -4,6 +4,8 @@ import type { WorkoutLocation } from '../store/authStore'
 import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
+import { supabase } from '../lib/supabase'
+import { subscribeToPush, unsubscribeFromPush, getPushSubscriptionStatus } from '../lib/push'
 
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
@@ -31,6 +33,43 @@ const EQUIPMENT_ITEMS = [
   'Barbell', 'Dumbbells', 'Kettlebell', 'Pull-up Bar',
   'Rings', 'Rower', 'Bike', 'Resistance Bands', 'Jump Rope', 'Box', 'Laufen',
 ]
+
+type PushEnabledKey = 'morning_enabled' | 'evening_enabled' | 'wod_enabled' | 'inactivity_enabled'
+type PushTimeKey    = 'morning_time' | 'evening_time' | 'wod_time'
+
+type PushPrefs = {
+  morning_enabled: boolean
+  evening_enabled: boolean
+  wod_enabled: boolean
+  inactivity_enabled: boolean
+  morning_time: string
+  evening_time: string
+  wod_time: string
+}
+
+const PUSH_REMINDERS: {
+  id: string
+  emoji: string
+  label: string
+  description: string
+  enabledKey: PushEnabledKey
+  timeKey: PushTimeKey | null
+}[] = [
+  { id: 'morning',    emoji: '🌅', label: 'Morgen-Routine',       description: 'Start in den Tag',            enabledKey: 'morning_enabled',    timeKey: 'morning_time' },
+  { id: 'evening',    emoji: '🌙', label: 'Abend-Routine',         description: 'Tagesabschluss',              enabledKey: 'evening_enabled',    timeKey: 'evening_time' },
+  { id: 'wod',        emoji: '💪', label: 'WOD Reminder',          description: 'Workout of the Day',          enabledKey: 'wod_enabled',        timeKey: 'wod_time' },
+  { id: 'inactivity', emoji: '⏰', label: 'Inaktivitäts-Reminder', description: 'Nach 2 Tagen ohne Aktivität', enabledKey: 'inactivity_enabled', timeKey: null },
+]
+
+const DEFAULT_PUSH_PREFS: PushPrefs = {
+  morning_enabled: true,
+  evening_enabled: true,
+  wod_enabled: false,
+  inactivity_enabled: true,
+  morning_time: '07:00',
+  evening_time: '21:00',
+  wod_time: '12:00',
+}
 
 type Lang = 'de' | 'en' | 'es'
 
@@ -103,6 +142,14 @@ export function SettingsPage() {
   const [savingPillars, setSavingPillars] = useState(false)
   const [savedPillars,  setSavedPillars]  = useState(false)
 
+  // ── Push notifications state ──
+  const [pushEnabled,   setPushEnabled]   = useState(false)
+  const [pushLoading,   setPushLoading]   = useState(false)
+  const [pushSupported, setPushSupported] = useState(false)
+  const [pushPrefs,     setPushPrefs]     = useState<PushPrefs>(DEFAULT_PUSH_PREFS)
+  const [savingPush,    setSavingPush]    = useState(false)
+  const [savedPush,     setSavedPush]     = useState(false)
+
   useEffect(() => {
     if (!profile) return
     setDisplayName(profile.display_name ?? '')
@@ -112,6 +159,36 @@ export function SettingsPage() {
     setActivePillars(profile.active_pillars?.length ? profile.active_pillars : ALL_PILLARS)
     setEquipByLoc(profile.equipment_by_location ?? DEFAULT_EQUIPMENT_BY_LOCATION)
   }, [profile])
+
+  useEffect(() => {
+    const supported = 'serviceWorker' in navigator && 'PushManager' in window
+    setPushSupported(supported)
+    if (!supported) return
+
+    getPushSubscriptionStatus().then(setPushEnabled)
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase
+        .from('push_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (data) {
+            setPushPrefs({
+              morning_enabled:    data.morning_enabled    ?? true,
+              evening_enabled:    data.evening_enabled    ?? true,
+              wod_enabled:        data.wod_enabled        ?? false,
+              inactivity_enabled: data.inactivity_enabled ?? true,
+              morning_time:       data.morning_time       ?? '07:00',
+              evening_time:       data.evening_time       ?? '21:00',
+              wod_time:           data.wod_time           ?? '12:00',
+            })
+          }
+        })
+    })
+  }, [])
 
   const handleSaveProfile = async () => {
     setSavingProfile(true)
@@ -158,6 +235,31 @@ export function SettingsPage() {
     setSavingPillars(false)
     setSavedPillars(true)
     setTimeout(() => setSavedPillars(false), 2000)
+  }
+
+  const handleTogglePush = async () => {
+    setPushLoading(true)
+    if (pushEnabled) {
+      await unsubscribeFromPush()
+      setPushEnabled(false)
+    } else {
+      const success = await subscribeToPush()
+      setPushEnabled(success)
+    }
+    setPushLoading(false)
+  }
+
+  const handleSavePushPrefs = async () => {
+    setSavingPush(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await supabase
+        .from('push_preferences')
+        .upsert({ user_id: user.id, ...pushPrefs, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+    }
+    setSavingPush(false)
+    setSavedPush(true)
+    setTimeout(() => setSavedPush(false), 2000)
   }
 
   const lang = (language as Lang)
@@ -380,4 +482,127 @@ export function SettingsPage() {
 
         <SaveButton loading={savingPillars} saved={savedPillars} onClick={handleSavePillars} />
       </section>
+
+      {/* ── Push Benachrichtigungen ── */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="font-semibold text-base">Push Benachrichtigungen</h2>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            Tägliche Reminder für deine aktiven Pillars
+          </p>
+        </div>
+
+        {!pushSupported ? (
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            Dein Browser unterstützt keine Push-Benachrichtigungen.
+          </p>
+        ) : (
+          <>
+            {/* Main enable/disable toggle */}
+            <button
+              onClick={handleTogglePush}
+              disabled={pushLoading}
+              className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left transition-transform active:scale-95"
+              style={{
+                backgroundColor: 'var(--color-bg-card)',
+                border: `2px solid ${pushEnabled ? '#E8642A' : 'transparent'}`,
+                color: 'var(--color-text)',
+                opacity: pushLoading ? 0.6 : 1,
+              }}
+            >
+              <span className="text-2xl">🔔</span>
+              <div className="flex-1">
+                <div className="font-semibold text-sm">
+                  {pushLoading ? 'Wird aktualisiert…' : pushEnabled ? 'Push aktiviert' : 'Push deaktiviert'}
+                </div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                  {pushEnabled ? 'Tippen zum Deaktivieren' : 'Tippen zum Aktivieren'}
+                </div>
+              </div>
+              <div
+                style={{
+                  width: 44, height: 24, borderRadius: 12,
+                  background: pushEnabled ? '#E8642A' : 'rgba(255,255,255,0.1)',
+                  transition: 'background 0.2s', position: 'relative', flexShrink: 0,
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute', top: 3,
+                    left: pushEnabled ? 23 : 3,
+                    width: 18, height: 18, borderRadius: '50%',
+                    background: 'white', transition: 'left 0.2s',
+                  }}
+                />
+              </div>
+            </button>
+
+            {/* Per-reminder settings, visible only when push is enabled */}
+            {pushEnabled && (
+              <>
+                {PUSH_REMINDERS.map((reminder) => {
+                  const isEnabled = pushPrefs[reminder.enabledKey]
+                  return (
+                    <div
+                      key={reminder.id}
+                      className="rounded-2xl px-4 py-3 space-y-2"
+                      style={{ backgroundColor: 'var(--color-bg-card)' }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{reminder.emoji}</span>
+                        <div className="flex-1">
+                          <div className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
+                            {reminder.label}
+                          </div>
+                          <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            {reminder.description}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() =>
+                            setPushPrefs((p) => ({ ...p, [reminder.enabledKey]: !p[reminder.enabledKey] }))
+                          }
+                          style={{
+                            width: 44, height: 24, borderRadius: 12,
+                            background: isEnabled ? '#E8642A' : 'rgba(255,255,255,0.1)',
+                            transition: 'background 0.2s', position: 'relative', flexShrink: 0,
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: 'absolute', top: 3,
+                              left: isEnabled ? 23 : 3,
+                              width: 18, height: 18, borderRadius: '50%',
+                              background: 'white', transition: 'left 0.2s',
+                            }}
+                          />
+                        </button>
+                      </div>
+                      {reminder.timeKey && isEnabled && (
+                        <input
+                          type="time"
+                          value={pushPrefs[reminder.timeKey]}
+                          onChange={(e) =>
+                            setPushPrefs((p) => ({ ...p, [reminder.timeKey!]: e.target.value }))
+                          }
+                          className="w-full rounded-xl px-3 py-2 text-sm"
+                          style={{
+                            backgroundColor: 'var(--color-bg)',
+                            color: 'var(--color-text)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                          }}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+
+                <SaveButton loading={savingPush} saved={savedPush} onClick={handleSavePushPrefs} />
+              </>
+            )}
+          </>
+        )}
+      </section>
     </div>
+  )
+}
