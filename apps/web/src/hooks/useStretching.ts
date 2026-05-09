@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 
 type Lang = 'de' | 'en' | 'es'
@@ -94,12 +94,16 @@ export function useStretchingExercises() {
   return useQuery({
     queryKey: ['stretching_exercises', lang],
     queryFn: async (): Promise<StretchingExercise[]> => {
+      if (!isSupabaseConfigured) {
+        console.warn('[useStretchingExercises] Supabase not configured — returning empty list')
+        return []
+      }
       const { data, error } = await supabase
         .from('stretching_exercises')
         .select('*')
         .order('muscle_group')
 
-      if (error) throw error
+      if (error) { console.error('[useStretchingExercises]', error.message); return [] }
       return ((data ?? []) as RawExercise[]).map((r) => mapExercise(r, lang))
     },
     staleTime: 10 * 60 * 1000,
@@ -112,12 +116,16 @@ export function useStretchingRoutines() {
   return useQuery({
     queryKey: ['stretching_routines', lang],
     queryFn: async (): Promise<StretchingRoutine[]> => {
+      if (!isSupabaseConfigured) {
+        console.warn('[useStretchingRoutines] Supabase not configured — returning empty list')
+        return []
+      }
       const { data, error } = await supabase
         .from('stretching_routines')
         .select('*')
         .order('duration_min')
 
-      if (error) throw error
+      if (error) { console.error('[useStretchingRoutines]', error.message); return [] }
       return ((data ?? []) as RawRoutine[]).map((r) => mapRoutine(r, lang))
     },
     staleTime: 10 * 60 * 1000,
