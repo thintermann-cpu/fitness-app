@@ -108,9 +108,9 @@ async function fetchLocalWods(filters: WodFilters): Promise<{ data: Wod[]; count
 
 const SUPABASE_TIMEOUT_MS = 5000
 
-function raceTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+function raceTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T | null> {
   return Promise.race([
-    promise,
+    Promise.resolve(promise),
     new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
   ])
 }

@@ -1,3 +1,5 @@
+import type { JSX } from 'react'
+
 const ILLUSTRATION_BG = '#9ED8A3'
 
 const MUSCLE_EMOJI: Record<string, string> = {
