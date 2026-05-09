@@ -101,4 +101,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     })
 
     supabase.auth.onAuthStateChange(async (_event, session) => {
-      const profile = session?.user ? await loadProfile(session.use
+      const profile = session?.user ? await loadProfile(session.user.id) : null
+      set({ session, user: session?.user ?? null, profile })
+    })
+  },
+}))

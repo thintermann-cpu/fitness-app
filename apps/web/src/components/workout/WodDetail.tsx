@@ -36,28 +36,28 @@ const WARMUP_ROUTINES: Record<string, WarmupExercise[]> = {
     { name: 'Easy Jog',        desc: 'Leichtes Einlaufen, lockeres Tempo',             sek: 60 },
   ],
   Barbell: [
-    { name: 'Jumping Jacks',           desc: 'Arme und Beine gleichzeitig spreizen',          sek: 40 },
-    { name: 'Hip Hinge',               desc: 'Langsam vorwärts beugen, Rücken gerade',        sek: 30 },
-    { name: 'Shoulder Circles',        desc: 'Große Kreise mit beiden Armen',                 sek: 30 },
-    { name: 'Air Squats',              desc: 'Tief in die Knie, Brust hoch',                  sek: 40 },
-    { name: 'Inchworms',               desc: 'Hände zum Boden, langsam vorwärts laufen',      sek: 40 },
+    { name: 'Jumping Jacks',            desc: 'Arme und Beine gleichzeitig spreizen',         sek: 40 },
+    { name: 'Hip Hinge',                desc: 'Langsam vorwärts beugen, Rücken gerade',       sek: 30 },
+    { name: 'Shoulder Circles',         desc: 'Große Kreise mit beiden Armen',                sek: 30 },
+    { name: 'Air Squats',               desc: 'Tief in die Knie, Brust hoch',                 sek: 40 },
+    { name: 'Inchworms',                desc: 'Hände zum Boden, langsam vorwärts laufen',     sek: 40 },
     { name: 'Barbell PVC Pass-Through', desc: 'Leichte Stange über den Kopf, Hüfte öffnen',  sek: 40 },
   ],
   Kettlebell: [
-    { name: 'Jumping Jacks', desc: 'Arme und Beine gleichzeitig spreizen',              sek: 40 },
-    { name: 'Hip Circles',   desc: 'Hüfte in großen Kreisen drehen',                    sek: 30 },
-    { name: 'Arm Circles',   desc: 'Große Kreise mit beiden Armen',                     sek: 30 },
-    { name: 'Goblet Squat Hold', desc: 'Knie halten, Hüfte öffnen – 3 Sek halten',     sek: 40 },
-    { name: 'Good Mornings', desc: 'Hände am Hinterkopf, Rücken gerade vorwärts',       sek: 40 },
-    { name: 'KB Halos',      desc: 'Kettlebell langsam um den Kopf kreisen',             sek: 40 },
+    { name: 'Jumping Jacks',    desc: 'Arme und Beine gleichzeitig spreizen',           sek: 40 },
+    { name: 'Hip Circles',      desc: 'Hüfte in großen Kreisen drehen',                 sek: 30 },
+    { name: 'Arm Circles',      desc: 'Große Kreise mit beiden Armen',                  sek: 30 },
+    { name: 'Goblet Squat Hold', desc: 'Knie halten, Hüfte öffnen – 3 Sek halten',    sek: 40 },
+    { name: 'Good Mornings',    desc: 'Hände am Hinterkopf, Rücken gerade vorwärts',   sek: 40 },
+    { name: 'KB Halos',         desc: 'Kettlebell langsam um den Kopf kreisen',         sek: 40 },
   ],
   Rower: [
-    { name: 'Jumping Jacks',   desc: 'Arme und Beine gleichzeitig spreizen',            sek: 40 },
-    { name: 'Hip Hinge',       desc: 'Vorwärts beugen, Rücken gerade',                  sek: 30 },
-    { name: 'Torso Rotation',  desc: 'Oberkörper links und rechts drehen',              sek: 30 },
-    { name: 'Leg Swings',      desc: 'Bein vor und zurück schwingen',                   sek: 30 },
-    { name: 'Easy Row',        desc: 'Sehr leichtes Rudern – Technik einüben',          sek: 60 },
-    { name: 'Burpees',         desc: 'Körper aufwärmen, Puls erhöhen',                  sek: 40 },
+    { name: 'Jumping Jacks',  desc: 'Arme und Beine gleichzeitig spreizen',             sek: 40 },
+    { name: 'Hip Hinge',      desc: 'Vorwärts beugen, Rücken gerade',                   sek: 30 },
+    { name: 'Torso Rotation', desc: 'Oberkörper links und rechts drehen',               sek: 30 },
+    { name: 'Leg Swings',     desc: 'Bein vor und zurück schwingen',                    sek: 30 },
+    { name: 'Easy Row',       desc: 'Sehr leichtes Rudern – Technik einüben',           sek: 60 },
+    { name: 'Burpees',        desc: 'Körper aufwärmen, Puls erhöhen',                   sek: 40 },
   ],
   Default: [
     { name: 'Jumping Jacks', desc: 'Arme und Beine gleichzeitig spreizen',              sek: 40 },
@@ -149,4 +149,174 @@ export function WodDetail({ wodName, onBack }: Props) {
 
       {/* Description */}
       <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-md)] p-4 space-y-3">
-        <p className="text-[var(--color-text)] text-
+        <p className="text-[var(--color-text)] text-sm leading-relaxed">{wod.description}</p>
+
+        {wod.exercises && (
+          <div>
+            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+              Exercises
+            </p>
+            <p className="text-sm text-[var(--color-text)]">{wod.exercises}</p>
+          </div>
+        )}
+
+        {wod.reps && (
+          <div>
+            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+              Reps / Scheme
+            </p>
+            <p className="text-sm text-[var(--color-text)] font-mono">{wod.reps}</p>
+          </div>
+        )}
+
+        {wod.gewicht && (
+          <div>
+            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+              Weight
+            </p>
+            <p className="text-sm text-[var(--color-text)]">{wod.gewicht} kg</p>
+          </div>
+        )}
+
+        {/* Equipment */}
+        {wod.equipment.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+              Equipment
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {wod.equipment.map((eq) => {
+                const eqColor = EQUIPMENT_COLORS[eq]
+                return (
+                  <span
+                    key={eq}
+                    className="text-xs px-2 py-1 rounded-full font-medium"
+                    style={eqColor
+                      ? { backgroundColor: `${eqColor}20`, color: eqColor }
+                      : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'var(--color-text-muted)' }
+                    }
+                  >
+                    {eq}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Warmup accordion */}
+      <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-md)] overflow-hidden">
+        <button
+          onClick={() => setShowWarmup((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3"
+        >
+          <span className="text-sm font-semibold text-[var(--color-text)]">🔥 Warmup</span>
+          <span className="text-[var(--color-text-muted)]">{showWarmup ? '▲' : '▼'}</span>
+        </button>
+        {showWarmup && (
+          <div className="px-4 pb-4 space-y-3">
+            {getWarmupRoutine(wod).map((ex, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className="text-xs font-bold text-[var(--color-text-muted)] mt-0.5 w-4 shrink-0">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-[var(--color-text)]">{ex.name}</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">{ex.desc} · {ex.sek}s</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Scaling */}
+      {(wod.skal_leicht || wod.skal_schwer) && (
+        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-md)] p-4 space-y-3">
+          <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+            Scaling
+          </p>
+          {wod.skal_leicht && (
+            <div>
+              <p className="text-xs text-green-400 mb-0.5">Easier</p>
+              <p className="text-sm text-[var(--color-text)]">{wod.skal_leicht}</p>
+            </div>
+          )}
+          {wod.skal_schwer && (
+            <div>
+              <p className="text-xs text-orange-400 mb-0.5">Harder</p>
+              <p className="text-sm text-[var(--color-text)]">{wod.skal_schwer}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Personal best */}
+      {personalBest && (
+        <div className="bg-[#E8642A]/10 border border-[#E8642A]/20 rounded-[var(--radius-md)] p-4 flex items-center gap-3">
+          <span className="text-2xl">🏆</span>
+          <div>
+            <p className="text-xs text-[#E8642A] font-medium uppercase tracking-wide">Personal Best</p>
+            <p className="text-lg font-bold text-[var(--color-text)]">
+              {personalBest.score_value}{' '}
+              <span className="text-sm font-normal text-[var(--color-text-muted)] capitalize">
+                ({personalBest.score_type})
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* CTA buttons */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => setShowTimer((v) => !v)}
+          className="flex-1 py-3.5 rounded-xl bg-[#E8642A] text-white font-semibold text-base active:scale-[0.98] transition-transform"
+        >
+          {showTimer ? 'Hide Timer' : '▶ Start Timer'}
+        </button>
+        <button
+          onClick={() => setShowScore(true)}
+          className="px-5 py-3.5 rounded-xl border border-[#E8642A]/40 text-[#E8642A] font-semibold text-sm active:scale-[0.98] transition-transform"
+        >
+          Log
+        </button>
+      </div>
+
+      {/* Embedded timer */}
+      {showTimer && (
+        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
+          <TimerView
+            initialMode={timerMode}
+            initialMinutes={wod.estimated_minutes || 20}
+            onComplete={() => setShowScore(true)}
+          />
+        </div>
+      )}
+
+      {/* History toggle */}
+      <button
+        onClick={() => setShowHistory((v) => !v)}
+        className="w-full text-left py-3 border-t border-white/8 flex items-center justify-between"
+      >
+        <span className="text-sm font-medium text-[var(--color-text-muted)]">My History</span>
+        <span className="text-[var(--color-text-muted)]">{showHistory ? '▲' : '▼'}</span>
+      </button>
+
+      {showHistory && <WodHistoryList wodName={wodName} />}
+
+      {/* Score input modal */}
+      <ScoreInput
+        wodName={wodName}
+        isOpen={showScore}
+        onClose={() => setShowScore(false)}
+        onSave={(entry) => {
+          addEntry.mutate(entry)
+          setShowScore(false)
+        }}
+        isPending={addEntry.isPending}
+      />
+    </div>
+  )
+}
