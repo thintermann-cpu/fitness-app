@@ -111,6 +111,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
   const workerRef = useRef<Worker | null>(null)
   const onCompleteRef = useRef(onComplete)
   onCompleteRef.current = onComplete
+  const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
 
   useEffect(() => {
     const worker = new Worker('/timer.worker.js')
@@ -171,6 +172,25 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
   // Reset side-switch flag on new run
   useEffect(() => {
     if (!isRunning) sideSwitchShownRef.current = false
+  }, [isRunning])
+
+  // Wake Lock: keep screen on while timer is running
+  useEffect(() => {
+    type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
+    const nav = navigator as WakeLockNav
+    if (!nav.wakeLock) return
+    if (isRunning) {
+      nav.wakeLock.request('screen')
+        .then(s => { wakeLockRef.current = s })
+        .catch(() => {})
+    } else {
+      wakeLockRef.current?.release().catch(() => {})
+      wakeLockRef.current = null
+    }
+    return () => {
+      wakeLockRef.current?.release().catch(() => {})
+      wakeLockRef.current = null
+    }
   }, [isRunning])
 
   const handleStart = useCallback(() => {
