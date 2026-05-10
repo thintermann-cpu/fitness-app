@@ -31,7 +31,8 @@ const LOCATION_OPTIONS: { id: WorkoutLocation; label: string; emoji: string }[] 
 
 const EQUIPMENT_ITEMS = [
   'Barbell', 'Dumbbells', 'Kettlebell', 'Pull-up Bar',
-  'Rings', 'Rower', 'Bike', 'Resistance Bands', 'Jump Rope', 'Box', 'Laufen',
+  'Rings', 'Rower', 'Bike', 'Resistance Bands', 'Jump Rope', 'Box',
+  'Sandbag', 'Gewichtsweste', 'Laufen',
 ]
 
 type PushEnabledKey = 'morning_enabled' | 'evening_enabled' | 'wod_enabled' | 'inactivity_enabled'

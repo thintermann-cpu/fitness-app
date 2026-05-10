@@ -8,7 +8,7 @@ export const DEFAULT_EQUIPMENT_BY_LOCATION: Record<WorkoutLocation, string[]> = 
   home:       ['Dumbbells', 'Kettlebell', 'Pull-up Bar', 'Resistance Bands'],
   gym:        ['Barbell', 'Dumbbells', 'Pull-up Bar', 'Rings', 'Rower', 'Bike', 'Kettlebell'],
   bodyweight: [],
-  outdoor:    ['Pull-up Bar', 'Laufen'],
+  outdoor:    ['Bodyweight', 'Pull-up Bar', 'Laufen'],
 }
 
 export interface DbProfile {
