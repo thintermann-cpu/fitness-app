@@ -240,8 +240,8 @@ type WorkoutLocation = 'home' | 'gym' | 'bodyweight' | 'outdoor'
 | Kettlebell | `#F5A623` Gelb | — |
 | Gymnastic | `#9B7FD4` Lila | — |
 | **Laufen** | `#06b6d4` Cyan | run, meter, 400m, 800m, mile, 1km, lauf + Aufwärm-Routine |
-| **Sandbag** | `#8B4513` Braun | sandbag |
-| **Gewichtsweste** | `#6B7280` Grau | weighted vest, weight vest, gewichtsweste |
+| **Sandbag** | — | sandbag |
+| **Gewichtsweste** | — | weighted vest, weight vest, gewichtsweste |
 
 ### Location-basierte Equipment-Presets (`DEFAULT_EQUIPMENT_BY_LOCATION`)
 
@@ -395,6 +395,14 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 | **Supabase Redirect-URLs** | Konfigurieren für OAuth / Magic Link |
 | **packages/ui** | Shared Component Library befüllen |
 | **E2E-Tests** | Playwright o.ä. |
+| **Warmup-Timer** | Echte Phasen via Timer-Worker (nicht nur Akkordeon-UI in WodDetail) |
+| **Free-Timer-Wizard** | 3-Step-Flow: Typ → Übungen → Übersicht; eigene Workouts ohne WOD-DB |
+| **Random-WOD-Picker** | Eigener Screen mit Filter + Würfel-Button |
+| **Favorites-System** | toggleFav, persistent (localStorage / Supabase) |
+| **Theme-Switcher** | Mind. Dark/Light; alte HTML-PWA hatte 8 Themes × 8 Accents |
+| **Toast-Notifications** | Globales Feedback-System (Ersatz für fehlende showToast-Äquivalente) |
+| **Home-Screen-Widgets** | Today's WOD, Woche-Stats, Recently Done auf Workout-Startansicht |
+| **Virtual/Infinite Scroll** | WodList — Performance bei 803+ Einträgen (aktuell: Pagination + "Load more") |
 
 ---
 
