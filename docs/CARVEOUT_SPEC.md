@@ -59,7 +59,7 @@ apps/web/src/
 │   ├── supabase.ts            # Supabase-Client + isSupabaseConfigured()
 │   └── push.ts                # Push Notification Helpers (subscribeToPush, unsubscribeFromPush)
 ├── store/
-│   └── authStore.ts           # Zustand-Store: user, session, loading; signIn/signUp/signOut/initialize
+│   └── authStore.ts           # Zustand-Store: user, session, loading, profile; signIn/signUp/signOut/initialize/fetchProfile/updateProfile; WorkoutLocation + DEFAULT_EQUIPMENT_BY_LOCATION + equipment_by_location
 ├── pages/
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
@@ -163,6 +163,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | Monorepo | Turborepo | 2.9.9 |
 | Hintergrund-Timer | Web Workers | nativ |
 | Audio | Web Audio API | nativ (Gong, Klangschale, Regen, Wellen) |
+| Screen Wake Lock | Screen Wake Lock API | nativ (verhindert Display-Timeout während Timer läuft) |
 | Push | Web Push API + Service Worker | nativ |
 | Linting | ESLint + TypeScript | — |
 | Node.js | (CI/Server) | 20 LTS |
@@ -182,7 +183,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 
 | Tabelle | Beschreibung |
 |---|---|
-| `user_profiles` | Nutzer-Metadaten: language, activePillars, primaryPillar, colorTheme, subscriptionStatus, trialEndsAt, **role** (admin/moderator/user), **subscription_status** |
+| `user_profiles` | Nutzer-Metadaten: language, activePillars, primaryPillar, colorTheme, subscriptionStatus, trialEndsAt, **role** (admin/moderator/user), **subscription_status**, **equipment** (string[]), **equipment_by_location** (JSONB: Record\<WorkoutLocation, string[]\>) |
 | `routines` | Routinen eines Nutzers (Name, Beschreibung, Pillar, Uhrzeit, Wochentage) |
 | `routine_logs` | Completion-Einträge pro Routine + Datum |
 | `todos` | To-do-Liste pro Nutzer + Datum |
@@ -209,18 +210,22 @@ type Language = 'en' | 'de' | 'es'
 type SubscriptionStatus = 'trial' | 'active' | 'expired' | 'cancelled'
 type UserRole = 'admin' | 'moderator' | 'user'
 
-interface UserProfile {
+// packages/types — DbProfile (authStore)
+interface DbProfile {
   id: string
-  email: string
+  display_name: string | null
   language: Language
-  activePillars: PillarId[]
-  primaryPillar: PillarId
-  colorTheme: string
-  subscriptionStatus: SubscriptionStatus
-  trialEndsAt: string | null
-  role: UserRole
-  createdAt: string
+  primary_pillar: PillarId | null
+  active_pillars: PillarId[]
+  equipment: string[]
+  equipment_by_location: Record<WorkoutLocation, string[]> | null
+  role: UserRole | null
+  subscription_status: SubscriptionStatus | null
+  created_at: string
+  updated_at: string
 }
+
+type WorkoutLocation = 'home' | 'gym' | 'bodyweight' | 'outdoor'
 ```
 
 ---
@@ -235,6 +240,19 @@ interface UserProfile {
 | Kettlebell | `#F5A623` Gelb | — |
 | Gymnastic | `#9B7FD4` Lila | — |
 | **Laufen** | `#06b6d4` Cyan | run, meter, 400m, 800m, mile, 1km, lauf + Aufwärm-Routine |
+| **Sandbag** | `#8B4513` Braun | sandbag |
+| **Gewichtsweste** | `#6B7280` Grau | weighted vest, weight vest, gewichtsweste |
+
+### Location-basierte Equipment-Presets (`DEFAULT_EQUIPMENT_BY_LOCATION`)
+
+| Location | Standard-Equipment |
+|---|---|
+| **Home** | Dumbbells, Kettlebell, Pull-up Bar, Resistance Bands |
+| **Gym** | Barbell, Dumbbells, Pull-up Bar, Rings, Rower, Bike, Kettlebell |
+| **Bodyweight** | _(leer — nur Körpergewicht)_ |
+| **Outdoor** | Bodyweight, Pull-up Bar, Laufen |
+
+Nutzer können ihr Equipment pro Location in den Settings anpassen (`equipment_by_location` in `user_profiles`). `WorkoutPage` filtert die WOD-Liste anhand des aktiven Location-Presets.
 
 ---
 
@@ -248,6 +266,8 @@ interface UserProfile {
 | **Tabata** | Work-Zeit / Pause-Zeit / Anzahl Runden |
 
 Alle Modi nutzen den drift-korrigierten `timer.worker.js` im Hintergrund.
+
+**Screen Wake Lock:** Während der Timer läuft, aktiviert `TimerView.tsx` die Screen Wake Lock API (`navigator.wakeLock.request('screen')`), um zu verhindern, dass das Display während des Workouts ausgeht. Die Lock wird automatisch freigegeben, wenn der Timer pausiert, gestoppt oder die Komponente unmounted wird. Geräte ohne Wake-Lock-Support werden per Feature-Detection (`nav.wakeLock`-Check) still ignoriert.
 
 ---
 
@@ -351,7 +371,7 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 | **Phase 0** | Turborepo-Scaffold, packages/types, packages/i18n, packages/ui (Stub), CI/CD-Pipeline, Server-Setup-Skript |
 | **Phase 1** | Supabase-Client, Zustand Auth-Store, Login/Register/Onboarding-Pages, AppShell + BottomNav, Button/Card/Input-Components, Route Guards |
 | **Phase 2** | Routine-Pillar (RoutinePage, hooks: useRoutines/useRoutineLogs/useDailyLog/useTodos, Komponenten: RoutineList/WaterTracker/MoodCheck/TodoList/WeekView) |
-| **Phase 3** | Workout-Pillar (WorkoutPage, 803 WODs, drift-korrigierter Web Worker Timer mit AMRAP/ForTime/EMOM/Tabata-Konfiguration, alle WOD-Komponenten, Supabase-DDL für wods + wod_history, Equipment-Kategorie Laufen) |
+| **Phase 3** | Workout-Pillar (WorkoutPage, 803 WODs, drift-korrigierter Web Worker Timer mit AMRAP/ForTime/EMOM/Tabata-Konfiguration, alle WOD-Komponenten, Supabase-DDL für wods + wod_history, Equipment-Kategorien Laufen/Sandbag/Gewichtsweste, Location-basierter Equipment-Filter mit `DEFAULT_EQUIPMENT_BY_LOCATION`, Screen Wake Lock während Timer-Lauf) |
 | **Phase 4** | Stretching-Pillar — 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync |
 | **Phase 5** | Meditation-Pillar — 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer |
 | **Desktop Layout** | Sidebar (240px) ab lg-Breakpoint, BottomNav wird ausgeblendet |
@@ -378,4 +398,4 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session A Tier-1: equipment fix, wake lock, roadmap update)*
