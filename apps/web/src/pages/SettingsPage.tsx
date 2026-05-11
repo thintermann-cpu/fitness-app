@@ -9,12 +9,6 @@ import { subscribeToPush, unsubscribeFromPush, getPushSubscriptionStatus } from 
 
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
-const PILLARS = [
-  { id: 'workout',    label: 'Workout',    emoji: '🏋️', color: '#E8642A' },
-  { id: 'routine',    label: 'Mein Tag',   emoji: '📋', color: '#4A90D9' },
-  { id: 'stretching', label: 'Stretching', emoji: '🤸', color: '#7BC67E' },
-  { id: 'meditation', label: 'Meditation', emoji: '🧘', color: '#9B7FD4' },
-] as const
 
 const LANGUAGES = [
   { id: 'de', label: 'Deutsch', flag: '🇩🇪' },
@@ -76,21 +70,49 @@ type Lang = 'de' | 'en' | 'es'
 
 const T = {
   de: {
-    activePillars: 'Aktive Pillars',
-    activePillarsDesc: 'Welche Bereiche möchtest du nutzen?',
-    alwaysActive: 'Immer aktiv',
+    activePillars:    'Aktive Pillars',
+    activePillarsDesc:'Welche Bereiche möchtest du nutzen?',
+    alwaysActive:     'Immer aktiv',
+    pillarWorkout:    'Training',
+    pillarRoutine:    'Mein Tag',
+    pillarStretching: 'Dehnen & Yoga',
+    pillarMeditation: 'Meditation',
   },
   en: {
-    activePillars: 'Active Pillars',
-    activePillarsDesc: 'Which areas do you want to use?',
-    alwaysActive: 'Always active',
+    activePillars:    'Active Pillars',
+    activePillarsDesc:'Which areas do you want to use?',
+    alwaysActive:     'Always active',
+    pillarWorkout:    'Workout',
+    pillarRoutine:    'My Day',
+    pillarStretching: 'Stretching & Yoga',
+    pillarMeditation: 'Meditation',
   },
   es: {
-    activePillars: 'Pilares activos',
-    activePillarsDesc: '¿Qué áreas quieres utilizar?',
-    alwaysActive: 'Siempre activo',
+    activePillars:    'Pilares activos',
+    activePillarsDesc:'¿Qué áreas quieres utilizar?',
+    alwaysActive:     'Siempre activo',
+    pillarWorkout:    'Entrenamiento',
+    pillarRoutine:    'Mi Día',
+    pillarStretching: 'Estiramientos & Yoga',
+    pillarMeditation: 'Meditación',
   },
 } as const
+
+type TDict = { pillarWorkout: string; pillarRoutine: string; pillarStretching: string; pillarMeditation: string }
+
+const PILLAR_BASES = [
+  { id: 'workout'    as const, emoji: '🏋️', color: '#E8642A' },
+  { id: 'routine'    as const, emoji: '📋', color: '#4A90D9' },
+  { id: 'stretching' as const, emoji: '🤸', color: '#7BC67E' },
+  { id: 'meditation' as const, emoji: '🧘', color: '#9B7FD4' },
+]
+
+function getPillars(t: TDict) {
+  return PILLAR_BASES.map(p => ({
+    ...p,
+    label: t[`pillar${p.id.charAt(0).toUpperCase() + p.id.slice(1)}` as keyof TDict],
+  }))
+}
 
 function SaveButton({
   loading,
@@ -150,6 +172,19 @@ export function SettingsPage() {
   const [pushPrefs,     setPushPrefs]     = useState<PushPrefs>(DEFAULT_PUSH_PREFS)
   const [savingPush,    setSavingPush]    = useState(false)
   const [savedPush,     setSavedPush]     = useState(false)
+
+  // ── Substitution toggle (localStorage) ──
+  const SUBST_KEY = 'carveout_substitution_enabled'
+  const [substitutionEnabled, setSubstitutionEnabled] = useState<boolean>(() => {
+    const stored = localStorage.getItem(SUBST_KEY)
+    return stored === null ? true : stored === 'true'
+  })
+  const toggleSubstitution = () => {
+    setSubstitutionEnabled((prev) => {
+      localStorage.setItem(SUBST_KEY, String(!prev))
+      return !prev
+    })
+  }
 
   useEffect(() => {
     if (!profile) return
@@ -265,6 +300,7 @@ export function SettingsPage() {
 
   const lang = (language as Lang)
   const t = T[lang] ?? T.de
+  const pillars = getPillars(t)
 
   return (
     <div
@@ -310,7 +346,7 @@ export function SettingsPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {PILLARS.map((p) => {
+          {pillars.map((p) => {
             const selected = primaryPillar === p.id
             return (
               <button
@@ -426,7 +462,7 @@ export function SettingsPage() {
         </div>
 
         <div className="space-y-3">
-          {PILLARS.map((p) => {
+          {pillars.map((p) => {
             const isActive = activePillars.includes(p.id)
             const isLocked = p.id === 'routine'
             return (
@@ -603,6 +639,41 @@ export function SettingsPage() {
             )}
           </>
         )}
+      </section>
+
+      {/* ── Substitutions ── */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="font-semibold text-base">Skalierungen anzeigen</h2>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            Zeigt leichte und schwere Varianten bei jedem WOD an.
+          </p>
+        </div>
+        <button
+          onClick={toggleSubstitution}
+          className="w-full flex items-center justify-between rounded-2xl px-4 py-3"
+          style={{ backgroundColor: 'var(--color-bg-card)' }}
+        >
+          <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+            Skalierungen aktiv
+          </span>
+          <div
+            style={{
+              width: 44, height: 24, borderRadius: 12,
+              background: substitutionEnabled ? '#E8642A' : 'rgba(255,255,255,0.1)',
+              transition: 'background 0.2s', position: 'relative', flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute', top: 3,
+                left: substitutionEnabled ? 23 : 3,
+                width: 18, height: 18, borderRadius: '50%',
+                background: 'white', transition: 'left 0.2s',
+              }}
+            />
+          </div>
+        </button>
       </section>
     </div>
   )
