@@ -186,6 +186,18 @@ export function SettingsPage() {
     })
   }
 
+  // ── Silent Mode toggle (localStorage) ──
+  const SILENT_KEY = 'carveout_silent_mode'
+  const [silentMode, setSilentMode] = useState<boolean>(() =>
+    localStorage.getItem(SILENT_KEY) === 'true'
+  )
+  const toggleSilentMode = () => {
+    setSilentMode((prev) => {
+      localStorage.setItem(SILENT_KEY, String(!prev))
+      return !prev
+    })
+  }
+
   useEffect(() => {
     if (!profile) return
     setDisplayName(profile.display_name ?? '')
@@ -668,6 +680,41 @@ export function SettingsPage() {
               style={{
                 position: 'absolute', top: 3,
                 left: substitutionEnabled ? 23 : 3,
+                width: 18, height: 18, borderRadius: '50%',
+                background: 'white', transition: 'left 0.2s',
+              }}
+            />
+          </div>
+        </button>
+      </section>
+
+      {/* ── Silent Mode (Parent Mode) ── */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="font-semibold text-base">Silent Mode</h2>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            Blendet WODs mit Sprungübungen aus (für geräuscharmes Training).
+          </p>
+        </div>
+        <button
+          onClick={toggleSilentMode}
+          className="w-full flex items-center justify-between rounded-2xl px-4 py-3"
+          style={{ backgroundColor: 'var(--color-bg-card)' }}
+        >
+          <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+            🤫 Keine Sprungübungen
+          </span>
+          <div
+            style={{
+              width: 44, height: 24, borderRadius: 12,
+              background: silentMode ? '#E8642A' : 'rgba(255,255,255,0.1)',
+              transition: 'background 0.2s', position: 'relative', flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute', top: 3,
+                left: silentMode ? 23 : 3,
                 width: 18, height: 18, borderRadius: '50%',
                 background: 'white', transition: 'left 0.2s',
               }}

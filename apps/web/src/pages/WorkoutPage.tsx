@@ -40,6 +40,7 @@ export function WorkoutPage() {
 
   const [tab, setTab]             = useState<Tab>('wods')
   const [location, setLocation]   = useState<WorkoutLocation | null>(getSavedLocation())
+  const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
 
   function handleLocationSelect(loc: WorkoutLocation) {
     const next = location === loc ? null : loc
@@ -117,6 +118,7 @@ export function WorkoutPage() {
             <WodList
               onSelectWod={(name) => navigate(`/workout/${encodeURIComponent(name)}`)}
               equipmentFilter={equipmentForLocation}
+              silentMode={silentMode}
             />
           </>
         )}
