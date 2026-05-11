@@ -219,6 +219,7 @@ interface DbProfile {
   active_pillars: PillarId[]
   equipment: string[]
   equipment_by_location: Record<WorkoutLocation, string[]> | null
+  substitution_enabled: boolean
   role: UserRole | null
   subscription_status: SubscriptionStatus | null
   created_at: string
@@ -377,12 +378,13 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 | **Desktop Layout** | Sidebar (240px) ab lg-Breakpoint, BottomNav wird ausgeblendet |
 | **Admin-Bereich** | /admin/* mit AdminRoute (role-guard), AdminLayout, Dashboard, Users, Manual Tasks + Markdown-Export |
 | **Push Notifications (Client)** | Service Worker, subscribeToPush/unsubscribeFromPush, Settings-Toggles pro Reminder-Typ |
+| **Phase 7-9 Cleanup** | Zeit-Filter (`minDuration`/`maxDuration` in `useWods`), Substitution-Toggle (SettingsPage + WodDetail-Gate, localStorage), Silent Mode / Parent Mode (`is_jumping`-Flag auf WOD-Ebene, Keyword-Sweep 251 WODs, SettingsPage-Toggle + WodList-Filter), Stretching & Yoga Rebranding (i18n DE/EN/ES), Hybrid-Labels für WOD-Typen (`wodTypeLabels.ts`, WodCard + WodList + TimerView sprachabhängig), BottomNav i18n, LogoIcon SVG |
 
 ### Offen / Roadmap
 
 | Bereich | Inhalt |
 |---|---|
-| **Logo / Brand Identity** | Finale Markenidentität für carveout.app |
+| **Logo / Brand Identity** | ✅ LogoIcon.tsx als SVG-Komponente (C-Bogen + Pfeil), Sidebar + favicon.svg aktualisiert |
 | **Landingpage** | apps/landing — Marketing, Waitlist, Pricing |
 | **Stripe** | Abo-Integration (7-Tage Trial); subscription_status bereits im Schema |
 | **Bestätigungsemail** | Via Resend — wartet auf finales Logo |
@@ -406,4 +408,4 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session A Tier-1: equipment fix, wake lock, roadmap update)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session B: Phase 7-9 Cleanup, Branding, Wording-System)*
