@@ -1,4 +1,6 @@
 import { useState, useCallback } from 'react'
+import { useAuthStore } from '../../store/authStore'
+import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { useWods } from '../../hooks/useWods'
 import { WodCard } from './WodCard'
 
@@ -9,9 +11,11 @@ const DIFFICULTIES = ['', 'Beginner', 'Intermediate', 'Advanced']
 interface Props {
   onSelectWod: (wodName: string) => void
   equipmentFilter?: string[]
+  silentMode?: boolean
 }
 
-export function WodList({ onSelectWod, equipmentFilter }: Props) {
+export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
+  const lang = useAuthStore((s) => s.profile?.language ?? 'de')
   const [search, setSearch]         = useState('')
   const [type, setType]             = useState('')
   const [category, setCategory]     = useState('')
@@ -28,6 +32,7 @@ export function WodList({ onSelectWod, equipmentFilter }: Props) {
     search:          search || undefined,
     page,
     equipmentFilter: equipmentFilter?.length ? equipmentFilter : undefined,
+    silentMode: silentMode ?? false,
   })
 
   const wods    = data?.data  ?? []
@@ -148,6 +153,7 @@ export function WodList({ onSelectWod, equipmentFilter }: Props) {
               options={TYPES}
               value={type}
               onChange={handleFilterChange(setType)}
+              lang={lang}
             />
             <FilterSection
               label="Category"
@@ -180,9 +186,11 @@ interface FilterSectionProps {
   options: string[]
   value: string
   onChange: (v: string) => void
+  labelMap?: Record<string, string>
+  lang?: string
 }
 
-function FilterSection({ label, options, value, onChange }: FilterSectionProps) {
+function FilterSection({ label, options, value, onChange, labelMap, lang = 'de' }: FilterSectionProps) {
   return (
     <div className="space-y-2">
       <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
@@ -198,7 +206,7 @@ function FilterSection({ label, options, value, onChange }: FilterSectionProps) 
                 : { backgroundColor: 'rgba(255,255,255,0.08)', color: 'var(--color-text-muted)' }
             }
           >
-            {opt || `All ${label}s`}
+            {opt ? (label === 'Type' ? getWodTypeLabel(opt, lang) : (labelMap?.[opt] ?? opt)) : `All ${label}s`}
           </button>
         ))}
       </div>
