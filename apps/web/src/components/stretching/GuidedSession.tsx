@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import type { StretchingRoutine, StretchingExercise } from '../../hooks/useStretching'
 import { useStretchingLogs } from '../../hooks/useStretchingLogs'
+import { useAudio } from '../../hooks/useAudio'
 import { ExerciseIllustration } from './ExerciseIllustration'
 
 const PILLAR_COLOR = '#7BC67E'
@@ -79,6 +80,9 @@ interface Props {
 export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
   const t = T[lang]
   const { addLog } = useStretchingLogs()
+  const audio = useAudio()
+  const audioRef = useRef(audio)
+  audioRef.current = audio
   const [startTime] = useState(() => Date.now())
 
   const orderedExercises = useMemo(
@@ -119,6 +123,9 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
   const dashOffset = RING_CIRCUMFERENCE * (1 - ringProgress)
   const ringColor = phase === 'switch' ? '#F59E0B' : phase === 'rest' ? '#60A5FA' : PILLAR_COLOR
 
+  // Audio cleanup on unmount
+  useEffect(() => () => { audioRef.current.cleanup() }, [])
+
   // Start session
   function startSession() {
     const first = orderedExercises[0]
@@ -128,6 +135,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
     setPhase('exercise')
     setTimeLeft(first.bilateral ? Math.floor(exerciseDuration / 2) : exerciseDuration)
     setPaused(false)
+    void audioRef.current.playGong()
   }
 
   function jumpToExercise(idx: number) {
@@ -144,6 +152,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
     setPhase('done')
     const durationMin = Math.round((Date.now() - startTime) / 60000)
     addLog.mutate({ routine_id: routine.id, duration_min: durationMin || 1 })
+    void audioRef.current.playComplete()
   }
 
   function goBack() {
@@ -168,14 +177,17 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
 
     if (timeLeft <= 0) {
       if (phase === 'exercise' && current.bilateral && side === 'left') {
+        void audioRef.current.playBeep()
         setPhase('switch')
         setTimeLeft(SWITCH_DURATION)
       } else if (phase === 'switch') {
+        void audioRef.current.playBeep()
         setSide('right')
         setPhase('exercise')
         setTimeLeft(Math.floor(exerciseDuration / 2))
       } else if (phase === 'rest') {
         if (currentIndex < total - 1) {
+          void audioRef.current.playBeep()
           jumpToExercise(currentIndex + 1)
         } else {
           finishSession()
@@ -183,9 +195,11 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
       } else {
         // exercise done (non-bilateral or right side)
         if (pauseDuration > 0) {
+          void audioRef.current.playBeep()
           setPhase('rest')
           setTimeLeft(pauseDuration)
         } else if (currentIndex < total - 1) {
+          void audioRef.current.playBeep()
           jumpToExercise(currentIndex + 1)
         } else {
           finishSession()
