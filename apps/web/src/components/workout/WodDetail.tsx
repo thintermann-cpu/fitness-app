@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useWod } from '../../hooks/useWods'
 import type { Wod } from '../../hooks/useWods'
+import { useAuthStore } from '../../store/authStore'
+import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { TimerView } from './TimerView'
 import { ScoreInput } from './ScoreInput'
@@ -95,6 +97,7 @@ interface Props {
 }
 
 export function WodDetail({ wodName, onBack }: Props) {
+  const lang = useAuthStore((s) => s.profile?.language ?? 'de')
   const { data: wod, isLoading } = useWod(wodName)
   const { personalBest, addEntry } = useWodHistory(wodName)
   const [showTimer, setShowTimer]     = useState(false)
@@ -137,7 +140,7 @@ export function WodDetail({ wodName, onBack }: Props) {
           <h2 className="text-2xl font-black text-[var(--color-text)]">{wod.name}</h2>
           <div className="flex gap-2 mt-1 flex-wrap">
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[#E8642A]/20 text-[#E8642A]">
-              {wod.type}
+              {getWodTypeLabel(wod.type, lang)}
             </span>
             <span className="text-xs text-[var(--color-text-muted)]">{wod.category}</span>
             {wod.estimated_minutes > 0 && (
@@ -231,8 +234,9 @@ export function WodDetail({ wodName, onBack }: Props) {
         )}
       </div>
 
-      {/* Scaling */}
-      {(wod.skal_leicht || wod.skal_schwer) && (
+      {/* Scaling — only when substitution_enabled */}
+      {(wod.skal_leicht || wod.skal_schwer) &&
+        localStorage.getItem('carveout_substitution_enabled') !== 'false' && (
         <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-md)] p-4 space-y-3">
           <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
             Scaling

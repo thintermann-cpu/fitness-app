@@ -187,6 +187,7 @@ export function RoutineList({
                   onClick={() => onCreateSuggested(s)}
                   style={{
                     padding: '6px 12px',
+                    minHeight: 44,
                     background: 'rgba(74,144,217,0.15)',
                     border: '1px solid rgba(74,144,217,0.3)',
                     borderRadius: 8,

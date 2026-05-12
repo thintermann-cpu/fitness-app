@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { LogoIcon } from '../ui/LogoIcon'
 import { useAuthStore } from '../../store/authStore'
 
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
@@ -6,7 +7,7 @@ const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 const NAV_ITEMS = [
   { path: '/workout',    icon: '💪', label: 'Workout',  color: '#E8642A', pillarId: 'workout' },
   { path: '/routine',    icon: '📋', label: 'Routine',  color: '#4A90D9', pillarId: null },
-  { path: '/stretching', icon: '🧘', label: 'Stretch',  color: '#7BC67E', pillarId: 'stretching' },
+  { path: '/stretching', icon: '🧘', label: 'Stretch & Yoga',  color: '#7BC67E', pillarId: 'stretching' },
   { path: '/meditation', icon: '🧠', label: 'Focus',    color: '#9B7FD4', pillarId: 'meditation' },
 ] as const
 
@@ -33,7 +34,8 @@ export function Sidebar() {
       }}
     >
       {/* Logo */}
-      <div className="px-6 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+      <div className="px-6 py-5 border-b flex items-center gap-3" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        <LogoIcon className="w-8 h-8" style={{ color: '#E8642A' }} />
         <span className="text-xl font-black" style={{ color: '#E8642A' }}>Carve</span>
         <span className="text-xl font-black" style={{ color: 'var(--color-text)' }}>Out</span>
       </div>

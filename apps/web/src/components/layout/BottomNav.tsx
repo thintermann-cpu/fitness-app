@@ -4,16 +4,24 @@ import { useAuthStore } from '../../store/authStore'
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 const NAV_ITEMS = [
-  { path: '/workout',    icon: '💪', label: 'Workout',  color: '#E8642A', pillarId: 'workout' },
-  { path: '/routine',    icon: '📋', label: 'Routine',  color: '#4A90D9', pillarId: null },
-  { path: '/stretching', icon: '🧘', label: 'Stretch',  color: '#7BC67E', pillarId: 'stretching' },
-  { path: '/meditation', icon: '🧠', label: 'Focus',    color: '#9B7FD4', pillarId: 'meditation' },
-  { path: '/settings',   icon: '⚙️', label: 'Settings', color: null,      pillarId: null },
+  { path: '/workout',    icon: '💪', key: 'workout',    color: '#E8642A', pillarId: 'workout' },
+  { path: '/routine',    icon: '📋', key: 'routine',    color: '#4A90D9', pillarId: null },
+  { path: '/stretching', icon: '🧘', key: 'stretching', color: '#7BC67E', pillarId: 'stretching' },
+  { path: '/meditation', icon: '🧠', key: 'meditation', color: '#9B7FD4', pillarId: 'meditation' },
+  { path: '/settings',   icon: '⚙️', key: 'settings',   color: null,      pillarId: null },
 ] as const
+
+const NAV_LABELS: Record<string, Record<string, string>> = {
+  de: { workout: 'Training', routine: 'Mein Tag', stretching: 'Stretch & Yoga',      meditation: 'Fokus',      settings: 'Einstellungen' },
+  en: { workout: 'Workout',  routine: 'My Day',   stretching: 'Stretch & Yoga',      meditation: 'Meditate',   settings: 'Settings' },
+  es: { workout: 'Entreno',  routine: 'Mi Día',   stretching: 'Estiramiento & Yoga', meditation: 'Meditar',    settings: 'Ajustes' },
+}
 
 export function BottomNav() {
   const { pathname } = useLocation()
-  const { profile } = useAuthStore()
+  const { profile }  = useAuthStore()
+  const lang         = profile?.language ?? 'de'
+  const labels       = NAV_LABELS[lang] ?? NAV_LABELS.de
   const activePillars = profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
 
   const visibleItems = NAV_ITEMS.filter(item =>
@@ -30,9 +38,10 @@ export function BottomNav() {
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      {visibleItems.map(({ path, icon, label, color }) => {
-        const isActive = pathname === path
+      {visibleItems.map(({ path, icon, key, color }) => {
+        const isActive    = pathname === path
         const activeColor = color ?? 'var(--color-text)'
+        const label       = labels[key] ?? key
 
         return (
           <Link
@@ -49,7 +58,7 @@ export function BottomNav() {
             )}
             <span className="text-xl leading-none">{icon}</span>
             <span
-              className="text-[10px] font-medium leading-none"
+              className="text-[10px] font-medium leading-none truncate max-w-[56px]"
               style={{ color: isActive ? activeColor : 'var(--color-text-muted)' }}
             >
               {label}

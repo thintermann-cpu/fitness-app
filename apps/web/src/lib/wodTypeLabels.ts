@@ -2,20 +2,20 @@ const WOD_TYPE_LABELS: Record<string, Record<string, string>> = {
   de: {
     AMRAP:   'Zeit-Challenge (AMRAP)',
     ForTime: 'Auf Zeit (For Time)',
-    EMOM:    'Intervall-Routine (EMOM)',
-    Tabata:  'Tabata-Intervall',
+    EMOM:    'Intervall (EMOM)',
+    Tabata:  'Tabata-Intervall (Tabata)',
   },
   en: {
     AMRAP:   'Time Challenge (AMRAP)',
     ForTime: 'For Time',
-    EMOM:    'Interval Routine (EMOM)',
-    Tabata:  'Tabata Interval',
+    EMOM:    'Interval (EMOM)',
+    Tabata:  'Tabata Interval (Tabata)',
   },
   es: {
     AMRAP:   'Reto de Tiempo (AMRAP)',
     ForTime: 'Contra el Reloj',
-    EMOM:    'Rutina de Intervalo (EMOM)',
-    Tabata:  'Intervalo Tabata',
+    EMOM:    'Intervalo (EMOM)',
+    Tabata:  'Intervalo Tabata (Tabata)',
   },
 }
 

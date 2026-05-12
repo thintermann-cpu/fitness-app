@@ -15,7 +15,7 @@ type View = 'list' | 'detail' | 'session'
 
 const T = {
   de: {
-    title: 'Stretching',
+    title: 'Stretch & Yoga',
     tabRoutines: 'Routinen',
     tabHistory: 'Verlauf',
     all: 'Alle',
@@ -31,7 +31,7 @@ const T = {
     empty: 'Keine Routinen gefunden.',
   },
   en: {
-    title: 'Stretching',
+    title: 'Stretch & Yoga',
     tabRoutines: 'Routines',
     tabHistory: 'History',
     all: 'All',
@@ -47,7 +47,7 @@ const T = {
     empty: 'No routines found.',
   },
   es: {
-    title: 'Estiramientos',
+    title: 'Estiramiento & Yoga',
     tabRoutines: 'Rutinas',
     tabHistory: 'Historial',
     all: 'Todas',

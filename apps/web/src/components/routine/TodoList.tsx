@@ -95,6 +95,7 @@ export function TodoList({ todos, onAdd, onComplete, onDelete, onClearDone }: Pr
           onClick={handleAdd}
           style={{
             padding: '10px 15px',
+            minHeight: 44,
             background: 'rgba(74,144,217,0.18)',
             border: '1px solid rgba(74,144,217,0.36)',
             borderRadius: 8,
@@ -103,6 +104,7 @@ export function TodoList({ todos, onAdd, onComplete, onDelete, onClearDone }: Pr
             lineHeight: 1,
             cursor: 'pointer',
             fontFamily: 'inherit',
+            touchAction: 'manipulation',
           }}
         >
           +
@@ -130,25 +132,39 @@ export function TodoList({ todos, onAdd, onComplete, onDelete, onClearDone }: Pr
                 opacity: t.completed ? 0.5 : 1,
               }}
             >
-              <div
+              <button
                 onClick={() => onComplete(t.id, !t.completed)}
                 style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 5,
-                  flexShrink: 0,
-                  border: t.completed ? 'none' : '2px solid rgba(255,255,255,0.15)',
-                  background: t.completed ? '#4A90D9' : 'transparent',
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontSize: 11,
-                  color: 'white',
+                  minWidth: 44,
+                  minHeight: 44,
+                  flexShrink: 0,
+                  touchAction: 'manipulation',
                 }}
               >
-                {t.completed && '✓'}
-              </div>
+                <span
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 5,
+                    border: t.completed ? 'none' : '2px solid rgba(255,255,255,0.15)',
+                    background: t.completed ? '#4A90D9' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 11,
+                    color: 'white',
+                  }}
+                >
+                  {t.completed && '✓'}
+                </span>
+              </button>
               <div
                 style={{
                   flex: 1,
@@ -161,7 +177,20 @@ export function TodoList({ todos, onAdd, onComplete, onDelete, onClearDone }: Pr
               </div>
               <button
                 onClick={() => onDelete(t.id)}
-                style={{ background: 'none', border: 'none', color: '#4a4238', cursor: 'pointer', fontSize: 15 }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#4a4238',
+                  cursor: 'pointer',
+                  fontSize: 15,
+                  minWidth: 44,
+                  minHeight: 44,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  touchAction: 'manipulation',
+                }}
               >
                 ×
               </button>

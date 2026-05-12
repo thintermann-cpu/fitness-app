@@ -75,7 +75,7 @@ const T = {
     alwaysActive:     'Immer aktiv',
     pillarWorkout:    'Training',
     pillarRoutine:    'Mein Tag',
-    pillarStretching: 'Dehnen & Yoga',
+    pillarStretching: 'Stretch & Yoga',
     pillarMeditation: 'Meditation',
   },
   en: {
@@ -84,7 +84,7 @@ const T = {
     alwaysActive:     'Always active',
     pillarWorkout:    'Workout',
     pillarRoutine:    'My Day',
-    pillarStretching: 'Stretching & Yoga',
+    pillarStretching: 'Stretch & Yoga',
     pillarMeditation: 'Meditation',
   },
   es: {
@@ -93,7 +93,7 @@ const T = {
     alwaysActive:     'Siempre activo',
     pillarWorkout:    'Entrenamiento',
     pillarRoutine:    'Mi Día',
-    pillarStretching: 'Estiramientos & Yoga',
+    pillarStretching: 'Estiramiento & Yoga',
     pillarMeditation: 'Meditación',
   },
 } as const

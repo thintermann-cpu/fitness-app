@@ -7,7 +7,7 @@ import type { RoutineLog } from '../hooks/useRoutineLogs'
 const PILLARS = [
   { id: 'workout',    label: 'Workout',    emoji: '🏋️', color: '#E8642A', route: '/workout' },
   { id: 'routine',    label: 'Mein Tag',   emoji: '📋', color: '#4A90D9', route: '/routine' },
-  { id: 'stretching', label: 'Stretching', emoji: '🤸', color: '#7BC67E', route: '/stretching' },
+  { id: 'stretching', label: 'Stretch & Yoga', emoji: '🤸', color: '#7BC67E', route: '/stretching' },
   { id: 'meditation', label: 'Meditation', emoji: '🧘', color: '#9B7FD4', route: '/meditation' },
 ] as const
 

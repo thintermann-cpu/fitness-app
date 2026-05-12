@@ -116,23 +116,35 @@ export function RoutineItem({
         <button
           onClick={e => { e.stopPropagation(); onToggle() }}
           style={{
-            width: 28,
-            height: 28,
-            borderRadius: '50%',
-            flexShrink: 0,
+            background: 'none',
+            border: 'none',
+            padding: 0,
             cursor: 'pointer',
-            border: isCompleted ? 'none' : '2px solid rgba(255,255,255,0.15)',
-            background: isCompleted ? '#4A90D9' : 'transparent',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 12,
-            color: 'white',
-            padding: 0,
+            minWidth: 44,
+            minHeight: 44,
+            flexShrink: 0,
             touchAction: 'manipulation',
           }}
         >
-          {isCompleted && '✓'}
+          <span
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              border: isCompleted ? 'none' : '2px solid rgba(255,255,255,0.15)',
+              background: isCompleted ? '#4A90D9' : 'transparent',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12,
+              color: 'white',
+            }}
+          >
+            {isCompleted && '✓'}
+          </span>
         </button>
       </div>
     </div>

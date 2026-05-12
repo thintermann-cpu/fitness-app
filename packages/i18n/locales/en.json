@@ -7,7 +7,7 @@
     "home": "Home",
     "workout": "Workout",
     "routine": "My Day",
-    "stretching": "Stretch",
+    "stretching": "Stretch & Yoga",
     "meditation": "Meditate",
     "stats": "Stats",
     "settings": "Settings"
@@ -15,7 +15,7 @@
   "pillars": {
     "workout": "Workout",
     "routine": "My Day",
-    "stretching": "Stretching",
+    "stretching": "Stretch & Yoga",
     "meditation": "Meditation"
   },
   "onboarding": {
@@ -33,5 +33,11 @@
     "back": "Back",
     "start": "Start",
     "finish": "Finish"
+  },
+  "wodTypes": {
+    "AMRAP": "Time Challenge (AMRAP)",
+    "EMOM": "Interval (EMOM)",
+    "ForTime": "For Time",
+    "Tabata": "Tabata Interval (Tabata)"
   }
 }
