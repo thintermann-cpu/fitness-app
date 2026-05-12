@@ -53,7 +53,7 @@ export function MeditationCard({ meditation, lang, onClick }: Props) {
         <span className="font-semibold text-[var(--color-text)] text-base leading-tight flex-1 min-w-0">
           {meditation.name}
         </span>
-        <div className="flex items-center gap-0.5 shrink-0 -mr-2 -mt-2">
+        <div className="flex items-center gap-0.5 shrink-0">
           <span
             className="text-xs font-medium px-2 py-0.5 rounded-full"
             style={{ backgroundColor: `${PILLAR_COLOR}22`, color: PILLAR_COLOR }}

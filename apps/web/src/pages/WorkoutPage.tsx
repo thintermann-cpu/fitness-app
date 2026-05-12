@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import type { WorkoutLocation } from '../store/authStore'
 import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
@@ -74,13 +74,6 @@ export function WorkoutPage() {
         <h1 className="text-2xl font-black text-[var(--color-text)]">
           <span style={{ color: '#E8642A' }}>Workout</span>
         </h1>
-        <Link
-          to="/favorites?section=workout"
-          className="text-xs font-semibold pb-0.5"
-          style={{ color: '#E8642A' }}
-        >
-          ❤ Favoriten
-        </Link>
       </div>
 
       {/* Tab bar */}

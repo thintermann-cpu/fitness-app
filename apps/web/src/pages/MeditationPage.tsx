@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useMemo } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { useMeditations, useBreathworkTechniques } from '../hooks/useMeditations'
 import type { Meditation, BreathworkTechnique } from '../hooks/useMeditations'
@@ -108,13 +107,15 @@ export function MeditationPage() {
   const isLoading = medsLoading || techsLoading
   const isError   = medsError   || techsError
 
-  const catFiltered = catFilter === 'all'
-    ? meditations
-    : meditations.filter((m) => m.category === catFilter)
+  const catFiltered = useMemo(
+    () => catFilter === 'all' ? meditations : meditations.filter((m) => m.category === catFilter),
+    [meditations, catFilter],
+  )
 
-  const filtered = durFilter === 0
-    ? catFiltered
-    : catFiltered.filter((m) => m.duration_min <= durFilter)
+  const filtered = useMemo(
+    () => durFilter === 0 ? catFiltered : catFiltered.filter((m) => m.duration_min <= durFilter),
+    [catFiltered, durFilter],
+  )
 
   const handleSelectMeditation = (m: Meditation) => {
     setSelectedMeditation(m)
@@ -228,13 +229,6 @@ export function MeditationPage() {
         <h1 className="text-2xl font-black" style={{ color: PILLAR_COLOR }}>
           {t.title}
         </h1>
-        <Link
-          to="/favorites?section=meditation"
-          className="text-xs font-semibold pb-0.5"
-          style={{ color: PILLAR_COLOR }}
-        >
-          ❤ Favoriten
-        </Link>
       </div>
 
       {/* Tab bar */}
@@ -306,9 +300,22 @@ export function MeditationPage() {
 
             <div className="px-4 space-y-3">
               {isLoading ? (
-                <div className="flex justify-center py-12">
-                  <span className="text-sm text-[var(--color-text-muted)]">{t.loading}</span>
-                </div>
+                <>
+                  {[0, 1, 2, 3].map((i) => (
+                    <div key={i} className="rounded-[var(--radius-md)] bg-[var(--color-bg-card)] border border-white/5 p-4 animate-pulse">
+                      <div className="flex items-start gap-2 mb-2">
+                        <div className="h-4 rounded bg-white/10 flex-1" />
+                        <div className="h-5 w-20 rounded-full bg-white/10" />
+                      </div>
+                      <div className="h-3 rounded bg-white/10 mb-1.5 w-full" />
+                      <div className="h-3 rounded bg-white/10 w-2/3" />
+                      <div className="mt-3 flex gap-2">
+                        <div className="h-2.5 w-14 rounded bg-white/10" />
+                        <div className="h-2.5 w-10 rounded bg-white/10" />
+                      </div>
+                    </div>
+                  ))}
+                </>
               ) : isError ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                   <span className="text-4xl">⚠️</span>
@@ -337,9 +344,15 @@ export function MeditationPage() {
         {tab === 'breathwork' && (
           <div className="px-4 py-4 space-y-3">
             {isLoading ? (
-              <div className="flex justify-center py-12">
-                <span className="text-sm text-[var(--color-text-muted)]">{t.loading}</span>
-              </div>
+              <>
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="rounded-[var(--radius-md)] bg-[var(--color-bg-card)] border border-white/5 p-4 animate-pulse">
+                    <div className="h-4 rounded bg-white/10 mb-2 w-3/4" />
+                    <div className="h-3 rounded bg-white/10 w-full mb-1.5" />
+                    <div className="h-3 rounded bg-white/10 w-1/2" />
+                  </div>
+                ))}
+              </>
             ) : isError ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <span className="text-4xl">⚠️</span>

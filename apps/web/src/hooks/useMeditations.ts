@@ -98,6 +98,7 @@ export function useMeditations() {
         .from('meditations')
         .select('*')
         .order('duration_min')
+        .limit(100)
 
       if (error) {
         console.error('[useMeditations]', error.message)
@@ -105,7 +106,8 @@ export function useMeditations() {
       }
       return ((data ?? []) as RawMeditation[]).map((r) => mapMeditation(r, lang))
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime:    60 * 60 * 1000,
     retry: 1,
   })
 }
@@ -120,6 +122,7 @@ export function useBreathworkTechniques() {
         .from('breathwork_techniques')
         .select('*')
         .order('difficulty')
+        .limit(50)
 
       if (error) {
         console.error('[useBreathworkTechniques]', error.message)
@@ -127,7 +130,8 @@ export function useBreathworkTechniques() {
       }
       return ((data ?? []) as RawBreathworkTechnique[]).map((r) => mapTechnique(r, lang))
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime:    60 * 60 * 1000,
     retry: 1,
   })
 }

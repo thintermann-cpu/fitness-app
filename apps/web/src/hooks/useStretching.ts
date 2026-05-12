@@ -102,11 +102,13 @@ export function useStretchingExercises() {
         .from('stretching_exercises')
         .select('*')
         .order('muscle_group')
+        .limit(200)
 
       if (error) { console.error('[useStretchingExercises]', error.message); return [] }
       return ((data ?? []) as RawExercise[]).map((r) => mapExercise(r, lang))
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime:    60 * 60 * 1000,
   })
 }
 
@@ -124,10 +126,12 @@ export function useStretchingRoutines() {
         .from('stretching_routines')
         .select('*')
         .order('duration_min')
+        .limit(100)
 
       if (error) { console.error('[useStretchingRoutines]', error.message); return [] }
       return ((data ?? []) as RawRoutine[]).map((r) => mapRoutine(r, lang))
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime:    60 * 60 * 1000,
   })
 }

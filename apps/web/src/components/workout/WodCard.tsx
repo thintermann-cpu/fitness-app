@@ -37,7 +37,7 @@ export function WodCard({ wod, onClick }: Props) {
         <span className="font-semibold text-[var(--color-text)] text-base leading-tight flex-1 min-w-0">
           {wod.name}
         </span>
-        <div className="flex items-center gap-0.5 shrink-0 -mr-2 -mt-2">
+        <div className="flex items-center gap-0.5 shrink-0">
           <span
             className={`text-[10px] font-medium px-2 py-0.5 rounded-full max-w-[120px] truncate ${typeCls}`}
             title={label}

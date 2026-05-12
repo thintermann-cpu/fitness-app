@@ -102,7 +102,26 @@ export function RoutineList({
 
   if (isLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: 32, color: '#4a4238' }}>{t.loading}</div>
+      <div>
+        <div style={{ display: 'flex', gap: 7, marginBottom: 16 }}>
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={{ flex: 1, height: 52, borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }} />
+          ))}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 13px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+              <div style={{ width: 12, height: 28, borderRadius: 4, background: 'rgba(255,255,255,0.06)' }} />
+              <div style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(255,255,255,0.08)', flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ height: 13, borderRadius: 4, background: 'rgba(255,255,255,0.09)', marginBottom: 6, width: `${55 + (i * 13) % 30}%` }} />
+                <div style={{ height: 10, borderRadius: 4, background: 'rgba(255,255,255,0.06)', width: '35%' }} />
+              </div>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', flexShrink: 0 }} />
+            </div>
+          ))}
+        </div>
+      </div>
     )
   }
 
