@@ -55,7 +55,8 @@ export function MeditationCard({ meditation, lang, onClick }: Props) {
         </span>
         <div className="flex items-center gap-0.5 shrink-0">
           <span
-            className="text-xs font-medium px-2 py-0.5 rounded-full"
+            className="text-[10px] font-medium px-2 py-0.5 rounded-full max-w-[120px] truncate"
+            title={catLabel}
             style={{ backgroundColor: `${PILLAR_COLOR}22`, color: PILLAR_COLOR }}
           >
             {catLabel}
