@@ -24,6 +24,7 @@ export function TodoList({ todos, onAdd, onComplete, onDelete, onClearDone }: Pr
 
   const handleAdd = () => {
     if (!newText.trim()) return
+    console.log('[TodoList] handleAdd called:', activeList, newText.trim())
     onAdd(activeList, newText.trim())
     setNewText('')
   }

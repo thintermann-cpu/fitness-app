@@ -70,6 +70,7 @@ export function useRoutines() {
 
   const createMutation = useMutation({
     mutationFn: async (routine: Omit<Routine, 'id'>) => {
+      console.log('[useRoutines] create mutationFn called:', routine.name)
       const uid = await getUserId()
       if (!uid) throw new Error('Not authenticated')
       const { error } = await supabase
@@ -77,7 +78,17 @@ export function useRoutines() {
         .insert({ ...routine, user_id: uid })
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
+    onMutate: async (routine) => {
+      await queryClient.cancelQueries({ queryKey: ['routines'] })
+      const previous = queryClient.getQueryData<Routine[]>(['routines']) ?? []
+      const optimistic: Routine = { ...routine, id: `opt-${Date.now()}` }
+      queryClient.setQueryData<Routine[]>(['routines'], (old = []) => [...old, optimistic])
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      queryClient.setQueryData(['routines'], context?.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
   })
 
   const updateMutation = useMutation({

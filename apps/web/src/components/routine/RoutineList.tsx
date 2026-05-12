@@ -203,7 +203,10 @@ export function RoutineList({
                   </div>
                 </div>
                 <button
-                  onClick={() => onCreateSuggested(s)}
+                  onClick={() => {
+                    console.log('[RoutineList] Hinzufügen clicked:', s.name)
+                    onCreateSuggested(s)
+                  }}
                   style={{
                     padding: '6px 12px',
                     minHeight: 44,
@@ -224,7 +227,10 @@ export function RoutineList({
             ))}
           </div>
           <button
-            onClick={() => onCreateAll(suggestions)}
+            onClick={() => {
+              console.log('[RoutineList] Alle hinzufügen clicked, count:', suggestions.length)
+              onCreateAll(suggestions)
+            }}
             style={{
               width: '100%',
               padding: 12,

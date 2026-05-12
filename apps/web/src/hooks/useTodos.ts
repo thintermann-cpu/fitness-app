@@ -36,6 +36,7 @@ export function useTodos() {
 
   const addMutation = useMutation({
     mutationFn: async ({ list_name, text }: { list_name: string; text: string }) => {
+      console.log('[useTodos] add mutationFn called:', list_name, text)
       const uid = await getUserId()
       if (!uid) throw new Error('Not authenticated')
       const { error } = await supabase
@@ -43,7 +44,23 @@ export function useTodos() {
         .insert({ user_id: uid, list_name, text, completed: false })
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+    onMutate: async ({ list_name, text }) => {
+      await queryClient.cancelQueries({ queryKey: ['todos'] })
+      const previous = queryClient.getQueryData<Todo[]>(['todos']) ?? []
+      const optimistic: Todo = {
+        id: `opt-${Date.now()}`,
+        list_name,
+        text,
+        completed: false,
+        created_at: new Date().toISOString(),
+      }
+      queryClient.setQueryData<Todo[]>(['todos'], (old = []) => [...old, optimistic])
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      queryClient.setQueryData(['todos'], context?.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
   })
 
   const completeMutation = useMutation({
