@@ -1,4 +1,5 @@
 import type { StretchingRoutine } from '../../hooks/useStretching'
+import { FavoriteButton } from '../ui/FavoriteButton'
 
 const PILLAR_COLOR = '#7BC67E'
 
@@ -37,16 +38,19 @@ export function RoutineCard({ routine, lang, onClick }: Props) {
       onClick={onClick}
       className="w-full text-left rounded-[var(--radius-md)] bg-[var(--color-bg-card)] border border-white/5 p-4 active:scale-[0.98] transition-transform"
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="font-semibold text-[var(--color-text)] text-base leading-tight">
+      <div className="flex items-start gap-2 mb-2">
+        <span className="font-semibold text-[var(--color-text)] text-base leading-tight flex-1 min-w-0">
           {routine.name}
         </span>
-        <span
-          className="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full"
-          style={{ backgroundColor: `${PILLAR_COLOR}22`, color: PILLAR_COLOR }}
-        >
-          {goalLabel}
-        </span>
+        <div className="flex items-center gap-0.5 shrink-0 -mr-2 -mt-2">
+          <span
+            className="text-xs font-medium px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: `${PILLAR_COLOR}22`, color: PILLAR_COLOR }}
+          >
+            {goalLabel}
+          </span>
+          <FavoriteButton contentType="stretching_routine" contentId={routine.id} color={PILLAR_COLOR} />
+        </div>
       </div>
 
       <p className="text-sm text-[var(--color-text-muted)] line-clamp-2 mb-3">

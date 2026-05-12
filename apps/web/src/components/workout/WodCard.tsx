@@ -1,5 +1,6 @@
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
+import { FavoriteButton } from '../ui/FavoriteButton'
 import type { Wod } from '../../hooks/useWods'
 
 const TYPE_COLORS: Record<string, string> = {
@@ -32,16 +33,19 @@ export function WodCard({ wod, onClick }: Props) {
       onClick={onClick}
       className="w-full text-left rounded-[var(--radius-md)] bg-[var(--color-bg-card)] border border-white/5 p-4 active:scale-[0.98] transition-transform"
     >
-      <div className="flex items-start justify-between gap-2">
-        <span className="font-semibold text-[var(--color-text)] text-base leading-tight">
+      <div className="flex items-start gap-2">
+        <span className="font-semibold text-[var(--color-text)] text-base leading-tight flex-1 min-w-0">
           {wod.name}
         </span>
-        <span
-          className={`shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full max-w-[160px] truncate ${typeCls}`}
-          title={label}
-        >
-          {label}
-        </span>
+        <div className="flex items-center gap-0.5 shrink-0 -mr-2 -mt-2">
+          <span
+            className={`text-[10px] font-medium px-2 py-0.5 rounded-full max-w-[120px] truncate ${typeCls}`}
+            title={label}
+          >
+            {label}
+          </span>
+          <FavoriteButton contentType="wod" contentId={wod.name} color="#E8642A" />
+        </div>
       </div>
 
       <p className="mt-1 text-sm text-[var(--color-text-muted)] line-clamp-1">

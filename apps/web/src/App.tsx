@@ -14,6 +14,7 @@ import { SettingsPage } from './pages/SettingsPage'
 import { HomePage } from './pages/HomePage'
 import { StretchingPage } from './pages/StretchingPage'
 import { MeditationPage } from './pages/MeditationPage'
+import { FavoritesPage } from './pages/FavoritesPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { AdminTasksPage } from './pages/admin/AdminTasksPage'
@@ -83,6 +84,7 @@ function AppContent() {
           <Route path="/routine"          element={<RoutinePage />} />
           <Route path="/stretching"       element={<StretchingPage />} />
           <Route path="/meditation"       element={<MeditationPage />} />
+          <Route path="/favorites"        element={<FavoritesPage />} />
           <Route path="/settings"         element={<SettingsPage />} />
         </Route>
       </Route>

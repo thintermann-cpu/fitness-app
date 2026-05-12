@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { LogoIcon } from '../ui/LogoIcon'
 import { useAuthStore } from '../../store/authStore'
+import { useFavorites } from '../../hooks/useFavorites'
 
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
@@ -12,9 +13,11 @@ const NAV_ITEMS = [
 ] as const
 
 export function Sidebar() {
-  const { pathname } = useLocation()
-  const { profile } = useAuthStore()
+  const { pathname }  = useLocation()
+  const { profile }   = useAuthStore()
+  const { favorites } = useFavorites()
   const activePillars = profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
+  const favCount      = favorites.length
 
   const visibleItems = NAV_ITEMS.filter(
     item => item.pillarId === null || activePillars.includes(item.pillarId)
@@ -69,6 +72,42 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Favorites link */}
+      <div className="px-3 pb-2">
+        <Link
+          to="/favorites"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
+          style={{
+            backgroundColor: pathname === '/favorites' ? '#E8642A18' : 'transparent',
+            color: pathname === '/favorites' ? '#E8642A' : 'var(--color-text-muted)',
+          }}
+        >
+          <span className="text-lg leading-none w-6 text-center flex-shrink-0">
+            {favCount > 0 ? (
+              <svg viewBox="0 0 24 24" fill="#E8642A" width="20" height="20" style={{ display: 'inline' }}>
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="20" height="20" style={{ display: 'inline' }}>
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            )}
+          </span>
+          <span className="text-sm font-semibold flex-1">Favoriten</span>
+          {favCount > 0 && (
+            <span
+              className="text-xs font-bold px-1.5 py-0.5 rounded-full"
+              style={{ backgroundColor: '#E8642A22', color: '#E8642A' }}
+            >
+              {favCount}
+            </span>
+          )}
+          {pathname === '/favorites' && (
+            <div className="ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: '#E8642A' }} />
+          )}
+        </Link>
+      </div>
 
       {/* Footer: user info + settings */}
       <div className="px-3 py-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>

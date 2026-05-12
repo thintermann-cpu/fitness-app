@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import type { WorkoutLocation } from '../store/authStore'
 import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
@@ -70,10 +70,17 @@ export function WorkoutPage() {
   return (
     <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
       {/* Header */}
-      <div className="px-4 pt-10 pb-2">
+      <div className="px-4 pt-4 lg:pt-10 pb-2 flex items-end justify-between">
         <h1 className="text-2xl font-black text-[var(--color-text)]">
           <span style={{ color: '#E8642A' }}>Workout</span>
         </h1>
+        <Link
+          to="/favorites?section=workout"
+          className="text-xs font-semibold pb-0.5"
+          style={{ color: '#E8642A' }}
+        >
+          ❤ Favoriten
+        </Link>
       </div>
 
       {/* Tab bar */}

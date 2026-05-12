@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useStretchingRoutines, useStretchingExercises } from '../hooks/useStretching'
 import type { StretchingRoutine } from '../hooks/useStretching'
@@ -144,10 +145,17 @@ export function StretchingPage() {
   return (
     <div className="min-h-svh bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
       {/* Header */}
-      <div className="px-4 pt-10 pb-2">
+      <div className="px-4 pt-4 lg:pt-10 pb-2 flex items-end justify-between">
         <h1 className="text-2xl font-black" style={{ color: PILLAR_COLOR }}>
           {t.title}
         </h1>
+        <Link
+          to="/favorites?section=stretching"
+          className="text-xs font-semibold pb-0.5"
+          style={{ color: PILLAR_COLOR }}
+        >
+          ❤ Favoriten
+        </Link>
       </div>
 
       {/* Tab bar */}
