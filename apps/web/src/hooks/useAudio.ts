@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useMemo } from 'react'
 
 export type SoundKey = 'rain' | 'forest' | 'waves' | 'white_noise' | 'bowl' | 'silence'
 
@@ -164,5 +164,8 @@ export function useAudio() {
     }
   }, [])
 
-  return { playGong, playBeep, playComplete, startBackground, stopBackground, cleanup }
+  return useMemo(
+    () => ({ playGong, playBeep, playComplete, startBackground, stopBackground, cleanup }),
+    [playGong, playBeep, playComplete, startBackground, stopBackground, cleanup],
+  )
 }

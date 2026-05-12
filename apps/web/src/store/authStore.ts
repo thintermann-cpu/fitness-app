@@ -21,6 +21,7 @@ export interface DbProfile {
   equipment_by_location: Record<WorkoutLocation, string[]> | null
   role: 'admin' | 'moderator' | 'user' | null
   subscription_status: string | null
+  substitution_enabled: boolean
   created_at: string
   updated_at: string
 }
@@ -89,20 +90,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initialize: async () => {
-    const { data } = await supabase.auth.getSession()
-    const profile = data.session?.user
-      ? await loadProfile(data.session.user.id)
-      : null
-    set({
-      session: data.session,
-      user: data.session?.user ?? null,
-      profile,
-      loading: false,
-    })
+    try {
+      const { data } = await supabase.auth.getSession()
+      const profile = data.session?.user
+        ? await loadProfile(data.session.user.id)
+        : null
+      set({
+        session: data.session,
+        user: data.session?.user ?? null,
+        profile,
+        loading: false,
+      })
 
-    supabase.auth.onAuthStateChange(async (_event, session) => {
-      const profile = session?.user ? await loadProfile(session.user.id) : null
-      set({ session, user: session?.user ?? null, profile })
-    })
+      supabase.auth.onAuthStateChange(async (_event, session) => {
+        const profile = session?.user ? await loadProfile(session.user.id) : null
+        set({ session, user: session?.user ?? null, profile })
+      })
+    } catch {
+      set({ loading: false })
+    }
   },
 }))

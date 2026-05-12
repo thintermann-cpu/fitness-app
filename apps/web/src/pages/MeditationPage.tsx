@@ -141,7 +141,7 @@ export function MeditationPage() {
   // Full-screen session views
   if (view === 'session' && selectedMeditation) {
     return (
-      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
+      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
         <div className="flex-1 px-4 py-6 pb-24 max-w-lg mx-auto w-full overflow-y-auto">
           {/* Back button */}
           <button
@@ -163,7 +163,7 @@ export function MeditationPage() {
 
   if (view === 'breathwork_session' && selectedTechnique) {
     return (
-      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
+      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
         <div className="flex-1 px-4 py-6 pb-24 max-w-lg mx-auto w-full overflow-y-auto">
           <button
             onClick={handleBackFromSession}
@@ -184,7 +184,7 @@ export function MeditationPage() {
 
   if (view === 'custom_breathwork_session' && selectedTechnique) {
     return (
-      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
+      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
         <div className="flex-1 px-4 py-6 pb-24 max-w-lg mx-auto w-full overflow-y-auto">
           <button
             onClick={handleBackFromSession}
@@ -205,7 +205,7 @@ export function MeditationPage() {
 
   if (view === 'custom_timer') {
     return (
-      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
+      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
         <div className="flex-1 px-4 py-6 pb-24 max-w-lg mx-auto w-full overflow-y-auto">
           <button
             onClick={handleBackFromSession}
@@ -221,7 +221,7 @@ export function MeditationPage() {
   }
 
   return (
-    <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
+    <div className="min-h-svh bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
       {/* Header */}
       <div className="px-4 pt-10 pb-2">
         <h1 className="text-2xl font-black" style={{ color: PILLAR_COLOR }}>

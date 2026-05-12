@@ -40,8 +40,8 @@ export const SUGGESTED_ROUTINES: Record<string, Array<Omit<Routine, 'id'>>> = {
 }
 
 async function getUserId(): Promise<string | null> {
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.id ?? null
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.user?.id ?? null
 }
 
 export function useRoutines() {
