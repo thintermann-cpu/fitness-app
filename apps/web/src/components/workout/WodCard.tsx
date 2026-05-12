@@ -1,11 +1,6 @@
+import { useAuthStore } from '../../store/authStore'
+import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import type { Wod } from '../../hooks/useWods'
-
-const TYPE_LABELS: Record<string, string> = {
-  AMRAP:   'Zeit-Challenge (AMRAP)',
-  ForTime: 'Auf Zeit (For Time)',
-  EMOM:    'Intervall-Routine (EMOM)',
-  Tabata:  'Tabata-Intervall',
-}
 
 const TYPE_COLORS: Record<string, string> = {
   AMRAP:   'bg-orange-500/20 text-orange-400',
@@ -27,9 +22,10 @@ interface Props {
 }
 
 export function WodCard({ wod, onClick }: Props) {
+  const lang    = useAuthStore((s) => s.profile?.language ?? 'de')
   const typeCls = TYPE_COLORS[wod.type] ?? 'bg-white/10 text-white/60'
   const dots    = DIFFICULTY_DOTS[wod.difficulty] ?? 2
-  const label   = TYPE_LABELS[wod.type] ?? wod.type
+  const label   = getWodTypeLabel(wod.type, lang)
 
   return (
     <button

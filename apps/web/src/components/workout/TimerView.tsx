@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 
+import { useAuthStore } from '../../store/authStore'
+import { getWodTypeLabel } from '../../lib/wodTypeLabels'
+
 type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
 interface Props {
@@ -16,11 +19,18 @@ interface TickData {
   interval: number
 }
 
-const MODE_INFO: Record<TimerMode, { label: string; color: string }> = {
-  fortime: { label: 'For Time', color: '#E8642A' },
-  amrap:   { label: 'AMRAP',    color: '#F59E0B' },
-  emom:    { label: 'EMOM',     color: '#3B82F6' },
-  tabata:  { label: 'Tabata',   color: '#8B5CF6' },
+const MODE_COLOR: Record<TimerMode, string> = {
+  fortime: '#E8642A',
+  amrap:   '#F59E0B',
+  emom:    '#3B82F6',
+  tabata:  '#8B5CF6',
+}
+
+const MODE_TO_WOD_TYPE: Record<TimerMode, string> = {
+  fortime: 'ForTime',
+  amrap:   'AMRAP',
+  emom:    'EMOM',
+  tabata:  'Tabata',
 }
 
 function formatMs(ms: number): string {
@@ -245,11 +255,13 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
     setIsComplete(true)
   }, [])
 
-  const modeInfo = MODE_INFO[mode]
+  const lang       = useAuthStore((s) => s.profile?.language ?? 'de')
+  const modeColor  = MODE_COLOR[mode]
+  const modeLabel  = (m: TimerMode) => getWodTypeLabel(MODE_TO_WOD_TYPE[m], lang)
   const isForTimeWithCap = mode === 'fortime' && forTimeCap !== null
   const displayMs  = (mode === 'fortime' && !isForTimeWithCap) ? tick.elapsed : tick.remaining
   const isTabata   = mode === 'tabata'
-  const phaseColor = tick.phase === 'rest' ? '#3B82F6' : modeInfo.color
+  const phaseColor = tick.phase === 'rest' ? '#3B82F6' : modeColor
 
   return (
     <div className="flex flex-col items-center gap-6 py-4">
@@ -257,7 +269,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
       {/* Mode selector */}
       {!isRunning && !isPaused && (
         <div className="w-full grid grid-cols-4 gap-1.5 bg-white/5 rounded-xl p-1">
-          {(Object.keys(MODE_INFO) as TimerMode[]).map((m) => (
+          {(Object.keys(MODE_COLOR) as TimerMode[]).map((m) => (
             <button
               key={m}
               onClick={() => { setMode(m); setIsComplete(false) }}
@@ -267,7 +279,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
               }`}
             >
-              {MODE_INFO[m].label}
+              {modeLabel(m)}
             </button>
           ))}
         </div>
@@ -314,7 +326,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
                   className="px-3 py-1.5 rounded-full text-xs font-bold transition-colors"
                   style={
                     forTimeCap !== null
-                      ? { backgroundColor: modeInfo.color, color: 'white' }
+                      ? { backgroundColor: modeColor, color: 'white' }
                       : { backgroundColor: 'rgba(255,255,255,0.1)', color: 'var(--color-text-muted)' }
                   }
                 >
@@ -418,7 +430,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
           <button
             onClick={handleStart}
             className="px-10 py-4 rounded-2xl font-bold text-lg text-white active:scale-95 transition-transform"
-            style={{ backgroundColor: modeInfo.color }}
+            style={{ backgroundColor: modeColor }}
           >
             Start
           </button>
@@ -455,7 +467,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
             <button
               onClick={handleResume}
               className="px-8 py-4 rounded-2xl font-bold text-lg text-white active:scale-95 transition-transform"
-              style={{ backgroundColor: modeInfo.color }}
+              style={{ backgroundColor: modeColor }}
             >
               Resume
             </button>
