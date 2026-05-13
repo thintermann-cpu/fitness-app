@@ -296,6 +296,62 @@ export function RoutineList({
               />
             </div>
           )}
+
+          {/* Remaining suggestions for current category */}
+          {(() => {
+            const addedNames = new Set(routines.map(r => r.name))
+            const remaining = suggestions.filter(s => s.category === activeCategory && !addedNames.has(s.name))
+            if (remaining.length === 0) return null
+            return (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 12, color: '#6a6258', marginBottom: 10, letterSpacing: 0.5 }}>
+                  {t.suggestions}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {remaining.map((s, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '11px 13px',
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                        borderRadius: 12,
+                      }}
+                    >
+                      <span style={{ fontSize: 20 }}>{s.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, color: '#c0b8a8' }}>{s.name}</div>
+                        <div style={{ fontSize: 11, color: '#5a5248', marginTop: 2 }}>
+                          {formatActiveDays(s.active_days, lang, t)}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => onCreateSuggested(s)}
+                        style={{
+                          padding: '6px 12px',
+                          minHeight: 44,
+                          background: 'rgba(74,144,217,0.12)',
+                          border: '1px solid rgba(74,144,217,0.25)',
+                          borderRadius: 8,
+                          color: '#4A90D9',
+                          fontSize: 12,
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          whiteSpace: 'nowrap',
+                          touchAction: 'manipulation',
+                        }}
+                      >
+                        {t.add}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
         </>
       )}
     </div>
