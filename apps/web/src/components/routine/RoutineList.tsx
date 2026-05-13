@@ -18,6 +18,7 @@ interface Props {
   lang: Lang
   isLoading: boolean
   createError?: boolean
+  createErrorMsg?: string
 }
 
 const CATEGORIES: Category[] = ['morning', 'day', 'evening']
@@ -91,6 +92,7 @@ export function RoutineList({
   lang,
   isLoading,
   createError,
+  createErrorMsg,
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<Category>('morning')
   const t = T[lang] ?? T.de
@@ -249,7 +251,7 @@ export function RoutineList({
           </button>
           {createError && (
             <div style={{ color: '#ef4444', fontSize: 12, marginTop: 10, textAlign: 'center' }}>
-              Speichern fehlgeschlagen — Supabase-Tabelle fehlt oder RLS-Policy prüfen.
+              Speichern fehlgeschlagen: {createErrorMsg ?? 'unbekannter Fehler'}
             </div>
           )}
         </div>

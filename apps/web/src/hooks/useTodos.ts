@@ -106,5 +106,6 @@ const uid = await getUserId()
     remove: deleteMutation.mutate,
     clearDone: clearDoneMutation.mutate,
     addError: addMutation.isError,
+    addErrorMsg: addMutation.error instanceof Error ? addMutation.error.message : undefined,
   }
 }

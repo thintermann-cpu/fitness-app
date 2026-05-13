@@ -10,9 +10,10 @@ interface Props {
   onDelete: (id: string) => void
   onClearDone: (listName: string) => void
   addError?: boolean
+  addErrorMsg?: string
 }
 
-export function TodoList({ todos, onAdd, onComplete, onDelete, onClearDone, addError }: Props) {
+export function TodoList({ todos, onAdd, onComplete, onDelete, onClearDone, addError, addErrorMsg }: Props) {
   const existingLists = Array.from(new Set(todos.map(t => t.list_name)))
   const lists = Array.from(new Set([...DEFAULT_LISTS, ...existingLists]))
 
@@ -113,7 +114,7 @@ onAdd(activeList, newText.trim())
       </div>
       {addError && (
         <div style={{ color: '#ef4444', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>
-          Speichern fehlgeschlagen — Supabase-Tabelle fehlt oder RLS-Policy prüfen.
+          Speichern fehlgeschlagen: {addErrorMsg ?? 'unbekannter Fehler'}
         </div>
       )}
 
