@@ -204,7 +204,6 @@ export function RoutineList({
                 </div>
                 <button
                   onClick={() => {
-                    console.log('[RoutineList] Hinzufügen clicked:', s.name)
                     onCreateSuggested(s)
                   }}
                   style={{
@@ -228,7 +227,6 @@ export function RoutineList({
           </div>
           <button
             onClick={() => {
-              console.log('[RoutineList] Alle hinzufügen clicked, count:', suggestions.length)
               onCreateAll(suggestions)
             }}
             style={{

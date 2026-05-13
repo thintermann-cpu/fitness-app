@@ -36,8 +36,7 @@ export function useTodos() {
 
   const addMutation = useMutation({
     mutationFn: async ({ list_name, text }: { list_name: string; text: string }) => {
-      console.log('[useTodos] add mutationFn called:', list_name, text)
-      const uid = await getUserId()
+const uid = await getUserId()
       if (!uid) throw new Error('Not authenticated')
       const { error } = await supabase
         .from('todos')

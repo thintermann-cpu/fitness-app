@@ -70,8 +70,7 @@ export function useRoutines() {
 
   const createMutation = useMutation({
     mutationFn: async (routine: Omit<Routine, 'id'>) => {
-      console.log('[useRoutines] create mutationFn called:', routine.name)
-      const uid = await getUserId()
+const uid = await getUserId()
       if (!uid) throw new Error('Not authenticated')
       const { error } = await supabase
         .from('routines')
