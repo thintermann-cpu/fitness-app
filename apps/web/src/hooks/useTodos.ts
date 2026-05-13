@@ -57,7 +57,8 @@ const uid = await getUserId()
       queryClient.setQueryData<Todo[]>(['todos'], (old = []) => [...old, optimistic])
       return { previous }
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
+      console.error('[useTodos] add error:', err)
       queryClient.setQueryData(['todos'], context?.previous)
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
@@ -70,6 +71,7 @@ const uid = await getUserId()
       const { error } = await supabase.from('todos').update({ completed }).eq('id', id).eq('user_id', uid)
       if (error) throw error
     },
+    onError: (err) => console.error('[useTodos] complete error:', err),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
   })
 
@@ -80,6 +82,7 @@ const uid = await getUserId()
       const { error } = await supabase.from('todos').delete().eq('id', id).eq('user_id', uid)
       if (error) throw error
     },
+    onError: (err) => console.error('[useTodos] delete error:', err),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
   })
 
@@ -106,6 +109,10 @@ const uid = await getUserId()
     remove: deleteMutation.mutate,
     clearDone: clearDoneMutation.mutate,
     addError: addMutation.isError,
-    addErrorMsg: addMutation.error instanceof Error ? addMutation.error.message : undefined,
+    addErrorMsg: addMutation.error
+      ? ((addMutation.error as any)?.message ?? (addMutation.error as any)?.details ?? JSON.stringify(addMutation.error))
+      : undefined,
+    completeError: completeMutation.isError,
+    deleteError: deleteMutation.isError,
   }
 }

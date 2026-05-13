@@ -85,7 +85,8 @@ const uid = await getUserId()
       queryClient.setQueryData<Routine[]>(['routines'], (old = []) => [...old, optimistic])
       return { previous }
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
+      console.error('[useRoutines] create error:', err)
       queryClient.setQueryData(['routines'], context?.previous)
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
@@ -114,6 +115,8 @@ const uid = await getUserId()
     update: updateMutation.mutate,
     remove: deleteMutation.mutate,
     createError: createMutation.isError,
-    createErrorMsg: createMutation.error instanceof Error ? createMutation.error.message : undefined,
+    createErrorMsg: createMutation.error
+      ? ((createMutation.error as any)?.message ?? (createMutation.error as any)?.details ?? JSON.stringify(createMutation.error))
+      : undefined,
   }
 }
