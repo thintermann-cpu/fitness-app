@@ -32,6 +32,7 @@ export function useTodos() {
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    retry: false,
   })
 
   const addMutation = useMutation({
@@ -104,5 +105,6 @@ const uid = await getUserId()
     complete: completeMutation.mutate,
     remove: deleteMutation.mutate,
     clearDone: clearDoneMutation.mutate,
+    addError: addMutation.isError,
   }
 }

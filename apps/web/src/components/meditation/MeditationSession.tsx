@@ -100,7 +100,25 @@ export function MeditationSession({ meditation, lang, onFinish }: Props) {
   const [sound,    setSound]    = useState<SoundKey>(
     (meditation.background_sound as SoundKey | null) ?? 'silence'
   )
-  const startTimeRef = useRef(Date.now())
+  const startTimeRef  = useRef(Date.now())
+  const wakeLockRef   = useRef<{ release: () => Promise<void> } | null>(null)
+
+  const isTimerActive = started && !paused && !finished
+  useEffect(() => {
+    type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
+    const nav = navigator as WakeLockNav
+    if (!nav.wakeLock) return
+    if (isTimerActive) {
+      nav.wakeLock.request('screen').then(s => { wakeLockRef.current = s }).catch(() => {})
+    } else {
+      wakeLockRef.current?.release().catch(() => {})
+      wakeLockRef.current = null
+    }
+    return () => {
+      wakeLockRef.current?.release().catch(() => {})
+      wakeLockRef.current = null
+    }
+  }, [isTimerActive])
 
   // Start session: gong + background
   const handleStart = useCallback(() => {
@@ -125,6 +143,7 @@ export function MeditationSession({ meditation, lang, onFinish }: Props) {
       setFinished(true)
       audio.stopBackground()
       audio.playComplete()
+      void audio.playGong()
       const durationMin = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
       addLog.mutate({
         meditation_id: meditation.id,
@@ -274,6 +293,7 @@ export function MeditationSession({ meditation, lang, onFinish }: Props) {
             onClick={() => {
               audio.stopBackground()
               audio.playComplete()
+              void audio.playGong()
               setFinished(true)
               const durationMin = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
               addLog.mutate({

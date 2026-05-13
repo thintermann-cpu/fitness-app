@@ -57,10 +57,10 @@ export function RoutinePage() {
 
   const weekDates = getCurrentWeekDates()
 
-  const { routines, isLoading, create, update, remove } = useRoutines()
+  const { routines, isLoading, create, update, remove, createError } = useRoutines()
   const { data: logsRaw }     = useRoutineLogs(todayStr)
   const { log: dailyLog, setWater, setMood } = useDailyLog(todayStr)
-  const { todos, add: addTodo, complete: completeTodo, remove: removeTodo, clearDone } = useTodos()
+  const { todos, add: addTodo, complete: completeTodo, remove: removeTodo, clearDone, addError } = useTodos()
   const { data: weekLogsRaw } = useWeekLogs(weekDates)
   const toggleLog             = useToggleRoutineLog(todayStr)
 
@@ -258,6 +258,7 @@ export function RoutinePage() {
               selectedDay={selectedDay}
               lang={lang}
               isLoading={isLoading}
+              createError={createError}
             />
           </>
         )}
@@ -270,6 +271,7 @@ export function RoutinePage() {
             onComplete={(id, completed) => completeTodo({ id, completed })}
             onDelete={id => removeTodo(id)}
             onClearDone={listName => clearDone(listName)}
+            addError={addError}
           />
         )}
 

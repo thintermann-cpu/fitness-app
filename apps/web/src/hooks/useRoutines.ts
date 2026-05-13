@@ -66,6 +66,7 @@ export function useRoutines() {
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    retry: false,
   })
 
   const createMutation = useMutation({
@@ -112,5 +113,6 @@ const uid = await getUserId()
     create: createMutation.mutate,
     update: updateMutation.mutate,
     remove: deleteMutation.mutate,
+    createError: createMutation.isError,
   }
 }

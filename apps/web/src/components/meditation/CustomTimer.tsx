@@ -129,8 +129,26 @@ export function CustomTimer({ lang, onFinish }: Props) {
   const [prepLeft,     setPrepLeft]     = useState(0)
 
   const startTimeRef      = useRef(Date.now())
-  const lastIntervalRef   = useRef(0)   // seconds elapsed at last beep
+  const lastIntervalRef   = useRef(0)
   const totalSecRef       = useRef(durationMin * 60)
+  const wakeLockRef       = useRef<{ release: () => Promise<void> } | null>(null)
+
+  const isTimerActive = status === 'running' || status === 'prep'
+  useEffect(() => {
+    type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
+    const nav = navigator as WakeLockNav
+    if (!nav.wakeLock) return
+    if (isTimerActive) {
+      nav.wakeLock.request('screen').then(s => { wakeLockRef.current = s }).catch(() => {})
+    } else {
+      wakeLockRef.current?.release().catch(() => {})
+      wakeLockRef.current = null
+    }
+    return () => {
+      wakeLockRef.current?.release().catch(() => {})
+      wakeLockRef.current = null
+    }
+  }, [isTimerActive])
 
   const circumference = 2 * Math.PI * 44
 
@@ -172,6 +190,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
       if (timeLeft <= 0) {
         audio.stopBackground()
         void audio.playComplete()
+        void audio.playGong()
         const durationMinActual = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
         addLog.mutate({ session_type: 'custom_timer', duration_min: durationMinActual })
         setStatus('done')
@@ -280,6 +299,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
             onClick={() => {
               audio.stopBackground()
               void audio.playComplete()
+              void audio.playGong()
               const durationMinActual = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
               addLog.mutate({ session_type: 'custom_timer', duration_min: durationMinActual })
               setStatus('done')

@@ -112,6 +112,25 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
 
   const current = orderedExercises[currentIndex]
 
+  // Wake Lock
+  const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
+  const isTimerActive = phase !== 'config' && phase !== 'done' && !paused
+  useEffect(() => {
+    type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
+    const nav = navigator as WakeLockNav
+    if (!nav.wakeLock) return
+    if (isTimerActive) {
+      nav.wakeLock.request('screen').then(s => { wakeLockRef.current = s }).catch(() => {})
+    } else {
+      wakeLockRef.current?.release().catch(() => {})
+      wakeLockRef.current = null
+    }
+    return () => {
+      wakeLockRef.current?.release().catch(() => {})
+      wakeLockRef.current = null
+    }
+  }, [isTimerActive])
+
   // Progress ring
   const phaseTotal = (() => {
     if (phase === 'switch') return SWITCH_DURATION
@@ -153,6 +172,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
     const durationMin = Math.round((Date.now() - startTime) / 60000)
     addLog.mutate({ routine_id: routine.id, duration_min: durationMin || 1 })
     void audioRef.current.playComplete()
+    void audioRef.current.playGong()
   }
 
   function goBack() {
