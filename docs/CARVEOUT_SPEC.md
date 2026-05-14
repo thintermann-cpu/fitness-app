@@ -12,7 +12,7 @@ Das Produkt basiert auf **4 Pillars** (Domänen), die einzeln freischaltbar sind
 
 | Pillar | Farbe | Funktion |
 |---|---|---|
-| **Workout** | `#E8642A` Orange | WOD-Datenbank (803 CrossFit-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), History, Highscores |
+| **Workout** | `#E8642A` Orange | WOD-Datenbank (798 CrossFit-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), History, Highscores |
 | **Routine** (My Day) | `#4A90D9` Blau | Tagesroutinen, To-dos, Wochenübersicht, Wassertracker, Mood-Check |
 | **Stretching** | `#7BC67E` Grün | 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync |
 | **Meditation** | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer, Screen Wake Lock, Gong am Session-Ende |
@@ -66,7 +66,7 @@ apps/web/src/
 │   ├── OnboardingPage.tsx     # Pillar-Auswahl, Primary Pillar, Theme
 │   ├── WorkoutPage.tsx        # Tabs: WODs / Timer / History
 │   ├── RoutinePage.tsx        # Tabs: Routinen / Todo / Woche
-│   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4)
+│   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); Duration-Filter-Chips: Alle/≤5/≤10/≤20 min (clientseitig via duration_min)
 │   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5)
 │   ├── FavoritesPage.tsx      # Drei Sektionen (Workouts / Stretch & Yoga / Meditationen), URL-Param ?section=
 │   └── admin/
@@ -82,7 +82,7 @@ apps/web/src/
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
 │   ├── workout/
 │   │   ├── WodCard.tsx
-│   │   ├── WodList.tsx
+│   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); Duration-Filter-Chips: Alle/≤15/≤20/≤30 min
 │   │   ├── WodDetail.tsx
 │   │   ├── TimerView.tsx      # Nutzt timer.worker.js; AMRAP/ForTime/EMOM/Tabata konfigurierbar
 │   │   ├── WodHistoryList.tsx
@@ -208,7 +208,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | `routine_logs` | Completion-Einträge pro Routine + Datum |
 | `todos` | To-do-Liste pro Nutzer + Datum |
 | `daily_logs` | Tageseinträge: Mood, Wasserkonsum, Notizen |
-| `wods` | WOD-Stammdaten (803 Einträge, statisch, read-only für Users) |
+| `wods` | WOD-Stammdaten (798 Einträge, statisch, read-only für Users) |
 | `wod_history` | Workout-Logs pro Nutzer (WOD, Score, Datum, Notizen) |
 | `feedback` | In-App-Feedback / Bug-Reports |
 | `stretching_exercises` | 65 Übungen (dreisprachig, bilateral_support, category) |
@@ -335,6 +335,7 @@ Implementiert in `lib/push.ts`:
 - `subscribeToPush()` — erzeugt Web Push Subscription, persistiert in `push_subscriptions`
 - `unsubscribeFromPush()` — entfernt Subscription aus DB und Browser
 - Settings-UI mit Toggles pro Reminder-Typ (morning / evening / wod / inactivity) inkl. Zeitauswahl
+- `pushError: string | null` State in `SettingsPage` — zeigt Fehlermeldung wenn `subscribeToPush()` false zurückgibt (z.B. Permission denied); Toggle-Buttons mit `type="button"` + `cursor: pointer`
 - Preferences gespeichert in `push_preferences` (Supabase)
 
 Server-Side Broadcast (Admin → alle User) ist noch offen (siehe Roadmap).
@@ -388,7 +389,7 @@ Init: `initI18n(language: Language)` — konfiguriert i18next mit den passenden 
 Namespace-Schlüssel: `app`, `nav`, `pillars`, `onboarding`, `common`
 
 Stretching-Übungen sind vollständig dreisprachig (name/description/instructions als JSONB).
-WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe Roadmap).
+WODs (798 Einträge, 7 Duplikate bereinigt) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe Roadmap).
 
 ---
 
@@ -410,9 +411,10 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 | **Phase 7-9 Cleanup** | Zeit-Filter (`minDuration`/`maxDuration` in `useWods`), Substitution-Toggle (SettingsPage + WodDetail-Gate, localStorage), Silent Mode / Parent Mode (`is_jumping`-Flag auf WOD-Ebene, Keyword-Sweep 251 WODs, SettingsPage-Toggle + WodList-Filter), Stretching & Yoga Rebranding (i18n DE/EN/ES), Hybrid-Labels für WOD-Typen (`wodTypeLabels.ts`, WodCard + WodList + TimerView sprachabhängig), BottomNav i18n, LogoIcon SVG (C-Bogen + Pfeil, Sidebar + favicon.svg) |
 | **Wake Lock (Stretching + Meditation)** | Screen Wake Lock in `GuidedSession`, `MeditationSession`, `CustomTimer` — selbes Pattern wie `TimerView` |
 | **Gong am Session-Ende** | `GuidedSession`, `MeditationSession`, `CustomTimer` spielen Gong bei Timer-Ende und manuellem Beenden |
-| **Routine-Create Modal** | Custom Routine direkt aus `RoutineList` erstellen via `RoutineEditModal`, optimistic Insert in `useRoutines` + `useTodos` |
+| **Routine-Create Modal** | Custom Routine direkt aus `RoutineList` erstellen via `RoutineEditModal`, optimistic Insert in `useRoutines` + `useTodos`; `useRoutines` (update + delete) und `useTodos` (complete) vollständig optimistic (onMutate/onError rollback/onSettled) |
 | **Favoriten-System** | `useFavorites` (localStorage + Supabase Dual-Write), `FavoriteButton`, `FavoritesPage` (/favorites), drei Sektionen (Workouts / Stretch & Yoga / Meditationen), AppShell-Header-Badge + Sidebar-Eintrag |
 | **PWA-Manifest** | `manifest.json` (standalone, theme `#0D0D14`, SVG-Icon), `index.html` Title + Apple-Meta-Tags |
+| **Session D: Polish** | Duration-Filter-Chips in `WodList` (Alle/≤15/≤20/≤30 min) + `StretchingPage` (Alle/≤5/≤10/≤20 min); WOD-Suche sessionStorage-persistent (Key: `wod_search`); Push-Fehlerbehandlung (`pushError` State in `SettingsPage`); Optimistic Updates: `useRoutines` (update+delete) + `useTodos` (complete); 7 Duplikat-WODs bereinigt (798 aktiv) |
 
 ### Offen / Roadmap
 
@@ -423,7 +425,7 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 | **Bestätigungsemail** | Via Resend — wartet auf finales Logo |
 | **Push (Server-Side)** | Admin-Broadcast an alle User |
 | **GDPR** | Cookie-Banner, Privacy Policy, Daten-Export, Konto-Löschung |
-| **WOD-Übersetzungen** | EN/ES für 803 WODs (aktuell nur DE) |
+| **WOD-Übersetzungen** | EN/ES für 798 WODs (aktuell nur DE) |
 | **Integrationen (Phase 4+)** | Garmin Connect, Apple Health, Strava |
 | **Analytics** | Plausible oder Umami (self-hosted) |
 | **Error Tracking** | Sentry |
@@ -436,8 +438,8 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 | **Theme-Switcher** | Mind. Dark/Light; alte HTML-PWA hatte 8 Themes × 8 Accents |
 | **Toast-Notifications** | Globales Feedback-System (Ersatz für fehlende showToast-Äquivalente) |
 | **Home-Screen-Widgets** | Today's WOD, Woche-Stats, Recently Done auf Workout-Startansicht |
-| **Virtual/Infinite Scroll** | WodList — Performance bei 803+ Einträgen (aktuell: Pagination + "Load more") |
+| **Virtual/Infinite Scroll** | WodList — Performance bei 798+ Einträgen (aktuell: Pagination + "Load more") |
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session C: Wake Lock Stretching/Meditation, Gong-End, Routine-Create Modal, Favoriten-System, PWA-Manifest)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session D: Duration-Filter-Chips Workout+Stretching, WOD-Suche sessionStorage-persistent, Push-Fehlerbehandlung, Optimistic Updates Routinen/Todos, 7 WOD-Duplikate bereinigt)*
