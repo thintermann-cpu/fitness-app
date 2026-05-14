@@ -9,12 +9,13 @@ import { BreathworkSession }      from '../components/meditation/BreathworkSessi
 import { CustomTimer }            from '../components/meditation/CustomTimer'
 import { CustomBreathworkEditor } from '../components/meditation/CustomBreathworkEditor'
 import { MeditationHistory }      from '../components/meditation/MeditationHistory'
+import { AdHocMeditationTimer }  from '../components/meditation/AdHocMeditationTimer'
 
 const PILLAR_COLOR = '#9B7FD4'
 
 type Lang     = 'de' | 'en' | 'es'
 type Tab      = 'meditate' | 'breathwork' | 'history'
-type View     = 'list' | 'session' | 'breathwork_session' | 'custom_timer' | 'custom_breathwork_session'
+type View     = 'list' | 'session' | 'breathwork_session' | 'custom_timer' | 'custom_breathwork_session' | 'free_meditation'
 type Category  = 'all' | 'mindfulness' | 'body_scan' | 'sleep' | 'focus' | 'stress_relief' | 'morning' | 'visualization' | 'movement'
 type DurFilter = 0 | 5 | 10 | 15 | 20 | 30
 
@@ -40,6 +41,8 @@ const T = {
     emptyBreath:    'Keine Techniken gefunden.',
     customTimer:    'Eigene Frequenz',
     customTimerSub: 'Freier Timer mit eigenem Klang',
+    freeTitle:      'Freie Meditation',
+    freeStart:      'Starten',
   },
   en: {
     title:          'Meditation',
@@ -60,6 +63,8 @@ const T = {
     emptyBreath:    'No techniques found.',
     customTimer:    'Custom Frequency',
     customTimerSub: 'Free timer with your own sound',
+    freeTitle:      'Free Meditation',
+    freeStart:      'Start',
   },
   es: {
     title:          'Meditación',
@@ -80,6 +85,8 @@ const T = {
     emptyBreath:    'No se encontraron técnicas.',
     customTimer:    'Frecuencia propia',
     customTimerSub: 'Temporizador libre con tu propio sonido',
+    freeTitle:      'Meditación libre',
+    freeStart:      'Iniciar',
   },
 }
 
@@ -93,10 +100,11 @@ export function MeditationPage() {
   const lang    = ((profile?.language ?? 'en') as Lang)
   const t       = T[lang]
 
-  const [tab,       setTab]       = useState<Tab>('meditate')
-  const [view,      setView]      = useState<View>('list')
-  const [catFilter, setCatFilter] = useState<Category>('all')
-  const [durFilter, setDurFilter] = useState<DurFilter>(0)
+  const [tab,          setTab]          = useState<Tab>('meditate')
+  const [view,         setView]         = useState<View>('list')
+  const [catFilter,    setCatFilter]    = useState<Category>('all')
+  const [durFilter,    setDurFilter]    = useState<DurFilter>(0)
+  const [freeDuration, setFreeDuration] = useState(10)
 
   const [selectedMeditation, setSelectedMeditation] = useState<Meditation | null>(null)
   const [selectedTechnique,  setSelectedTechnique]  = useState<BreathworkTechnique | null>(null)
@@ -222,6 +230,23 @@ export function MeditationPage() {
     )
   }
 
+  if (view === 'free_meditation') {
+    return (
+      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
+        <div className="flex-1 px-4 py-6 pb-24 max-w-lg mx-auto w-full overflow-y-auto">
+          <button
+            onClick={handleBackFromSession}
+            className="mb-6 flex items-center gap-1 text-sm font-semibold"
+            style={{ color: PILLAR_COLOR }}
+          >
+            ← {t.tabMeditate}
+          </button>
+          <AdHocMeditationTimer duration={freeDuration} lang={lang} onFinish={handleFinishSession} />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
       {/* Header */}
@@ -259,6 +284,41 @@ export function MeditationPage() {
         {/* ── MEDITATE TAB ─────────────────────────────────────── */}
         {tab === 'meditate' && (
           <>
+            {/* Quick meditation */}
+            <div className="px-4 pt-4 pb-2">
+              <div
+                className="rounded-[var(--radius-md)] p-4 border"
+                style={{ backgroundColor: `${PILLAR_COLOR}10`, borderColor: `${PILLAR_COLOR}30` }}
+              >
+                <p className="text-sm font-semibold mb-3" style={{ color: PILLAR_COLOR }}>
+                  🧘 {t.freeTitle}
+                </p>
+                <div className="flex gap-2 mb-3">
+                  {([5, 10, 20] as const).map((min) => (
+                    <button
+                      key={min}
+                      onClick={() => setFreeDuration(min)}
+                      className="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors"
+                      style={
+                        freeDuration === min
+                          ? { backgroundColor: PILLAR_COLOR, color: 'white' }
+                          : { backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }
+                      }
+                    >
+                      {min} min
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setView('free_meditation')}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
+                  style={{ backgroundColor: PILLAR_COLOR }}
+                >
+                  ▶ {t.freeStart}
+                </button>
+              </div>
+            </div>
+
             {/* Category filter chips */}
             <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-none">
               {CATEGORIES.map((cat) => {

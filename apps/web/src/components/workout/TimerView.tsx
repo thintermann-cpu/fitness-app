@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
+import { useWodHistory } from '../../hooks/useWodHistory'
 
 type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
@@ -10,6 +11,7 @@ interface Props {
   initialMinutes?: number
   onComplete?: () => void
   bilateral?: boolean
+  adHocLog?: boolean
 }
 
 interface TickData {
@@ -101,7 +103,7 @@ function Stepper({
   )
 }
 
-export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }: Props) {
+export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, adHocLog }: Props) {
   const [mode, setMode]           = useState<TimerMode>(initialMode ?? 'fortime')
   const [minutes, setMinutes]     = useState(initialMinutes ?? 20)  // AMRAP total time
 
@@ -126,6 +128,9 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
   const onCompleteRef = useRef(onComplete)
   onCompleteRef.current = onComplete
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
+
+  const { addEntry } = useWodHistory()
+  const loggedRef = useRef(false)
 
   useEffect(() => {
     const worker = new Worker('/timer.worker.js')
@@ -188,6 +193,18 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
     if (!isRunning) sideSwitchShownRef.current = false
   }, [isRunning])
 
+  // Ad-hoc history logging: fires when timer completes (no WOD from DB)
+  useEffect(() => {
+    if (!adHocLog || !isComplete || loggedRef.current) return
+    loggedRef.current = true
+    addEntry.mutate({
+      wod_name: `Ad-hoc ${MODE_TO_WOD_TYPE[mode]}`,
+      score_type: 'time',
+      score_value: formatMs(tick.elapsed > 0 ? tick.elapsed : 0),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isComplete])
+
   // Wake Lock: keep screen on while timer is running
   useEffect(() => {
     type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
@@ -249,6 +266,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral }
     setIsRunning(false)
     setIsPaused(false)
     setIsComplete(false)
+    loggedRef.current = false
   }, [])
 
   const handleStop = useCallback(() => {

@@ -124,7 +124,7 @@ export function WorkoutPage() {
         )}
         {tab === 'timer' && (
           <div className="py-4">
-            <TimerView />
+            <TimerView adHocLog />
           </div>
         )}
         {tab === 'history' && <WodHistoryList />}
