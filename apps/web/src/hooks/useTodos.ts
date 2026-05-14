@@ -57,8 +57,7 @@ const uid = await getUserId()
       queryClient.setQueryData<Todo[]>(['todos'], (old = []) => [...old, optimistic])
       return { previous }
     },
-    onError: (err, _vars, context) => {
-      console.error('[useTodos] add error:', err)
+    onError: (_err, _vars, context) => {
       queryClient.setQueryData(['todos'], context?.previous)
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
@@ -71,8 +70,18 @@ const uid = await getUserId()
       const { error } = await supabase.from('todos').update({ completed }).eq('id', id).eq('user_id', uid)
       if (error) throw error
     },
-    onError: (err) => console.error('[useTodos] complete error:', err),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+    onMutate: async ({ id, completed }) => {
+      await queryClient.cancelQueries({ queryKey: ['todos'] })
+      const previous = queryClient.getQueryData<Todo[]>(['todos']) ?? []
+      queryClient.setQueryData<Todo[]>(['todos'], (old = []) =>
+        old.map(t => t.id === id ? { ...t, completed } : t)
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      queryClient.setQueryData(['todos'], context?.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
   })
 
   const deleteMutation = useMutation({
@@ -88,8 +97,7 @@ const uid = await getUserId()
       queryClient.setQueryData<Todo[]>(['todos'], (old = []) => old.filter(t => t.id !== id))
       return { previous }
     },
-    onError: (err, _id, context) => {
-      console.error('[useTodos] delete error:', err)
+    onError: (_err, _id, context) => {
       queryClient.setQueryData(['todos'], context?.previous)
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),

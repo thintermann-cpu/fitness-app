@@ -85,8 +85,7 @@ const uid = await getUserId()
       queryClient.setQueryData<Routine[]>(['routines'], (old = []) => [...old, optimistic])
       return { previous }
     },
-    onError: (err, _vars, context) => {
-      console.error('[useRoutines] create error:', err)
+    onError: (_err, _vars, context) => {
       queryClient.setQueryData(['routines'], context?.previous)
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
@@ -97,7 +96,18 @@ const uid = await getUserId()
       const { error } = await supabase.from('routines').update(updates).eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
+    onMutate: async ({ id, ...updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['routines'] })
+      const previous = queryClient.getQueryData<Routine[]>(['routines']) ?? []
+      queryClient.setQueryData<Routine[]>(['routines'], (old = []) =>
+        old.map(r => r.id === id ? { ...r, ...updates } : r)
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, context) => {
+      queryClient.setQueryData(['routines'], context?.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
   })
 
   const deleteMutation = useMutation({
@@ -105,7 +115,16 @@ const uid = await getUserId()
       const { error } = await supabase.from('routines').delete().eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['routines'] })
+      const previous = queryClient.getQueryData<Routine[]>(['routines']) ?? []
+      queryClient.setQueryData<Routine[]>(['routines'], (old = []) => old.filter(r => r.id !== id))
+      return { previous }
+    },
+    onError: (_err, _id, context) => {
+      queryClient.setQueryData(['routines'], context?.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
   })
 
   return {

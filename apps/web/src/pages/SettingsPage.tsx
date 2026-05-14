@@ -169,6 +169,7 @@ export function SettingsPage() {
   const [pushEnabled,   setPushEnabled]   = useState(false)
   const [pushLoading,   setPushLoading]   = useState(false)
   const [pushSupported, setPushSupported] = useState(false)
+  const [pushError,     setPushError]     = useState<string | null>(null)
   const [pushPrefs,     setPushPrefs]     = useState<PushPrefs>(DEFAULT_PUSH_PREFS)
   const [savingPush,    setSavingPush]    = useState(false)
   const [savedPush,     setSavedPush]     = useState(false)
@@ -287,12 +288,22 @@ export function SettingsPage() {
 
   const handleTogglePush = async () => {
     setPushLoading(true)
+    setPushError(null)
     if (pushEnabled) {
       await unsubscribeFromPush()
       setPushEnabled(false)
     } else {
       const success = await subscribeToPush()
-      setPushEnabled(success)
+      if (success) {
+        setPushEnabled(true)
+      } else {
+        const denied = typeof Notification !== 'undefined' && Notification.permission === 'denied'
+        setPushError(
+          denied
+            ? 'Benachrichtigungen sind im Browser blockiert. Bitte in den Browser-Einstellungen erlauben.'
+            : 'Push-Aktivierung fehlgeschlagen. Bitte prüfe die Browser-Berechtigungen.'
+        )
+      }
     }
     setPushLoading(false)
   }
@@ -586,6 +597,10 @@ export function SettingsPage() {
               </div>
             </button>
 
+            {pushError && (
+              <p className="text-xs text-center" style={{ color: '#ef4444' }}>{pushError}</p>
+            )}
+
             {/* Per-reminder settings, visible only when push is enabled */}
             {pushEnabled && (
               <>
@@ -608,6 +623,7 @@ export function SettingsPage() {
                           </div>
                         </div>
                         <button
+                          type="button"
                           onClick={() =>
                             setPushPrefs((p) => ({ ...p, [reminder.enabledKey]: !p[reminder.enabledKey] }))
                           }
@@ -615,6 +631,7 @@ export function SettingsPage() {
                             width: 44, height: 24, borderRadius: 12,
                             background: isEnabled ? '#E8642A' : 'rgba(255,255,255,0.1)',
                             transition: 'background 0.2s', position: 'relative', flexShrink: 0,
+                            border: 'none', cursor: 'pointer',
                           }}
                         >
                           <div

@@ -8,6 +8,10 @@ const TYPES       = ['', 'AMRAP', 'ForTime', 'EMOM', 'Tabata']
 const CATEGORIES  = ['', 'Girl WOD', 'Hero WOD', 'Other Benchmark', 'CrossFit Open', 'HomeWOD', 'Core WOD']
 const DIFFICULTIES = ['', 'Beginner', 'Intermediate', 'Advanced']
 
+type DurFilter = 0 | 15 | 20 | 30
+const DUR_OPTIONS: DurFilter[] = [0, 15, 20, 30]
+const SEARCH_KEY = 'wod_search'
+
 interface Props {
   onSelectWod: (wodName: string) => void
   equipmentFilter?: string[]
@@ -16,10 +20,11 @@ interface Props {
 
 export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
   const lang = useAuthStore((s) => s.profile?.language ?? 'de')
-  const [search, setSearch]         = useState('')
+  const [search, setSearch]         = useState(() => sessionStorage.getItem(SEARCH_KEY) ?? '')
   const [type, setType]             = useState('')
   const [category, setCategory]     = useState('')
   const [difficulty, setDifficulty] = useState('')
+  const [maxDur, setMaxDur]         = useState<DurFilter>(0)
   const [page, setPage]             = useState(0)
   const [filterOpen, setFilterOpen] = useState(false)
 
@@ -32,7 +37,8 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
     search:          search || undefined,
     page,
     equipmentFilter: equipmentFilter?.length ? equipmentFilter : undefined,
-    silentMode: silentMode ?? false,
+    silentMode:      silentMode ?? false,
+    maxDuration:     maxDur || undefined,
   })
 
   const wods    = data?.data  ?? []
@@ -61,7 +67,12 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
           <input
             type="search"
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(0) }}
+            onChange={(e) => {
+              const v = e.target.value
+              setSearch(v)
+              sessionStorage.setItem(SEARCH_KEY, v)
+              setPage(0)
+            }}
             placeholder="Search WODs…"
             className="w-full bg-[var(--color-bg-card)] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[#E8642A] text-sm"
           />
@@ -86,6 +97,24 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
             </span>
           )}
         </button>
+      </div>
+
+      {/* Duration filter chips */}
+      <div className="flex gap-2">
+        {DUR_OPTIONS.map((d) => (
+          <button
+            key={d}
+            onClick={() => { setMaxDur(d); setPage(0) }}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+            style={
+              maxDur === d
+                ? { backgroundColor: '#E8642A', color: 'white' }
+                : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }
+            }
+          >
+            {d === 0 ? 'Alle' : `≤${d} min`}
+          </button>
+        ))}
       </div>
 
       {/* Count */}

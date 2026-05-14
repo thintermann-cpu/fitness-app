@@ -71,6 +71,9 @@ const GOAL_FILTERS = [
 
 type GoalFilter = typeof GOAL_FILTERS[number]
 
+type DurFilter = 0 | 5 | 10 | 20
+const DUR_OPTIONS: DurFilter[] = [0, 5, 10, 20]
+
 export function StretchingPage() {
   const profile = useAuthStore((s) => s.profile)
   const lang = ((profile?.language ?? 'en') as Lang)
@@ -78,6 +81,7 @@ export function StretchingPage() {
 
   const [tab, setTab] = useState<Tab>('routines')
   const [goalFilter, setGoalFilter] = useState<GoalFilter>('all')
+  const [durFilter, setDurFilter] = useState<DurFilter>(0)
   const [view, setView] = useState<View>('list')
   const [selectedRoutine, setSelectedRoutine] = useState<StretchingRoutine | null>(null)
 
@@ -86,10 +90,11 @@ export function StretchingPage() {
 
   const isLoading = routinesLoading || exercisesLoading
 
-  const filteredRoutines = useMemo(
-    () => goalFilter === 'all' ? routines : routines.filter((r) => r.goal === goalFilter),
-    [routines, goalFilter],
-  )
+  const filteredRoutines = useMemo(() => {
+    let result = goalFilter === 'all' ? routines : routines.filter((r) => r.goal === goalFilter)
+    if (durFilter > 0) result = result.filter((r) => r.duration_min > 0 && r.duration_min <= durFilter)
+    return result
+  }, [routines, goalFilter, durFilter])
 
   const handleSelectRoutine = (routine: StretchingRoutine) => {
     setSelectedRoutine(routine)
@@ -193,6 +198,24 @@ export function StretchingPage() {
                   </button>
                 )
               })}
+            </div>
+
+            {/* Duration filter chips */}
+            <div className="px-4 pb-2 flex gap-2">
+              {DUR_OPTIONS.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDurFilter(d)}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                  style={
+                    durFilter === d
+                      ? { backgroundColor: PILLAR_COLOR, color: 'white' }
+                      : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }
+                  }
+                >
+                  {d === 0 ? t.all : `≤${d} min`}
+                </button>
+              ))}
             </div>
 
             {/* Routine list */}
