@@ -15,7 +15,7 @@ Das Produkt basiert auf **4 Pillars** (Domänen), die einzeln freischaltbar sind
 | **Workout** | `#E8642A` Orange | WOD-Datenbank (803 CrossFit-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), History, Highscores |
 | **Routine** (My Day) | `#4A90D9` Blau | Tagesroutinen, To-dos, Wochenübersicht, Wassertracker, Mood-Check |
 | **Stretching** | `#7BC67E` Grün | 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync |
-| **Meditation** | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API, Custom Timer |
+| **Meditation** | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer, Screen Wake Lock, Gong am Session-Ende |
 
 Migrations-Hintergrund: Rebuild aus zwei Vorgänger-Apps (`wod-tracker/` Vanilla-JS-PWA mit ServiceWorker, `mein-tag/` v1.4.0 HTML). Beide Ordner liegen noch im Repo und bleiben unberührt.
 
@@ -68,6 +68,7 @@ apps/web/src/
 │   ├── RoutinePage.tsx        # Tabs: Routinen / Todo / Woche
 │   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4)
 │   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5)
+│   ├── FavoritesPage.tsx      # Drei Sektionen (Workouts / Stretch & Yoga / Meditationen), URL-Param ?section=
 │   └── admin/
 │       ├── AdminDashboardPage.tsx
 │       ├── AdminUsersPage.tsx
@@ -79,10 +80,6 @@ apps/web/src/
 │   │   ├── BottomNav.tsx      # Tab-Navigation, hebt aktiven Pillar hervor (versteckt ab lg)
 │   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint)
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
-│   ├── ui/
-│   │   ├── Button.tsx
-│   │   ├── Card.tsx
-│   │   └── Input.tsx
 │   ├── workout/
 │   │   ├── WodCard.tsx
 │   │   ├── WodList.tsx
@@ -92,13 +89,19 @@ apps/web/src/
 │   │   └── ScoreInput.tsx
 │   ├── routine/
 │   │   ├── RoutineItem.tsx
-│   │   ├── RoutineList.tsx
+│   │   ├── RoutineList.tsx    # inkl. Routine-Create-Modal (RoutineEditModal)
+│   │   ├── RoutineEditModal.tsx
 │   │   ├── WaterTracker.tsx
 │   │   ├── MoodCheck.tsx
 │   │   ├── TodoList.tsx
 │   │   └── WeekView.tsx
 │   ├── stretching/            # Alle Stretching-Komponenten
 │   ├── meditation/            # Alle Meditation-Komponenten
+│   ├── ui/
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   ├── Input.tsx
+│   │   └── FavoriteButton.tsx # SVG-Herz, 44×44 Touch-Target, Pillar-Farbe
 │   └── AdminRoute.tsx         # Role-Guard (admin/moderator)
 ├── hooks/
 │   ├── useRoutines.ts         # CRUD Routinen
@@ -110,14 +113,30 @@ apps/web/src/
 │   ├── useHighscores.ts       # Top-10 pro WOD (Supabase oder local)
 │   ├── useStretching.ts       # Stretching-Übungen, Routinen, Logs
 │   ├── useMeditations.ts      # Meditationen, Session-Logs
-│   └── useBreathworkTechniques.ts  # Breathwork-Techniken
+│   ├── useBreathworkTechniques.ts  # Breathwork-Techniken
+│   └── useFavorites.ts        # localStorage + Supabase Dual-Write, optimistic UI; content_type: wod | stretching_routine | meditation
 └── public/
     ├── wods.json              # 803 WODs (aus wod-tracker migriert)
     ├── timer.worker.js        # Drift-korrigierter Web Worker
     ├── favicon.svg
     ├── icons.svg
+    ├── manifest.json          # PWA-Manifest (name/short_name CarveOut, theme_color #0D0D14, SVG-Icon)
     └── sw.js                  # Service Worker (Push Notifications)
 ```
+
+### PWA-Konfiguration
+
+`apps/web/index.html`:
+- `<title>CarveOut</title>`
+- `<link rel="manifest" href="/manifest.json" />`
+- `<meta name="theme-color" content="#0D0D14" />`
+- Apple-Meta-Tags: `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style` (black-translucent), `apple-mobile-web-app-title` (CarveOut)
+
+`apps/web/public/manifest.json`:
+- `name` / `short_name`: CarveOut
+- `display`: standalone
+- `background_color` / `theme_color`: `#0D0D14`
+- Icon: `/favicon.svg` (type `image/svg+xml`, sizes `any`)
 
 ### Routing (App.tsx)
 
@@ -130,6 +149,7 @@ apps/web/src/
   /routine
   /stretching
   /meditation
+  /favorites
   /settings
 /admin → AdminLayout (AdminRoute: role admin/moderator)
   /admin
@@ -199,6 +219,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | `meditation_logs` | Session-Logs pro Nutzer |
 | `push_subscriptions` | Web Push Subscription JSON pro User |
 | `push_preferences` | Reminder-Einstellungen (morning/evening/wod/inactivity + Zeiten) |
+| `favorites` | Favoriten pro Nutzer: `content_type` (wod \| stretching_routine \| meditation), `content_id` (string); DDL als Kommentar in `useFavorites.ts` |
 
 DDL + RLS für `wods` und `wod_history`: `supabase/seed-wods.sql`
 
@@ -268,7 +289,15 @@ Nutzer können ihr Equipment pro Location in den Settings anpassen (`equipment_b
 
 Alle Modi nutzen den drift-korrigierten `timer.worker.js` im Hintergrund.
 
-**Screen Wake Lock:** Während der Timer läuft, aktiviert `TimerView.tsx` die Screen Wake Lock API (`navigator.wakeLock.request('screen')`), um zu verhindern, dass das Display während des Workouts ausgeht. Die Lock wird automatisch freigegeben, wenn der Timer pausiert, gestoppt oder die Komponente unmounted wird. Geräte ohne Wake-Lock-Support werden per Feature-Detection (`nav.wakeLock`-Check) still ignoriert.
+**Screen Wake Lock:** Während der Timer läuft, aktivieren folgende Komponenten die Screen Wake Lock API (`navigator.wakeLock.request('screen')`), um Display-Timeout zu verhindern:
+- `TimerView.tsx` (Workout) — aktiv solange Timer läuft
+- `GuidedSession.tsx` (Stretching) — aktiv solange `isTimerActive`
+- `MeditationSession.tsx` (Meditation) — aktiv wenn `started && !paused && !finished`
+- `CustomTimer.tsx` (Meditation) — aktiv bei Status `running` | `prep`
+
+Die Lock wird automatisch freigegeben, wenn der Timer pausiert, gestoppt oder die Komponente unmounted wird. Geräte ohne Wake-Lock-Support werden per Feature-Detection still ignoriert.
+
+**Gong am Session-Ende:** `GuidedSession.finishSession()` ruft nach `playComplete()` zusätzlich `playGong()` auf. `MeditationSession` und `CustomTimer` spielen `playGong()` sowohl am Timer-Ende als auch beim manuellen Beenden.
 
 ---
 
@@ -378,13 +407,17 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 | **Desktop Layout** | Sidebar (240px) ab lg-Breakpoint, BottomNav wird ausgeblendet |
 | **Admin-Bereich** | /admin/* mit AdminRoute (role-guard), AdminLayout, Dashboard, Users, Manual Tasks + Markdown-Export |
 | **Push Notifications (Client)** | Service Worker, subscribeToPush/unsubscribeFromPush, Settings-Toggles pro Reminder-Typ |
-| **Phase 7-9 Cleanup** | Zeit-Filter (`minDuration`/`maxDuration` in `useWods`), Substitution-Toggle (SettingsPage + WodDetail-Gate, localStorage), Silent Mode / Parent Mode (`is_jumping`-Flag auf WOD-Ebene, Keyword-Sweep 251 WODs, SettingsPage-Toggle + WodList-Filter), Stretching & Yoga Rebranding (i18n DE/EN/ES), Hybrid-Labels für WOD-Typen (`wodTypeLabels.ts`, WodCard + WodList + TimerView sprachabhängig), BottomNav i18n, LogoIcon SVG |
+| **Phase 7-9 Cleanup** | Zeit-Filter (`minDuration`/`maxDuration` in `useWods`), Substitution-Toggle (SettingsPage + WodDetail-Gate, localStorage), Silent Mode / Parent Mode (`is_jumping`-Flag auf WOD-Ebene, Keyword-Sweep 251 WODs, SettingsPage-Toggle + WodList-Filter), Stretching & Yoga Rebranding (i18n DE/EN/ES), Hybrid-Labels für WOD-Typen (`wodTypeLabels.ts`, WodCard + WodList + TimerView sprachabhängig), BottomNav i18n, LogoIcon SVG (C-Bogen + Pfeil, Sidebar + favicon.svg) |
+| **Wake Lock (Stretching + Meditation)** | Screen Wake Lock in `GuidedSession`, `MeditationSession`, `CustomTimer` — selbes Pattern wie `TimerView` |
+| **Gong am Session-Ende** | `GuidedSession`, `MeditationSession`, `CustomTimer` spielen Gong bei Timer-Ende und manuellem Beenden |
+| **Routine-Create Modal** | Custom Routine direkt aus `RoutineList` erstellen via `RoutineEditModal`, optimistic Insert in `useRoutines` + `useTodos` |
+| **Favoriten-System** | `useFavorites` (localStorage + Supabase Dual-Write), `FavoriteButton`, `FavoritesPage` (/favorites), drei Sektionen (Workouts / Stretch & Yoga / Meditationen), AppShell-Header-Badge + Sidebar-Eintrag |
+| **PWA-Manifest** | `manifest.json` (standalone, theme `#0D0D14`, SVG-Icon), `index.html` Title + Apple-Meta-Tags |
 
 ### Offen / Roadmap
 
 | Bereich | Inhalt |
 |---|---|
-| **Logo / Brand Identity** | ✅ LogoIcon.tsx als SVG-Komponente (C-Bogen + Pfeil), Sidebar + favicon.svg aktualisiert |
 | **Landingpage** | apps/landing — Marketing, Waitlist, Pricing |
 | **Stripe** | Abo-Integration (7-Tage Trial); subscription_status bereits im Schema |
 | **Bestätigungsemail** | Via Resend — wartet auf finales Logo |
@@ -400,7 +433,6 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 | **Warmup-Timer** | Echte Phasen via Timer-Worker (nicht nur Akkordeon-UI in WodDetail) |
 | **Free-Timer-Wizard** | 3-Step-Flow: Typ → Übungen → Übersicht; eigene Workouts ohne WOD-DB |
 | **Random-WOD-Picker** | Eigener Screen mit Filter + Würfel-Button |
-| **Favorites-System** | toggleFav, persistent (localStorage / Supabase) |
 | **Theme-Switcher** | Mind. Dark/Light; alte HTML-PWA hatte 8 Themes × 8 Accents |
 | **Toast-Notifications** | Globales Feedback-System (Ersatz für fehlende showToast-Äquivalente) |
 | **Home-Screen-Widgets** | Today's WOD, Woche-Stats, Recently Done auf Workout-Startansicht |
@@ -408,4 +440,4 @@ WODs (803 Einträge) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe R
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session B: Phase 7-9 Cleanup, Branding, Wording-System)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session C: Wake Lock Stretching/Meditation, Gong-End, Routine-Create Modal, Favoriten-System, PWA-Manifest)*
