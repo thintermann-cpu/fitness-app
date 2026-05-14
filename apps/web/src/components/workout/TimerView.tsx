@@ -43,6 +43,10 @@ function formatMs(ms: number): string {
 let audioCtx: AudioContext | null = null
 
 function beep(type: 'start' | 'interval' | 'end') {
+  if ('vibrate' in navigator) {
+    if (type === 'end') navigator.vibrate([500, 100, 500])
+    else if (type === 'interval') navigator.vibrate([200, 100, 200])
+  }
   try {
     if (!audioCtx) audioCtx = new AudioContext()
     if (audioCtx.state === 'suspended') void audioCtx.resume()

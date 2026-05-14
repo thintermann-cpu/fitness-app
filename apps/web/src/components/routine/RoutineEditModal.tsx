@@ -80,6 +80,7 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
   const [icon, setIcon]           = useState(routine.icon)
   const [category, setCategory]   = useState<Category>(routine.category)
   const [activeDays, setActiveDays] = useState<number[]>(routine.active_days)
+  const [time, setTime]           = useState(routine.time ?? '')
   const [linkUrl, setLinkUrl]     = useState(routine.link_url ?? '')
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -93,6 +94,7 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
       icon: icon.trim() || routine.icon,
       category,
       active_days: activeDays,
+      time: time || null,
       link_url: linkUrl.trim() || null,
     })
     onBack()
@@ -241,6 +243,17 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
             })}
           </div>
         </div>
+
+        {/* Time */}
+        <label style={{ display: 'block', marginBottom: 18 }}>
+          <div style={labelStyle}>Uhrzeit (optional)</div>
+          <input
+            value={time}
+            onChange={e => setTime(e.target.value)}
+            type="time"
+            style={{ ...inputStyle, colorScheme: 'dark' }}
+          />
+        </label>
 
         {/* Link URL */}
         <label style={{ display: 'block', marginBottom: 28 }}>

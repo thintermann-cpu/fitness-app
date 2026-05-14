@@ -133,7 +133,7 @@ export function RoutinePage() {
               icon: rest.icon ?? '📋',
               category: rest.category ?? newCategory,
               active_days: rest.active_days ?? [1, 2, 3, 4, 5],
-              time: null,
+              time: rest.time ?? null,
               link_url: rest.link_url ?? null,
               sort_order: 0,
             })

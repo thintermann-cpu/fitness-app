@@ -189,6 +189,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
     if (status === 'running') {
       if (timeLeft <= 0) {
         audio.stopBackground()
+        if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
         void audio.playComplete()
         void audio.playGong()
         const durationMinActual = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
@@ -202,6 +203,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
         const elapsed = totalSecRef.current - timeLeft
         const nextBeat = lastIntervalRef.current + intervalMin * 60
         if (elapsed >= nextBeat && elapsed > 0) {
+          if ('vibrate' in navigator) navigator.vibrate([200, 100, 200])
           void audio.playBeep()
           lastIntervalRef.current = nextBeat
         }
@@ -298,6 +300,7 @@ export function CustomTimer({ lang, onFinish }: Props) {
           <button
             onClick={() => {
               audio.stopBackground()
+              if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
               void audio.playComplete()
               void audio.playGong()
               const durationMinActual = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))

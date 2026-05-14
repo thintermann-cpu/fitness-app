@@ -113,7 +113,7 @@ export function MeditationPage() {
   )
 
   const filtered = useMemo(
-    () => durFilter === 0 ? catFiltered : catFiltered.filter((m) => m.duration_min <= durFilter),
+    () => durFilter === 0 ? catFiltered : catFiltered.filter((m) => m.duration_min > 0 && m.duration_min <= durFilter),
     [catFiltered, durFilter],
   )
 
@@ -293,7 +293,7 @@ export function MeditationPage() {
                       : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }
                   }
                 >
-                  {dur === 0 ? t.all : `≤ ${dur} min`}
+                  {dur === 0 ? t.all : `≤${dur} min`}
                 </button>
               ))}
             </div>

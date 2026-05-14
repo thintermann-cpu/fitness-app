@@ -171,6 +171,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
     setPhase('done')
     const durationMin = Math.round((Date.now() - startTime) / 60000)
     addLog.mutate({ routine_id: routine.id, duration_min: durationMin || 1 })
+    if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
     void audioRef.current.playComplete()
     void audioRef.current.playGong()
   }
@@ -196,18 +197,19 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
     if (paused || phase === 'config' || phase === 'done' || !current) return
 
     if (timeLeft <= 0) {
+      const vibrate = () => { if ('vibrate' in navigator) navigator.vibrate([200, 100, 200]) }
       if (phase === 'exercise' && current.bilateral && side === 'left') {
-        void audioRef.current.playBeep()
+        vibrate(); void audioRef.current.playBeep()
         setPhase('switch')
         setTimeLeft(SWITCH_DURATION)
       } else if (phase === 'switch') {
-        void audioRef.current.playBeep()
+        vibrate(); void audioRef.current.playBeep()
         setSide('right')
         setPhase('exercise')
         setTimeLeft(Math.floor(exerciseDuration / 2))
       } else if (phase === 'rest') {
         if (currentIndex < total - 1) {
-          void audioRef.current.playBeep()
+          vibrate(); void audioRef.current.playBeep()
           jumpToExercise(currentIndex + 1)
         } else {
           finishSession()
@@ -215,11 +217,11 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
       } else {
         // exercise done (non-bilateral or right side)
         if (pauseDuration > 0) {
-          void audioRef.current.playBeep()
+          vibrate(); void audioRef.current.playBeep()
           setPhase('rest')
           setTimeLeft(pauseDuration)
         } else if (currentIndex < total - 1) {
-          void audioRef.current.playBeep()
+          vibrate(); void audioRef.current.playBeep()
           jumpToExercise(currentIndex + 1)
         } else {
           finishSession()

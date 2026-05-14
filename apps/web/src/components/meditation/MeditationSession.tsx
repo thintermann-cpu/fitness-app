@@ -142,6 +142,7 @@ export function MeditationSession({ meditation, lang, onFinish }: Props) {
     if (timeLeft <= 0) {
       setFinished(true)
       audio.stopBackground()
+      if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
       audio.playComplete()
       void audio.playGong()
       const durationMin = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
@@ -292,6 +293,7 @@ export function MeditationSession({ meditation, lang, onFinish }: Props) {
           <button
             onClick={() => {
               audio.stopBackground()
+              if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
               audio.playComplete()
               void audio.playGong()
               setFinished(true)

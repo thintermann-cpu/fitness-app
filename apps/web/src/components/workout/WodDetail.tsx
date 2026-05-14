@@ -7,6 +7,7 @@ import { useWodHistory } from '../../hooks/useWodHistory'
 import { TimerView } from './TimerView'
 import { ScoreInput } from './ScoreInput'
 import { WodHistoryList } from './WodHistoryList'
+import { FavoriteButton } from '../ui/FavoriteButton'
 
 type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
@@ -148,6 +149,7 @@ export function WodDetail({ wodName, onBack }: Props) {
             )}
           </div>
         </div>
+        <FavoriteButton contentType="wod" contentId={wod.name} color="#E8642A" />
       </div>
 
       {/* Description */}

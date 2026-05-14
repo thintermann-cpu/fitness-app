@@ -1,8 +1,10 @@
 import { useRef, useCallback, useMemo } from 'react'
+import { useAudioStore } from '../store/audioStore'
 
 export type SoundKey = 'rain' | 'forest' | 'waves' | 'white_noise' | 'bowl' | 'silence'
 
 export function useAudio() {
+  const isMuted   = useAudioStore((s) => s.isMuted)
   const ctxRef    = useRef<AudioContext | null>(null)
   const stopBgRef = useRef<(() => void) | null>(null)
 
@@ -17,6 +19,7 @@ export function useAudio() {
   }, [])
 
   const playGong = useCallback(async () => {
+    if (isMuted) return
     try {
       const ctx = await getCtxReady()
       const osc = ctx.createOscillator()
@@ -34,6 +37,7 @@ export function useAudio() {
   }, [getCtxReady])
 
   const playBeep = useCallback(async () => {
+    if (isMuted) return
     try {
       const ctx = await getCtxReady()
       const osc = ctx.createOscillator()
@@ -50,6 +54,7 @@ export function useAudio() {
   }, [getCtxReady])
 
   const playComplete = useCallback(async () => {
+    if (isMuted) return
     try {
       const ctx   = await getCtxReady()
       const notes = [880, 698, 523]
@@ -82,7 +87,7 @@ export function useAudio() {
       try { stopBgRef.current() } catch {}
       stopBgRef.current = null
     }
-    if (!sound || sound === 'silence') return
+    if (isMuted || !sound || sound === 'silence') return
 
     try {
       const ctx = await getCtxReady()
@@ -165,7 +170,7 @@ export function useAudio() {
   }, [])
 
   return useMemo(
-    () => ({ playGong, playBeep, playComplete, startBackground, stopBackground, cleanup }),
-    [playGong, playBeep, playComplete, startBackground, stopBackground, cleanup],
+    () => ({ playGong, playBeep, playComplete, startBackground, stopBackground, cleanup, isMuted }),
+    [playGong, playBeep, playComplete, startBackground, stopBackground, cleanup, isMuted],
   )
 }

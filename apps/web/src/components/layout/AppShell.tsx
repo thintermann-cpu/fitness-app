@@ -2,6 +2,7 @@ import { Outlet, Link } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
 import { useFavorites } from '../../hooks/useFavorites'
+import { useAudioStore } from '../../store/audioStore'
 
 function FavoritesHeaderBtn() {
   const { favorites } = useFavorites()
@@ -34,6 +35,32 @@ function FavoritesHeaderBtn() {
   )
 }
 
+function MuteHeaderBtn() {
+  const { isMuted, toggleMute } = useAudioStore()
+  return (
+    <button
+      onClick={toggleMute}
+      aria-label={isMuted ? 'Ton einschalten' : 'Ton ausschalten'}
+      style={{ minWidth: 44, minHeight: 44 }}
+      className="flex items-center justify-center"
+    >
+      {isMuted ? (
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" width="20" height="20" aria-hidden="true">
+          <path d="M11 5L6 9H2v6h4l5 4V5z" strokeLinejoin="round" />
+          <line x1="23" y1="9" x2="17" y2="15" />
+          <line x1="17" y1="9" x2="23" y2="15" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" width="20" height="20" aria-hidden="true">
+          <path d="M11 5L6 9H2v6h4l5 4V5z" strokeLinejoin="round" />
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
 export function AppShell() {
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
@@ -44,9 +71,10 @@ export function AppShell() {
       <div className="flex flex-col flex-1 lg:pl-[240px]">
         {/* Mobile-only top bar with favorites shortcut */}
         <div
-          className="lg:hidden flex items-center justify-end px-3 border-b border-white/5 sticky top-0 z-20"
+          className="lg:hidden flex items-center justify-end gap-1 px-3 border-b border-white/5 sticky top-0 z-20"
           style={{ height: 44, backgroundColor: 'var(--color-bg)' }}
         >
+          <MuteHeaderBtn />
           <FavoritesHeaderBtn />
         </div>
 
