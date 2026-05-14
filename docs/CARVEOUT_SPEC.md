@@ -12,7 +12,7 @@ Das Produkt basiert auf **4 Pillars** (Domänen), die einzeln freischaltbar sind
 
 | Pillar | Farbe | Funktion |
 |---|---|---|
-| **Workout** | `#E8642A` Orange | WOD-Datenbank (798 CrossFit-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), History, Highscores |
+| **Workout** | `#E8642A` Orange | WOD-Datenbank (796 lokale / 798 Supabase CrossFit-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), History, Highscores |
 | **Routine** (My Day) | `#4A90D9` Blau | Tagesroutinen, To-dos, Wochenübersicht, Wassertracker, Mood-Check |
 | **Stretching** | `#7BC67E` Grün | 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync |
 | **Meditation** | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer, Screen Wake Lock, Gong am Session-Ende |
@@ -59,7 +59,8 @@ apps/web/src/
 │   ├── supabase.ts            # Supabase-Client + isSupabaseConfigured()
 │   └── push.ts                # Push Notification Helpers (subscribeToPush, unsubscribeFromPush)
 ├── store/
-│   └── authStore.ts           # Zustand-Store: user, session, loading, profile; signIn/signUp/signOut/initialize/fetchProfile/updateProfile; WorkoutLocation + DEFAULT_EQUIPMENT_BY_LOCATION + equipment_by_location
+│   ├── authStore.ts           # Zustand-Store: user, session, loading, profile; signIn/signUp/signOut/initialize/fetchProfile/updateProfile; WorkoutLocation + DEFAULT_EQUIPMENT_BY_LOCATION + equipment_by_location
+│   └── audioStore.ts          # Zustand-Store (persist: 'audio-mute'): isMuted: boolean, toggleMute()
 ├── pages/
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
@@ -76,21 +77,21 @@ apps/web/src/
 │       └── AdminPlaceholderPage.tsx
 ├── components/
 │   ├── layout/
-│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context
+│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header: Mute-Button + Favoriten-Button
 │   │   ├── BottomNav.tsx      # Tab-Navigation, hebt aktiven Pillar hervor (versteckt ab lg)
 │   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint)
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
 │   ├── workout/
 │   │   ├── WodCard.tsx
 │   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); Duration-Filter-Chips: Alle/≤15/≤20/≤30 min
-│   │   ├── WodDetail.tsx
+│   │   ├── WodDetail.tsx      # enthält FavoriteButton (contentType="wod", color="#E8642A")
 │   │   ├── TimerView.tsx      # Nutzt timer.worker.js; AMRAP/ForTime/EMOM/Tabata konfigurierbar
 │   │   ├── WodHistoryList.tsx
 │   │   └── ScoreInput.tsx
 │   ├── routine/
 │   │   ├── RoutineItem.tsx
 │   │   ├── RoutineList.tsx    # inkl. Routine-Create-Modal (RoutineEditModal)
-│   │   ├── RoutineEditModal.tsx
+│   │   ├── RoutineEditModal.tsx  # Felder: Name, Beschreibung, Wochentage, Uhrzeit (type=time, time: string|null)
 │   │   ├── WaterTracker.tsx
 │   │   ├── MoodCheck.tsx
 │   │   ├── TodoList.tsx
@@ -114,9 +115,10 @@ apps/web/src/
 │   ├── useStretching.ts       # Stretching-Übungen, Routinen, Logs
 │   ├── useMeditations.ts      # Meditationen, Session-Logs
 │   ├── useBreathworkTechniques.ts  # Breathwork-Techniken
-│   └── useFavorites.ts        # localStorage + Supabase Dual-Write, optimistic UI; content_type: wod | stretching_routine | meditation
+│   ├── useFavorites.ts        # localStorage + Supabase Dual-Write, optimistic UI; content_type: wod | stretching_routine | meditation
+│   └── useAudio.ts            # Web Audio API; isMuted-Check via audioStore in allen play*-Funktionen + startBackground
 └── public/
-    ├── wods.json              # 803 WODs (aus wod-tracker migriert)
+    ├── wods.json              # 796 WODs lokal (aus wod-tracker migriert, 7 Duplikate bereinigt)
     ├── timer.worker.js        # Drift-korrigierter Web Worker
     ├── favicon.svg
     ├── icons.svg
@@ -299,6 +301,10 @@ Die Lock wird automatisch freigegeben, wenn der Timer pausiert, gestoppt oder di
 
 **Gong am Session-Ende:** `GuidedSession.finishSession()` ruft nach `playComplete()` zusätzlich `playGong()` auf. `MeditationSession` und `CustomTimer` spielen `playGong()` sowohl am Timer-Ende als auch beim manuellen Beenden.
 
+**Vibration:** `TimerView`, `GuidedSession`, `MeditationSession`, `CustomTimer` rufen `navigator.vibrate()` auf — Intervall: `[200,100,200]`, Ende: `[500,100,500]`. Geräte ohne Vibration-Support werden per Feature-Detection still ignoriert.
+
+**Mute-Toggle:** `useAudioStore` (persist: `audio-mute`) hält `isMuted`-State. `useAudio.ts` prüft `isMuted` in allen `play*`-Funktionen und `startBackground` — bei `isMuted: true` kein Audio-Output. Mute-Button im Mobile-Header (`AppShell.tsx`) neben dem Favoriten-Button.
+
 ---
 
 ## 7. Desktop Layout
@@ -389,7 +395,7 @@ Init: `initI18n(language: Language)` — konfiguriert i18next mit den passenden 
 Namespace-Schlüssel: `app`, `nav`, `pillars`, `onboarding`, `common`
 
 Stretching-Übungen sind vollständig dreisprachig (name/description/instructions als JSONB).
-WODs (798 Einträge, 7 Duplikate bereinigt) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe Roadmap).
+WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe Roadmap).
 
 ---
 
@@ -402,7 +408,7 @@ WODs (798 Einträge, 7 Duplikate bereinigt) aktuell nur Deutsch — Übersetzung
 | **Phase 0** | Turborepo-Scaffold, packages/types, packages/i18n, packages/ui (Stub), CI/CD-Pipeline, Server-Setup-Skript |
 | **Phase 1** | Supabase-Client, Zustand Auth-Store, Login/Register/Onboarding-Pages, AppShell + BottomNav, Button/Card/Input-Components, Route Guards |
 | **Phase 2** | Routine-Pillar (RoutinePage, hooks: useRoutines/useRoutineLogs/useDailyLog/useTodos, Komponenten: RoutineList/WaterTracker/MoodCheck/TodoList/WeekView) |
-| **Phase 3** | Workout-Pillar (WorkoutPage, 803 WODs, drift-korrigierter Web Worker Timer mit AMRAP/ForTime/EMOM/Tabata-Konfiguration, alle WOD-Komponenten, Supabase-DDL für wods + wod_history, Equipment-Kategorien Laufen/Sandbag/Gewichtsweste, Location-basierter Equipment-Filter mit `DEFAULT_EQUIPMENT_BY_LOCATION`, Screen Wake Lock während Timer-Lauf) |
+| **Phase 3** | Workout-Pillar (WorkoutPage, 796 WODs lokal / 798 Supabase, drift-korrigierter Web Worker Timer mit AMRAP/ForTime/EMOM/Tabata-Konfiguration, alle WOD-Komponenten, Supabase-DDL für wods + wod_history, Equipment-Kategorien Laufen/Sandbag/Gewichtsweste, Location-basierter Equipment-Filter mit `DEFAULT_EQUIPMENT_BY_LOCATION`, Screen Wake Lock während Timer-Lauf) |
 | **Phase 4** | Stretching-Pillar — 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync |
 | **Phase 5** | Meditation-Pillar — 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer |
 | **Desktop Layout** | Sidebar (240px) ab lg-Breakpoint, BottomNav wird ausgeblendet |
@@ -414,7 +420,8 @@ WODs (798 Einträge, 7 Duplikate bereinigt) aktuell nur Deutsch — Übersetzung
 | **Routine-Create Modal** | Custom Routine direkt aus `RoutineList` erstellen via `RoutineEditModal`, optimistic Insert in `useRoutines` + `useTodos`; `useRoutines` (update + delete) und `useTodos` (complete) vollständig optimistic (onMutate/onError rollback/onSettled) |
 | **Favoriten-System** | `useFavorites` (localStorage + Supabase Dual-Write), `FavoriteButton`, `FavoritesPage` (/favorites), drei Sektionen (Workouts / Stretch & Yoga / Meditationen), AppShell-Header-Badge + Sidebar-Eintrag |
 | **PWA-Manifest** | `manifest.json` (standalone, theme `#0D0D14`, SVG-Icon), `index.html` Title + Apple-Meta-Tags |
-| **Session D: Polish** | Duration-Filter-Chips in `WodList` (Alle/≤15/≤20/≤30 min) + `StretchingPage` (Alle/≤5/≤10/≤20 min); WOD-Suche sessionStorage-persistent (Key: `wod_search`); Push-Fehlerbehandlung (`pushError` State in `SettingsPage`); Optimistic Updates: `useRoutines` (update+delete) + `useTodos` (complete); 7 Duplikat-WODs bereinigt (798 aktiv) |
+| **Session D: Polish** | Duration-Filter-Chips in `WodList` (Alle/≤15/≤20/≤30 min) + `StretchingPage` (Alle/≤5/≤10/≤20 min); WOD-Suche sessionStorage-persistent (Key: `wod_search`); Push-Fehlerbehandlung (`pushError` State in `SettingsPage`); Optimistic Updates: `useRoutines` (update+delete) + `useTodos` (complete); 7 Duplikat-WODs aus lokalem JSON bereinigt (796 lokal / 798 Supabase) |
+| **Session E: Polish II** | `audioStore` (Zustand persist: `isMuted`/`toggleMute`), Mute-Button im Mobile-Header (`AppShell`); Vibration-Feedback in `TimerView`/`GuidedSession`/`MeditationSession`/`CustomTimer`; `RoutineEditModal` Uhrzeit-Feld (`time: string\|null`); `FavoriteButton` in `WodDetail`; `MeditationPage` `duration_min > 0` Guard; `FavoriteButton` fix: Sichtbarkeit + Tag-Overflow-Schutz auf Cards |
 
 ### Offen / Roadmap
 
@@ -442,4 +449,4 @@ WODs (798 Einträge, 7 Duplikate bereinigt) aktuell nur Deutsch — Übersetzung
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session D: Duration-Filter-Chips Workout+Stretching, WOD-Suche sessionStorage-persistent, Push-Fehlerbehandlung, Optimistic Updates Routinen/Todos, 7 WOD-Duplikate bereinigt)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session E: audioStore/Mute-Toggle, Vibration-Feedback, RoutineEditModal Uhrzeit, FavoriteButton WodDetail, MeditationPage Guard, 796/798 WOD-Zähler)*
