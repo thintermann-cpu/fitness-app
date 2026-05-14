@@ -1,0 +1,17 @@
+{
+  "name": "CarveOut",
+  "short_name": "CarveOut",
+  "description": "Strukturierte Selbstoptimierung — Workout, Routine, Stretching, Meditation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D0D14",
+  "theme_color": "#0D0D14",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
