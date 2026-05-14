@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { Routine, Category } from '../../hooks/useRoutines'
+import { useToast } from '../../hooks/useToast'
 
 type Lang = 'de' | 'en' | 'es'
 
@@ -74,7 +75,8 @@ interface Props {
 }
 
 export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Props) {
-  const t = T[lang] ?? T.de
+  const t     = T[lang] ?? T.de
+  const toast = useToast()
 
   const [name, setName]           = useState(routine.name)
   const [icon, setIcon]           = useState(routine.icon)
@@ -97,6 +99,7 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
       time: time || null,
       link_url: linkUrl.trim() || null,
     })
+    toast.success(lang === 'de' ? 'Routine gespeichert' : lang === 'es' ? 'Rutina guardada' : 'Routine saved')
     onBack()
   }
 

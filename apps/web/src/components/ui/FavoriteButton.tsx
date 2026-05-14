@@ -1,4 +1,5 @@
 import { useFavorites } from '../../hooks/useFavorites'
+import { useToastStore } from '../../store/toastStore'
 
 interface Props {
   contentType: string
@@ -8,11 +9,21 @@ interface Props {
 
 export function FavoriteButton({ contentType, contentId, color }: Props) {
   const { isFavorite, toggleFavorite } = useFavorites()
-  const active = isFavorite(contentType, contentId)
+  const active    = isFavorite(contentType, contentId)
+  const addToast  = useToastStore((s) => s.addToast)
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    toggleFavorite(contentType, contentId)
+    addToast(active
+      ? { message: 'Aus Favoriten entfernt', type: 'info' }
+      : { message: 'Zu Favoriten hinzugefügt', type: 'success' },
+    )
+  }
 
   return (
     <button
-      onClick={(e) => { e.stopPropagation(); toggleFavorite(contentType, contentId) }}
+      onClick={handleClick}
       aria-label={active ? 'Von Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
       style={{
         background: 'none',

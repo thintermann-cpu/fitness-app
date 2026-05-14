@@ -3,6 +3,7 @@ import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
 import { useFavorites } from '../../hooks/useFavorites'
 import { useAudioStore } from '../../store/audioStore'
+import { ToastContainer } from '../ui/ToastContainer'
 
 function FavoritesHeaderBtn() {
   const { favorites } = useFavorites()
@@ -83,6 +84,7 @@ export function AppShell() {
         </main>
         <BottomNav />
       </div>
+      <ToastContainer />
     </div>
   )
 }
