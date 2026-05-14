@@ -6,6 +6,7 @@ import { RoutineCard } from '../components/stretching/RoutineCard'
 import { RoutineDetail } from '../components/stretching/RoutineDetail'
 import { GuidedSession } from '../components/stretching/GuidedSession'
 import { StretchingHistory } from '../components/stretching/StretchingHistory'
+import { FilterBottomSheet } from '../components/ui/FilterBottomSheet'
 
 const PILLAR_COLOR = '#7BC67E'
 
@@ -29,6 +30,10 @@ const T = {
     recovery: 'Erholung',
     loading: 'Laden…',
     empty: 'Keine Routinen gefunden.',
+    filterGoal: 'Ziel',
+    filterDur: 'Dauer',
+    filterApply: 'Anwenden',
+    filterReset: 'Zurücksetzen',
   },
   en: {
     title: 'Stretch & Yoga',
@@ -45,6 +50,10 @@ const T = {
     recovery: 'Recovery',
     loading: 'Loading…',
     empty: 'No routines found.',
+    filterGoal: 'Goal',
+    filterDur: 'Duration',
+    filterApply: 'Apply',
+    filterReset: 'Reset',
   },
   es: {
     title: 'Estiramiento & Yoga',
@@ -61,6 +70,10 @@ const T = {
     recovery: 'Recuperación',
     loading: 'Cargando…',
     empty: 'No se encontraron rutinas.',
+    filterGoal: 'Objetivo',
+    filterDur: 'Duración',
+    filterApply: 'Aplicar',
+    filterReset: 'Restablecer',
   },
 }
 
@@ -84,6 +97,15 @@ export function StretchingPage() {
   const [durFilter, setDurFilter] = useState<DurFilter>(0)
   const [view, setView] = useState<View>('list')
   const [selectedRoutine, setSelectedRoutine] = useState<StretchingRoutine | null>(null)
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [draftGoal, setDraftGoal] = useState<GoalFilter>('all')
+  const [draftDur, setDraftDur] = useState<DurFilter>(0)
+
+  const activeFilterCount = (goalFilter !== 'all' ? 1 : 0) + (durFilter !== 0 ? 1 : 0)
+
+  const openFilter = () => { setDraftGoal(goalFilter); setDraftDur(durFilter); setFilterOpen(true) }
+  const applyFilter = () => { setGoalFilter(draftGoal); setDurFilter(draftDur); setFilterOpen(false) }
+  const resetFilter = () => { setGoalFilter('all'); setDurFilter(0); setFilterOpen(false) }
 
   const { data: routines = [], isLoading: routinesLoading } = useStretchingRoutines()
   const { data: exercises = [], isLoading: exercisesLoading } = useStretchingExercises()
@@ -178,44 +200,25 @@ export function StretchingPage() {
       <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
         {tab === 'routines' && (
           <>
-            {/* Goal filter chips */}
-            <div className="px-4 py-3 flex gap-2 overflow-x-auto scrollbar-none">
-              {GOAL_FILTERS.map((goal) => {
-                const label = t[goal as keyof typeof t] as string
-                const active = goalFilter === goal
-                return (
-                  <button
-                    key={goal}
-                    onClick={() => setGoalFilter(goal)}
-                    className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                    style={
-                      active
-                        ? { backgroundColor: PILLAR_COLOR, color: 'white' }
-                        : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }
-                    }
-                  >
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Duration filter chips */}
-            <div className="px-4 pb-2 flex gap-2">
-              {DUR_OPTIONS.map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setDurFilter(d)}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                  style={
-                    durFilter === d
-                      ? { backgroundColor: PILLAR_COLOR, color: 'white' }
-                      : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }
-                  }
-                >
-                  {d === 0 ? t.all : `≤${d} min`}
-                </button>
-              ))}
+            {/* Filter button bar */}
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+              <span className="text-xs text-[var(--color-text-muted)]">
+                {filteredRoutines.length}
+              </span>
+              <button
+                onClick={openFilter}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                style={
+                  activeFilterCount > 0
+                    ? { backgroundColor: `${PILLAR_COLOR}25`, color: PILLAR_COLOR, border: `1px solid ${PILLAR_COLOR}60` }
+                    : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)', border: '1px solid transparent' }
+                }
+              >
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M1 2h10L7 6.5V10l-2-1V6.5L1 2z"/>
+                </svg>
+                {activeFilterCount > 0 ? `Filter · ${activeFilterCount}` : 'Filter'}
+              </button>
             </div>
 
             {/* Routine list */}
@@ -262,6 +265,76 @@ export function StretchingPage() {
           </div>
         )}
       </div>
+
+      <FilterBottomSheet
+        isOpen={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        onApply={applyFilter}
+        onReset={resetFilter}
+        pillarColor={PILLAR_COLOR}
+        activeCount={activeFilterCount}
+        applyLabel={t.filterApply}
+        resetLabel={t.filterReset}
+      >
+        {/* Goal group */}
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ fontSize: 11, color: '#6a6258', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>
+            {t.filterGoal}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {GOAL_FILTERS.map((goal) => {
+              const label = t[goal as keyof typeof t] as string
+              return (
+                <button
+                  key={goal}
+                  onClick={() => setDraftGoal(goal)}
+                  style={{
+                    padding: '7px 14px',
+                    borderRadius: 20,
+                    border: 'none',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-sans)',
+                    backgroundColor: draftGoal === goal ? PILLAR_COLOR : 'rgba(255,255,255,0.07)',
+                    color: draftGoal === goal ? 'white' : 'rgba(255,255,255,0.5)',
+                  }}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Duration group */}
+        <div style={{ marginBottom: 8 }}>
+          <p style={{ fontSize: 11, color: '#6a6258', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>
+            {t.filterDur}
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {DUR_OPTIONS.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDraftDur(d)}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: 20,
+                  border: 'none',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                  backgroundColor: draftDur === d ? PILLAR_COLOR : 'rgba(255,255,255,0.07)',
+                  color: draftDur === d ? 'white' : 'rgba(255,255,255,0.5)',
+                }}
+              >
+                {d === 0 ? t.all : `≤${d} min`}
+              </button>
+            ))}
+          </div>
+        </div>
+      </FilterBottomSheet>
     </div>
   )
 }

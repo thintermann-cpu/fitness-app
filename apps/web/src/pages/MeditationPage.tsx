@@ -10,6 +10,7 @@ import { CustomTimer }            from '../components/meditation/CustomTimer'
 import { CustomBreathworkEditor } from '../components/meditation/CustomBreathworkEditor'
 import { MeditationHistory }      from '../components/meditation/MeditationHistory'
 import { AdHocMeditationTimer }  from '../components/meditation/AdHocMeditationTimer'
+import { FilterBottomSheet }     from '../components/ui/FilterBottomSheet'
 
 const PILLAR_COLOR = '#9B7FD4'
 
@@ -43,6 +44,10 @@ const T = {
     customTimerSub: 'Freier Timer mit eigenem Klang',
     freeTitle:      'Freie Meditation',
     freeStart:      'Starten',
+    filterCat:      'Kategorie',
+    filterDur:      'Dauer',
+    filterApply:    'Anwenden',
+    filterReset:    'Zurücksetzen',
   },
   en: {
     title:          'Meditation',
@@ -65,6 +70,10 @@ const T = {
     customTimerSub: 'Free timer with your own sound',
     freeTitle:      'Free Meditation',
     freeStart:      'Start',
+    filterCat:      'Category',
+    filterDur:      'Duration',
+    filterApply:    'Apply',
+    filterReset:    'Reset',
   },
   es: {
     title:          'Meditación',
@@ -87,6 +96,10 @@ const T = {
     customTimerSub: 'Temporizador libre con tu propio sonido',
     freeTitle:      'Meditación libre',
     freeStart:      'Iniciar',
+    filterCat:      'Categoría',
+    filterDur:      'Duración',
+    filterApply:    'Aplicar',
+    filterReset:    'Restablecer',
   },
 }
 
@@ -105,6 +118,15 @@ export function MeditationPage() {
   const [catFilter,    setCatFilter]    = useState<Category>('all')
   const [durFilter,    setDurFilter]    = useState<DurFilter>(0)
   const [freeDuration, setFreeDuration] = useState(10)
+  const [filterOpen,   setFilterOpen]   = useState(false)
+  const [draftCat,     setDraftCat]     = useState<Category>('all')
+  const [draftDur,     setDraftDur]     = useState<DurFilter>(0)
+
+  const activeFilterCount = (catFilter !== 'all' ? 1 : 0) + (durFilter !== 0 ? 1 : 0)
+
+  const openFilter = () => { setDraftCat(catFilter); setDraftDur(durFilter); setFilterOpen(true) }
+  const applyFilter = () => { setCatFilter(draftCat); setDurFilter(draftDur); setFilterOpen(false) }
+  const resetFilter = () => { setCatFilter('all'); setDurFilter(0); setFilterOpen(false) }
 
   const [selectedMeditation, setSelectedMeditation] = useState<Meditation | null>(null)
   const [selectedTechnique,  setSelectedTechnique]  = useState<BreathworkTechnique | null>(null)
@@ -319,43 +341,25 @@ export function MeditationPage() {
               </div>
             </div>
 
-            {/* Category filter chips */}
-            <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-none">
-              {CATEGORIES.map((cat) => {
-                const label = (t as Record<string, string>)[cat] ?? cat
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setCatFilter(cat)}
-                    className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                    style={
-                      catFilter === cat
-                        ? { backgroundColor: PILLAR_COLOR, color: 'white' }
-                        : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }
-                    }
-                  >
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Duration filter chips */}
-            <div className="px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-none">
-              {DUR_OPTIONS.map((dur) => (
-                <button
-                  key={dur}
-                  onClick={() => setDurFilter(dur)}
-                  className="shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                  style={
-                    durFilter === dur
-                      ? { backgroundColor: PILLAR_COLOR, color: 'white' }
-                      : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }
-                  }
-                >
-                  {dur === 0 ? t.all : `≤${dur} min`}
-                </button>
-              ))}
+            {/* Filter button bar */}
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+              <span className="text-xs text-[var(--color-text-muted)]">
+                {filtered.length}
+              </span>
+              <button
+                onClick={openFilter}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                style={
+                  activeFilterCount > 0
+                    ? { backgroundColor: `${PILLAR_COLOR}25`, color: PILLAR_COLOR, border: `1px solid ${PILLAR_COLOR}60` }
+                    : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)', border: '1px solid transparent' }
+                }
+              >
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M1 2h10L7 6.5V10l-2-1V6.5L1 2z"/>
+                </svg>
+                {activeFilterCount > 0 ? `Filter · ${activeFilterCount}` : 'Filter'}
+              </button>
             </div>
 
             <div className="px-4 space-y-3">
@@ -483,6 +487,76 @@ export function MeditationPage() {
           </div>
         )}
       </div>
+
+      <FilterBottomSheet
+        isOpen={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        onApply={applyFilter}
+        onReset={resetFilter}
+        pillarColor={PILLAR_COLOR}
+        activeCount={activeFilterCount}
+        applyLabel={t.filterApply}
+        resetLabel={t.filterReset}
+      >
+        {/* Category group */}
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ fontSize: 11, color: '#6a6258', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>
+            {t.filterCat}
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {CATEGORIES.map((cat) => {
+              const label = (t as Record<string, string>)[cat] ?? cat
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setDraftCat(cat)}
+                  style={{
+                    padding: '7px 14px',
+                    borderRadius: 20,
+                    border: 'none',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-sans)',
+                    backgroundColor: draftCat === cat ? PILLAR_COLOR : 'rgba(255,255,255,0.07)',
+                    color: draftCat === cat ? 'white' : 'rgba(255,255,255,0.5)',
+                  }}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Duration group */}
+        <div style={{ marginBottom: 8 }}>
+          <p style={{ fontSize: 11, color: '#6a6258', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>
+            {t.filterDur}
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {DUR_OPTIONS.map((d) => (
+              <button
+                key={d}
+                onClick={() => setDraftDur(d)}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: 20,
+                  border: 'none',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                  backgroundColor: draftDur === d ? PILLAR_COLOR : 'rgba(255,255,255,0.07)',
+                  color: draftDur === d ? 'white' : 'rgba(255,255,255,0.5)',
+                }}
+              >
+                {d === 0 ? t.all : `≤${d} min`}
+              </button>
+            ))}
+          </div>
+        </div>
+      </FilterBottomSheet>
     </div>
   )
 }
