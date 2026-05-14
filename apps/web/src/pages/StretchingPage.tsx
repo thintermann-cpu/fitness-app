@@ -148,7 +148,7 @@ export function StretchingPage() {
   }
 
   return (
-    <div className="min-h-svh bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
+    <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
       {/* Header */}
       <div className="px-4 pt-4 lg:pt-10 pb-2 flex items-end justify-between">
         <h1 className="text-2xl font-black" style={{ color: PILLAR_COLOR }}>
