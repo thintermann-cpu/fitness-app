@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRoutines } from '../hooks/useRoutines'
-import type { Routine } from '../hooks/useRoutines'
+import type { Routine, Category } from '../hooks/useRoutines'
 import { useRoutineLogs, useWeekLogs, useToggleRoutineLog } from '../hooks/useRoutineLogs'
 import { useDailyLog } from '../hooks/useDailyLog'
 import { useTodos } from '../hooks/useTodos'
@@ -51,9 +51,11 @@ export function RoutinePage() {
   const { profile } = useAuthStore()
   const lang = ((profile?.language ?? 'de') as Lang)
 
-  const [tab, setTab]           = useState<Tab>('routinen')
-  const [selectedDay, setSelDay] = useState(todayDow)
-  const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)
+  const [tab, setTab]               = useState<Tab>('routinen')
+  const [selectedDay, setSelDay]    = useState(todayDow)
+  const [editingRoutine, setEditingRoutine]   = useState<Routine | null>(null)
+  const [isCreatingRoutine, setIsCreatingRoutine] = useState(false)
+  const [newCategory, setNewCategory] = useState<Category>('morning')
 
   const weekDates = getCurrentWeekDates()
 
@@ -117,6 +119,26 @@ export function RoutinePage() {
           onSave={update}
           onDelete={remove}
           onBack={() => setEditingRoutine(null)}
+        />
+      )}
+
+      {/* Create modal */}
+      {isCreatingRoutine && (
+        <RoutineEditModal
+          routine={{ id: 'new', category: newCategory, name: '', icon: '📋', time: null, link_url: null, active_days: [1, 2, 3, 4, 5], sort_order: 0 }}
+          lang={lang}
+          onSave={({ id: _id, ...rest }) => {
+            create({
+              name: rest.name ?? '',
+              icon: rest.icon ?? '📋',
+              category: rest.category ?? newCategory,
+              active_days: rest.active_days ?? [1, 2, 3, 4, 5],
+              time: null,
+              link_url: rest.link_url ?? null,
+              sort_order: 0,
+            })
+          }}
+          onBack={() => setIsCreatingRoutine(false)}
         />
       )}
 
@@ -260,6 +282,7 @@ export function RoutinePage() {
               isLoading={isLoading}
               createError={createError}
               createErrorMsg={createErrorMsg}
+              onCreateNew={(cat) => { setNewCategory(cat); setIsCreatingRoutine(true) }}
             />
           </>
         )}

@@ -19,6 +19,7 @@ interface Props {
   isLoading: boolean
   createError?: boolean
   createErrorMsg?: string
+  onCreateNew: (category: Category) => void
 }
 
 const CATEGORIES: Category[] = ['morning', 'day', 'evening']
@@ -93,6 +94,7 @@ export function RoutineList({
   isLoading,
   createError,
   createErrorMsg,
+  onCreateNew,
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<Category>('morning')
   const t = T[lang] ?? T.de
@@ -139,7 +141,7 @@ export function RoutineList({
   return (
     <div>
       {/* Category tabs — always visible */}
-      <div style={{ display: 'flex', gap: 7, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 7, marginBottom: 16, alignItems: 'stretch' }}>
         {CATEGORIES.map(cat => {
           const catItems = routines.length > 0 ? getItems(cat) : []
           const catDone = catItems.filter(r => completedIds.has(r.id)).length
@@ -177,7 +179,29 @@ export function RoutineList({
             </button>
           )
         })}
-      </div>
+          <button
+            onClick={() => onCreateNew(activeCategory)}
+            title="Neue Routine erstellen"
+            style={{
+              width: 40,
+              flexShrink: 0,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 12,
+              color: '#7a7268',
+              fontSize: 20,
+              lineHeight: 1,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              touchAction: 'manipulation',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            +
+          </button>
+        </div>
 
       {/* Suggestions (no routines yet) */}
       {routines.length === 0 && (

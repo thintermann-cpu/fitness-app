@@ -82,8 +82,17 @@ const uid = await getUserId()
       const { error } = await supabase.from('todos').delete().eq('id', id).eq('user_id', uid)
       if (error) throw error
     },
-    onError: (err) => console.error('[useTodos] delete error:', err),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['todos'] })
+      const previous = queryClient.getQueryData<Todo[]>(['todos']) ?? []
+      queryClient.setQueryData<Todo[]>(['todos'], (old = []) => old.filter(t => t.id !== id))
+      return { previous }
+    },
+    onError: (err, _id, context) => {
+      console.error('[useTodos] delete error:', err)
+      queryClient.setQueryData(['todos'], context?.previous)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
   })
 
   const clearDoneMutation = useMutation({

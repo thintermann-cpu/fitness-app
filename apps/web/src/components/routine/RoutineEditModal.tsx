@@ -69,7 +69,7 @@ interface Props {
   routine: Routine
   lang: Lang
   onSave: (updates: Partial<Routine> & { id: string }) => void
-  onDelete: (id: string) => void
+  onDelete?: (id: string) => void
   onBack: () => void
 }
 
@@ -99,7 +99,7 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
   }
 
   const handleDelete = () => {
-    onDelete(routine.id)
+    onDelete?.(routine.id)
     onBack()
   }
 
@@ -275,7 +275,7 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
         </button>
 
         {/* Delete */}
-        {!confirmDelete ? (
+        {onDelete && !confirmDelete ? (
           <button
             onClick={() => setConfirmDelete(true)}
             style={{
@@ -292,7 +292,7 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
           >
             {t.deleteBtn}
           </button>
-        ) : (
+        ) : onDelete && (
           <div
             style={{
               background: 'rgba(220,60,60,0.1)',
