@@ -99,7 +99,14 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
       time: time || null,
       link_url: linkUrl.trim() || null,
     })
-    toast.success(lang === 'de' ? 'Routine gespeichert' : lang === 'es' ? 'Rutina guardada' : 'Routine saved')
+
+    const firstDayIdx = DAYS_ORDER.findIndex(d => activeDays.includes(d))
+    const firstDayLabel = firstDayIdx >= 0 ? t.dayLabels[firstDayIdx] : null
+    const toastMsg = firstDayLabel
+      ? (lang === 'de' ? `Erscheint am ${firstDayLabel}` : lang === 'es' ? `Aparece el ${firstDayLabel}` : `Appears on ${firstDayLabel}`)
+      : (lang === 'de' ? 'Routine gespeichert' : lang === 'es' ? 'Rutina guardada' : 'Routine saved')
+
+    toast.success(toastMsg)
     onBack()
   }
 
