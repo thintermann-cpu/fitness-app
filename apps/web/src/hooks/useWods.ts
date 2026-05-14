@@ -108,8 +108,8 @@ async function fetchLocalWods(filters: WodFilters): Promise<{ data: Wod[]; count
       (w) => w.equipment.length === 0 || w.equipment.every((eq) => allowed.has(eq.toLowerCase())),
     )
   }
-  if (filters.minDuration != null) wods = wods.filter((w) => w.estimated_minutes >= filters.minDuration!)
-  if (filters.maxDuration != null) wods = wods.filter((w) => w.estimated_minutes <= filters.maxDuration!)
+  if (filters.minDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes >= filters.minDuration!)
+  if (filters.maxDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes <= filters.maxDuration!)
   if (filters.silentMode) wods = wods.filter((w) => !w.is_jumping)
 
   const count = wods.length
@@ -131,7 +131,12 @@ export function useWods(filters: WodFilters = {}) {
   return useQuery({
     queryKey: ['wods', filters],
     queryFn: async () => {
-      if (!isSupabaseConfigured) {
+      const hasComplexFilters =
+        Boolean(filters.equipmentFilter?.length) ||
+        filters.maxDuration != null ||
+        filters.silentMode === true
+
+      if (!isSupabaseConfigured || hasComplexFilters) {
         return fetchLocalWods(filters)
       }
 
