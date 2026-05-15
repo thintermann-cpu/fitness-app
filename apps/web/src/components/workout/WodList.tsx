@@ -20,15 +20,16 @@ interface Props {
 
 export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
   const lang = useAuthStore((s) => s.profile?.language ?? 'de')
-  const [search, setSearch]         = useState(() => sessionStorage.getItem(SEARCH_KEY) ?? '')
-  const [type, setType]             = useState('')
-  const [category, setCategory]     = useState('')
-  const [difficulty, setDifficulty] = useState('')
-  const [maxDur, setMaxDur]         = useState<DurFilter>(0)
-  const [page, setPage]             = useState(0)
-  const [filterOpen, setFilterOpen] = useState(false)
+  const [search, setSearch]             = useState(() => sessionStorage.getItem(SEARCH_KEY) ?? '')
+  const [type, setType]                 = useState('')
+  const [category, setCategory]         = useState('')
+  const [difficulty, setDifficulty]     = useState('')
+  const [maxDur, setMaxDur]             = useState<DurFilter>(0)
+  const [editorsPick, setEditorsPick]   = useState(false)
+  const [page, setPage]                 = useState(0)
+  const [filterOpen, setFilterOpen]     = useState(false)
 
-  const activeFilterCount = [type, category, difficulty].filter(Boolean).length
+  const activeFilterCount = [type, category, difficulty].filter(Boolean).length + (editorsPick ? 1 : 0)
 
   const { data, isLoading, isFetching, isError } = useWods({
     type:            type || undefined,
@@ -39,6 +40,7 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
     equipmentFilter: equipmentFilter?.length ? equipmentFilter : undefined,
     silentMode:      silentMode ?? false,
     maxDuration:     maxDur || undefined,
+    editorsPick:     editorsPick || undefined,
   })
 
   const wods    = data?.data  ?? []
@@ -53,6 +55,7 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
     setType('')
     setCategory('')
     setDifficulty('')
+    setEditorsPick(false)
     setPage(0)
   }
 
@@ -99,8 +102,19 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
         </button>
       </div>
 
-      {/* Duration filter chips */}
-      <div className="flex gap-2">
+      {/* Duration + Editor's Pick chips */}
+      <div className="flex gap-2 flex-wrap">
+        <button
+          onClick={() => { setEditorsPick((v) => !v); setPage(0) }}
+          className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+          style={
+            editorsPick
+              ? { backgroundColor: '#E8642A', color: 'white' }
+              : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }
+          }
+        >
+          ⭐ Pick
+        </button>
         {DUR_OPTIONS.map((d) => (
           <button
             key={d}

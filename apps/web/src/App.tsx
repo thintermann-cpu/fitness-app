@@ -18,6 +18,7 @@ import { FavoritesPage } from './pages/FavoritesPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { AdminTasksPage } from './pages/admin/AdminTasksPage'
+import { AdminWodsPage } from './pages/admin/AdminWodsPage'
 import { AdminPlaceholderPage } from './pages/admin/AdminPlaceholderPage'
 
 const queryClient = new QueryClient({
@@ -99,7 +100,7 @@ function AppContent() {
         <Route path="push"             element={<AdminPlaceholderPage title="Push Reminders" />} />
         <Route path="emails"           element={<AdminPlaceholderPage title="Emails" />} />
         <Route path="feedback"         element={<AdminPlaceholderPage title="Feedback" />} />
-        <Route path="wods"             element={<AdminPlaceholderPage title="WODs" />} />
+        <Route path="wods"             element={<AdminWodsPage />} />
         <Route path="tasks"            element={<AdminTasksPage />} />
       </Route>
     </Routes>

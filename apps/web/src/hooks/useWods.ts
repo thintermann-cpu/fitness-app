@@ -12,6 +12,7 @@ export interface Wod {
   difficulty: string
   estimated_minutes: number
   is_jumping: boolean
+  is_editors_pick?: boolean
   runden?: string
   reps?: string
   gewicht?: string
@@ -27,10 +28,19 @@ export interface WodFilters {
   search?: string
   page?: number
   equipmentFilter?: string[]
+  excludeEquipment?: string[]
   minDuration?: number
   maxDuration?: number
   silentMode?: boolean
+  editorsPick?: boolean
 }
+
+const EDITORS_PICK_IDS = new Set<string>([
+  '63','75','89','90','93','105','213','214','255','258','267','274','275',
+  '278','279','284','306','307','310','317','332','334','343','345','346',
+  '370','372','395','396','619','628','633','639','644','650','656','661',
+  '671','675','691','739','763','764','765','open_25_1','open_17_2',
+])
 
 const PAGE_SIZE = 20
 
@@ -44,6 +54,7 @@ interface RawWod {
   equipment: string
   dauer: string
   schwierigkeit: string
+  is_editors_pick?: boolean | null
   runden?: string
   reps?: string
   gewicht?: string
@@ -63,6 +74,7 @@ function mapRawToWod(raw: RawWod): Wod {
     equipment: raw.equipment ? raw.equipment.split(',').map((s) => s.trim()) : [],
     difficulty: raw.schwierigkeit,
     estimated_minutes: parseInt(raw.dauer) || 0,
+    is_editors_pick: raw.is_editors_pick ?? EDITORS_PICK_IDS.has(raw.id),
     is_jumping: (() => {
       const JUMP_KEYWORDS = ['jump', 'jumping', 'burpee', 'hop', 'double under', 'double-under', 'box jump', 'skip']
       const text = (raw.uebungen ?? '').toLowerCase()
@@ -108,9 +120,14 @@ async function fetchLocalWods(filters: WodFilters): Promise<{ data: Wod[]; count
       (w) => w.equipment.length === 0 || w.equipment.every((eq) => allowed.has(eq.toLowerCase())),
     )
   }
+  if (filters.excludeEquipment?.length) {
+    const excluded = new Set(filters.excludeEquipment.map((e) => e.toLowerCase()))
+    wods = wods.filter((w) => !w.equipment.some((eq) => excluded.has(eq.toLowerCase())))
+  }
   if (filters.minDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes >= filters.minDuration!)
   if (filters.maxDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes <= filters.maxDuration!)
   if (filters.silentMode) wods = wods.filter((w) => !w.is_jumping)
+  if (filters.editorsPick) wods = wods.filter((w) => w.is_editors_pick ?? EDITORS_PICK_IDS.has(w.id))
 
   const count = wods.length
   const page = filters.page ?? 0
@@ -133,6 +150,8 @@ export function useWods(filters: WodFilters = {}) {
     queryFn: async () => {
       const hasComplexFilters =
         Boolean(filters.equipmentFilter?.length) ||
+        Boolean(filters.excludeEquipment?.length) ||
+        filters.minDuration != null ||
         filters.maxDuration != null ||
         filters.silentMode === true
 
@@ -146,6 +165,7 @@ export function useWods(filters: WodFilters = {}) {
       if (filters.category) query = query.eq('category', filters.category)
       if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
       if (filters.search) query = query.ilike('name', `%${filters.search}%`)
+      if (filters.editorsPick) query = query.eq('is_editors_pick', true)
 
       const page = filters.page ?? 0
       const result = await raceTimeout(
