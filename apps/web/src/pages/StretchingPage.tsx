@@ -28,6 +28,7 @@ const T = {
     upper_body: 'Oberkörper',
     lower_body: 'Unterkörper',
     recovery: 'Erholung',
+    yoga: 'Yoga',
     loading: 'Laden…',
     empty: 'Keine Routinen gefunden.',
     filterGoal: 'Ziel',
@@ -48,6 +49,7 @@ const T = {
     upper_body: 'Upper Body',
     lower_body: 'Lower Body',
     recovery: 'Recovery',
+    yoga: 'Yoga',
     loading: 'Loading…',
     empty: 'No routines found.',
     filterGoal: 'Goal',
@@ -68,6 +70,7 @@ const T = {
     upper_body: 'Tren superior',
     lower_body: 'Tren inferior',
     recovery: 'Recuperación',
+    yoga: 'Yoga',
     loading: 'Cargando…',
     empty: 'No se encontraron rutinas.',
     filterGoal: 'Objetivo',
@@ -79,7 +82,7 @@ const T = {
 
 const GOAL_FILTERS = [
   'all', 'morning', 'post_workout', 'office', 'evening',
-  'full_body', 'upper_body', 'lower_body', 'recovery',
+  'full_body', 'upper_body', 'lower_body', 'recovery', 'yoga',
 ] as const
 
 type GoalFilter = typeof GOAL_FILTERS[number]
@@ -113,7 +116,9 @@ export function StretchingPage() {
   const isLoading = routinesLoading || exercisesLoading
 
   const filteredRoutines = useMemo(() => {
-    let result = goalFilter === 'all' ? routines : routines.filter((r) => r.goal === goalFilter)
+    let result = goalFilter === 'all'
+      ? routines
+      : routines.filter((r) => r.goal === goalFilter || r.subcategory === goalFilter)
     if (durFilter > 0) result = result.filter((r) => r.duration_min > 0 && r.duration_min <= durFilter)
     return result
   }, [routines, goalFilter, durFilter])

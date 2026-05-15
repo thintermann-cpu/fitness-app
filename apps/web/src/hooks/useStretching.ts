@@ -25,6 +25,7 @@ interface RawRoutine {
   difficulty: string
   duration_min: number
   exercise_ids: string[] | null
+  subcategory?: string | null
 }
 
 export interface StretchingExercise {
@@ -48,6 +49,7 @@ export interface StretchingRoutine {
   difficulty: string
   duration_min: number
   exercise_ids: string[]
+  subcategory: string | null
 }
 
 function resolve(obj: Record<Lang, string> | null | undefined, lang: Lang): string {
@@ -85,6 +87,7 @@ function mapRoutine(raw: RawRoutine, lang: Lang): StretchingRoutine {
     difficulty: raw.difficulty,
     duration_min: raw.duration_min,
     exercise_ids: raw.exercise_ids ?? [],
+    subcategory: raw.subcategory ?? null,
   }
 }
 
