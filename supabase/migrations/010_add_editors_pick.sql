@@ -1,13 +1,14 @@
 -- Add is_editors_pick column to wods table
 ALTER TABLE wods ADD COLUMN IF NOT EXISTS is_editors_pick BOOLEAN DEFAULT false;
 
--- Allow admins to update wods (is_editors_pick toggle)
-CREATE POLICY IF NOT EXISTS "Admins can update wods"
+-- Allow admins and moderators to update wods (is_editors_pick toggle)
+DROP POLICY IF EXISTS "Admins can update wods" ON wods;
+CREATE POLICY "Admins can update wods"
   ON wods FOR UPDATE
   USING (
     EXISTS (
       SELECT 1 FROM user_profiles
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE id = auth.uid() AND role IN ('admin', 'moderator')
     )
   );
 
