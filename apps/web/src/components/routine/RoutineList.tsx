@@ -11,6 +11,7 @@ interface Props {
   logs: RoutineLog[]
   onToggle: (routineId: string, isCompleted: boolean) => void
   onEdit: (routine: Routine) => void
+  onPillarNavigate: (pillar: string) => void
   onSwapOrder: (a: Routine, b: Routine) => void
   onCreateSuggested: (routine: Omit<Routine, 'id'>) => void
   onCreateAll: (routines: Array<Omit<Routine, 'id'>>) => void
@@ -86,6 +87,7 @@ export function RoutineList({
   logs,
   onToggle,
   onEdit,
+  onPillarNavigate,
   onSwapOrder,
   onCreateSuggested,
   onCreateAll,
@@ -297,6 +299,7 @@ export function RoutineList({
                   isCompleted={completedIds.has(routine.id)}
                   onToggle={() => onToggle(routine.id, completedIds.has(routine.id))}
                   onEdit={() => onEdit(routine)}
+                  onPillarNavigate={routine.linked_pillar ? () => onPillarNavigate(routine.linked_pillar!) : undefined}
                   onMoveUp={idx > 0 ? () => onSwapOrder(routine, items[idx - 1]) : undefined}
                   onMoveDown={idx < items.length - 1 ? () => onSwapOrder(routine, items[idx + 1]) : undefined}
                   isFirst={idx === 0}

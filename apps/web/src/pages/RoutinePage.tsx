@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useRoutines } from '../hooks/useRoutines'
 import type { Routine, Category } from '../hooks/useRoutines'
 import { useRoutineLogs, useWeekLogs, useToggleRoutineLog } from '../hooks/useRoutineLogs'
@@ -47,6 +48,7 @@ export function RoutinePage() {
   const today    = new Date()
   const todayStr = toLocalDateStr(today)
   const todayDow = today.getDay()
+  const navigate  = useNavigate()
 
   const { profile } = useAuthStore()
   const lang = ((profile?.language ?? 'de') as Lang)
@@ -125,7 +127,7 @@ export function RoutinePage() {
       {/* Create modal */}
       {isCreatingRoutine && (
         <RoutineEditModal
-          routine={{ id: 'new', category: newCategory, name: '', icon: '📋', time: null, link_url: null, active_days: [1, 2, 3, 4, 5], sort_order: 0 }}
+          routine={{ id: 'new', category: newCategory, name: '', icon: '📋', time: null, link_url: null, linked_pillar: null, active_days: [1, 2, 3, 4, 5], sort_order: 0 }}
           lang={lang}
           onSave={({ id: _id, ...rest }) => {
             create({
@@ -135,6 +137,7 @@ export function RoutinePage() {
               active_days: rest.active_days ?? [1, 2, 3, 4, 5],
               time: rest.time ?? null,
               link_url: rest.link_url ?? null,
+              linked_pillar: rest.linked_pillar ?? null,
               sort_order: 0,
             })
           }}
@@ -274,6 +277,7 @@ export function RoutinePage() {
               logs={todayLogs}
               onToggle={(routineId, isCompleted) => toggleLog.mutate({ routineId, isCompleted })}
               onEdit={setEditingRoutine}
+              onPillarNavigate={(pillar) => navigate(`/${pillar}`)}
               onSwapOrder={handleSwapOrder}
               onCreateSuggested={create}
               onCreateAll={suggestions => suggestions.forEach(s => create(s))}

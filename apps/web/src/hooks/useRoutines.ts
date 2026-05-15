@@ -12,6 +12,7 @@ export interface Routine {
   link_url: string | null
   active_days: number[]
   sort_order: number
+  linked_pillar: string | null
 }
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6]
@@ -20,22 +21,22 @@ const MON_WED_FRI = [1, 3, 5]
 
 export const SUGGESTED_ROUTINES: Record<string, Array<Omit<Routine, 'id'>>> = {
   de: [
-    { category: 'morning', name: 'Morgenroutine',        icon: '🌅', time: '07:00', link_url: null, active_days: WEEKDAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Post-Workout Stretch',  icon: '💪', time: '12:00', link_url: null, active_days: MON_WED_FRI, sort_order: 0 },
-    { category: 'evening', name: 'Abend-Reflexion',       icon: '📖', time: '21:00', link_url: null, active_days: ALL_DAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Wasser trinken',        icon: '💧', time: '12:00', link_url: null, active_days: ALL_DAYS,    sort_order: 1 },
+    { category: 'morning', name: 'Morgenroutine',        icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Post-Workout Stretch',  icon: '💪', time: '12:00', link_url: null, linked_pillar: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'evening', name: 'Abend-Reflexion',       icon: '📖', time: '21:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Wasser trinken',        icon: '💧', time: '12:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 1 },
   ],
   en: [
-    { category: 'morning', name: 'Morning Routine',       icon: '🌅', time: '07:00', link_url: null, active_days: WEEKDAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Post-Workout Stretch',  icon: '💪', time: '12:00', link_url: null, active_days: MON_WED_FRI, sort_order: 0 },
-    { category: 'evening', name: 'Evening Reflection',    icon: '📖', time: '21:00', link_url: null, active_days: ALL_DAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Drink Water',           icon: '💧', time: '12:00', link_url: null, active_days: ALL_DAYS,    sort_order: 1 },
+    { category: 'morning', name: 'Morning Routine',       icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Post-Workout Stretch',  icon: '💪', time: '12:00', link_url: null, linked_pillar: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'evening', name: 'Evening Reflection',    icon: '📖', time: '21:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Drink Water',           icon: '💧', time: '12:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 1 },
   ],
   es: [
-    { category: 'morning', name: 'Rutina Matutina',                    icon: '🌅', time: '07:00', link_url: null, active_days: WEEKDAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Estiramiento Post-Entrenamiento',    icon: '💪', time: '12:00', link_url: null, active_days: MON_WED_FRI, sort_order: 0 },
-    { category: 'evening', name: 'Reflexión Vespertina',               icon: '📖', time: '21:00', link_url: null, active_days: ALL_DAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Beber Agua',                         icon: '💧', time: '12:00', link_url: null, active_days: ALL_DAYS,    sort_order: 1 },
+    { category: 'morning', name: 'Rutina Matutina',                    icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Estiramiento Post-Entrenamiento',    icon: '💪', time: '12:00', link_url: null, linked_pillar: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'evening', name: 'Reflexión Vespertina',               icon: '📖', time: '21:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Beber Agua',                         icon: '💧', time: '12:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 1 },
   ],
 }
 
@@ -62,7 +63,11 @@ export function useRoutines() {
 
       if (error) throw error
 
-      return (data ?? []).map(r => ({ ...r, active_days: r.active_days ?? ALL_DAYS })) as Routine[]
+      return (data ?? []).map(r => ({
+        ...r,
+        active_days: r.active_days ?? ALL_DAYS,
+        linked_pillar: r.linked_pillar ?? null,
+      })) as Routine[]
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

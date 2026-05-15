@@ -6,6 +6,13 @@ type Lang = 'de' | 'en' | 'es'
 
 const PILLAR_COLOR = '#4A90D9'
 const CATEGORIES: Category[] = ['morning', 'day', 'evening']
+
+const PILLARS = [
+  { id: 'workout',    label: 'Workout',    color: '#E8642A' },
+  { id: 'routine',   label: 'Mein Tag',   color: '#4A90D9' },
+  { id: 'stretching', label: 'Stretch',   color: '#7BC67E' },
+  { id: 'meditation', label: 'Meditation', color: '#9B7FD4' },
+] as const
 // Day order: Mo(1), Di(2), Mi(3), Do(4), Fr(5), Sa(6), So(0)
 const DAYS_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
@@ -18,6 +25,8 @@ const T = {
     timeLabel: 'Tageszeit',
     daysLabel: 'Aktive Tage',
     linkLabel: 'Link URL (optional)',
+    pillarLabel: 'Pillar-Verknüpfung',
+    pillarNone: 'Keine',
     save: 'Speichern',
     deleteBtn: 'Routine löschen',
     confirmMsg: 'Diese Routine wirklich löschen?',
@@ -36,6 +45,8 @@ const T = {
     timeLabel: 'Time of Day',
     daysLabel: 'Active Days',
     linkLabel: 'Link URL (optional)',
+    pillarLabel: 'Pillar Link',
+    pillarNone: 'None',
     save: 'Save',
     deleteBtn: 'Delete Routine',
     confirmMsg: 'Really delete this routine?',
@@ -54,6 +65,8 @@ const T = {
     timeLabel: 'Momento del día',
     daysLabel: 'Días activos',
     linkLabel: 'URL de enlace (opcional)',
+    pillarLabel: 'Enlace de pilar',
+    pillarNone: 'Ninguno',
     save: 'Guardar',
     deleteBtn: 'Eliminar rutina',
     confirmMsg: '¿Eliminar esta rutina?',
@@ -78,12 +91,13 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
   const t     = T[lang] ?? T.de
   const toast = useToast()
 
-  const [name, setName]           = useState(routine.name)
-  const [icon, setIcon]           = useState(routine.icon)
-  const [category, setCategory]   = useState<Category>(routine.category)
-  const [activeDays, setActiveDays] = useState<number[]>(routine.active_days)
-  const [time, setTime]           = useState(routine.time ?? '')
-  const [linkUrl, setLinkUrl]     = useState(routine.link_url ?? '')
+  const [name, setName]               = useState(routine.name)
+  const [icon, setIcon]               = useState(routine.icon)
+  const [category, setCategory]       = useState<Category>(routine.category)
+  const [activeDays, setActiveDays]   = useState<number[]>(routine.active_days)
+  const [time, setTime]               = useState(routine.time ?? '')
+  const [linkUrl, setLinkUrl]         = useState(routine.link_url ?? '')
+  const [linkedPillar, setLinkedPillar] = useState<string | null>(routine.linked_pillar)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const toggleDay = (day: number) =>
@@ -98,6 +112,7 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
       active_days: activeDays,
       time: time || null,
       link_url: linkUrl.trim() || null,
+      linked_pillar: linkedPillar,
     })
 
     const firstDayIdx = DAYS_ORDER.findIndex(d => activeDays.includes(d))
@@ -266,7 +281,7 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
         </label>
 
         {/* Link URL */}
-        <label style={{ display: 'block', marginBottom: 28 }}>
+        <label style={{ display: 'block', marginBottom: 18 }}>
           <div style={labelStyle}>{t.linkLabel}</div>
           <input
             value={linkUrl}
@@ -276,6 +291,48 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
             style={{ ...inputStyle, fontSize: 13 }}
           />
         </label>
+
+        {/* Pillar link */}
+        <div style={{ marginBottom: 28 }}>
+          <div style={labelStyle}>{t.pillarLabel}</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setLinkedPillar(null)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: 10,
+                border: `1px solid ${linkedPillar === null ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)'}`,
+                background: linkedPillar === null ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
+                color: linkedPillar === null ? '#f0e8d8' : '#6a6258',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              {t.pillarNone}
+            </button>
+            {PILLARS.map(p => (
+              <button
+                key={p.id}
+                onClick={() => setLinkedPillar(p.id)}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 10,
+                  border: `1px solid ${linkedPillar === p.id ? p.color : 'rgba(255,255,255,0.08)'}`,
+                  background: linkedPillar === p.id ? `${p.color}20` : 'rgba(255,255,255,0.04)',
+                  color: linkedPillar === p.id ? p.color : '#6a6258',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Save */}
         <button
