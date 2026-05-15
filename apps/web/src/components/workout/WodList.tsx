@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
-import { useWods } from '../../hooks/useWods'
+import { useWods, pickRandomWod } from '../../hooks/useWods'
+import { useToast } from '../../hooks/useToast'
 import { WodCard } from './WodCard'
 
 const TYPES       = ['', 'AMRAP', 'ForTime', 'EMOM', 'Tabata']
@@ -19,7 +20,8 @@ interface Props {
 }
 
 export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
-  const lang = useAuthStore((s) => s.profile?.language ?? 'de')
+  const lang  = useAuthStore((s) => s.profile?.language ?? 'de')
+  const toast = useToast()
   const [search, setSearch]             = useState(() => sessionStorage.getItem(SEARCH_KEY) ?? '')
   const [type, setType]                 = useState('')
   const [category, setCategory]         = useState('')
@@ -28,6 +30,7 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
   const [editorsPick, setEditorsPick]   = useState(false)
   const [page, setPage]                 = useState(0)
   const [filterOpen, setFilterOpen]     = useState(false)
+  const [picking, setPicking]           = useState(false)
 
   const activeFilterCount = [type, category, difficulty].filter(Boolean).length + (editorsPick ? 1 : 0)
 
@@ -50,6 +53,25 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
   const handleFilterChange = useCallback((setter: (v: string) => void) => {
     return (v: string) => { setter(v); setPage(0) }
   }, [])
+
+  const handleRandomPick = async () => {
+    if (picking) return
+    setPicking(true)
+    const wod = await pickRandomWod({
+      type:            type || undefined,
+      category:        category || undefined,
+      difficulty:      difficulty || undefined,
+      search:          search || undefined,
+      equipmentFilter: equipmentFilter?.length ? equipmentFilter : undefined,
+      silentMode:      silentMode ?? false,
+      maxDuration:     maxDur || undefined,
+      editorsPick:     editorsPick || undefined,
+    })
+    setPicking(false)
+    if (!wod) { toast.info('Keine WODs gefunden'); return }
+    toast.success(`Zufälliger WOD: ${wod.name}`)
+    onSelectWod(wod.name)
+  }
 
   const resetFilters = () => {
     setType('')
@@ -80,6 +102,20 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
             className="w-full bg-[var(--color-bg-card)] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[#E8642A] text-sm"
           />
         </div>
+        <button
+          onClick={() => void handleRandomPick()}
+          disabled={picking}
+          title="Zufälliger WOD"
+          className="flex items-center justify-center w-12 rounded-xl text-lg border transition-colors shrink-0"
+          style={{
+            backgroundColor: 'var(--color-bg-card)',
+            borderColor: 'rgba(255,255,255,0.08)',
+            color: picking ? 'var(--color-text-subtle)' : 'var(--color-text-muted)',
+            cursor: picking ? 'wait' : 'pointer',
+          }}
+        >
+          {picking ? '…' : '🎲'}
+        </button>
         <button
           onClick={() => setFilterOpen(true)}
           className="relative flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border transition-colors"

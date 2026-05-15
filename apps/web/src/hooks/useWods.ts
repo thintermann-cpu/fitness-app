@@ -99,9 +99,7 @@ async function loadLocalWods(): Promise<Wod[]> {
   return cachedLocalWods
 }
 
-async function fetchLocalWods(filters: WodFilters): Promise<{ data: Wod[]; count: number }> {
-  let wods = await loadLocalWods()
-
+function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[] {
   if (filters.type) wods = wods.filter((w) => w.type === filters.type)
   if (filters.category) wods = wods.filter((w) => w.category === filters.category)
   if (filters.difficulty) wods = wods.filter((w) => w.difficulty === filters.difficulty)
@@ -128,11 +126,21 @@ async function fetchLocalWods(filters: WodFilters): Promise<{ data: Wod[]; count
   if (filters.maxDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes <= filters.maxDuration!)
   if (filters.silentMode) wods = wods.filter((w) => !w.is_jumping)
   if (filters.editorsPick) wods = wods.filter((w) => w.is_editors_pick ?? EDITORS_PICK_IDS.has(w.id))
+  return wods
+}
 
-  const count = wods.length
+async function fetchLocalWods(filters: WodFilters): Promise<{ data: Wod[]; count: number }> {
+  const all = await loadLocalWods()
+  const filtered = applyLocalFilters(all, filters)
   const page = filters.page ?? 0
-  const data = wods.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
-  return { data, count }
+  return { data: filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE), count: filtered.length }
+}
+
+export async function pickRandomWod(filters: Omit<WodFilters, 'page'>): Promise<Wod | null> {
+  const all = await loadLocalWods()
+  const filtered = applyLocalFilters(all, filters)
+  if (filtered.length === 0) return null
+  return filtered[Math.floor(Math.random() * filtered.length)]
 }
 
 const SUPABASE_TIMEOUT_MS = 5000
