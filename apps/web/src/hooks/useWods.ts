@@ -35,7 +35,7 @@ export interface WodFilters {
   editorsPick?: boolean
 }
 
-const EDITORS_PICK_IDS = new Set<string>([
+export const EDITORS_PICK_IDS = new Set<string>([
   '63','75','89','90','93','105','213','214','255','258','267','274','275',
   '278','279','284','306','307','310','317','332','334','343','345','346',
   '370','372','395','396','619','628','633','639','644','650','656','661',

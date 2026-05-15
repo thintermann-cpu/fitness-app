@@ -6,10 +6,11 @@ import { useFavorites } from '../../hooks/useFavorites'
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 const NAV_ITEMS = [
-  { path: '/workout',    icon: '💪', label: 'Workout',  color: '#E8642A', pillarId: 'workout' },
-  { path: '/routine',    icon: '📋', label: 'Routine',  color: '#4A90D9', pillarId: null },
-  { path: '/stretching', icon: '🧘', label: 'Stretch & Yoga',  color: '#7BC67E', pillarId: 'stretching' },
-  { path: '/meditation', icon: '🧠', label: 'Focus',    color: '#9B7FD4', pillarId: 'meditation' },
+  { path: '/',           icon: '🏠', label: 'Home',         color: '#F0EDE8', pillarId: null },
+  { path: '/workout',    icon: '💪', label: 'Workout',      color: '#E8642A', pillarId: 'workout' },
+  { path: '/routine',    icon: '📋', label: 'Routine',      color: '#4A90D9', pillarId: null },
+  { path: '/stretching', icon: '🧘', label: 'Stretch & Yoga', color: '#7BC67E', pillarId: 'stretching' },
+  { path: '/meditation', icon: '🧠', label: 'Focus',        color: '#9B7FD4', pillarId: 'meditation' },
 ] as const
 
 export function Sidebar() {
@@ -46,8 +47,11 @@ export function Sidebar() {
       {/* Nav items */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {visibleItems.map(({ path, icon, label, color }) => {
-          const isActive = pathname === path || (path !== '/workout' && pathname.startsWith(path))
-            || (path === '/workout' && (pathname === '/workout' || pathname.startsWith('/workout/')))
+          const isActive = path === '/'
+            ? pathname === '/'
+            : (pathname === path
+                || (path !== '/workout' && pathname.startsWith(path))
+                || (path === '/workout' && (pathname === '/workout' || pathname.startsWith('/workout/'))))
           const activeColor = color
 
           return (

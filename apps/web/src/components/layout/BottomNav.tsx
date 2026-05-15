@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore'
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 const NAV_ITEMS = [
+  { path: '/',           icon: '🏠', key: 'home',       color: null,      pillarId: null },
   { path: '/workout',    icon: '💪', key: 'workout',    color: '#E8642A', pillarId: 'workout' },
   { path: '/routine',    icon: '📋', key: 'routine',    color: '#4A90D9', pillarId: null },
   { path: '/stretching', icon: '🧘', key: 'stretching', color: '#7BC67E', pillarId: 'stretching' },
@@ -12,9 +13,9 @@ const NAV_ITEMS = [
 ] as const
 
 const NAV_LABELS: Record<string, Record<string, string>> = {
-  de: { workout: 'Training', routine: 'Mein Tag', stretching: 'Stretch & Yoga',      meditation: 'Fokus',      settings: 'Einstellungen' },
-  en: { workout: 'Workout',  routine: 'My Day',   stretching: 'Stretch & Yoga',      meditation: 'Meditate',   settings: 'Settings' },
-  es: { workout: 'Entreno',  routine: 'Mi Día',   stretching: 'Estiramiento & Yoga', meditation: 'Meditar',    settings: 'Ajustes' },
+  de: { home: 'Start',   workout: 'Training', routine: 'Mein Tag', stretching: 'Stretch & Yoga',      meditation: 'Fokus',    settings: 'Einstellungen' },
+  en: { home: 'Home',    workout: 'Workout',  routine: 'My Day',   stretching: 'Stretch & Yoga',      meditation: 'Meditate', settings: 'Settings' },
+  es: { home: 'Inicio',  workout: 'Entreno',  routine: 'Mi Día',   stretching: 'Estiramiento & Yoga', meditation: 'Meditar',  settings: 'Ajustes' },
 }
 
 export function BottomNav() {
