@@ -60,15 +60,16 @@ apps/web/src/
 │   └── push.ts                # Push Notification Helpers (subscribeToPush, unsubscribeFromPush)
 ├── store/
 │   ├── authStore.ts           # Zustand-Store: user, session, loading, profile; signIn/signUp/signOut/initialize/fetchProfile/updateProfile; WorkoutLocation + DEFAULT_EQUIPMENT_BY_LOCATION + equipment_by_location
-│   └── audioStore.ts          # Zustand-Store (persist: 'audio-mute'): isMuted: boolean, toggleMute()
+│   ├── audioStore.ts          # Zustand-Store (persist: 'audio-mute'): isMuted: boolean, toggleMute()
+│   └── toastStore.ts          # Zustand-Store: toasts[], addToast(), removeToast(); ToastType: success|error|info|warning; max. 3 gleichzeitig
 ├── pages/
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
 │   ├── OnboardingPage.tsx     # Pillar-Auswahl, Primary Pillar, Theme
 │   ├── WorkoutPage.tsx        # Tabs: WODs / Timer / History
 │   ├── RoutinePage.tsx        # Tabs: Routinen / Todo / Woche
-│   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); Duration-Filter-Chips: Alle/≤5/≤10/≤20 min (clientseitig via duration_min)
-│   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5)
+│   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); FilterBottomSheet (Goal/Kategorie inkl. Yoga-Subcategory, Dauer)
+│   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5); FilterBottomSheet (Kategorie + Dauer); view=free_meditation (Quick-Select 5/10/20 min via AdHocMeditationTimer)
 │   ├── FavoritesPage.tsx      # Drei Sektionen (Workouts / Stretch & Yoga / Meditationen), URL-Param ?section=
 │   └── admin/
 │       ├── AdminDashboardPage.tsx
@@ -83,47 +84,49 @@ apps/web/src/
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
 │   ├── workout/
 │   │   ├── WodCard.tsx
-│   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); Duration-Filter-Chips: Alle/≤15/≤20/≤30 min
+│   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); FilterBottomSheet (Typ, Kategorie, Schwierigkeit, Editor's Pick, Dauer Von-Bis, Equipment Exclude); Würfel-Button für Random-WOD
 │   │   ├── WodDetail.tsx      # enthält FavoriteButton (contentType="wod", color="#E8642A")
-│   │   ├── TimerView.tsx      # Nutzt timer.worker.js; AMRAP/ForTime/EMOM/Tabata konfigurierbar
+│   │   ├── TimerView.tsx      # Nutzt timer.worker.js; AMRAP/ForTime/EMOM/Tabata konfigurierbar; adHocLog-Prop: auto-Log in wod_history ohne WOD aus DB
 │   │   ├── WodHistoryList.tsx
 │   │   └── ScoreInput.tsx
 │   ├── routine/
-│   │   ├── RoutineItem.tsx
+│   │   ├── RoutineItem.tsx    # farbige Left-Border + Punkt-Indikator bei linked_pillar; Tap → Pillar-Navigation; Bleistift öffnet Edit
 │   │   ├── RoutineList.tsx    # inkl. Routine-Create-Modal (RoutineEditModal)
-│   │   ├── RoutineEditModal.tsx  # Felder: Name, Beschreibung, Wochentage, Uhrzeit (type=time, time: string|null)
+│   │   ├── RoutineEditModal.tsx  # Felder: Name, Beschreibung, Wochentage, Uhrzeit (type=time, time: string|null), Pillar-Selektor (4 farbige Chips + Keine); Toast nach Speichern (erster aktiver Wochentag)
 │   │   ├── WaterTracker.tsx
 │   │   ├── MoodCheck.tsx
 │   │   ├── TodoList.tsx
 │   │   └── WeekView.tsx
 │   ├── stretching/            # Alle Stretching-Komponenten
-│   ├── meditation/            # Alle Meditation-Komponenten
+│   ├── meditation/            # Alle Meditation-Komponenten (inkl. AdHocMeditationTimer.tsx — circular progress, gong, vibrate, wake lock, session-log)
 │   ├── ui/
 │   │   ├── Button.tsx
 │   │   ├── Card.tsx
 │   │   ├── Input.tsx
-│   │   └── FavoriteButton.tsx # SVG-Herz, 44×44 Touch-Target, Pillar-Farbe
+│   │   ├── FavoriteButton.tsx # SVG-Herz, 44×44 Touch-Target, Pillar-Farbe
+│   │   └── FilterBottomSheet.tsx # Generisches Filter-Sheet (Draft-State, CSS-Transition, Apply/Reset/Backdrop-Close)
 │   └── AdminRoute.tsx         # Role-Guard (admin/moderator)
 ├── hooks/
 │   ├── useRoutines.ts         # CRUD Routinen
 │   ├── useRoutineLogs.ts      # Completion-Logs
 │   ├── useDailyLog.ts         # Tages-Mood, Wasser
 │   ├── useTodos.ts            # To-do-Liste
-│   ├── useWods.ts             # Supabase oder /wods.json Fallback
+│   ├── useWods.ts             # Supabase oder /wods.json Fallback; Filter: equipmentFilter, silentMode, editorsPick, excludeEquipment, minDuration, maxDuration; pickRandomWod() (gecachte lokale WODs + alle Filter)
 │   ├── useWodHistory.ts       # localStorage + Supabase Dual-Write, personalBest
 │   ├── useHighscores.ts       # Top-10 pro WOD (Supabase oder local)
 │   ├── useStretching.ts       # Stretching-Übungen, Routinen, Logs
 │   ├── useMeditations.ts      # Meditationen, Session-Logs
 │   ├── useBreathworkTechniques.ts  # Breathwork-Techniken
 │   ├── useFavorites.ts        # localStorage + Supabase Dual-Write, optimistic UI; content_type: wod | stretching_routine | meditation
-│   └── useAudio.ts            # Web Audio API; isMuted-Check via audioStore in allen play*-Funktionen + startBackground
+│   ├── useAudio.ts            # Web Audio API; isMuted-Check via audioStore in allen play*-Funktionen + startBackground
+│   └── useToast.ts            # Wrapper um toastStore: toast.success/error/info/warning/show
+├── sw.ts                      # Service Worker (Workbox injectManifest; precaching + Push-Handler; gebaut zu dist/sw.js via vite-plugin-pwa)
 └── public/
     ├── wods.json              # 796 WODs lokal (aus wod-tracker migriert, 7 Duplikate bereinigt)
     ├── timer.worker.js        # Drift-korrigierter Web Worker
     ├── favicon.svg
     ├── icons.svg
-    ├── manifest.json          # PWA-Manifest (name/short_name CarveOut, theme_color #0D0D14, SVG-Icon)
-    └── sw.js                  # Service Worker (Push Notifications)
+    └── manifest.json          # PWA-Manifest (name/short_name CarveOut, theme_color #0D0D14, SVG-Icon)
 ```
 
 ### PWA-Konfiguration
@@ -206,15 +209,15 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | Tabelle | Beschreibung |
 |---|---|
 | `user_profiles` | Nutzer-Metadaten: language, activePillars, primaryPillar, colorTheme, subscriptionStatus, trialEndsAt, **role** (admin/moderator/user), **subscription_status**, **equipment** (string[]), **equipment_by_location** (JSONB: Record\<WorkoutLocation, string[]\>) |
-| `routines` | Routinen eines Nutzers (Name, Beschreibung, Pillar, Uhrzeit, Wochentage) |
+| `routines` | Routinen eines Nutzers (Name, Beschreibung, Pillar, Uhrzeit, Wochentage, `linked_pillar` VARCHAR NULL — Migration 012) |
 | `routine_logs` | Completion-Einträge pro Routine + Datum |
 | `todos` | To-do-Liste pro Nutzer + Datum |
 | `daily_logs` | Tageseinträge: Mood, Wasserkonsum, Notizen |
-| `wods` | WOD-Stammdaten (798 Einträge, statisch, read-only für Users) |
+| `wods` | WOD-Stammdaten (798 Einträge, statisch, read-only für Users); `is_editors_pick` bool (Migration 010); lokaler Fallback: `EDITORS_PICK_IDS` Set in `useWods` |
 | `wod_history` | Workout-Logs pro Nutzer (WOD, Score, Datum, Notizen) |
 | `feedback` | In-App-Feedback / Bug-Reports |
-| `stretching_exercises` | 65 Übungen (dreisprachig, bilateral_support, category) |
-| `stretching_routines` | 18 Routinen mit exercise_ids |
+| `stretching_exercises` | 65 Übungen (dreisprachig, bilateral_support, category, `subcategory` VARCHAR NULL — Migration 011) |
+| `stretching_routines` | 18 Routinen mit exercise_ids; `subcategory` VARCHAR NULL (Migration 011, Yoga-Seed) |
 | `stretching_logs` | Completion-Logs pro Nutzer |
 | `meditations` | 20 Einträge (name/description/instructions als JSONB, category, duration_min, difficulty, background_sound) |
 | `breathwork_techniques` | 8 Techniken (inhale_sec, hold_in_sec, exhale_sec, hold_out_sec, cycles) |
@@ -328,7 +331,7 @@ Zugangsbedingung: `user_profiles.role IN ('admin', 'moderator')`, geprüft von `
 | `/admin/push` | AdminPlaceholderPage — Server-Side Push (offen) |
 | `/admin/emails` | AdminPlaceholderPage — E-Mail-Verwaltung (offen) |
 | `/admin/feedback` | AdminPlaceholderPage — Feedback-Übersicht (offen) |
-| `/admin/wods` | AdminPlaceholderPage — WOD-Management (offen) |
+| `/admin/wods` | AdminWodsPage — Supabase-Tabelle + is_editors_pick Toggle pro WOD |
 
 Layout: `AdminLayout.tsx` mit eigenem Navigations-Wrapper.
 
@@ -337,7 +340,7 @@ Layout: `AdminLayout.tsx` mit eigenem Navigations-Wrapper.
 ## 9. Push Notifications (Client-Side)
 
 Implementiert in `lib/push.ts`:
-- Service Worker (`public/sw.js`) registriert + verwaltet
+- Service Worker (`src/sw.ts`, via vite-plugin-pwa zu `dist/sw.js` gebaut) registriert + verwaltet; Workbox precaching (6 Einträge) + NetworkFirst (Supabase) + StaleWhileRevalidate (lokale JSON-Dateien)
 - `subscribeToPush()` — erzeugt Web Push Subscription, persistiert in `push_subscriptions`
 - `unsubscribeFromPush()` — entfernt Subscription aus DB und Browser
 - Settings-UI mit Toggles pro Reminder-Typ (morning / evening / wod / inactivity) inkl. Zeitauswahl
@@ -422,6 +425,7 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 | **PWA-Manifest** | `manifest.json` (standalone, theme `#0D0D14`, SVG-Icon), `index.html` Title + Apple-Meta-Tags |
 | **Session D: Polish** | Duration-Filter-Chips in `WodList` (Alle/≤15/≤20/≤30 min) + `StretchingPage` (Alle/≤5/≤10/≤20 min); WOD-Suche sessionStorage-persistent (Key: `wod_search`); Push-Fehlerbehandlung (`pushError` State in `SettingsPage`); Optimistic Updates: `useRoutines` (update+delete) + `useTodos` (complete); 7 Duplikat-WODs aus lokalem JSON bereinigt (796 lokal / 798 Supabase) |
 | **Session E: Polish II** | `audioStore` (Zustand persist: `isMuted`/`toggleMute`), Mute-Button im Mobile-Header (`AppShell`); Vibration-Feedback in `TimerView`/`GuidedSession`/`MeditationSession`/`CustomTimer`; `RoutineEditModal` Uhrzeit-Feld (`time: string\|null`); `FavoriteButton` in `WodDetail`; `MeditationPage` `duration_min > 0` Guard; `FavoriteButton` fix: Sichtbarkeit + Tag-Overflow-Schutz auf Cards |
+| **Session F** | **Editor's Pick** (`is_editors_pick` auf `wods`, Migration 010, lokaler Fallback via `EDITORS_PICK_IDS`; `AdminWodsPage` mit Toggle); **Random-WOD-Picker** (Würfel-Button in `WodList`, `pickRandomWod()` mit allen aktiven Filtern, Toast); **FilterBottomSheet** (`components/ui/FilterBottomSheet.tsx`; Draft-State, Apply/Reset/Backdrop-Close; ersetzt Chip-Reihen in `WodList`/`StretchingPage`/`MeditationPage`; `WodList`: Typ/Kategorie/Schwierigkeit/Editor's Pick/Dauer Von-Bis/Equipment Exclude); **Yoga-Subcategory** (`subcategory` auf `stretching_exercises`+`stretching_routines`, Migration 011, `StretchingPage` filtert via `r.goal === filter \|\| r.subcategory === filter`); **Routine linked_pillar** (Migration 012, `RoutineEditModal` Pillar-Selektor, `RoutineItem` farbige Left-Border + Pillar-Navigation); **Workbox sw.ts** (`src/sw.ts` via `vite-plugin-pwa injectManifest`; precaching + NetworkFirst/StaleWhileRevalidate; `public/sw.js` gelöscht); **Toast-System** (`toastStore` + `useToast.ts`, kein Package); **Ad-hoc Timer-Log** (`TimerView.adHocLog`-Prop); **Freie Meditation** (`AdHocMeditationTimer`, `view=free_meditation` in `MeditationPage`) |
 
 ### Offen / Roadmap
 
@@ -441,12 +445,11 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 | **E2E-Tests** | Playwright o.ä. |
 | **Warmup-Timer** | Echte Phasen via Timer-Worker (nicht nur Akkordeon-UI in WodDetail) |
 | **Free-Timer-Wizard** | 3-Step-Flow: Typ → Übungen → Übersicht; eigene Workouts ohne WOD-DB |
-| **Random-WOD-Picker** | Eigener Screen mit Filter + Würfel-Button |
+| **Random-WOD-Picker (erweiterbar)** | Aktuell: Würfel-Button in WodList; offen: eigener Screen |
 | **Theme-Switcher** | Mind. Dark/Light; alte HTML-PWA hatte 8 Themes × 8 Accents |
-| **Toast-Notifications** | Globales Feedback-System (Ersatz für fehlende showToast-Äquivalente) |
 | **Home-Screen-Widgets** | Today's WOD, Woche-Stats, Recently Done auf Workout-Startansicht |
 | **Virtual/Infinite Scroll** | WodList — Performance bei 798+ Einträgen (aktuell: Pagination + "Load more") |
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session E: audioStore/Mute-Toggle, Vibration-Feedback, RoutineEditModal Uhrzeit, FavoriteButton WodDetail, MeditationPage Guard, 796/798 WOD-Zähler)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session F: Editor's Pick, Random-WOD, FilterBottomSheet, Yoga subcategory, Routine linked_pillar, Workbox sw.ts, Toast-System, Ad-hoc Timer-Log, Freie Meditation)*
