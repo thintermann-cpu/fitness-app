@@ -5,7 +5,7 @@ type Lang = 'de' | 'en' | 'es'
 
 const PILLARS = [
   { id: 'workout',    label: { de: 'Training',       en: 'Workout',       es: 'Entrenamiento' }, emoji: '💪', color: '#E8642A' },
-  { id: 'routine',    label: { de: 'Mein Tag',        en: 'My Day',        es: 'Mi Día'        }, emoji: '📋', color: '#4A90D9' },
+  { id: 'routine',    label: { de: 'Ritual',          en: 'Ritual',        es: 'Ritual'        }, emoji: '📋', color: '#4A90D9' },
   { id: 'stretching', label: { de: 'Stretch & Yoga',  en: 'Stretch & Yoga', es: 'Estiramiento'  }, emoji: '🤸', color: '#7BC67E' },
   { id: 'meditation', label: { de: 'Meditation',      en: 'Meditation',    es: 'Meditación'    }, emoji: '🧘', color: '#9B7FD4' },
 ] as const

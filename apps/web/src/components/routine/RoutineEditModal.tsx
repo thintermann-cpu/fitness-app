@@ -9,7 +9,7 @@ const CATEGORIES: Category[] = ['morning', 'day', 'evening']
 
 const PILLARS = [
   { id: 'workout',    label: 'Workout',    color: '#E8642A' },
-  { id: 'routine',   label: 'Mein Tag',   color: '#4A90D9' },
+  { id: 'routine',   label: 'Ritual',     color: '#4A90D9' },
   { id: 'stretching', label: 'Stretch',   color: '#7BC67E' },
   { id: 'meditation', label: 'Meditation', color: '#9B7FD4' },
 ] as const
@@ -19,7 +19,7 @@ const DAYS_ORDER = [1, 2, 3, 4, 5, 6, 0]
 const T = {
   de: {
     back: '← Zurück',
-    title: 'Routine bearbeiten',
+    title: 'Ritual bearbeiten',
     iconLabel: 'Icon (Emoji)',
     nameLabel: 'Name',
     timeLabel: 'Tageszeit',
@@ -28,8 +28,8 @@ const T = {
     pillarLabel: 'Pillar-Verknüpfung',
     pillarNone: 'Keine',
     save: 'Speichern',
-    deleteBtn: 'Routine löschen',
-    confirmMsg: 'Diese Routine wirklich löschen?',
+    deleteBtn: 'Ritual löschen',
+    confirmMsg: 'Dieses Ritual wirklich löschen?',
     cancel: 'Abbrechen',
     confirmDel: 'Löschen',
     morning: '🌅 Morgen',
@@ -39,7 +39,7 @@ const T = {
   },
   en: {
     back: '← Back',
-    title: 'Edit Routine',
+    title: 'Edit Ritual',
     iconLabel: 'Icon (Emoji)',
     nameLabel: 'Name',
     timeLabel: 'Time of Day',
@@ -48,8 +48,8 @@ const T = {
     pillarLabel: 'Pillar Link',
     pillarNone: 'None',
     save: 'Save',
-    deleteBtn: 'Delete Routine',
-    confirmMsg: 'Really delete this routine?',
+    deleteBtn: 'Delete Ritual',
+    confirmMsg: 'Really delete this ritual?',
     cancel: 'Cancel',
     confirmDel: 'Delete',
     morning: '🌅 Morning',
@@ -59,7 +59,7 @@ const T = {
   },
   es: {
     back: '← Volver',
-    title: 'Editar rutina',
+    title: 'Editar ritual',
     iconLabel: 'Icono (Emoji)',
     nameLabel: 'Nombre',
     timeLabel: 'Momento del día',
@@ -68,8 +68,8 @@ const T = {
     pillarLabel: 'Enlace de pilar',
     pillarNone: 'Ninguno',
     save: 'Guardar',
-    deleteBtn: 'Eliminar rutina',
-    confirmMsg: '¿Eliminar esta rutina?',
+    deleteBtn: 'Eliminar ritual',
+    confirmMsg: '¿Eliminar este ritual?',
     cancel: 'Cancelar',
     confirmDel: 'Eliminar',
     morning: '🌅 Mañana',
@@ -119,7 +119,7 @@ export function RoutineEditModal({ routine, lang, onSave, onDelete, onBack }: Pr
     const firstDayLabel = firstDayIdx >= 0 ? t.dayLabels[firstDayIdx] : null
     const toastMsg = firstDayLabel
       ? (lang === 'de' ? `Erscheint am ${firstDayLabel}` : lang === 'es' ? `Aparece el ${firstDayLabel}` : `Appears on ${firstDayLabel}`)
-      : (lang === 'de' ? 'Routine gespeichert' : lang === 'es' ? 'Rutina guardada' : 'Routine saved')
+      : (lang === 'de' ? 'Ritual gespeichert' : lang === 'es' ? 'Ritual guardado' : 'Ritual saved')
 
     toast.success(toastMsg)
     onBack()

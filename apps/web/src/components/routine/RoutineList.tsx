@@ -1,5 +1,14 @@
 import { useState } from 'react'
 import type { Routine, Category } from '../../hooks/useRoutines'
+
+const DISMISSED_KEY = 'dismissed_suggestions'
+
+function getDismissed(): string[] {
+  try { return JSON.parse(localStorage.getItem(DISMISSED_KEY) ?? '[]') } catch { return [] }
+}
+function saveDismissed(names: string[]) {
+  localStorage.setItem(DISMISSED_KEY, JSON.stringify(names))
+}
 import { SUGGESTED_ROUTINES } from '../../hooks/useRoutines'
 import type { RoutineLog } from '../../hooks/useRoutineLogs'
 import { RoutineItem } from './RoutineItem'
@@ -32,7 +41,7 @@ const T = {
     evening: '🌙 Abend',
     noItems: 'Keine Aufgaben für heute',
     loading: 'Lädt…',
-    suggestions: 'Vorgeschlagene Routinen',
+    suggestions: 'Vorgeschlagene Rituale',
     addAll: 'Alle hinzufügen',
     add: 'Hinzufügen',
     daily: 'täglich',
@@ -45,7 +54,7 @@ const T = {
     evening: '🌙 Evening',
     noItems: 'No tasks for today',
     loading: 'Loading…',
-    suggestions: 'Suggested Routines',
+    suggestions: 'Suggested Rituals',
     addAll: 'Add all',
     add: 'Add',
     daily: 'daily',
@@ -58,7 +67,7 @@ const T = {
     evening: '🌙 Tarde',
     noItems: 'Sin tareas para hoy',
     loading: 'Cargando…',
-    suggestions: 'Rutinas sugeridas',
+    suggestions: 'Rituales sugeridos',
     addAll: 'Agregar todo',
     add: 'Agregar',
     daily: 'diario',
@@ -99,7 +108,14 @@ export function RoutineList({
   onCreateNew,
 }: Props) {
   const [activeCategory, setActiveCategory] = useState<Category>('morning')
+  const [dismissed, setDismissed] = useState<string[]>(() => getDismissed())
   const t = T[lang] ?? T.de
+
+  const handleDismiss = (name: string) => {
+    const next = [...dismissed, name]
+    saveDismissed(next)
+    setDismissed(next)
+  }
 
   const completedIds = new Set(logs.filter(l => l.completed).map(l => l.routine_id))
 
@@ -212,7 +228,7 @@ export function RoutineList({
             {t.suggestions}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 }}>
-            {suggestions.filter(s => s.category === activeCategory).map((s, i) => (
+            {suggestions.filter(s => s.category === activeCategory && !dismissed.includes(s.name)).map((s, i) => (
               <div
                 key={i}
                 style={{
@@ -233,9 +249,7 @@ export function RoutineList({
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    onCreateSuggested(s)
-                  }}
+                  onClick={() => onCreateSuggested(s)}
                   style={{
                     padding: '6px 12px',
                     minHeight: 44,
@@ -252,13 +266,27 @@ export function RoutineList({
                 >
                   {t.add}
                 </button>
+                <button
+                  onClick={() => handleDismiss(s.name)}
+                  style={{
+                    padding: '6px 8px',
+                    minHeight: 44,
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#4a4238',
+                    fontSize: 14,
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    touchAction: 'manipulation',
+                  }}
+                >
+                  ✕
+                </button>
               </div>
             ))}
           </div>
           <button
-            onClick={() => {
-              onCreateAll(suggestions)
-            }}
+            onClick={() => onCreateAll(suggestions.filter(s => !dismissed.includes(s.name)))}
             style={{
               width: '100%',
               padding: 12,
@@ -327,7 +355,7 @@ export function RoutineList({
           {/* Remaining suggestions for current category */}
           {(() => {
             const addedNames = new Set(routines.map(r => r.name))
-            const remaining = suggestions.filter(s => s.category === activeCategory && !addedNames.has(s.name))
+            const remaining = suggestions.filter(s => s.category === activeCategory && !addedNames.has(s.name) && !dismissed.includes(s.name))
             if (remaining.length === 0) return null
             return (
               <div style={{ marginTop: 16 }}>
@@ -372,6 +400,22 @@ export function RoutineList({
                         }}
                       >
                         {t.add}
+                      </button>
+                      <button
+                        onClick={() => handleDismiss(s.name)}
+                        style={{
+                          padding: '6px 8px',
+                          minHeight: 44,
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#4a4238',
+                          fontSize: 14,
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          touchAction: 'manipulation',
+                        }}
+                      >
+                        ✕
                       </button>
                     </div>
                   ))}

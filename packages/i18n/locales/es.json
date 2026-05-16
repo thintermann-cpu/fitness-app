@@ -4,9 +4,9 @@
     "tagline": "Dedica tiempo a lo que importa."
   },
   "nav": {
-    "home": "Inicio",
+    "home": "Mi Día",
     "workout": "Entrenamiento",
-    "routine": "Mi Día",
+    "routine": "Rituales",
     "stretching": "Estiramiento & Yoga",
     "meditation": "Meditar",
     "stats": "Estadísticas",
@@ -14,7 +14,7 @@
   },
   "pillars": {
     "workout": "Entrenamiento",
-    "routine": "Mi Día",
+    "routine": "Ritual",
     "stretching": "Estiramiento & Yoga",
     "meditation": "Meditación"
   },

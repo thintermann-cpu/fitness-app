@@ -4,9 +4,9 @@
     "tagline": "Carve out time for what matters."
   },
   "nav": {
-    "home": "Home",
+    "home": "My Day",
     "workout": "Workout",
-    "routine": "My Day",
+    "routine": "Rituals",
     "stretching": "Stretch & Yoga",
     "meditation": "Meditate",
     "stats": "Stats",
@@ -14,7 +14,7 @@
   },
   "pillars": {
     "workout": "Workout",
-    "routine": "My Day",
+    "routine": "Ritual",
     "stretching": "Stretch & Yoga",
     "meditation": "Meditation"
   },

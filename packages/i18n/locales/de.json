@@ -4,9 +4,9 @@
     "tagline": "Carve dir Zeit für das, was zählt."
   },
   "nav": {
-    "home": "Start",
+    "home": "Mein Tag",
     "workout": "Training",
-    "routine": "Mein Tag",
+    "routine": "Rituale",
     "stretching": "Stretch & Yoga",
     "meditation": "Meditation",
     "stats": "Statistiken",
@@ -14,7 +14,7 @@
   },
   "pillars": {
     "workout": "Training",
-    "routine": "Mein Tag",
+    "routine": "Ritual",
     "stretching": "Stretch & Yoga",
     "meditation": "Meditation"
   },

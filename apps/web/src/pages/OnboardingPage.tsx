@@ -15,7 +15,7 @@ const LANGUAGES = [
 
 const PILLARS = [
   { id: 'workout',    label: 'Workout',    emoji: '🏋️', color: '#E8642A' },
-  { id: 'routine',    label: 'Mein Tag',   emoji: '📋', color: '#4A90D9' },
+  { id: 'routine',    label: 'Ritual',     emoji: '📋', color: '#4A90D9' },
   { id: 'stretching', label: 'Stretch & Yoga', emoji: '🤸', color: '#7BC67E' },
   { id: 'meditation', label: 'Meditation', emoji: '🧘', color: '#9B7FD4' },
 ] as const

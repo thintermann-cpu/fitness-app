@@ -3,13 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { useRoutines } from '../hooks/useRoutines'
 import type { Routine, Category } from '../hooks/useRoutines'
 import { useRoutineLogs, useWeekLogs, useToggleRoutineLog } from '../hooks/useRoutineLogs'
-import { useDailyLog } from '../hooks/useDailyLog'
 import { useTodos } from '../hooks/useTodos'
 import { useAuthStore } from '../store/authStore'
 import { RoutineList } from '../components/routine/RoutineList'
 import { RoutineEditModal } from '../components/routine/RoutineEditModal'
-import { WaterTracker } from '../components/routine/WaterTracker'
-import { MoodCheck } from '../components/routine/MoodCheck'
 import { TodoList } from '../components/routine/TodoList'
 import { WeekView } from '../components/routine/WeekView'
 
@@ -35,13 +32,16 @@ function getCurrentWeekDates(): string[] {
 const DAYS_SHORT = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
 const DAYS_FULL  = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
 
-const WATER_STEP = 400
-const WATER_MAX  = 5600
-
 const TABS: Record<Lang, Array<[Tab, string]>> = {
   de: [['routinen', '📋 Routinen'], ['todo', '✅ To-Do'], ['woche', '📊 Woche']],
   en: [['routinen', '📋 Routines'], ['todo', '✅ To-Do'], ['woche', '📊 Week']],
   es: [['routinen', '📋 Rutinas'], ['todo', '✅ Tareas'], ['woche', '📊 Semana']],
+}
+
+const PAGE_TITLE: Record<Lang, string> = {
+  de: 'Rituale',
+  en: 'Rituals',
+  es: 'Rituales',
 }
 
 export function RoutinePage() {
@@ -63,14 +63,12 @@ export function RoutinePage() {
 
   const { routines, isLoading, create, update, remove, createError, createErrorMsg } = useRoutines()
   const { data: logsRaw }     = useRoutineLogs(todayStr)
-  const { log: dailyLog, setWater, setMood } = useDailyLog(todayStr)
   const { todos, add: addTodo, complete: completeTodo, remove: removeTodo, clearDone, addError, addErrorMsg } = useTodos()
   const { data: weekLogsRaw } = useWeekLogs(weekDates)
   const toggleLog             = useToggleRoutineLog(todayStr)
 
   const todayLogs = logsRaw     ?? []
   const weekLogs  = weekLogsRaw ?? []
-  const waterMl   = dailyLog?.water_ml ?? 0
 
   const weekPcts = DAYS_SHORT.map((_, i) => {
     const dateIdx = weekDates.findIndex(d => new Date(d + 'T00:00:00').getDay() === i)
@@ -159,7 +157,7 @@ export function RoutinePage() {
               {DAYS_FULL[todayDow]}
             </div>
             <h1 style={{ margin: '2px 0 0', fontSize: 21, fontWeight: 400, color: '#f0e8d8' }}>
-              Mein Tag
+              {PAGE_TITLE[lang]}
             </h1>
           </div>
           <div style={{ display: 'flex', gap: 7 }}>
@@ -255,23 +253,6 @@ export function RoutinePage() {
         {/* ── Routinen ── */}
         {tab === 'routinen' && (
           <>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'stretch' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <MoodCheck
-                  mood={dailyLog?.mood ?? null}
-                  moodComment={dailyLog?.mood_comment ?? null}
-                  onSave={(mood, comment) => setMood({ mood, mood_comment: comment })}
-                />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <WaterTracker
-                  waterMl={waterMl}
-                  onAdd={() => setWater(Math.min(waterMl + WATER_STEP, WATER_MAX))}
-                  onRemove={() => setWater(Math.max(waterMl - WATER_STEP, 0))}
-                />
-              </div>
-            </div>
-
             <RoutineList
               routines={routines}
               logs={todayLogs}

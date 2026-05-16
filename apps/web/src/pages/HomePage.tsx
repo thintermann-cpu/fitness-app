@@ -5,6 +5,8 @@ import { AdaptiveSuggestion } from '../components/home/AdaptiveSuggestion'
 import { TodaysWod } from '../components/home/TodaysWod'
 import { WeekStats } from '../components/home/WeekStats'
 import { RecentActivity } from '../components/home/RecentActivity'
+import { MoodCheck } from '../components/routine/MoodCheck'
+import { useDailyLog } from '../hooks/useDailyLog'
 
 const LOCALE_MAP: Record<string, string> = {
   de: 'de-DE',
@@ -12,8 +14,14 @@ const LOCALE_MAP: Record<string, string> = {
   es: 'es-ES',
 }
 
+function todayStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 export function HomePage() {
   const { profile } = useAuthStore()
+  const { log: dailyLog, setMood } = useDailyLog(todayStr())
 
   const locale    = LOCALE_MAP[profile?.language ?? 'de'] ?? 'de-DE'
   const dateLabel = new Intl.DateTimeFormat(locale, {
@@ -39,6 +47,11 @@ export function HomePage() {
       </header>
 
       <TodayPillarTracker />
+      <MoodCheck
+        mood={dailyLog?.mood ?? null}
+        moodComment={dailyLog?.mood_comment ?? null}
+        onSave={(mood, comment) => setMood({ mood, mood_comment: comment })}
+      />
       <AdaptiveSuggestion />
       <TodaysWod />
       <WeekStats />

@@ -6,12 +6,18 @@ import { useFavorites } from '../../hooks/useFavorites'
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 const NAV_ITEMS = [
-  { path: '/',           icon: '🏠', label: 'Home',         color: '#F0EDE8', pillarId: null },
-  { path: '/workout',    icon: '💪', label: 'Workout',      color: '#E8642A', pillarId: 'workout' },
-  { path: '/routine',    icon: '📋', label: 'Routine',      color: '#4A90D9', pillarId: null },
-  { path: '/stretching', icon: '🧘', label: 'Stretch & Yoga', color: '#7BC67E', pillarId: 'stretching' },
-  { path: '/meditation', icon: '🧠', label: 'Focus',        color: '#9B7FD4', pillarId: 'meditation' },
+  { path: '/',           icon: '🏠', key: 'home',       color: '#F0EDE8', pillarId: null },
+  { path: '/workout',    icon: '💪', key: 'workout',    color: '#E8642A', pillarId: 'workout' },
+  { path: '/routine',    icon: '📋', key: 'routine',    color: '#4A90D9', pillarId: null },
+  { path: '/stretching', icon: '🧘', key: 'stretching', color: '#7BC67E', pillarId: 'stretching' },
+  { path: '/meditation', icon: '🧠', key: 'meditation', color: '#9B7FD4', pillarId: 'meditation' },
 ] as const
+
+const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
+  de: { home: 'Mein Tag', workout: 'Training', routine: 'Rituale',  stretching: 'Stretch & Yoga',      meditation: 'Fokus'    },
+  en: { home: 'My Day',   workout: 'Workout',  routine: 'Rituals',  stretching: 'Stretch & Yoga',      meditation: 'Meditate' },
+  es: { home: 'Mi Día',   workout: 'Entreno',  routine: 'Rituales', stretching: 'Estiramiento & Yoga', meditation: 'Meditar'  },
+}
 
 export function Sidebar() {
   const { pathname }  = useLocation()
@@ -19,6 +25,8 @@ export function Sidebar() {
   const { favorites } = useFavorites()
   const activePillars = profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
   const favCount      = favorites.length
+  const lang          = profile?.language ?? 'de'
+  const labels        = SIDEBAR_LABELS[lang] ?? SIDEBAR_LABELS.de
 
   const visibleItems = NAV_ITEMS.filter(
     item => item.pillarId === null || activePillars.includes(item.pillarId)
@@ -46,7 +54,8 @@ export function Sidebar() {
 
       {/* Nav items */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {visibleItems.map(({ path, icon, label, color }) => {
+        {visibleItems.map(({ path, icon, key, color }) => {
+          const label = labels[key] ?? key
           const isActive = path === '/'
             ? pathname === '/'
             : (pathname === path

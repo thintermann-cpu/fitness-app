@@ -26,16 +26,16 @@ const PILLAR_CONFIG = {
     emoji:  '📋',
     route:  '/routine',
     headline: {
-      de: 'Guten Morgen 🌅 — Zeit für deine Routine',
-      en: 'Good morning 🌅 — Time for your routine',
-      es: 'Buenos días 🌅 — Hora de tu rutina',
+      de: 'Guten Morgen 🌅 — Zeit für dein Ritual',
+      en: 'Good morning 🌅 — Time for your ritual',
+      es: 'Buenos días 🌅 — Hora de tu ritual',
     },
     sub: {
       de: 'Starte strukturiert in den Tag.',
       en: 'Start your day with structure.',
       es: 'Empieza el día con estructura.',
     },
-    cta: { de: 'Routine öffnen', en: 'Open routine', es: 'Abrir rutina' },
+    cta: { de: 'Ritual öffnen', en: 'Open ritual', es: 'Abrir ritual' },
   },
   stretching: {
     color:  '#7BC67E',
