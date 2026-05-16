@@ -58,7 +58,8 @@ apps/web/src/
 ├── lib/
 │   ├── supabase.ts            # Supabase-Client + isSupabaseConfigured()
 │   ├── push.ts                # Push Notification Helpers (subscribeToPush, unsubscribeFromPush)
-│   └── adaptiveSuggestion.ts  # Pure Funktion getSuggestedPillar(): Pillar — Empfehlung nach Uhrzeit (05–10 routine, 10–17 workout, 17–21 stretching, sonst meditation)
+│   ├── adaptiveSuggestion.ts  # Pure Funktion getSuggestedPillar(): Pillar — Empfehlung nach Uhrzeit (05–10 routine, 10–17 workout, 17–21 stretching, sonst meditation)
+│   └── customWorkouts.ts      # CustomWorkout + CustomSession Typen; localStorage CRUD (save/load/delete); Keys: carveout_custom_workouts / carveout_custom_sessions
 ├── store/
 │   ├── authStore.ts           # Zustand-Store: user, session, loading, profile; signIn/signUp/signOut/initialize/fetchProfile/updateProfile; WorkoutLocation + DEFAULT_EQUIPMENT_BY_LOCATION + equipment_by_location
 │   ├── audioStore.ts          # Zustand-Store (persist: 'audio-mute'): isMuted: boolean, toggleMute()
@@ -93,8 +94,10 @@ apps/web/src/
 │   ├── workout/
 │   │   ├── WodCard.tsx
 │   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); FilterBottomSheet (Typ, Kategorie, Schwierigkeit, Editor's Pick, Dauer Von-Bis, Equipment Exclude); Würfel-Button für Random-WOD
-│   │   ├── WodDetail.tsx      # enthält FavoriteButton (contentType="wod", color="#E8642A")
+│   │   ├── WodDetail.tsx      # enthält FavoriteButton (contentType="wod", color="#E8642A"); "Warmup-Timer starten"-Button im Warmup-Akkordeon
 │   │   ├── TimerView.tsx      # Nutzt timer.worker.js; AMRAP/ForTime/EMOM/Tabata konfigurierbar; adHocLog-Prop: auto-Log in wod_history ohne WOD aus DB
+│   │   ├── FreeTimerWizard.tsx  # 3-Step Wizard (Modus → Übungen → Konfiguration); speichert benannte Workouts via customWorkouts.ts; onStart(mode, minutes) → triggert TimerView
+│   │   ├── WarmupTimer.tsx    # Bottom-Sheet mit Presets 3/5/10 min + manuellem Input; Countdown-Ring (SVG); Wake Lock; playGong + vibrate + Toast bei Ende; eingebettet in WodDetail
 │   │   ├── WodHistoryList.tsx
 │   │   └── ScoreInput.tsx
 │   ├── routine/
@@ -106,6 +109,10 @@ apps/web/src/
 │   │   ├── TodoList.tsx
 │   │   └── WeekView.tsx
 │   ├── stretching/            # Alle Stretching-Komponenten
+│   │   └── SessionCreator.tsx  # 3-Step Wizard (Auswählen nach muscle_group → Reihenfolge → Name); erstellt virtuelle StretchingRoutine; speichert benannte Sessions via customWorkouts.ts
+│   ├── wizard/
+│   │   ├── WizardShell.tsx    # Generischer 3-Step Full-Screen Modal-Wrapper; Progress-Bars, Back/Next/Close, canNext-Guard, body-overflow-lock
+│   │   └── ExerciseListEditor.tsx  # Reorderable Liste (↑/↓/✕) + optionales Add-Input-Feld; Props: items, onChange, placeholder, showAddInput
 │   ├── meditation/            # Alle Meditation-Komponenten (inkl. AdHocMeditationTimer.tsx — circular progress, gong, vibrate, wake lock, session-log)
 │   ├── ui/
 │   │   ├── Button.tsx
@@ -309,12 +316,13 @@ Alle Modi nutzen den drift-korrigierten `timer.worker.js` im Hintergrund.
 - `GuidedSession.tsx` (Stretching) — aktiv solange `isTimerActive`
 - `MeditationSession.tsx` (Meditation) — aktiv wenn `started && !paused && !finished`
 - `CustomTimer.tsx` (Meditation) — aktiv bei Status `running` | `prep`
+- `WarmupTimer.tsx` (Workout) — aktiv solange Timer läuft
 
 Die Lock wird automatisch freigegeben, wenn der Timer pausiert, gestoppt oder die Komponente unmounted wird. Geräte ohne Wake-Lock-Support werden per Feature-Detection still ignoriert.
 
 **Gong am Session-Ende:** `GuidedSession.finishSession()` ruft nach `playComplete()` zusätzlich `playGong()` auf. `MeditationSession` und `CustomTimer` spielen `playGong()` sowohl am Timer-Ende als auch beim manuellen Beenden.
 
-**Vibration:** `TimerView`, `GuidedSession`, `MeditationSession`, `CustomTimer` rufen `navigator.vibrate()` auf — Intervall: `[200,100,200]`, Ende: `[500,100,500]`. Geräte ohne Vibration-Support werden per Feature-Detection still ignoriert.
+**Vibration:** `TimerView`, `GuidedSession`, `MeditationSession`, `CustomTimer`, `WarmupTimer` rufen `navigator.vibrate()` auf — Intervall: `[200,100,200]`, Ende: `[500,100,500]`. Geräte ohne Vibration-Support werden per Feature-Detection still ignoriert.
 
 **Mute-Toggle:** `useAudioStore` (persist: `audio-mute`) hält `isMuted`-State. `useAudio.ts` prüft `isMuted` in allen `play*`-Funktionen und `startBackground` — bei `isMuted: true` kein Audio-Output. Mute-Button im Mobile-Header (`AppShell.tsx`) neben dem Favoriten-Button.
 
@@ -439,6 +447,7 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 | **Session G** | **Dashboard-Familie** — Route `/` zeigt `HomePage` (kein Redirect mehr auf `/workout`); `TodayPillarTracker` (4 Chips Done/Open via `useTodayPillars`); `AdaptiveSuggestion` (Empfehlungskarte nach Tageszeit, `adaptiveSuggestion.ts`); `TodaysWod` (deterministisch aus Editor's-Pick-Pool via `pickByDate`); `WeekStats` (Session-Counts Workout/Stretching/Meditation letzte 7 Tage); `RecentActivity` (letzte 3 WOD-Einträge, relatives Datum); BottomNav + Sidebar: Home-Item als erstes Item; Sidebar `isActive`-Fix für `/` |
 | **Session H** | **Rebrand + UX-Polish** — Home-Nav-Item umbenennen (de: Mein Tag / en: My Day / es: Mi Día); Routine-Pillar umbenennen zu Ritual/Rituale (i18n, RoutinePage-Titel, RoutineEditModal, RoutineList-Vorschläge-Label); **Swipe-Navigation** in `AppShell` (TouchEvent 50px-Threshold, 30px vertikale Drift-Grenze, `active_pillars`-aware Route-Reihenfolge); **Dismiss-Funktion** für Vorschlags-Items in `RoutineList` (localStorage Key: `dismissed_suggestions`); **MoodCheck** von `RoutinePage` → `HomePage` (zwischen `TodayPillarTracker` und `AdaptiveSuggestion`); **WaterTracker** aus `RoutinePage` entfernt (UI only, DB unberührt) |
 | **Session I** | **Nav-Reihenfolge** — `BottomNav` + `Sidebar` + `AppShell MAIN_ROUTES`: neue Reihenfolge Mein Tag · Ritual · Workout · Stretching · Meditation; **Settings aus BottomNav entfernt** (jetzt nur noch im Mobile-Header als Icon); **Mobile-Header-Redesign** (52px, bg: `--color-bg-card` + border; Links: CarveOut-Logo + Name; Rechts: Vorname (max-[360px]:hidden) · Mute · Favoriten · Settings-Link); **TodayPillarTracker** — Header-Label geändert zu "Aktueller Stand von heute · N von 4" (de/en/es); Chip-Reihenfolge: Ritual · Workout · Stretching · Meditation |
+| **Session G2** | **Wizard-Framework + Custom Workouts** — `lib/customWorkouts.ts` (CustomWorkout + CustomSession Typen, localStorage CRUD); `wizard/WizardShell` (generischer 3-Step Full-Screen Wizard, Progress-Bars, canNext-Guard); `wizard/ExerciseListEditor` (reorderable Liste mit ↑/↓/✕ + Add-Input); **FreeTimerWizard** (3-Step: Modus → Übungen → Konfiguration/Name, speichert benannte Workouts, triggert TimerView); **SessionCreator** (3-Step: Auswählen → Reihenfolge → Name, erstellt virtuelle StretchingRoutine); **WarmupTimer** (Bottom-Sheet, Presets 3/5/10 min + manuell, Countdown-Ring, Wake Lock, Gong + Vibrate + Toast); `WorkoutPage` "Eigene Workouts"-Sektion; `StretchingPage` "Eigene Sessions"-Sektion; `WodDetail` Warmup-Timer-Button |
 
 ### Offen / Roadmap
 
@@ -456,12 +465,10 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 | **Supabase Redirect-URLs** | Konfigurieren für OAuth / Magic Link |
 | **packages/ui** | Shared Component Library befüllen |
 | **E2E-Tests** | Playwright o.ä. |
-| **Warmup-Timer** | Echte Phasen via Timer-Worker (nicht nur Akkordeon-UI in WodDetail) |
-| **Free-Timer-Wizard** | 3-Step-Flow: Typ → Übungen → Übersicht; eigene Workouts ohne WOD-DB |
 | **Random-WOD-Picker (erweiterbar)** | Aktuell: Würfel-Button in WodList; offen: eigener Screen |
 | **Theme-Switcher** | Mind. Dark/Light; alte HTML-PWA hatte 8 Themes × 8 Accents |
 | **Virtual/Infinite Scroll** | WodList — Performance bei 798+ Einträgen (aktuell: Pagination + "Load more") |
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session I: Nav-Reihenfolge, Header-Redesign, TodayPillarTracker)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session G2: Wizard-Framework, FreeTimerWizard, SessionCreator, WarmupTimer)*
