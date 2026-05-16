@@ -69,11 +69,12 @@ apps/web/src/
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
 │   ├── OnboardingPage.tsx     # Pillar-Auswahl, Primary Pillar, Theme
-│   ├── WorkoutPage.tsx        # Tabs: WODs / Timer / History
+│   ├── WorkoutPage.tsx        # Tabs: WODs / Timer / History; Timer-Tab idle-Zustand öffnet FreeTimerWizard (variant=adhoc) via "Timer konfigurieren"-Button
 │   ├── RoutinePage.tsx        # Titel: Rituale; Tabs: Rituale / Todo / Woche (kein WaterTracker, kein MoodCheck)
 │   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); FilterBottomSheet (Goal/Kategorie inkl. Yoga-Subcategory, Dauer)
 │   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5); FilterBottomSheet (Kategorie + Dauer); view=free_meditation (Quick-Select 5/10/20 min via AdHocMeditationTimer)
 │   ├── FavoritesPage.tsx      # Drei Sektionen (Workouts / Stretch & Yoga / Meditationen), URL-Param ?section=
+│   ├── ProfilePage.tsx        # Name + Sprache bearbeiten, Passwort-Reset (E-Mail), Abo-Placeholder, Abmelden; Route /profile
 │   └── admin/
 │       ├── AdminDashboardPage.tsx
 │       ├── AdminUsersPage.tsx
@@ -81,7 +82,7 @@ apps/web/src/
 │       └── AdminPlaceholderPage.tsx
 ├── components/
 │   ├── layout/
-│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header (52px, bg: --color-bg-card + border): Links: CarveOut-Logo + Name; Rechts: Vorname (max-[360px]:hidden) · Mute · Favoriten · Settings-Link; MAIN_ROUTES-Reihenfolge: / · /routine · /workout · /stretching · /meditation; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge)
+│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header (52px, bg: --color-bg-card + border): Links: CarveOut-Logo + Name; Rechts: Vorname als Link zu /profile (max-[360px]:hidden) · Mute · Favoriten · Settings-Link; MAIN_ROUTES-Reihenfolge: / · /routine · /workout · /stretching · /meditation; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge)
 │   │   ├── BottomNav.tsx      # Tab-Navigation, hebt aktiven Pillar hervor (versteckt ab lg); Reihenfolge: Home · Ritual · Workout · Stretching · Meditation (Settings entfernt); erstes Item: Home `/` (de: Mein Tag, en: My Day, es: Mi Día); Routine-Item (de: Rituale, en: Rituals, es: Rituales)
 │   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint); Reihenfolge: Home · Ritual · Workout · Stretching · Meditation; erstes Item: Home `/`; isActive-Fix für exakten `/`-Match
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
@@ -96,13 +97,13 @@ apps/web/src/
 │   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); FilterBottomSheet (Typ, Kategorie, Schwierigkeit, Editor's Pick, Dauer Von-Bis, Equipment Exclude); Würfel-Button für Random-WOD
 │   │   ├── WodDetail.tsx      # enthält FavoriteButton (contentType="wod", color="#E8642A"); "Warmup-Timer starten"-Button im Warmup-Akkordeon
 │   │   ├── TimerView.tsx      # Nutzt timer.worker.js; AMRAP/ForTime/EMOM/Tabata konfigurierbar; adHocLog-Prop: auto-Log in wod_history ohne WOD aus DB
-│   │   ├── FreeTimerWizard.tsx  # 3-Step Wizard (Modus → Übungen → Konfiguration); speichert benannte Workouts via customWorkouts.ts; onStart(mode, minutes) → triggert TimerView
+│   │   ├── FreeTimerWizard.tsx  # Wizard; variant='save' (3 Steps: Modus → Übungen → Konfiguration/Name, speichert via customWorkouts.ts) | variant='adhoc' (4 Steps: Modus → Übungen → Konfiguration → Warmup-Frage); onStart(mode, minutes, withWarmup?) → triggert TimerView; Dauer 1–120 min, 1-min-Schritte
 │   │   ├── WarmupTimer.tsx    # Bottom-Sheet mit Presets 3/5/10 min + manuellem Input; Countdown-Ring (SVG); Wake Lock; playGong + vibrate + Toast bei Ende; eingebettet in WodDetail
 │   │   ├── WodHistoryList.tsx
 │   │   └── ScoreInput.tsx
 │   ├── routine/
 │   │   ├── RoutineItem.tsx    # farbige Left-Border + Punkt-Indikator bei linked_pillar; Tap → Pillar-Navigation; Bleistift öffnet Edit
-│   │   ├── RoutineList.tsx    # inkl. Routine-Create-Modal (RoutineEditModal); Vorschläge-Label "Vorgeschlagene Rituale"; Dismiss-Button pro Vorschlags-Item (localStorage Key: dismissed_suggestions)
+│   │   ├── RoutineList.tsx    # inkl. Routine-Create-Modal (RoutineEditModal); Vorschläge-Label "Vorgeschlagene Rituale"; Dismiss-Button pro Vorschlags-Item (localStorage Key: dismissed_suggestions); Drag & Drop via @dnd-kit/core+sortable (sort_order Supabase-Sync via onReorder-Prop)
 │   │   ├── RoutineEditModal.tsx  # Felder: Name, Beschreibung, Wochentage, Uhrzeit (type=time, time: string|null), Pillar-Selektor (4 farbige Chips + Keine); Toast nach Speichern (erster aktiver Wochentag)
 │   │   ├── WaterTracker.tsx
 │   │   ├── MoodCheck.tsx
@@ -119,7 +120,8 @@ apps/web/src/
 │   │   ├── Card.tsx
 │   │   ├── Input.tsx
 │   │   ├── FavoriteButton.tsx # SVG-Herz, 44×44 Touch-Target, Pillar-Farbe
-│   │   └── FilterBottomSheet.tsx # Generisches Filter-Sheet (Draft-State, CSS-Transition, Apply/Reset/Backdrop-Close)
+│   │   ├── FilterBottomSheet.tsx # Generisches Filter-Sheet (Draft-State, CSS-Transition, Apply/Reset/Backdrop-Close)
+│   │   └── FeedbackModal.tsx  # Bottom-Sheet: Bug/Idee/Lob Chips + Textarea; schreibt in feedback-Tabelle; geöffnet via SettingsPage
 │   └── AdminRoute.tsx         # Role-Guard (admin/moderator)
 ├── hooks/
 │   ├── useTodayPillars.ts     # 4 parallele Supabase-Count-Queries (wod_history/stretching_logs/meditation_logs/routine_logs) → TodayPillars { workout, routine, stretching, meditation, total }; staleTime 5 min
@@ -173,6 +175,7 @@ apps/web/src/
   /meditation
   /favorites
   /settings
+  /profile
 /admin → AdminLayout (AdminRoute: role admin/moderator)
   /admin
   /admin/users
@@ -200,6 +203,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | Routing | React Router | 7.14.2 |
 | State | Zustand | 5.0.13 |
 | Async State | TanStack React Query | 5.100.9 |
+| Drag & Drop | @dnd-kit/core + @dnd-kit/sortable | — |
 | Backend | Supabase JS | 2.105.3 |
 | i18n | i18next + react-i18next | 26.0.8 / 17.0.6 |
 | Monorepo | Turborepo | 2.9.9 |
@@ -242,6 +246,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | `push_subscriptions` | Web Push Subscription JSON pro User |
 | `push_preferences` | Reminder-Einstellungen (morning/evening/wod/inactivity + Zeiten) |
 | `favorites` | Favoriten pro Nutzer: `content_type` (wod \| stretching_routine \| meditation), `content_id` (string); DDL als Kommentar in `useFavorites.ts` |
+| `feedback` | User-Feedback: `category` (bug \| idee \| lob), `message` text; RLS: User kann nur eigene Einträge einfügen + lesen (Migration 014) |
 
 DDL + RLS für `wods` und `wod_history`: `supabase/seed-wods.sql`
 
@@ -448,6 +453,7 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 | **Session H** | **Rebrand + UX-Polish** — Home-Nav-Item umbenennen (de: Mein Tag / en: My Day / es: Mi Día); Routine-Pillar umbenennen zu Ritual/Rituale (i18n, RoutinePage-Titel, RoutineEditModal, RoutineList-Vorschläge-Label); **Swipe-Navigation** in `AppShell` (TouchEvent 50px-Threshold, 30px vertikale Drift-Grenze, `active_pillars`-aware Route-Reihenfolge); **Dismiss-Funktion** für Vorschlags-Items in `RoutineList` (localStorage Key: `dismissed_suggestions`); **MoodCheck** von `RoutinePage` → `HomePage` (zwischen `TodayPillarTracker` und `AdaptiveSuggestion`); **WaterTracker** aus `RoutinePage` entfernt (UI only, DB unberührt) |
 | **Session I** | **Nav-Reihenfolge** — `BottomNav` + `Sidebar` + `AppShell MAIN_ROUTES`: neue Reihenfolge Mein Tag · Ritual · Workout · Stretching · Meditation; **Settings aus BottomNav entfernt** (jetzt nur noch im Mobile-Header als Icon); **Mobile-Header-Redesign** (52px, bg: `--color-bg-card` + border; Links: CarveOut-Logo + Name; Rechts: Vorname (max-[360px]:hidden) · Mute · Favoriten · Settings-Link); **TodayPillarTracker** — Header-Label geändert zu "Aktueller Stand von heute · N von 4" (de/en/es); Chip-Reihenfolge: Ritual · Workout · Stretching · Meditation |
 | **Session G2** | **Wizard-Framework + Custom Workouts** — `lib/customWorkouts.ts` (CustomWorkout + CustomSession Typen, localStorage CRUD); `wizard/WizardShell` (generischer 3-Step Full-Screen Wizard, Progress-Bars, canNext-Guard); `wizard/ExerciseListEditor` (reorderable Liste mit ↑/↓/✕ + Add-Input); **FreeTimerWizard** (3-Step: Modus → Übungen → Konfiguration/Name, speichert benannte Workouts, triggert TimerView); **SessionCreator** (3-Step: Auswählen → Reihenfolge → Name, erstellt virtuelle StretchingRoutine); **WarmupTimer** (Bottom-Sheet, Presets 3/5/10 min + manuell, Countdown-Ring, Wake Lock, Gong + Vibrate + Toast); `WorkoutPage` "Eigene Workouts"-Sektion; `StretchingPage` "Eigene Sessions"-Sektion; `WodDetail` Warmup-Timer-Button |
+| **Session J** | **Bugfixes + neue Features** — Bug MoodCheck: localStorage-Cache + useEffect-Sync für async Supabase-Daten; **Drag & Drop RoutineList** (`@dnd-kit/core` + `@dnd-kit/sortable`, `sort_order` Supabase-Sync); Bug SessionCreator Step 0: Loading/Empty-State; **FreeTimerWizard** Schrittgröße 1 min (1–120 min), neuer `variant='adhoc'` (4. Schritt: Warmup-Frage); **Timer-Tab idle-Zustand** ("Timer konfigurieren"-Button öffnet Ad-hoc-Wizard); **ProfilePage** (`/profile`: Name + Sprache bearbeiten, Passwort-Reset via E-Mail, Abo-Placeholder, Abmelden); **FeedbackModal** (`components/ui/FeedbackModal.tsx`: Bug/Idee/Lob Chips + Textarea, schreibt in `feedback`-Tabelle); SettingsPage Feedback-Button; AppShell Vorname als Link zu `/profile`; **Migration 013**: `user_profiles` RLS defensive Re-Apply + `handle_new_user()`-Trigger; **Migration 014**: `feedback`-Tabelle mit RLS |
 
 ### Offen / Roadmap
 
@@ -471,4 +477,4 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session G2: Wizard-Framework, FreeTimerWizard, SessionCreator, WarmupTimer)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session J: Bugfixes, DnD, Ad-hoc Timer, ProfilePage, FeedbackModal)*
