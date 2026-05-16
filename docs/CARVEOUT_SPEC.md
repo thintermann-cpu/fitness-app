@@ -80,12 +80,12 @@ apps/web/src/
 │       └── AdminPlaceholderPage.tsx
 ├── components/
 │   ├── layout/
-│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header: Mute-Button + Favoriten-Button; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge)
-│   │   ├── BottomNav.tsx      # Tab-Navigation, hebt aktiven Pillar hervor (versteckt ab lg); erstes Item: Home `/` (de: Mein Tag, en: My Day, es: Mi Día); Routine-Item (de: Rituale, en: Rituals, es: Rituales)
-│   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint); erstes Item: Home `/`; isActive-Fix für exakten `/`-Match
+│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header (52px, bg: --color-bg-card + border): Links: CarveOut-Logo + Name; Rechts: Vorname (max-[360px]:hidden) · Mute · Favoriten · Settings-Link; MAIN_ROUTES-Reihenfolge: / · /routine · /workout · /stretching · /meditation; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge)
+│   │   ├── BottomNav.tsx      # Tab-Navigation, hebt aktiven Pillar hervor (versteckt ab lg); Reihenfolge: Home · Ritual · Workout · Stretching · Meditation (Settings entfernt); erstes Item: Home `/` (de: Mein Tag, en: My Day, es: Mi Día); Routine-Item (de: Rituale, en: Rituals, es: Rituales)
+│   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint); Reihenfolge: Home · Ritual · Workout · Stretching · Meditation; erstes Item: Home `/`; isActive-Fix für exakten `/`-Match
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
 │   ├── home/
-│   │   ├── TodayPillarTracker.tsx  # 4 Chips (Done/Open) aus useTodayPillars; dreisprachig
+│   │   ├── TodayPillarTracker.tsx  # 4 Chips (Done/Open) aus useTodayPillars; dreisprachig; Header-Label: "Aktueller Stand von heute · N von 4" (de/en/es); Chip-Reihenfolge: Ritual · Workout · Stretching · Meditation
 │   │   ├── AdaptiveSuggestion.tsx  # Empfehlungskarte nach Tageszeit; Pillar-Farbe + CTA → Navigation
 │   │   ├── TodaysWod.tsx           # Deterministischer Tages-WOD aus Editor's-Pick-Pool (pickByDate); staleTime 1 h
 │   │   ├── WeekStats.tsx           # Session-Counts letzte 7 Tage: Workout / Stretching / Meditation (3 parallele Count-Queries)
@@ -438,6 +438,7 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 | **Session F** | **Editor's Pick** (`is_editors_pick` auf `wods`, Migration 010, lokaler Fallback via `EDITORS_PICK_IDS`; `AdminWodsPage` mit Toggle); **Random-WOD-Picker** (Würfel-Button in `WodList`, `pickRandomWod()` mit allen aktiven Filtern, Toast); **FilterBottomSheet** (`components/ui/FilterBottomSheet.tsx`; Draft-State, Apply/Reset/Backdrop-Close; ersetzt Chip-Reihen in `WodList`/`StretchingPage`/`MeditationPage`; `WodList`: Typ/Kategorie/Schwierigkeit/Editor's Pick/Dauer Von-Bis/Equipment Exclude); **Yoga-Subcategory** (`subcategory` auf `stretching_exercises`+`stretching_routines`, Migration 011, `StretchingPage` filtert via `r.goal === filter \|\| r.subcategory === filter`); **Routine linked_pillar** (Migration 012, `RoutineEditModal` Pillar-Selektor, `RoutineItem` farbige Left-Border + Pillar-Navigation); **Workbox sw.ts** (`src/sw.ts` via `vite-plugin-pwa injectManifest`; precaching + NetworkFirst/StaleWhileRevalidate; `public/sw.js` gelöscht); **Toast-System** (`toastStore` + `useToast.ts`, kein Package); **Ad-hoc Timer-Log** (`TimerView.adHocLog`-Prop); **Freie Meditation** (`AdHocMeditationTimer`, `view=free_meditation` in `MeditationPage`) |
 | **Session G** | **Dashboard-Familie** — Route `/` zeigt `HomePage` (kein Redirect mehr auf `/workout`); `TodayPillarTracker` (4 Chips Done/Open via `useTodayPillars`); `AdaptiveSuggestion` (Empfehlungskarte nach Tageszeit, `adaptiveSuggestion.ts`); `TodaysWod` (deterministisch aus Editor's-Pick-Pool via `pickByDate`); `WeekStats` (Session-Counts Workout/Stretching/Meditation letzte 7 Tage); `RecentActivity` (letzte 3 WOD-Einträge, relatives Datum); BottomNav + Sidebar: Home-Item als erstes Item; Sidebar `isActive`-Fix für `/` |
 | **Session H** | **Rebrand + UX-Polish** — Home-Nav-Item umbenennen (de: Mein Tag / en: My Day / es: Mi Día); Routine-Pillar umbenennen zu Ritual/Rituale (i18n, RoutinePage-Titel, RoutineEditModal, RoutineList-Vorschläge-Label); **Swipe-Navigation** in `AppShell` (TouchEvent 50px-Threshold, 30px vertikale Drift-Grenze, `active_pillars`-aware Route-Reihenfolge); **Dismiss-Funktion** für Vorschlags-Items in `RoutineList` (localStorage Key: `dismissed_suggestions`); **MoodCheck** von `RoutinePage` → `HomePage` (zwischen `TodayPillarTracker` und `AdaptiveSuggestion`); **WaterTracker** aus `RoutinePage` entfernt (UI only, DB unberührt) |
+| **Session I** | **Nav-Reihenfolge** — `BottomNav` + `Sidebar` + `AppShell MAIN_ROUTES`: neue Reihenfolge Mein Tag · Ritual · Workout · Stretching · Meditation; **Settings aus BottomNav entfernt** (jetzt nur noch im Mobile-Header als Icon); **Mobile-Header-Redesign** (52px, bg: `--color-bg-card` + border; Links: CarveOut-Logo + Name; Rechts: Vorname (max-[360px]:hidden) · Mute · Favoriten · Settings-Link); **TodayPillarTracker** — Header-Label geändert zu "Aktueller Stand von heute · N von 4" (de/en/es); Chip-Reihenfolge: Ritual · Workout · Stretching · Meditation |
 
 ### Offen / Roadmap
 
@@ -463,4 +464,4 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session H: Rebrand Ritual, Swipe-Nav, Dismiss, MoodCheck-Verschiebung)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session I: Nav-Reihenfolge, Header-Redesign, TodayPillarTracker)*
