@@ -2,14 +2,15 @@ import { useRef } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
+import { LogoIcon } from '../ui/LogoIcon'
 import { useFavorites } from '../../hooks/useFavorites'
 import { useAudioStore } from '../../store/audioStore'
 import { useAuthStore } from '../../store/authStore'
 import { ToastContainer } from '../ui/ToastContainer'
 
-const MAIN_ROUTES = ['/', '/workout', '/routine', '/stretching', '/meditation']
+const MAIN_ROUTES = ['/', '/routine', '/workout', '/stretching', '/meditation']
 const ROUTE_PILLAR: Record<string, string | null> = {
-  '/': null, '/workout': 'workout', '/routine': null,
+  '/': null, '/routine': null, '/workout': 'workout',
   '/stretching': 'stretching', '/meditation': 'meditation',
 }
 
@@ -76,6 +77,7 @@ export function AppShell() {
   const { profile } = useAuthStore()
   const touchX      = useRef(0)
   const touchY      = useRef(0)
+  const firstName   = profile?.display_name?.trim().split(' ')[0] ?? ''
 
   const activePillars = profile?.active_pillars?.length
     ? profile.active_pillars
@@ -108,13 +110,41 @@ export function AppShell() {
 
       {/* Content area: offset by sidebar width on desktop */}
       <div className="flex flex-col flex-1 lg:pl-[240px]">
-        {/* Mobile-only top bar with favorites shortcut */}
+        {/* Mobile header */}
         <div
-          className="lg:hidden flex items-center justify-end gap-1 px-3 border-b border-white/5 sticky top-0 z-20"
-          style={{ height: 44, backgroundColor: 'var(--color-bg)' }}
+          className="lg:hidden flex items-center px-3 border-b sticky top-0 z-20"
+          style={{ height: 52, backgroundColor: 'var(--color-bg-card)', borderColor: 'rgba(255,255,255,0.08)' }}
         >
-          <MuteHeaderBtn />
-          <FavoritesHeaderBtn />
+          {/* Left: logo */}
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <LogoIcon className="w-5 h-5 flex-shrink-0" style={{ color: '#E8642A' }} />
+            <span className="font-black text-sm leading-none" style={{ color: '#E8642A' }}>Carve</span>
+            <span className="font-black text-sm leading-none" style={{ color: 'var(--color-text)' }}>Out</span>
+          </div>
+          {/* Right: vorname + icons */}
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            {firstName && (
+              <span
+                className="max-[360px]:hidden text-xs px-1 truncate max-w-[72px]"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                {firstName}
+              </span>
+            )}
+            <MuteHeaderBtn />
+            <FavoritesHeaderBtn />
+            <Link
+              to="/settings"
+              className="flex items-center justify-center"
+              style={{
+                minWidth: 44, minHeight: 44,
+                color: location.pathname === '/settings' ? '#E8642A' : 'rgba(255,255,255,0.4)',
+              }}
+              aria-label="Einstellungen"
+            >
+              <span className="text-xl leading-none">⚙️</span>
+            </Link>
+          </div>
         </div>
 
         <main

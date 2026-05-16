@@ -4,16 +4,16 @@ import { useAuthStore } from '../../store/authStore'
 type Lang = 'de' | 'en' | 'es'
 
 const PILLARS = [
-  { id: 'workout',    label: { de: 'Training',       en: 'Workout',       es: 'Entrenamiento' }, emoji: '💪', color: '#E8642A' },
   { id: 'routine',    label: { de: 'Ritual',          en: 'Ritual',        es: 'Ritual'        }, emoji: '📋', color: '#4A90D9' },
+  { id: 'workout',    label: { de: 'Training',        en: 'Workout',       es: 'Entrenamiento' }, emoji: '💪', color: '#E8642A' },
   { id: 'stretching', label: { de: 'Stretch & Yoga',  en: 'Stretch & Yoga', es: 'Estiramiento'  }, emoji: '🤸', color: '#7BC67E' },
   { id: 'meditation', label: { de: 'Meditation',      en: 'Meditation',    es: 'Meditación'    }, emoji: '🧘', color: '#9B7FD4' },
 ] as const
 
 const HEADER: Record<Lang, (n: number) => string> = {
-  de: (n) => `Heute · ${n} von 4 Pillars`,
-  en: (n) => `Today · ${n} of 4 pillars`,
-  es: (n) => `Hoy · ${n} de 4 pilares`,
+  de: (n) => `Aktueller Stand von heute · ${n} von 4`,
+  en: (n) => `Today's overview · ${n} of 4`,
+  es: (n) => `Estado de hoy · ${n} de 4`,
 }
 
 export function TodayPillarTracker() {
