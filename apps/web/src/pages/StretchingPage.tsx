@@ -7,6 +7,12 @@ import { RoutineDetail } from '../components/stretching/RoutineDetail'
 import { GuidedSession } from '../components/stretching/GuidedSession'
 import { StretchingHistory } from '../components/stretching/StretchingHistory'
 import { FilterBottomSheet } from '../components/ui/FilterBottomSheet'
+import { SessionCreator } from '../components/stretching/SessionCreator'
+import {
+  loadCustomSessions,
+  deleteCustomSession,
+  type CustomSession,
+} from '../lib/customWorkouts'
 
 const PILLAR_COLOR = '#7BC67E'
 
@@ -103,6 +109,8 @@ export function StretchingPage() {
   const [filterOpen, setFilterOpen] = useState(false)
   const [draftGoal, setDraftGoal] = useState<GoalFilter>('all')
   const [draftDur, setDraftDur] = useState<DurFilter>(0)
+  const [creatorOpen, setCreatorOpen] = useState(false)
+  const [savedSessions, setSavedSessions] = useState<CustomSession[]>(() => loadCustomSessions())
 
   const activeFilterCount = (goalFilter !== 'all' ? 1 : 0) + (durFilter !== 0 ? 1 : 0)
 
@@ -145,6 +153,17 @@ export function StretchingPage() {
       setSelectedRoutine(null)
       setView('list')
     }
+  }
+
+  const handleCreatorStart = (virtualRoutine: StretchingRoutine) => {
+    setSavedSessions(loadCustomSessions())
+    setSelectedRoutine(virtualRoutine)
+    setView('session')
+  }
+
+  const handleDeleteSession = (id: string) => {
+    deleteCustomSession(id)
+    setSavedSessions(loadCustomSessions())
   }
 
   // Detail / Session views (full-screen, no tab bar)
@@ -205,6 +224,78 @@ export function StretchingPage() {
       <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
         {tab === 'routines' && (
           <>
+            {/* Custom sessions section */}
+            <div className="px-4 pt-3 pb-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+              <div className="flex items-center justify-between mb-2.5">
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  Eigene Sessions
+                </span>
+                <button
+                  onClick={() => { setSavedSessions(loadCustomSessions()); setCreatorOpen(true) }}
+                  className="text-xs font-bold px-2.5 py-1 rounded-lg"
+                  style={{ backgroundColor: `${PILLAR_COLOR}20`, color: PILLAR_COLOR }}
+                >
+                  + Neu
+                </button>
+              </div>
+              {savedSessions.length === 0 ? (
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  Noch keine gespeicherten Sessions.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {savedSessions.map((s) => (
+                    <div
+                      key={s.id}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
+                      style={{ backgroundColor: 'var(--color-bg-card)' }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
+                          {s.name}
+                        </p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                          {s.exerciseIds.length} Übungen
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const virtualRoutine: StretchingRoutine = {
+                            id:           `custom-${s.id}`,
+                            name:         s.name,
+                            description:  '',
+                            goal:         'custom',
+                            difficulty:   'medium',
+                            duration_min: Math.max(5, Math.ceil((s.exerciseIds.length * 35) / 60)),
+                            exercise_ids: s.exerciseIds,
+                            subcategory:  null,
+                          }
+                          setSelectedRoutine(virtualRoutine)
+                          setView('session')
+                        }}
+                        className="text-xs font-bold px-2.5 py-1.5 rounded-lg flex-shrink-0"
+                        style={{ backgroundColor: `${PILLAR_COLOR}20`, color: PILLAR_COLOR }}
+                        aria-label="Starten"
+                      >
+                        ▶
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSession(s.id)}
+                        className="text-xs flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg"
+                        style={{ color: 'rgba(255,255,255,0.3)' }}
+                        aria-label="Löschen"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Filter button bar */}
             <div className="px-4 pt-3 pb-2 flex items-center justify-between">
               <span className="text-xs text-[var(--color-text-muted)]">
@@ -340,6 +431,13 @@ export function StretchingPage() {
           </div>
         </div>
       </FilterBottomSheet>
+
+      <SessionCreator
+        isOpen={creatorOpen}
+        onClose={() => { setCreatorOpen(false); setSavedSessions(loadCustomSessions()) }}
+        exercises={exercises}
+        onStart={handleCreatorStart}
+      />
     </div>
   )
 }

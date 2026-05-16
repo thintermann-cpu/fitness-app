@@ -7,8 +7,15 @@ import { WodList } from '../components/workout/WodList'
 import { WodDetail } from '../components/workout/WodDetail'
 import { TimerView } from '../components/workout/TimerView'
 import { WodHistoryList } from '../components/workout/WodHistoryList'
+import { FreeTimerWizard } from '../components/workout/FreeTimerWizard'
+import {
+  loadCustomWorkouts,
+  deleteCustomWorkout,
+  type CustomWorkout,
+} from '../lib/customWorkouts'
 
 type Tab = 'wods' | 'timer' | 'history'
+type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'wods',    label: 'WODs' },
@@ -38,9 +45,27 @@ export function WorkoutPage() {
   const navigate    = useNavigate()
   const { profile } = useAuthStore()
 
-  const [tab, setTab]             = useState<Tab>('wods')
-  const [location, setLocation]   = useState<WorkoutLocation | null>(getSavedLocation())
+  const [tab, setTab]               = useState<Tab>('wods')
+  const [location, setLocation]     = useState<WorkoutLocation | null>(getSavedLocation())
+  const [wizardOpen, setWizardOpen] = useState(false)
+  const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number } | null>(null)
+  const [savedWorkouts, setSavedWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
+
+  function handleWizardStart(mode: TimerMode, minutes: number) {
+    setTimerConfig({ mode, minutes })
+    setTab('timer')
+  }
+
+  function handleDeleteSaved(id: string) {
+    deleteCustomWorkout(id)
+    setSavedWorkouts(loadCustomWorkouts())
+  }
+
+  function handleStartSaved(w: CustomWorkout) {
+    setTimerConfig({ mode: w.mode, minutes: w.minutes })
+    setTab('timer')
+  }
 
   function handleLocationSelect(loc: WorkoutLocation) {
     const next = location === loc ? null : loc
@@ -97,6 +122,66 @@ export function WorkoutPage() {
       <div className="flex-1 px-4 py-4 pb-24 max-w-lg mx-auto w-full">
         {tab === 'wods' && (
           <>
+            {/* Custom workouts section */}
+            <div className="mb-5">
+              <div className="flex items-center justify-between mb-2.5">
+                <span
+                  className="text-[10px] font-semibold uppercase tracking-wider"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  Eigene Workouts
+                </span>
+                <button
+                  onClick={() => { setSavedWorkouts(loadCustomWorkouts()); setWizardOpen(true) }}
+                  className="text-xs font-bold px-2.5 py-1 rounded-lg"
+                  style={{ backgroundColor: '#E8642A18', color: '#E8642A' }}
+                >
+                  + Neu
+                </button>
+              </div>
+              {savedWorkouts.length === 0 ? (
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  Noch keine gespeicherten Workouts.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {savedWorkouts.map((w) => (
+                    <div
+                      key={w.id}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
+                      style={{ backgroundColor: 'var(--color-bg-card)' }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
+                          {w.name}
+                        </p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                          {w.mode.toUpperCase()} · {w.minutes} min
+                          {w.exercises.length > 0 ? ` · ${w.exercises.length} Übungen` : ''}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleStartSaved(w)}
+                        className="text-xs font-bold px-2.5 py-1.5 rounded-lg flex-shrink-0"
+                        style={{ backgroundColor: '#E8642A20', color: '#E8642A' }}
+                        aria-label="Starten"
+                      >
+                        ▶
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSaved(w.id)}
+                        className="text-xs flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg"
+                        style={{ color: 'rgba(255,255,255,0.3)' }}
+                        aria-label="Löschen"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Location selector */}
             <div className="flex gap-2 mb-4">
               {LOCATIONS.map((loc) => (
@@ -124,11 +209,21 @@ export function WorkoutPage() {
         )}
         {tab === 'timer' && (
           <div className="py-4">
-            <TimerView adHocLog />
+            <TimerView
+              adHocLog
+              initialMode={timerConfig?.mode}
+              initialMinutes={timerConfig?.minutes}
+            />
           </div>
         )}
         {tab === 'history' && <WodHistoryList />}
       </div>
+
+      <FreeTimerWizard
+        isOpen={wizardOpen}
+        onClose={() => { setWizardOpen(false); setSavedWorkouts(loadCustomWorkouts()) }}
+        onStart={handleWizardStart}
+      />
     </div>
   )
 }

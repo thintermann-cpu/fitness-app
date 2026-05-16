@@ -8,6 +8,7 @@ import { TimerView } from './TimerView'
 import { ScoreInput } from './ScoreInput'
 import { WodHistoryList } from './WodHistoryList'
 import { FavoriteButton } from '../ui/FavoriteButton'
+import { WarmupTimer } from './WarmupTimer'
 
 type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
@@ -101,10 +102,11 @@ export function WodDetail({ wodName, onBack }: Props) {
   const lang = useAuthStore((s) => s.profile?.language ?? 'de')
   const { data: wod, isLoading } = useWod(wodName)
   const { personalBest, addEntry } = useWodHistory(wodName)
-  const [showTimer, setShowTimer]     = useState(false)
-  const [showScore, setShowScore]     = useState(false)
-  const [showHistory, setShowHistory] = useState(false)
-  const [showWarmup, setShowWarmup]   = useState(false)
+  const [showTimer, setShowTimer]           = useState(false)
+  const [showScore, setShowScore]           = useState(false)
+  const [showHistory, setShowHistory]       = useState(false)
+  const [showWarmup, setShowWarmup]         = useState(false)
+  const [showWarmupTimer, setShowWarmupTimer] = useState(false)
 
   if (isLoading) {
     return (
@@ -232,6 +234,14 @@ export function WodDetail({ wodName, onBack }: Props) {
                 </div>
               </div>
             ))}
+            <button
+              onClick={() => setShowWarmupTimer(true)}
+              className="mt-1 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl transition-colors"
+              style={{ backgroundColor: '#E8642A18', color: '#E8642A' }}
+            >
+              <span>⏱</span>
+              <span>Warmup-Timer starten</span>
+            </button>
           </div>
         )}
       </div>
@@ -322,6 +332,11 @@ export function WodDetail({ wodName, onBack }: Props) {
           setShowScore(false)
         }}
         isPending={addEntry.isPending}
+      />
+
+      <WarmupTimer
+        isOpen={showWarmupTimer}
+        onClose={() => setShowWarmupTimer(false)}
       />
     </div>
   )
