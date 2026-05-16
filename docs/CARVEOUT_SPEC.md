@@ -57,12 +57,14 @@ apps/web/src/
 ├── styles/tokens.css          # CSS Custom Properties (Pillar-Farben, Spacing, Radius)
 ├── lib/
 │   ├── supabase.ts            # Supabase-Client + isSupabaseConfigured()
-│   └── push.ts                # Push Notification Helpers (subscribeToPush, unsubscribeFromPush)
+│   ├── push.ts                # Push Notification Helpers (subscribeToPush, unsubscribeFromPush)
+│   └── adaptiveSuggestion.ts  # Pure Funktion getSuggestedPillar(): Pillar — Empfehlung nach Uhrzeit (05–10 routine, 10–17 workout, 17–21 stretching, sonst meditation)
 ├── store/
 │   ├── authStore.ts           # Zustand-Store: user, session, loading, profile; signIn/signUp/signOut/initialize/fetchProfile/updateProfile; WorkoutLocation + DEFAULT_EQUIPMENT_BY_LOCATION + equipment_by_location
 │   ├── audioStore.ts          # Zustand-Store (persist: 'audio-mute'): isMuted: boolean, toggleMute()
 │   └── toastStore.ts          # Zustand-Store: toasts[], addToast(), removeToast(); ToastType: success|error|info|warning; max. 3 gleichzeitig
 ├── pages/
+│   ├── HomePage.tsx               # Dashboard: Greeting + i18n-Datum, TodayPillarTracker, AdaptiveSuggestion, TodaysWod, WeekStats, RecentActivity
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
 │   ├── OnboardingPage.tsx     # Pillar-Auswahl, Primary Pillar, Theme
@@ -79,9 +81,15 @@ apps/web/src/
 ├── components/
 │   ├── layout/
 │   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header: Mute-Button + Favoriten-Button
-│   │   ├── BottomNav.tsx      # Tab-Navigation, hebt aktiven Pillar hervor (versteckt ab lg)
-│   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint)
+│   │   ├── BottomNav.tsx      # Tab-Navigation, hebt aktiven Pillar hervor (versteckt ab lg); erstes Item: Home `/` (de: Start, en: Home, es: Inicio)
+│   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint); erstes Item: Home `/`; isActive-Fix für exakten `/`-Match
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
+│   ├── home/
+│   │   ├── TodayPillarTracker.tsx  # 4 Chips (Done/Open) aus useTodayPillars; dreisprachig
+│   │   ├── AdaptiveSuggestion.tsx  # Empfehlungskarte nach Tageszeit; Pillar-Farbe + CTA → Navigation
+│   │   ├── TodaysWod.tsx           # Deterministischer Tages-WOD aus Editor's-Pick-Pool (pickByDate); staleTime 1 h
+│   │   ├── WeekStats.tsx           # Session-Counts letzte 7 Tage: Workout / Stretching / Meditation (3 parallele Count-Queries)
+│   │   └── RecentActivity.tsx      # Letzte 3 WOD-Einträge aus wod_history; relatives Datum (Heute/Gestern/vor N Tagen)
 │   ├── workout/
 │   │   ├── WodCard.tsx
 │   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); FilterBottomSheet (Typ, Kategorie, Schwierigkeit, Editor's Pick, Dauer Von-Bis, Equipment Exclude); Würfel-Button für Random-WOD
@@ -107,6 +115,7 @@ apps/web/src/
 │   │   └── FilterBottomSheet.tsx # Generisches Filter-Sheet (Draft-State, CSS-Transition, Apply/Reset/Backdrop-Close)
 │   └── AdminRoute.tsx         # Role-Guard (admin/moderator)
 ├── hooks/
+│   ├── useTodayPillars.ts     # 4 parallele Supabase-Count-Queries (wod_history/stretching_logs/meditation_logs/routine_logs) → TodayPillars { workout, routine, stretching, meditation, total }; staleTime 5 min
 │   ├── useRoutines.ts         # CRUD Routinen
 │   ├── useRoutineLogs.ts      # Completion-Logs
 │   ├── useDailyLog.ts         # Tages-Mood, Wasser
@@ -148,6 +157,7 @@ apps/web/src/
 ```
 /login, /register              → AuthLayout (kein Auth nötig)
 / → AppShell (ProtectedLayout)
+  /                            → HomePage (Dashboard — kein Redirect mehr auf /workout)
   /onboarding
   /workout
   /workout/:wodName
@@ -426,6 +436,7 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 | **Session D: Polish** | Duration-Filter-Chips in `WodList` (Alle/≤15/≤20/≤30 min) + `StretchingPage` (Alle/≤5/≤10/≤20 min); WOD-Suche sessionStorage-persistent (Key: `wod_search`); Push-Fehlerbehandlung (`pushError` State in `SettingsPage`); Optimistic Updates: `useRoutines` (update+delete) + `useTodos` (complete); 7 Duplikat-WODs aus lokalem JSON bereinigt (796 lokal / 798 Supabase) |
 | **Session E: Polish II** | `audioStore` (Zustand persist: `isMuted`/`toggleMute`), Mute-Button im Mobile-Header (`AppShell`); Vibration-Feedback in `TimerView`/`GuidedSession`/`MeditationSession`/`CustomTimer`; `RoutineEditModal` Uhrzeit-Feld (`time: string\|null`); `FavoriteButton` in `WodDetail`; `MeditationPage` `duration_min > 0` Guard; `FavoriteButton` fix: Sichtbarkeit + Tag-Overflow-Schutz auf Cards |
 | **Session F** | **Editor's Pick** (`is_editors_pick` auf `wods`, Migration 010, lokaler Fallback via `EDITORS_PICK_IDS`; `AdminWodsPage` mit Toggle); **Random-WOD-Picker** (Würfel-Button in `WodList`, `pickRandomWod()` mit allen aktiven Filtern, Toast); **FilterBottomSheet** (`components/ui/FilterBottomSheet.tsx`; Draft-State, Apply/Reset/Backdrop-Close; ersetzt Chip-Reihen in `WodList`/`StretchingPage`/`MeditationPage`; `WodList`: Typ/Kategorie/Schwierigkeit/Editor's Pick/Dauer Von-Bis/Equipment Exclude); **Yoga-Subcategory** (`subcategory` auf `stretching_exercises`+`stretching_routines`, Migration 011, `StretchingPage` filtert via `r.goal === filter \|\| r.subcategory === filter`); **Routine linked_pillar** (Migration 012, `RoutineEditModal` Pillar-Selektor, `RoutineItem` farbige Left-Border + Pillar-Navigation); **Workbox sw.ts** (`src/sw.ts` via `vite-plugin-pwa injectManifest`; precaching + NetworkFirst/StaleWhileRevalidate; `public/sw.js` gelöscht); **Toast-System** (`toastStore` + `useToast.ts`, kein Package); **Ad-hoc Timer-Log** (`TimerView.adHocLog`-Prop); **Freie Meditation** (`AdHocMeditationTimer`, `view=free_meditation` in `MeditationPage`) |
+| **Session G** | **Dashboard-Familie** — Route `/` zeigt `HomePage` (kein Redirect mehr auf `/workout`); `TodayPillarTracker` (4 Chips Done/Open via `useTodayPillars`); `AdaptiveSuggestion` (Empfehlungskarte nach Tageszeit, `adaptiveSuggestion.ts`); `TodaysWod` (deterministisch aus Editor's-Pick-Pool via `pickByDate`); `WeekStats` (Session-Counts Workout/Stretching/Meditation letzte 7 Tage); `RecentActivity` (letzte 3 WOD-Einträge, relatives Datum); BottomNav + Sidebar: Home-Item als erstes Item; Sidebar `isActive`-Fix für `/` |
 
 ### Offen / Roadmap
 
@@ -447,9 +458,8 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 | **Free-Timer-Wizard** | 3-Step-Flow: Typ → Übungen → Übersicht; eigene Workouts ohne WOD-DB |
 | **Random-WOD-Picker (erweiterbar)** | Aktuell: Würfel-Button in WodList; offen: eigener Screen |
 | **Theme-Switcher** | Mind. Dark/Light; alte HTML-PWA hatte 8 Themes × 8 Accents |
-| **Home-Screen-Widgets** | Today's WOD, Woche-Stats, Recently Done auf Workout-Startansicht |
 | **Virtual/Infinite Scroll** | WodList — Performance bei 798+ Einträgen (aktuell: Pagination + "Load more") |
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session F: Editor's Pick, Random-WOD, FilterBottomSheet, Yoga subcategory, Routine linked_pillar, Workbox sw.ts, Toast-System, Ad-hoc Timer-Log, Freie Meditation)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session G: Dashboard-Familie — HomePage, TodayPillarTracker, AdaptiveSuggestion, TodaysWod, WeekStats, RecentActivity)*
