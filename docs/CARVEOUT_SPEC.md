@@ -13,7 +13,7 @@ Das Produkt basiert auf **4 Pillars** (Domänen), die einzeln freischaltbar sind
 | Pillar | Farbe | Funktion |
 |---|---|---|
 | **Workout** | `#E8642A` Orange | WOD-Datenbank (796 lokale / 798 Supabase CrossFit-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), History, Highscores |
-| **Routine** (My Day) | `#4A90D9` Blau | Tagesroutinen, To-dos, Wochenübersicht, Wassertracker, Mood-Check |
+| **Routine** (Ritual) | `#4A90D9` Blau | Tagesrituale, To-dos, Wochenübersicht; MoodCheck jetzt auf HomePage |
 | **Stretching** | `#7BC67E` Grün | 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync |
 | **Meditation** | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer, Screen Wake Lock, Gong am Session-Ende |
 
@@ -64,12 +64,12 @@ apps/web/src/
 │   ├── audioStore.ts          # Zustand-Store (persist: 'audio-mute'): isMuted: boolean, toggleMute()
 │   └── toastStore.ts          # Zustand-Store: toasts[], addToast(), removeToast(); ToastType: success|error|info|warning; max. 3 gleichzeitig
 ├── pages/
-│   ├── HomePage.tsx               # Dashboard: Greeting + i18n-Datum, TodayPillarTracker, AdaptiveSuggestion, TodaysWod, WeekStats, RecentActivity
+│   ├── HomePage.tsx               # Dashboard: Greeting + i18n-Datum, TodayPillarTracker, MoodCheck (useDailyLog), AdaptiveSuggestion, TodaysWod, WeekStats, RecentActivity
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
 │   ├── OnboardingPage.tsx     # Pillar-Auswahl, Primary Pillar, Theme
 │   ├── WorkoutPage.tsx        # Tabs: WODs / Timer / History
-│   ├── RoutinePage.tsx        # Tabs: Routinen / Todo / Woche
+│   ├── RoutinePage.tsx        # Titel: Rituale; Tabs: Rituale / Todo / Woche (kein WaterTracker, kein MoodCheck)
 │   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); FilterBottomSheet (Goal/Kategorie inkl. Yoga-Subcategory, Dauer)
 │   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5); FilterBottomSheet (Kategorie + Dauer); view=free_meditation (Quick-Select 5/10/20 min via AdHocMeditationTimer)
 │   ├── FavoritesPage.tsx      # Drei Sektionen (Workouts / Stretch & Yoga / Meditationen), URL-Param ?section=
@@ -80,8 +80,8 @@ apps/web/src/
 │       └── AdminPlaceholderPage.tsx
 ├── components/
 │   ├── layout/
-│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header: Mute-Button + Favoriten-Button
-│   │   ├── BottomNav.tsx      # Tab-Navigation, hebt aktiven Pillar hervor (versteckt ab lg); erstes Item: Home `/` (de: Start, en: Home, es: Inicio)
+│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header: Mute-Button + Favoriten-Button; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge)
+│   │   ├── BottomNav.tsx      # Tab-Navigation, hebt aktiven Pillar hervor (versteckt ab lg); erstes Item: Home `/` (de: Mein Tag, en: My Day, es: Mi Día); Routine-Item (de: Rituale, en: Rituals, es: Rituales)
 │   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint); erstes Item: Home `/`; isActive-Fix für exakten `/`-Match
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
 │   ├── home/
@@ -99,7 +99,7 @@ apps/web/src/
 │   │   └── ScoreInput.tsx
 │   ├── routine/
 │   │   ├── RoutineItem.tsx    # farbige Left-Border + Punkt-Indikator bei linked_pillar; Tap → Pillar-Navigation; Bleistift öffnet Edit
-│   │   ├── RoutineList.tsx    # inkl. Routine-Create-Modal (RoutineEditModal)
+│   │   ├── RoutineList.tsx    # inkl. Routine-Create-Modal (RoutineEditModal); Vorschläge-Label "Vorgeschlagene Rituale"; Dismiss-Button pro Vorschlags-Item (localStorage Key: dismissed_suggestions)
 │   │   ├── RoutineEditModal.tsx  # Felder: Name, Beschreibung, Wochentage, Uhrzeit (type=time, time: string|null), Pillar-Selektor (4 farbige Chips + Keine); Toast nach Speichern (erster aktiver Wochentag)
 │   │   ├── WaterTracker.tsx
 │   │   ├── MoodCheck.tsx
@@ -219,7 +219,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | Tabelle | Beschreibung |
 |---|---|
 | `user_profiles` | Nutzer-Metadaten: language, activePillars, primaryPillar, colorTheme, subscriptionStatus, trialEndsAt, **role** (admin/moderator/user), **subscription_status**, **equipment** (string[]), **equipment_by_location** (JSONB: Record\<WorkoutLocation, string[]\>) |
-| `routines` | Routinen eines Nutzers (Name, Beschreibung, Pillar, Uhrzeit, Wochentage, `linked_pillar` VARCHAR NULL — Migration 012) |
+| `routines` | Rituale eines Nutzers (Name, Beschreibung, Pillar, Uhrzeit, Wochentage, `linked_pillar` VARCHAR NULL — Migration 012) |
 | `routine_logs` | Completion-Einträge pro Routine + Datum |
 | `todos` | To-do-Liste pro Nutzer + Datum |
 | `daily_logs` | Tageseinträge: Mood, Wasserkonsum, Notizen |
@@ -437,6 +437,7 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 | **Session E: Polish II** | `audioStore` (Zustand persist: `isMuted`/`toggleMute`), Mute-Button im Mobile-Header (`AppShell`); Vibration-Feedback in `TimerView`/`GuidedSession`/`MeditationSession`/`CustomTimer`; `RoutineEditModal` Uhrzeit-Feld (`time: string\|null`); `FavoriteButton` in `WodDetail`; `MeditationPage` `duration_min > 0` Guard; `FavoriteButton` fix: Sichtbarkeit + Tag-Overflow-Schutz auf Cards |
 | **Session F** | **Editor's Pick** (`is_editors_pick` auf `wods`, Migration 010, lokaler Fallback via `EDITORS_PICK_IDS`; `AdminWodsPage` mit Toggle); **Random-WOD-Picker** (Würfel-Button in `WodList`, `pickRandomWod()` mit allen aktiven Filtern, Toast); **FilterBottomSheet** (`components/ui/FilterBottomSheet.tsx`; Draft-State, Apply/Reset/Backdrop-Close; ersetzt Chip-Reihen in `WodList`/`StretchingPage`/`MeditationPage`; `WodList`: Typ/Kategorie/Schwierigkeit/Editor's Pick/Dauer Von-Bis/Equipment Exclude); **Yoga-Subcategory** (`subcategory` auf `stretching_exercises`+`stretching_routines`, Migration 011, `StretchingPage` filtert via `r.goal === filter \|\| r.subcategory === filter`); **Routine linked_pillar** (Migration 012, `RoutineEditModal` Pillar-Selektor, `RoutineItem` farbige Left-Border + Pillar-Navigation); **Workbox sw.ts** (`src/sw.ts` via `vite-plugin-pwa injectManifest`; precaching + NetworkFirst/StaleWhileRevalidate; `public/sw.js` gelöscht); **Toast-System** (`toastStore` + `useToast.ts`, kein Package); **Ad-hoc Timer-Log** (`TimerView.adHocLog`-Prop); **Freie Meditation** (`AdHocMeditationTimer`, `view=free_meditation` in `MeditationPage`) |
 | **Session G** | **Dashboard-Familie** — Route `/` zeigt `HomePage` (kein Redirect mehr auf `/workout`); `TodayPillarTracker` (4 Chips Done/Open via `useTodayPillars`); `AdaptiveSuggestion` (Empfehlungskarte nach Tageszeit, `adaptiveSuggestion.ts`); `TodaysWod` (deterministisch aus Editor's-Pick-Pool via `pickByDate`); `WeekStats` (Session-Counts Workout/Stretching/Meditation letzte 7 Tage); `RecentActivity` (letzte 3 WOD-Einträge, relatives Datum); BottomNav + Sidebar: Home-Item als erstes Item; Sidebar `isActive`-Fix für `/` |
+| **Session H** | **Rebrand + UX-Polish** — Home-Nav-Item umbenennen (de: Mein Tag / en: My Day / es: Mi Día); Routine-Pillar umbenennen zu Ritual/Rituale (i18n, RoutinePage-Titel, RoutineEditModal, RoutineList-Vorschläge-Label); **Swipe-Navigation** in `AppShell` (TouchEvent 50px-Threshold, 30px vertikale Drift-Grenze, `active_pillars`-aware Route-Reihenfolge); **Dismiss-Funktion** für Vorschlags-Items in `RoutineList` (localStorage Key: `dismissed_suggestions`); **MoodCheck** von `RoutinePage` → `HomePage` (zwischen `TodayPillarTracker` und `AdaptiveSuggestion`); **WaterTracker** aus `RoutinePage` entfernt (UI only, DB unberührt) |
 
 ### Offen / Roadmap
 
@@ -462,4 +463,4 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session G: Dashboard-Familie — HomePage, TodayPillarTracker, AdaptiveSuggestion, TodaysWod, WeekStats, RecentActivity)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session H: Rebrand Ritual, Swipe-Nav, Dismiss, MoodCheck-Verschiebung)*
