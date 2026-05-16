@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
+const MOOD_KEY = 'carveout_mood_today'
 const MOODS = [
   { emoji: '😄', label: 'Super',     color: '#6fcf6f' },
   { emoji: '🙂', label: 'Gut',       color: '#a8d87a' },
@@ -8,6 +9,27 @@ const MOODS = [
   { emoji: '😤', label: 'Gestresst', color: '#e06060' },
 ]
 
+function todayKey(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function readLocal(): { date: string; mood: string; comment: string } | null {
+  try {
+    const raw = localStorage.getItem(MOOD_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function writeLocal(mood: string, comment: string) {
+  try {
+    localStorage.setItem(MOOD_KEY, JSON.stringify({ date: todayKey(), mood, comment }))
+  } catch {}
+}
+
 interface Props {
   mood: string | null
   moodComment: string | null
@@ -15,17 +37,31 @@ interface Props {
 }
 
 export function MoodCheck({ mood, moodComment, onSave }: Props) {
-  const [selected, setSelected] = useState<string | null>(mood)
-  const [comment, setComment] = useState(moodComment ?? '')
-  const [saved, setSaved] = useState(!!mood)
+  // Seed from localStorage immediately, then Supabase overrides via props
+  const cached = readLocal()
+  const todayLocal = cached?.date === todayKey() ? cached : null
+
+  const [selected, setSelected] = useState<string | null>(todayLocal?.mood ?? mood)
+  const [comment,  setComment]  = useState(todayLocal?.comment ?? moodComment ?? '')
+  const [saved,    setSaved]    = useState(!!(todayLocal?.mood ?? mood))
+
+  // Sync when Supabase data arrives (mood prop changes from null → value)
+  useEffect(() => {
+    if (mood && mood !== selected) {
+      setSelected(mood)
+      setComment(moodComment ?? '')
+      setSaved(true)
+    }
+  }, [mood, moodComment]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = () => {
     if (!selected) return
+    writeLocal(selected, comment)
     onSave(selected, comment)
     setSaved(true)
   }
 
-  const savedMood = MOODS.find(m => m.label === mood)
+  const savedMood = MOODS.find(m => m.label === (saved ? selected : null))
 
   return (
     <div
@@ -112,8 +148,8 @@ export function MoodCheck({ mood, moodComment, onSave }: Props) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
           <span style={{ fontSize: 11, color: '#7a7268' }}>
             {savedMood.emoji} {savedMood.label}
-            {moodComment && (
-              <div style={{ fontSize: 10, color: '#5a5248', marginTop: 1 }}>{moodComment}</div>
+            {comment && (
+              <div style={{ fontSize: 10, color: '#5a5248', marginTop: 1 }}>{comment}</div>
             )}
           </span>
           <button

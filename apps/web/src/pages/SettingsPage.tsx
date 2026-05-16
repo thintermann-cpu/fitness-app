@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { supabase } from '../lib/supabase'
 import { subscribeToPush, unsubscribeFromPush, getPushSubscriptionStatus } from '../lib/push'
+import { FeedbackModal } from '../components/ui/FeedbackModal'
 
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
@@ -137,6 +138,7 @@ function SaveButton({
 
 export function SettingsPage() {
   const { profile, updateProfile } = useAuthStore()
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   // ── Profil section state ──
   const [displayName,   setDisplayName]   = useState(profile?.display_name ?? '')
@@ -739,6 +741,22 @@ export function SettingsPage() {
           </div>
         </button>
       </section>
+
+      {/* ── Feedback ── */}
+      <section>
+        <button
+          onClick={() => setFeedbackOpen(true)}
+          className="w-full flex items-center justify-between rounded-2xl px-4 py-3"
+          style={{ backgroundColor: 'var(--color-bg-card)' }}
+        >
+          <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+            💬 Feedback geben
+          </span>
+          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 16 }}>›</span>
+        </button>
+      </section>
+
+      <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </div>
   )
 }

@@ -20,6 +20,7 @@ import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { AdminTasksPage } from './pages/admin/AdminTasksPage'
 import { AdminWodsPage } from './pages/admin/AdminWodsPage'
 import { AdminPlaceholderPage } from './pages/admin/AdminPlaceholderPage'
+import { ProfilePage } from './pages/ProfilePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -87,6 +88,7 @@ function AppContent() {
           <Route path="/meditation"       element={<MeditationPage />} />
           <Route path="/favorites"        element={<FavoritesPage />} />
           <Route path="/settings"         element={<SettingsPage />} />
+          <Route path="/profile"          element={<ProfilePage />} />
         </Route>
       </Route>
 

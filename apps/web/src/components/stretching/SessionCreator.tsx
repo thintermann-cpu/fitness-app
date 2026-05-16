@@ -142,6 +142,18 @@ export function SessionCreator({ isOpen, onClose, exercises, onStart }: Props) {
             )}
           </div>
 
+          {/* Loading / empty state */}
+          {exercises.length === 0 && (
+            <div className="text-center py-8" style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
+              Übungen werden geladen…
+            </div>
+          )}
+          {exercises.length > 0 && grouped.length === 0 && (
+            <div className="text-center py-8" style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
+              Keine Treffer
+            </div>
+          )}
+
           {/* Exercise groups */}
           {grouped.map(([group, exs]) => (
             <div key={group}>

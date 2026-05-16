@@ -93,9 +93,8 @@ export function RoutinePage() {
     return s
   })()
 
-  const handleSwapOrder = (a: Routine, b: Routine) => {
-    update({ id: a.id, sort_order: b.sort_order })
-    update({ id: b.id, sort_order: a.sort_order })
+  const handleReorder = (updates: Array<{ id: string; sort_order: number }>) => {
+    updates.forEach(u => update({ id: u.id, sort_order: u.sort_order }))
   }
 
   const tabs = TABS[lang] ?? TABS.de
@@ -259,7 +258,7 @@ export function RoutinePage() {
               onToggle={(routineId, isCompleted) => toggleLog.mutate({ routineId, isCompleted })}
               onEdit={setEditingRoutine}
               onPillarNavigate={(pillar) => navigate(`/${pillar}`)}
-              onSwapOrder={handleSwapOrder}
+              onReorder={handleReorder}
               onCreateSuggested={create}
               onCreateAll={suggestions => suggestions.forEach(s => create(s))}
               selectedDay={selectedDay}

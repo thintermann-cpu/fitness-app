@@ -8,6 +8,7 @@ import { WodDetail } from '../components/workout/WodDetail'
 import { TimerView } from '../components/workout/TimerView'
 import { WodHistoryList } from '../components/workout/WodHistoryList'
 import { FreeTimerWizard } from '../components/workout/FreeTimerWizard'
+import { WarmupTimer } from '../components/workout/WarmupTimer'
 import {
   loadCustomWorkouts,
   deleteCustomWorkout,
@@ -48,13 +49,20 @@ export function WorkoutPage() {
   const [tab, setTab]               = useState<Tab>('wods')
   const [location, setLocation]     = useState<WorkoutLocation | null>(getSavedLocation())
   const [wizardOpen, setWizardOpen] = useState(false)
+  const [adhocOpen, setAdhocOpen]   = useState(false)
   const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number } | null>(null)
+  const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [savedWorkouts, setSavedWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
 
   function handleWizardStart(mode: TimerMode, minutes: number) {
     setTimerConfig({ mode, minutes })
     setTab('timer')
+  }
+
+  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean) {
+    setTimerConfig({ mode, minutes })
+    if (withWarmup) setShowWarmupTimer(true)
   }
 
   function handleDeleteSaved(id: string) {
@@ -209,11 +217,36 @@ export function WorkoutPage() {
         )}
         {tab === 'timer' && (
           <div className="py-4">
-            <TimerView
-              adHocLog
-              initialMode={timerConfig?.mode}
-              initialMinutes={timerConfig?.minutes}
-            />
+            {timerConfig ? (
+              <>
+                <TimerView
+                  adHocLog
+                  initialMode={timerConfig.mode}
+                  initialMinutes={timerConfig.minutes}
+                />
+                <button
+                  onClick={() => setTimerConfig(null)}
+                  className="mt-4 w-full py-2.5 rounded-xl text-xs"
+                  style={{ color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg-card)' }}
+                >
+                  ← Neu konfigurieren
+                </button>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-5 pt-16 pb-8">
+                <div style={{ fontSize: 48 }}>⏱</div>
+                <p className="text-sm text-center" style={{ color: 'var(--color-text-muted)' }}>
+                  Wähle Modus, Dauer und optionale Übungen für deinen Timer.
+                </p>
+                <button
+                  onClick={() => setAdhocOpen(true)}
+                  className="px-8 py-3.5 rounded-2xl font-bold text-base"
+                  style={{ backgroundColor: '#E8642A', color: 'white' }}
+                >
+                  Timer konfigurieren
+                </button>
+              </div>
+            )}
           </div>
         )}
         {tab === 'history' && <WodHistoryList />}
@@ -223,6 +256,17 @@ export function WorkoutPage() {
         isOpen={wizardOpen}
         onClose={() => { setWizardOpen(false); setSavedWorkouts(loadCustomWorkouts()) }}
         onStart={handleWizardStart}
+        variant="save"
+      />
+      <FreeTimerWizard
+        isOpen={adhocOpen}
+        onClose={() => setAdhocOpen(false)}
+        onStart={handleAdhocStart}
+        variant="adhoc"
+      />
+      <WarmupTimer
+        isOpen={showWarmupTimer}
+        onClose={() => setShowWarmupTimer(false)}
       />
     </div>
   )

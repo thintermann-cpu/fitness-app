@@ -1,4 +1,20 @@
 import { useState } from 'react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { Routine, Category } from '../../hooks/useRoutines'
 
 const DISMISSED_KEY = 'dismissed_suggestions'
@@ -21,7 +37,7 @@ interface Props {
   onToggle: (routineId: string, isCompleted: boolean) => void
   onEdit: (routine: Routine) => void
   onPillarNavigate: (pillar: string) => void
-  onSwapOrder: (a: Routine, b: Routine) => void
+  onReorder: (updates: Array<{ id: string; sort_order: number }>) => void
   onCreateSuggested: (routine: Omit<Routine, 'id'>) => void
   onCreateAll: (routines: Array<Omit<Routine, 'id'>>) => void
   selectedDay: number
@@ -91,13 +107,45 @@ function formatActiveDays(days: number[], lang: Lang, t: DayFormatStrings): stri
   return [...days].sort((a, b) => a - b).map(d => DAY_LABELS[lang][d]).join('/')
 }
 
+interface SortableItemProps {
+  routine: Routine
+  isCompleted: boolean
+  onToggle: () => void
+  onEdit: () => void
+  onPillarNavigate?: () => void
+  isFirst?: boolean
+  isLast?: boolean
+}
+
+function SortableRoutineItem({ routine, ...rest }: SortableItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: routine.id })
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: transition ?? undefined,
+      }}
+    >
+      <RoutineItem
+        {...rest}
+        routine={routine}
+        isDragging={isDragging}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  )
+}
+
 export function RoutineList({
   routines,
   logs,
   onToggle,
   onEdit,
   onPillarNavigate,
-  onSwapOrder,
+  onReorder,
   onCreateSuggested,
   onCreateAll,
   selectedDay,
@@ -110,6 +158,11 @@ export function RoutineList({
   const [activeCategory, setActiveCategory] = useState<Category>('morning')
   const [dismissed, setDismissed] = useState<string[]>(() => getDismissed())
   const t = T[lang] ?? T.de
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+  )
 
   const handleDismiss = (name: string) => {
     const next = [...dismissed, name]
@@ -155,6 +208,16 @@ export function RoutineList({
   const items = getItems(activeCategory)
   const doneCount = items.filter(r => completedIds.has(r.id)).length
   const pct = items.length > 0 ? Math.round((doneCount / items.length) * 100) : 0
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = items.findIndex(r => r.id === active.id)
+    const newIndex = items.findIndex(r => r.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+    const reordered = arrayMove(items, oldIndex, newIndex)
+    onReorder(reordered.map((r, i) => ({ id: r.id, sort_order: i * 10 })))
+  }
 
   return (
     <div>
@@ -314,28 +377,30 @@ export function RoutineList({
       {/* Routine items */}
       {routines.length > 0 && (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {items.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 24, color: '#4a4238', fontSize: 13 }}>
-                {t.noItems}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={items.map(r => r.id)} strategy={verticalListSortingStrategy}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+                {items.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 24, color: '#4a4238', fontSize: 13 }}>
+                    {t.noItems}
+                  </div>
+                ) : (
+                  items.map((routine, idx) => (
+                    <SortableRoutineItem
+                      key={routine.id}
+                      routine={routine}
+                      isCompleted={completedIds.has(routine.id)}
+                      onToggle={() => onToggle(routine.id, completedIds.has(routine.id))}
+                      onEdit={() => onEdit(routine)}
+                      onPillarNavigate={routine.linked_pillar ? () => onPillarNavigate(routine.linked_pillar!) : undefined}
+                      isFirst={idx === 0}
+                      isLast={idx === items.length - 1}
+                    />
+                  ))
+                )}
               </div>
-            ) : (
-              items.map((routine, idx) => (
-                <RoutineItem
-                  key={routine.id}
-                  routine={routine}
-                  isCompleted={completedIds.has(routine.id)}
-                  onToggle={() => onToggle(routine.id, completedIds.has(routine.id))}
-                  onEdit={() => onEdit(routine)}
-                  onPillarNavigate={routine.linked_pillar ? () => onPillarNavigate(routine.linked_pillar!) : undefined}
-                  onMoveUp={idx > 0 ? () => onSwapOrder(routine, items[idx - 1]) : undefined}
-                  onMoveDown={idx < items.length - 1 ? () => onSwapOrder(routine, items[idx + 1]) : undefined}
-                  isFirst={idx === 0}
-                  isLast={idx === items.length - 1}
-                />
-              ))
-            )}
-          </div>
+            </SortableContext>
+          </DndContext>
 
           {/* Progress bar */}
           {items.length > 0 && (

@@ -124,12 +124,13 @@ export function AppShell() {
           {/* Right: vorname + icons */}
           <div className="flex items-center gap-0.5 flex-shrink-0">
             {firstName && (
-              <span
+              <Link
+                to="/profile"
                 className="max-[360px]:hidden text-xs px-1 truncate max-w-[72px]"
-                style={{ color: 'var(--color-text-muted)' }}
+                style={{ color: 'var(--color-text-muted)', textDecoration: 'none' }}
               >
                 {firstName}
-              </span>
+              </Link>
             )}
             <MuteHeaderBtn />
             <FavoritesHeaderBtn />
