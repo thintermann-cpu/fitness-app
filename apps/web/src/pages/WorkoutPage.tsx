@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import type { WorkoutLocation } from '../store/authStore'
@@ -54,6 +54,11 @@ export function WorkoutPage() {
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [savedWorkouts, setSavedWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
+
+  // When returning from WodDetail back to the list, always land on WODs tab
+  useEffect(() => {
+    if (!wodName) setTab('wods')
+  }, [wodName])
 
   function handleWizardStart(mode: TimerMode, minutes: number) {
     setTimerConfig({ mode, minutes })
