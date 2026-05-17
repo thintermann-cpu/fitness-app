@@ -19,9 +19,17 @@ type Tab = 'wods' | 'timer' | 'history'
 type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'wods',    label: 'WODs' },
+  { id: 'wods',    label: 'Workouts' },
   { id: 'timer',   label: 'Timer' },
   { id: 'history', label: 'History' },
+]
+
+const WOD_CATEGORIES: { id: string; label: string }[] = [
+  { id: '',               label: 'Alle' },
+  { id: 'crossfit',       label: 'CrossFit' },
+  { id: 'hiit',           label: 'HIIT' },
+  { id: 'kraft_ausdauer', label: 'Kraft-Ausdauer' },
+  { id: 'kraft_auf_zeit', label: 'Kraft auf Zeit' },
 ]
 
 const LOCATIONS: { id: WorkoutLocation; label: string; emoji: string }[] = [
@@ -52,6 +60,7 @@ export function WorkoutPage() {
   const [adhocOpen, setAdhocOpen]   = useState(false)
   const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number } | null>(null)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
+  const [wodCategory, setWodCategory] = useState('')
   const [savedWorkouts, setSavedWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
 
@@ -213,10 +222,27 @@ export function WorkoutPage() {
                 </button>
               ))}
             </div>
+            {/* Category chips */}
+            <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none">
+              {WOD_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setWodCategory(cat.id)}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                  style={{
+                    backgroundColor: wodCategory === cat.id ? '#E8642A' : 'var(--color-bg-card)',
+                    color: wodCategory === cat.id ? 'white' : 'var(--color-text-muted)',
+                  }}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
             <WodList
               onSelectWod={(name) => navigate(`/workout/${encodeURIComponent(name)}`)}
               equipmentFilter={equipmentForLocation}
               silentMode={silentMode}
+              wodCategory={wodCategory || undefined}
             />
           </>
         )}

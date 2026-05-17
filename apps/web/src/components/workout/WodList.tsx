@@ -21,9 +21,10 @@ interface Props {
   onSelectWod: (wodName: string) => void
   equipmentFilter?: string[]
   silentMode?: boolean
+  wodCategory?: string
 }
 
-export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
+export function WodList({ onSelectWod, equipmentFilter, silentMode, wodCategory }: Props) {
   const lang  = useAuthStore((s) => s.profile?.language ?? 'de')
   const toast = useToast()
 
@@ -92,6 +93,7 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
     minDuration:      minDur || undefined,
     maxDuration:      maxDur || undefined,
     editorsPick:      editorsPick || undefined,
+    wodCategory:      wodCategory || undefined,
   })
 
   const wods    = data?.data  ?? []
@@ -112,6 +114,7 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
       minDuration:      minDur || undefined,
       maxDuration:      maxDur || undefined,
       editorsPick:      editorsPick || undefined,
+      wodCategory:      wodCategory || undefined,
     })
     setPicking(false)
     if (!wod) { toast.info('Keine WODs gefunden'); return }
@@ -136,7 +139,7 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
               sessionStorage.setItem(SEARCH_KEY, v)
               setPage(0)
             }}
-            placeholder="Search WODs…"
+            placeholder="Workouts suchen…"
             className="w-full bg-[var(--color-bg-card)] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[#E8642A] text-sm"
           />
         </div>
@@ -172,7 +175,7 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
 
       {/* Count */}
       <p className="text-xs text-[var(--color-text-subtle)]">
-        {total > 0 ? `${total} WOD${total !== 1 ? 's' : ''}` : isLoading ? '' : 'No WODs found'}
+        {total > 0 ? `${total} Workout${total !== 1 ? 's' : ''}` : isLoading ? '' : 'Keine Workouts gefunden'}
       </p>
 
       {/* List */}
@@ -214,7 +217,7 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode }: Props) {
         onReset={resetFilter}
         pillarColor={PILLAR_COLOR}
         activeCount={activeFilterCount}
-        applyLabel={`${total > 0 ? `${total} ` : ''}WODs anzeigen`}
+        applyLabel={`${total > 0 ? `${total} ` : ''}Workouts anzeigen`}
         resetLabel="Zurücksetzen"
       >
         {/* Type */}

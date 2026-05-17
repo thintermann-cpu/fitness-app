@@ -19,6 +19,7 @@ export interface DbProfile {
   active_pillars: string[]
   equipment: string[]
   equipment_by_location: Record<WorkoutLocation, string[]> | null
+  goal: string | null
   role: 'admin' | 'moderator' | 'user' | null
   subscription_status: string | null
   substitution_enabled: boolean

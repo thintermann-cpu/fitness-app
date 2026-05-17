@@ -3,14 +3,13 @@ import { useWod } from '../../hooks/useWods'
 import type { Wod } from '../../hooks/useWods'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
+import { WOD_TYPE_TO_MODE } from '../../lib/timerLabels'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { TimerView } from './TimerView'
 import { ScoreInput } from './ScoreInput'
 import { WodHistoryList } from './WodHistoryList'
 import { FavoriteButton } from '../ui/FavoriteButton'
 import { WarmupTimer } from './WarmupTimer'
-
-type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
 // ── Equipment color map ───────────────────────────────────────────────────
 const EQUIPMENT_COLORS: Record<string, string> = {
@@ -86,13 +85,6 @@ function getWarmupRoutine(wod: Wod): WarmupExercise[] {
   return WARMUP_ROUTINES.Default
 }
 
-const TYPE_TO_TIMER_MODE: Record<string, TimerMode> = {
-  ForTime: 'fortime',
-  AMRAP: 'amrap',
-  EMOM: 'emom',
-  Tabata: 'tabata',
-}
-
 interface Props {
   wodName: string
   onBack: () => void
@@ -127,7 +119,7 @@ export function WodDetail({ wodName, onBack }: Props) {
     )
   }
 
-  const timerMode = TYPE_TO_TIMER_MODE[wod.type] ?? 'fortime'
+  const timerMode = WOD_TYPE_TO_MODE[wod.type] ?? 'fortime'
 
   return (
     <div className="space-y-5">

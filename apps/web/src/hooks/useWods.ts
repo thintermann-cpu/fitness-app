@@ -13,6 +13,8 @@ export interface Wod {
   estimated_minutes: number
   is_jumping: boolean
   is_editors_pick?: boolean
+  wod_category?: string
+  equipment_tags?: string[]
   runden?: string
   reps?: string
   gewicht?: string
@@ -33,6 +35,7 @@ export interface WodFilters {
   maxDuration?: number
   silentMode?: boolean
   editorsPick?: boolean
+  wodCategory?: string
 }
 
 export const EDITORS_PICK_IDS = new Set<string>([
@@ -167,13 +170,14 @@ export function useWods(filters: WodFilters = {}) {
         return fetchLocalWods(filters)
       }
 
-      let query = supabase.from('wods').select('*', { count: 'exact' })
+      let query = supabase.from('wods').select('*', { count: 'exact' }).eq('is_visible', true)
 
       if (filters.type) query = query.eq('type', filters.type)
       if (filters.category) query = query.eq('category', filters.category)
       if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
       if (filters.search) query = query.ilike('name', `%${filters.search}%`)
       if (filters.editorsPick) query = query.eq('is_editors_pick', true)
+      if (filters.wodCategory) query = query.eq('wod_category', filters.wodCategory)
 
       const page = filters.page ?? 0
       const result = await raceTimeout(

@@ -3,15 +3,10 @@ import { WizardShell } from '../wizard/WizardShell'
 import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { saveCustomWorkout } from '../../lib/customWorkouts'
+import { TIMER_LABELS, TIMER_MODE_LIST } from '../../lib/timerLabels'
+import type { TimerMode } from '../../lib/timerLabels'
 
-export type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
-
-const MODES = [
-  { id: 'fortime' as TimerMode, label: 'For Time',  emoji: '⏱', desc: 'So schnell wie möglich',       color: '#E8642A' },
-  { id: 'amrap'   as TimerMode, label: 'AMRAP',      emoji: '🔁', desc: 'So viele Runden wie möglich',  color: '#F59E0B' },
-  { id: 'emom'    as TimerMode, label: 'EMOM',       emoji: '📶', desc: 'Jede Minute eine Runde',        color: '#3B82F6' },
-  { id: 'tabata'  as TimerMode, label: 'Tabata',     emoji: '⚡', desc: '20s Arbeit · 10s Pause',        color: '#8B5CF6' },
-]
+export type { TimerMode }
 
 interface Props {
   isOpen: boolean
@@ -65,7 +60,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
 
   const canNext = isAdhoc && step === lastStep ? warmup !== null : true
 
-  const modeInfo = MODES.find((m) => m.id === mode)!
+  const modeInfo = TIMER_LABELS[mode]
 
   const nextLabel = () => {
     if (step < lastStep) return 'Weiter'
@@ -90,31 +85,34 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
           <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text-muted)' }}>
             Timer-Modus wählen
           </p>
-          {MODES.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setMode(m.id)}
-              className="w-full flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all text-left"
-              style={{
-                backgroundColor: mode === m.id ? `${m.color}18` : 'var(--color-bg-card)',
-                border: `1.5px solid ${mode === m.id ? m.color : 'transparent'}`,
-              }}
-            >
-              <span className="text-2xl">{m.emoji}</span>
-              <div className="flex-1">
-                <p className="text-sm font-bold"
-                  style={{ color: mode === m.id ? m.color : 'var(--color-text)' }}>
-                  {m.label}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                  {m.desc}
-                </p>
-              </div>
-              {mode === m.id && (
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />
-              )}
-            </button>
-          ))}
+          {TIMER_MODE_LIST.map((id) => {
+            const m = TIMER_LABELS[id]
+            return (
+              <button
+                key={id}
+                onClick={() => setMode(id)}
+                className="w-full flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all text-left"
+                style={{
+                  backgroundColor: mode === id ? `${m.color}18` : 'var(--color-bg-card)',
+                  border: `1.5px solid ${mode === id ? m.color : 'transparent'}`,
+                }}
+              >
+                <span className="text-2xl">{m.emoji}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-bold"
+                    style={{ color: mode === id ? m.color : 'var(--color-text)' }}>
+                    {m.name}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                    {m.desc}
+                  </p>
+                </div>
+                {mode === id && (
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: m.color }} />
+                )}
+              </button>
+            )
+          })}
         </div>
       )}
 
@@ -144,7 +142,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
             }}
           >
             <span className="text-xl">{modeInfo.emoji}</span>
-            <span className="font-bold text-sm" style={{ color: modeInfo.color }}>{modeInfo.label}</span>
+            <span className="font-bold text-sm" style={{ color: modeInfo.color }}>{modeInfo.name}</span>
             {exercises.length > 0 && (
               <span className="text-xs ml-auto" style={{ color: 'var(--color-text-muted)' }}>
                 {exercises.length} Übung{exercises.length !== 1 ? 'en' : ''}
