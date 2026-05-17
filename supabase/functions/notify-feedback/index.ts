@@ -1,8 +1,18 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin':  '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
 serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS_HEADERS })
+  }
+
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return new Response('Method not allowed', { status: 405, headers: CORS_HEADERS })
   }
 
   const resendApiKey = Deno.env.get('RESEND_API_KEY')
@@ -11,19 +21,22 @@ serve(async (req) => {
 
   if (!resendApiKey) {
     console.error('[notify-feedback] RESEND_API_KEY not configured')
-    return new Response(JSON.stringify({ error: 'RESEND_API_KEY not configured' }), { status: 500 })
+    return new Response(JSON.stringify({ error: 'RESEND_API_KEY not configured' }), {
+      status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+    })
   }
 
   let payload: Record<string, unknown>
   try {
     payload = await req.json()
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 })
+    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+      status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+    })
   }
 
-  // Supabase DB Webhook wraps the row in payload.record
-  const record = (payload.record as Record<string, unknown>) ?? payload
-  const rec = record as Record<string, unknown>
+  const record     = (payload.record as Record<string, unknown>) ?? payload
+  const rec        = record as Record<string, unknown>
   const kategorie  = (rec.kategorie ?? rec.category) as string | undefined
   const message    = rec.message    as string | undefined
   const user_id    = rec.user_id    as string | undefined
@@ -36,8 +49,8 @@ serve(async (req) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: notifyFrom,
-      to:   [notifyTo],
+      from:    notifyFrom,
+      to:      [notifyTo],
       subject: `CarveOut Feedback — ${kategorie ?? 'unbekannt'}`,
       html: `
         <h2 style="color:#E8642A">Neues Feedback in CarveOut</h2>
@@ -54,11 +67,13 @@ serve(async (req) => {
   if (!res.ok) {
     const error = await res.text()
     console.error('[notify-feedback] Resend error:', error)
-    return new Response(JSON.stringify({ error }), { status: 502 })
+    return new Response(JSON.stringify({ error }), {
+      status: 502, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+    })
   }
 
   return new Response(JSON.stringify({ sent: true }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
   })
 })
