@@ -59,7 +59,8 @@ apps/web/src/
 │   ├── supabase.ts            # Supabase-Client + isSupabaseConfigured()
 │   ├── push.ts                # Push Notification Helpers (subscribeToPush, unsubscribeFromPush)
 │   ├── adaptiveSuggestion.ts  # Pure Funktion getSuggestedPillar(): Pillar — Empfehlung nach Uhrzeit (05–10 routine, 10–17 workout, 17–21 stretching, sonst meditation)
-│   └── customWorkouts.ts      # CustomWorkout + CustomSession Typen; localStorage CRUD (save/load/delete); Keys: carveout_custom_workouts / carveout_custom_sessions
+│   ├── customWorkouts.ts      # CustomWorkout + CustomSession Typen; localStorage CRUD (save/load/delete); Keys: carveout_custom_workouts / carveout_custom_sessions
+│   └── timerLabels.ts         # TimerMode, TimerLabel, TIMER_LABELS (name/desc/emoji/color pro Modus), TIMER_MODE_LIST, WOD_TYPE_TO_MODE (DB-Typ → TimerMode)
 ├── store/
 │   ├── authStore.ts           # Zustand-Store: user, session, loading, profile; signIn/signUp/signOut/initialize/fetchProfile/updateProfile; WorkoutLocation + DEFAULT_EQUIPMENT_BY_LOCATION + equipment_by_location
 │   ├── audioStore.ts          # Zustand-Store (persist: 'audio-mute'): isMuted: boolean, toggleMute()
@@ -68,8 +69,8 @@ apps/web/src/
 │   ├── HomePage.tsx               # Dashboard: Greeting + i18n-Datum, TodayPillarTracker, MoodCheck (useDailyLog), AdaptiveSuggestion, TodaysWod, WeekStats, RecentActivity
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
-│   ├── OnboardingPage.tsx     # Pillar-Auswahl, Primary Pillar, Theme
-│   ├── WorkoutPage.tsx        # Tabs: WODs / Timer / History; Timer-Tab idle-Zustand öffnet FreeTimerWizard (variant=adhoc) via "Timer konfigurieren"-Button
+│   ├── OnboardingPage.tsx     # 4 Schritte: Sprache → Ziel → Equipment → Pillars; Ziel (6 Optionen, `goal`-Feld, überspringbar); Equipment (14 Optionen, Mehrfachauswahl, überspringbar); Pillars (multi-select, min. 1 Pflicht); speichert language/goal/equipment/primary_pillar/active_pillars
+│   ├── WorkoutPage.tsx        # Tabs: Workouts / Timer / History (Tab-Label geändert: "WODs" → "Workouts"); Kategorie-Chips (Alle/CrossFit/HIIT/Kraft-Ausdauer/Kraft auf Zeit) über WodList; `wodCategory`-State → WodList-Prop; Timer-Tab idle-Zustand öffnet FreeTimerWizard (variant=adhoc) via "Timer konfigurieren"-Button
 │   ├── RoutinePage.tsx        # Titel: Rituale; Tabs: Rituale / Todo / Woche (kein WaterTracker, kein MoodCheck)
 │   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); FilterBottomSheet (Goal/Kategorie inkl. Yoga-Subcategory, Dauer)
 │   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5); FilterBottomSheet (Kategorie + Dauer); view=free_meditation (Quick-Select 5/10/20 min via AdHocMeditationTimer)
@@ -95,9 +96,9 @@ apps/web/src/
 │   ├── workout/
 │   │   ├── WodCard.tsx
 │   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); FilterBottomSheet (Typ, Kategorie, Schwierigkeit, Editor's Pick, Dauer Von-Bis, Equipment Exclude); Würfel-Button für Random-WOD
-│   │   ├── WodDetail.tsx      # enthält FavoriteButton (contentType="wod", color="#E8642A"); "Warmup-Timer starten"-Button im Warmup-Akkordeon
+│   │   ├── WodDetail.tsx      # enthält FavoriteButton (contentType="wod", color="#E8642A"); "Warmup-Timer starten"-Button im Warmup-Akkordeon; nutzt WOD_TYPE_TO_MODE aus timerLabels.ts
 │   │   ├── TimerView.tsx      # Nutzt timer.worker.js; AMRAP/ForTime/EMOM/Tabata konfigurierbar; adHocLog-Prop: auto-Log in wod_history ohne WOD aus DB
-│   │   ├── FreeTimerWizard.tsx  # Wizard; variant='save' (3 Steps: Modus → Übungen → Konfiguration/Name, speichert via customWorkouts.ts) | variant='adhoc' (4 Steps: Modus → Übungen → Konfiguration → Warmup-Frage); onStart(mode, minutes, withWarmup?) → triggert TimerView; Dauer 1–120 min, 1-min-Schritte
+│   │   ├── FreeTimerWizard.tsx  # Wizard; variant='save' (3 Steps: Modus → Übungen → Konfiguration/Name, speichert via customWorkouts.ts) | variant='adhoc' (4 Steps: Modus → Übungen → Konfiguration → Warmup-Frage); onStart(mode, minutes, withWarmup?) → triggert TimerView; Dauer 1–120 min, 1-min-Schritte; Modus-Auswahl via TIMER_LABELS aus timerLabels.ts
 │   │   ├── WarmupTimer.tsx    # Bottom-Sheet mit Presets 3/5/10 min + manuellem Input; Countdown-Ring (SVG); Wake Lock; playGong + vibrate + Toast bei Ende; eingebettet in WodDetail
 │   │   ├── WodHistoryList.tsx
 │   │   └── ScoreInput.tsx
@@ -129,7 +130,7 @@ apps/web/src/
 │   ├── useRoutineLogs.ts      # Completion-Logs
 │   ├── useDailyLog.ts         # Tages-Mood, Wasser
 │   ├── useTodos.ts            # To-do-Liste
-│   ├── useWods.ts             # Supabase oder /wods.json Fallback; Filter: equipmentFilter, silentMode, editorsPick, excludeEquipment, minDuration, maxDuration; pickRandomWod() (gecachte lokale WODs + alle Filter)
+│   ├── useWods.ts             # Supabase oder /wods.json Fallback; Filter: equipmentFilter, silentMode, editorsPick, excludeEquipment, minDuration, maxDuration, wodCategory; Supabase-Query mit `.eq('is_visible', true)`; pickRandomWod() (gecachte lokale WODs + alle Filter)
 │   ├── useWodHistory.ts       # localStorage + Supabase Dual-Write, personalBest
 │   ├── useHighscores.ts       # Top-10 pro WOD (Supabase oder local)
 │   ├── useStretching.ts       # Stretching-Übungen, Routinen, Logs
@@ -216,6 +217,10 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 
 **WOD-Felder (Deutsch → Intern):** `typ→type`, `kategorie→category`, `beschreibung→description`, `uebungen→exercises`, `dauer→estimated_minutes`, `schwierigkeit→difficulty`
 
+**Wod-Interface (useWods.ts) — zusätzliche Felder:**
+- `wod_category?: string` — Trainings-Stil (crossfit | hiit | kraft_ausdauer | kraft_auf_zeit)
+- `equipment_tags?: string[]` — Auto-Tag-Array (befüllt via `scripts/tag-wod-equipment.ts`)
+
 ---
 
 ## 4. Backend — Supabase
@@ -229,12 +234,12 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 
 | Tabelle | Beschreibung |
 |---|---|
-| `user_profiles` | Nutzer-Metadaten: language, activePillars, primaryPillar, colorTheme, subscriptionStatus, trialEndsAt, **role** (admin/moderator/user), **subscription_status**, **equipment** (string[]), **equipment_by_location** (JSONB: Record\<WorkoutLocation, string[]\>) |
+| `user_profiles` | Nutzer-Metadaten: language, activePillars, primaryPillar, colorTheme, subscriptionStatus, trialEndsAt, **role** (admin/moderator/user), **subscription_status**, **equipment** (string[]), **equipment_by_location** (JSONB: Record\<WorkoutLocation, string[]\>), **goal** text NULL (Migration 015) |
 | `routines` | Rituale eines Nutzers (Name, Beschreibung, Pillar, Uhrzeit, Wochentage, `linked_pillar` VARCHAR NULL — Migration 012) |
 | `routine_logs` | Completion-Einträge pro Routine + Datum |
 | `todos` | To-do-Liste pro Nutzer + Datum |
 | `daily_logs` | Tageseinträge: Mood, Wasserkonsum, Notizen |
-| `wods` | WOD-Stammdaten (798 Einträge, statisch, read-only für Users); `is_editors_pick` bool (Migration 010); lokaler Fallback: `EDITORS_PICK_IDS` Set in `useWods` |
+| `wods` | WOD-Stammdaten (798 Einträge, statisch, read-only für Users); `is_editors_pick` bool (Migration 010); `wod_category` text CHECK (crossfit\|hiit\|kraft_ausdauer\|kraft_auf_zeit), Default crossfit (Migration 015); `is_visible` bool NOT NULL DEFAULT true — Soft-Delete (Migration 015); `equipment_tags` text[] NOT NULL DEFAULT '{}', GIN-Index (Migration 016); lokaler Fallback: `EDITORS_PICK_IDS` Set in `useWods` |
 | `wod_history` | Workout-Logs pro Nutzer (WOD, Score, Datum, Notizen) |
 | `feedback` | In-App-Feedback / Bug-Reports |
 | `stretching_exercises` | 65 Übungen (dreisprachig, bilateral_support, category, `subcategory` VARCHAR NULL — Migration 011) |
@@ -267,6 +272,7 @@ interface DbProfile {
   active_pillars: PillarId[]
   equipment: string[]
   equipment_by_location: Record<WorkoutLocation, string[]> | null
+  goal: string | null
   substitution_enabled: boolean
   role: UserRole | null
   subscription_status: SubscriptionStatus | null
@@ -454,6 +460,7 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 | **Session I** | **Nav-Reihenfolge** — `BottomNav` + `Sidebar` + `AppShell MAIN_ROUTES`: neue Reihenfolge Mein Tag · Ritual · Workout · Stretching · Meditation; **Settings aus BottomNav entfernt** (jetzt nur noch im Mobile-Header als Icon); **Mobile-Header-Redesign** (52px, bg: `--color-bg-card` + border; Links: CarveOut-Logo + Name; Rechts: Vorname (max-[360px]:hidden) · Mute · Favoriten · Settings-Link); **TodayPillarTracker** — Header-Label geändert zu "Aktueller Stand von heute · N von 4" (de/en/es); Chip-Reihenfolge: Ritual · Workout · Stretching · Meditation |
 | **Session G2** | **Wizard-Framework + Custom Workouts** — `lib/customWorkouts.ts` (CustomWorkout + CustomSession Typen, localStorage CRUD); `wizard/WizardShell` (generischer 3-Step Full-Screen Wizard, Progress-Bars, canNext-Guard); `wizard/ExerciseListEditor` (reorderable Liste mit ↑/↓/✕ + Add-Input); **FreeTimerWizard** (3-Step: Modus → Übungen → Konfiguration/Name, speichert benannte Workouts, triggert TimerView); **SessionCreator** (3-Step: Auswählen → Reihenfolge → Name, erstellt virtuelle StretchingRoutine); **WarmupTimer** (Bottom-Sheet, Presets 3/5/10 min + manuell, Countdown-Ring, Wake Lock, Gong + Vibrate + Toast); `WorkoutPage` "Eigene Workouts"-Sektion; `StretchingPage` "Eigene Sessions"-Sektion; `WodDetail` Warmup-Timer-Button |
 | **Session J** | **Bugfixes + neue Features** — Bug MoodCheck: localStorage-Cache + useEffect-Sync für async Supabase-Daten; **Drag & Drop RoutineList** (`@dnd-kit/core` + `@dnd-kit/sortable`, `sort_order` Supabase-Sync); Bug SessionCreator Step 0: Loading/Empty-State; **FreeTimerWizard** Schrittgröße 1 min (1–120 min), neuer `variant='adhoc'` (4. Schritt: Warmup-Frage); **Timer-Tab idle-Zustand** ("Timer konfigurieren"-Button öffnet Ad-hoc-Wizard); **ProfilePage** (`/profile`: Name + Sprache bearbeiten, Passwort-Reset via E-Mail, Abo-Placeholder, Abmelden); **FeedbackModal** (`components/ui/FeedbackModal.tsx`: Bug/Idee/Lob Chips + Textarea, schreibt in `feedback`-Tabelle); SettingsPage Feedback-Button; AppShell Vorname als Link zu `/profile`; **Migration 013**: `user_profiles` RLS defensive Re-Apply + `handle_new_user()`-Trigger; **Migration 014**: `feedback`-Tabelle mit RLS |
+| **Session K** | **WOD-Katalog-Onboarding** — **Migration 015**: `wods.wod_category` (crossfit/hiit/kraft_ausdauer/kraft_auf_zeit, Default crossfit) + `wods.is_visible` (Soft-Delete bool) + `user_profiles.goal` text; **Migration 016**: `wods.equipment_tags` text[] GIN-Index; **`timerLabels.ts`** (`lib/`): zentrale Quelle für Timer-Modus-Labels (TimerMode, TimerLabel, TIMER_LABELS, TIMER_MODE_LIST, WOD_TYPE_TO_MODE); `FreeTimerWizard` nutzt TIMER_LABELS statt altes MODES-Array; `WodDetail` nutzt `WOD_TYPE_TO_MODE`; **WorkoutPage** Kategorie-Chips (Alle/CrossFit/HIIT/Kraft-Ausdauer/Kraft auf Zeit) + Tab-Label "WODs" → "Workouts"; **`WodList`** empfängt `wodCategory`-Prop; **`useWods`** `wodCategory`-Filter + Supabase-Query mit `is_visible=true`; **Onboarding-Overhaul**: 4 Schritte (Sprache/Ziel/Equipment/Pillars), 6 Ziel-Optionen, 14 Equipment-Optionen, Pillars multi-select, speichert `goal`; **`scripts/tag-wod-equipment.ts`**: One-time-Script zur Befüllung von `equipment_tags`; **`supabase/functions/notify-feedback`**: Deno Edge Function — DB-Webhook auf `feedback`-INSERT → Resend API E-Mail-Benachrichtigung |
 
 ### Offen / Roadmap
 
@@ -477,4 +484,4 @@ WODs (796 lokal / 798 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell 
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session J: Bugfixes, DnD, Ad-hoc Timer, ProfilePage, FeedbackModal)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session K: Kategorien, Equipment-Tags, Timer-Labels, Onboarding-Overhaul)*
