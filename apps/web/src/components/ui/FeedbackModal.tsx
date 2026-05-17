@@ -29,12 +29,23 @@ export function FeedbackModal({ isOpen, onClose }: Props) {
     if (!message.trim()) return
     setSending(true)
     try {
-      const { error } = await supabase.from('feedback').insert({
-        user_id:  user?.id ?? null,
+      const record = {
+        user_id:    user?.id ?? null,
         category,
-        message:  message.trim(),
+        message:    message.trim(),
+        created_at: new Date().toISOString(),
+      }
+      const { error } = await supabase.from('feedback').insert({
+        user_id:  record.user_id,
+        category: record.category,
+        message:  record.message,
       })
       if (error) throw error
+      void fetch('https://ipkazxttlkiufgsdyjdw.supabase.co/functions/v1/notify-feedback', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ record }),
+      })
       addToast({ type: 'success', message: 'Danke für dein Feedback! 🙏' })
       setMessage('')
       onClose()
