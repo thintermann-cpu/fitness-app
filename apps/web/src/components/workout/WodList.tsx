@@ -20,11 +20,12 @@ const SEARCH_KEY = 'wod_search'
 interface Props {
   onSelectWod: (wodName: string) => void
   equipmentFilter?: string[]
+  userEquipment?: string[]
   silentMode?: boolean
   wodCategory?: string
 }
 
-export function WodList({ onSelectWod, equipmentFilter, silentMode, wodCategory }: Props) {
+export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMode, wodCategory }: Props) {
   const lang  = useAuthStore((s) => s.profile?.language ?? 'de')
   const toast = useToast()
 
@@ -89,6 +90,7 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode, wodCategory 
     page,
     equipmentFilter:  equipmentFilter?.length ? equipmentFilter : undefined,
     excludeEquipment: excludeEq.length ? excludeEq : undefined,
+    userEquipment:    userEquipment?.length ? userEquipment : undefined,
     silentMode:       silentMode ?? false,
     minDuration:      minDur || undefined,
     maxDuration:      maxDur || undefined,
@@ -110,6 +112,7 @@ export function WodList({ onSelectWod, equipmentFilter, silentMode, wodCategory 
       search:           search || undefined,
       equipmentFilter:  equipmentFilter?.length ? equipmentFilter : undefined,
       excludeEquipment: excludeEq.length ? excludeEq : undefined,
+      userEquipment:    userEquipment?.length ? userEquipment : undefined,
       silentMode:       silentMode ?? false,
       minDuration:      minDur || undefined,
       maxDuration:      maxDur || undefined,

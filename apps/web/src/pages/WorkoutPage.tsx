@@ -57,10 +57,11 @@ export function WorkoutPage() {
   const navigate    = useNavigate()
   const { profile } = useAuthStore()
 
-  const [tab, setTab]               = useState<Tab>('wods')
-  const [location, setLocation]     = useState<WorkoutLocation | null>(getSavedLocation())
-  const [wizardOpen, setWizardOpen] = useState(false)
-  const [adhocOpen, setAdhocOpen]   = useState(false)
+  const [tab, setTab]                     = useState<Tab>('wods')
+  const [location, setLocation]           = useState<WorkoutLocation | null>(getSavedLocation())
+  const [wizardOpen, setWizardOpen]       = useState(false)
+  const [adhocOpen, setAdhocOpen]         = useState(false)
+  const [showAllEquipment, setShowAllEquipment] = useState(false)
   const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number; kraftConfig?: KraftConfig } | null>(null)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [wodCategory, setWodCategory] = useState('')
@@ -108,6 +109,9 @@ export function WorkoutPage() {
   const equipmentForLocation = location
     ? (profile?.equipment_by_location?.[location] ?? DEFAULT_EQUIPMENT_BY_LOCATION[location])
     : undefined
+
+  const hasProfileEquipment = (profile?.equipment?.length ?? 0) > 0
+  const userEquipment = hasProfileEquipment && !showAllEquipment ? profile!.equipment : undefined
 
   // If a WOD name is in the URL, show WodDetail instead of the list
   if (wodName) {
@@ -264,9 +268,19 @@ export function WorkoutPage() {
                 {WOD_CATEGORY_LABELS[tooltipCat].description}
               </div>
             )}
+            {hasProfileEquipment && (
+              <button
+                onClick={() => setShowAllEquipment((v) => !v)}
+                className="text-xs mb-3 flex items-center gap-1"
+                style={{ color: showAllEquipment ? 'var(--color-text-muted)' : '#E8642A', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                {showAllEquipment ? '⚡ Equipment-Filter aus — aktivieren' : '⚡ Equipment-Filter aktiv — Alle anzeigen'}
+              </button>
+            )}
             <WodList
               onSelectWod={(name) => navigate(`/workout/${encodeURIComponent(name)}`)}
               equipmentFilter={equipmentForLocation}
+              userEquipment={userEquipment}
               silentMode={silentMode}
               wodCategory={wodCategory || undefined}
             />

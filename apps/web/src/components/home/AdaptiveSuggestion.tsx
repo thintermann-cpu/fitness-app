@@ -1,8 +1,27 @@
 import { useNavigate } from 'react-router-dom'
-import { getSuggestedPillar } from '../../lib/adaptiveSuggestion'
+import { getSuggestedPillar, type Pillar } from '../../lib/adaptiveSuggestion'
 import { useAuthStore } from '../../store/authStore'
 
 type Lang = 'de' | 'en' | 'es'
+
+const GOAL_HINT: Record<string, Record<Lang, string>> = {
+  abnehmen:      { de: 'Gut für dein Ziel: Abnehmen & Körper formen.', en: 'Good for your goal: weight loss.',          es: 'Bueno para tu objetivo: perder peso.' },
+  kraft:         { de: 'Gut für dein Ziel: Kraft aufbauen.',            en: 'Good for your goal: build strength.',        es: 'Bueno para tu objetivo: ganar fuerza.' },
+  beweglichkeit: { de: 'Gut für dein Ziel: Beweglichkeit verbessern.', en: 'Good for your goal: improve flexibility.',  es: 'Bueno para tu objetivo: mejorar flexibilidad.' },
+  entspannen:    { de: 'Gut für dein Ziel: Entspannen & Fokus.',       en: 'Good for your goal: relax & focus.',         es: 'Bueno para tu objetivo: relajarte y enfocarte.' },
+}
+
+const GOAL_PILLAR: Record<string, Pillar[]> = {
+  abnehmen:      ['workout', 'stretching'],
+  kraft:         ['workout'],
+  beweglichkeit: ['stretching', 'meditation'],
+  entspannen:    ['meditation', 'stretching'],
+}
+
+function getGoalHint(pillar: Pillar, goal: string | null | undefined, lang: Lang): string | null {
+  if (!goal || !GOAL_PILLAR[goal]?.includes(pillar)) return null
+  return GOAL_HINT[goal]?.[lang] ?? null
+}
 
 const PILLAR_CONFIG = {
   workout: {
@@ -72,11 +91,13 @@ const PILLAR_CONFIG = {
 } as const
 
 export function AdaptiveSuggestion() {
-  const navigate  = useNavigate()
+  const navigate    = useNavigate()
   const { profile } = useAuthStore()
-  const lang      = (profile?.language ?? 'de') as Lang
-  const pillar    = getSuggestedPillar()
-  const cfg       = PILLAR_CONFIG[pillar]
+  const lang        = (profile?.language ?? 'de') as Lang
+  const goal        = profile?.goal ?? null
+  const pillar      = getSuggestedPillar(goal)
+  const cfg         = PILLAR_CONFIG[pillar]
+  const goalHint    = getGoalHint(pillar, goal, lang)
 
   return (
     <section
@@ -98,6 +119,11 @@ export function AdaptiveSuggestion() {
             <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
               {cfg.sub[lang]}
             </p>
+            {goalHint && (
+              <p className="text-xs mt-1 font-medium" style={{ color: cfg.color }}>
+                {goalHint}
+              </p>
+            )}
           </div>
         </div>
         <button

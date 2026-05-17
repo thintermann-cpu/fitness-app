@@ -167,6 +167,16 @@ export function SettingsPage() {
   const [savingPillars, setSavingPillars] = useState(false)
   const [savedPillars,  setSavedPillars]  = useState(false)
 
+  // ── Hide inactive pillars toggle (localStorage, no server save) ──
+  const [hideInactive, setHideInactive] = useState(() => localStorage.getItem('hide_inactive_pillars') === 'true')
+
+  function toggleHideInactive() {
+    const next = !hideInactive
+    setHideInactive(next)
+    localStorage.setItem('hide_inactive_pillars', String(next))
+    window.dispatchEvent(new CustomEvent('hide_inactive_changed'))
+  }
+
   // ── Push notifications state ──
   const [pushEnabled,   setPushEnabled]   = useState(false)
   const [pushLoading,   setPushLoading]   = useState(false)
@@ -545,6 +555,38 @@ export function SettingsPage() {
         </div>
 
         <SaveButton loading={savingPillars} saved={savedPillars} onClick={handleSavePillars} />
+
+        {/* Hide inactive toggle */}
+        <button
+          onClick={toggleHideInactive}
+          className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left"
+          style={{ backgroundColor: 'var(--color-bg-card)', border: 'none', cursor: 'pointer' }}
+        >
+          <div className="flex-1">
+            <div className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
+              Inaktive Bereiche ausblenden
+            </div>
+            <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+              Nicht aktive Tabs aus der Navigation entfernen
+            </div>
+          </div>
+          <div
+            style={{
+              width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+              background: hideInactive ? '#E8642A' : 'rgba(255,255,255,0.1)',
+              transition: 'background 0.2s', position: 'relative',
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute', top: 3,
+                left: hideInactive ? 23 : 3,
+                width: 18, height: 18, borderRadius: '50%',
+                background: 'white', transition: 'left 0.2s',
+              }}
+            />
+          </div>
+        </button>
       </section>
 
       {/* ── Push Benachrichtigungen ── */}

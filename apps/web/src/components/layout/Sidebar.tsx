@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { LogoIcon } from '../ui/LogoIcon'
 import { useAuthStore } from '../../store/authStore'
 import { useFavorites } from '../../hooks/useFavorites'
@@ -21,6 +22,7 @@ const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
 
 export function Sidebar() {
   const { pathname }  = useLocation()
+  const navigate      = useNavigate()
   const { profile }   = useAuthStore()
   const { favorites } = useFavorites()
   const activePillars = profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
@@ -28,15 +30,25 @@ export function Sidebar() {
   const lang          = profile?.language ?? 'de'
   const labels        = SIDEBAR_LABELS[lang] ?? SIDEBAR_LABELS.de
 
-  const visibleItems = NAV_ITEMS.filter(
-    item => item.pillarId === null || activePillars.includes(item.pillarId)
-  )
+  const [hideInactive, setHideInactive] = useState(() => localStorage.getItem('hide_inactive_pillars') === 'true')
+  const [inactiveAlert, setInactiveAlert] = useState(false)
+
+  useEffect(() => {
+    const handler = () => setHideInactive(localStorage.getItem('hide_inactive_pillars') === 'true')
+    window.addEventListener('hide_inactive_changed', handler)
+    return () => window.removeEventListener('hide_inactive_changed', handler)
+  }, [])
+
+  const visibleItems = hideInactive
+    ? NAV_ITEMS.filter((item) => item.pillarId === null || activePillars.includes(item.pillarId))
+    : NAV_ITEMS
 
   const initials = profile?.display_name
     ? profile.display_name.slice(0, 2).toUpperCase()
     : '?'
 
   return (
+    <>
     <aside
       className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 z-40"
       style={{
@@ -54,16 +66,17 @@ export function Sidebar() {
 
       {/* Nav items */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {visibleItems.map(({ path, icon, key, color }) => {
+        {visibleItems.map(({ path, icon, key, color, pillarId }) => {
           const label = labels[key] ?? key
-          const isActive = path === '/'
+          const isPillarActive = pillarId === null || activePillars.includes(pillarId)
+          const isActive = isPillarActive && (path === '/'
             ? pathname === '/'
             : (pathname === path
                 || (path !== '/workout' && pathname.startsWith(path))
-                || (path === '/workout' && (pathname === '/workout' || pathname.startsWith('/workout/'))))
+                || (path === '/workout' && (pathname === '/workout' || pathname.startsWith('/workout/')))))
           const activeColor = color
 
-          return (
+          return isPillarActive ? (
             <Link
               key={path}
               to={path}
@@ -82,6 +95,16 @@ export function Sidebar() {
                 />
               )}
             </Link>
+          ) : (
+            <button
+              key={path}
+              onClick={() => setInactiveAlert(true)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
+              style={{ backgroundColor: 'transparent', color: 'var(--color-text-muted)', opacity: 0.45, border: 'none', cursor: 'pointer', textAlign: 'left' }}
+            >
+              <span className="text-lg leading-none w-6 text-center flex-shrink-0">{icon}</span>
+              <span className="text-sm font-semibold">{label}</span>
+            </button>
           )
         })}
       </nav>
@@ -151,5 +174,43 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+
+    {inactiveAlert && (
+      <div
+        className="fixed inset-0 z-[70] hidden lg:flex items-center justify-center px-6"
+        style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+        onClick={() => setInactiveAlert(false)}
+      >
+        <div
+          className="w-full max-w-xs rounded-2xl p-5 space-y-3"
+          style={{ backgroundColor: 'var(--color-bg-card)' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="font-bold text-base" style={{ color: 'var(--color-text)' }}>
+            Noch nicht aktiviert
+          </p>
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            Dieser Bereich ist in deinem Profil nicht aktiv. Du kannst ihn in den Einstellungen einschalten.
+          </p>
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => { setInactiveAlert(false); navigate('/settings') }}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
+              style={{ backgroundColor: '#E8642A' }}
+            >
+              Zu den Einstellungen
+            </button>
+            <button
+              onClick={() => setInactiveAlert(false)}
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold"
+              style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
+            >
+              Schliessen
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

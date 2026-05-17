@@ -31,6 +31,7 @@ export interface WodFilters {
   page?: number
   equipmentFilter?: string[]
   excludeEquipment?: string[]
+  userEquipment?: string[]   // profile.equipment — show only WODs whose equipment_tags ⊆ userEquipment
   minDuration?: number
   maxDuration?: number
   silentMode?: boolean
@@ -125,6 +126,14 @@ function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[
     const excluded = new Set(filters.excludeEquipment.map((e) => e.toLowerCase()))
     wods = wods.filter((w) => !w.equipment.some((eq) => excluded.has(eq.toLowerCase())))
   }
+  if (filters.userEquipment?.length) {
+    const allowed = new Set(filters.userEquipment.map((e) => e.toLowerCase()))
+    wods = wods.filter((w) => {
+      // Prefer equipment_tags (from DB migration 016); fall back to old equipment field for local JSON
+      const tags = w.equipment_tags?.length ? w.equipment_tags : w.equipment
+      return tags.length === 0 || tags.every((eq) => allowed.has(eq.toLowerCase()))
+    })
+  }
   if (filters.minDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes >= filters.minDuration!)
   if (filters.maxDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes <= filters.maxDuration!)
   if (filters.silentMode) wods = wods.filter((w) => !w.is_jumping)
@@ -162,6 +171,7 @@ export function useWods(filters: WodFilters = {}) {
       const hasComplexFilters =
         Boolean(filters.equipmentFilter?.length) ||
         Boolean(filters.excludeEquipment?.length) ||
+        Boolean(filters.userEquipment?.length) ||
         filters.minDuration != null ||
         filters.maxDuration != null ||
         filters.silentMode === true
