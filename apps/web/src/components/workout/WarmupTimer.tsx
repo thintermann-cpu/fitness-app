@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAudio } from '../../hooks/useAudio'
 import { useToastStore } from '../../store/toastStore'
+import { CountdownOverlay } from '../shared/CountdownOverlay'
 
 const PRESETS = [3, 5, 10]
 
@@ -20,6 +21,7 @@ export function WarmupTimer({ isOpen, onClose }: Props) {
   const [customMin,   setCustomMin]     = useState('')
   const [running,     setRunning]       = useState(false)
   const [timeLeft,    setTimeLeft]      = useState(0)
+  const [showCountdown, setShowCountdown] = useState(false)
   const intervalRef = useRef<number | null>(null)
   const audio = useAudio()
   const addToast = useToastStore((s) => s.addToast)
@@ -60,12 +62,17 @@ export function WarmupTimer({ isOpen, onClose }: Props) {
 
   if (!isOpen) return null
 
-  const handleStart = () => {
+  const startTimer = () => {
     const mins = activeMins
     if (!mins || mins < 1) return
     setTimeLeft(mins * 60)
     setRunning(true)
     void audio.playBeep()
+  }
+
+  const handleStart = () => {
+    if (!activeMins || activeMins < 1) return
+    setShowCountdown(true)
   }
 
   const handleStop = () => {
@@ -89,6 +96,10 @@ export function WarmupTimer({ isOpen, onClose }: Props) {
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/60"
       onClick={handleClose}
     >
+      <CountdownOverlay
+        isOpen={showCountdown}
+        onComplete={() => { setShowCountdown(false); startTimer() }}
+      />
       <div
         className="w-full max-w-sm rounded-t-2xl p-6 pb-8"
         style={{ backgroundColor: 'var(--color-bg-card)' }}

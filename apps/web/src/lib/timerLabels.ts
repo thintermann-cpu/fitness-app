@@ -1,4 +1,4 @@
-export type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
+export type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata' | 'krafttraining'
 
 export interface TimerLabel {
   name:  string
@@ -32,9 +32,15 @@ export const TIMER_LABELS: Record<TimerMode, TimerLabel> = {
     emoji: '⚡',
     color: '#8B5CF6',
   },
+  krafttraining: {
+    name:  'Krafttraining',
+    desc:  'Sätze & Wiederholungen mit Pause',
+    emoji: '💪',
+    color: '#10B981',
+  },
 }
 
-export const TIMER_MODE_LIST: TimerMode[] = ['fortime', 'amrap', 'emom', 'tabata']
+export const TIMER_MODE_LIST: TimerMode[] = ['fortime', 'amrap', 'emom', 'tabata', 'krafttraining']
 
 /** Maps WOD type strings (from DB) to TimerMode */
 export const WOD_TYPE_TO_MODE: Record<string, TimerMode> = {

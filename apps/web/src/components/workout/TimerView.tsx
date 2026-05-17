@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { useWodHistory } from '../../hooks/useWodHistory'
+import { CountdownOverlay } from '../shared/CountdownOverlay'
 
 type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
@@ -119,6 +120,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
 
   const [isRunning, setIsRunning] = useState(false)
   const [isPaused,  setIsPaused]  = useState(false)
+  const [showCountdown, setShowCountdown] = useState(false)
   const [tick, setTick]           = useState<TickData>({ elapsed: 0, remaining: 0, phase: 'work', interval: 1 })
   const [isComplete, setIsComplete] = useState(false)
   const [showSideSwitch, setShowSideSwitch] = useState(false)
@@ -224,7 +226,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
     }
   }, [isRunning])
 
-  const handleStart = useCallback(() => {
+  const startTimer = useCallback(() => {
     let durationMs: number
     const workerConfig: Record<string, number> = {}
 
@@ -248,6 +250,10 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
     setIsPaused(false)
     setIsComplete(false)
   }, [mode, minutes, tabataWork, tabataRest, tabataRounds, emomInterval, emomRounds, forTimeCap])
+
+  const handleStart = useCallback(() => {
+    setShowCountdown(true)
+  }, [])
 
   const handlePause = useCallback(() => {
     workerRef.current?.postMessage({ type: 'pause' })
@@ -287,6 +293,10 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
 
   return (
     <div className="flex flex-col items-center gap-6 py-4">
+      <CountdownOverlay
+        isOpen={showCountdown}
+        onComplete={() => { setShowCountdown(false); startTimer() }}
+      />
 
       {/* Mode selector */}
       {!isRunning && !isPaused && (

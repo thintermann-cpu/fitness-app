@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { useToastStore } from '../store/toastStore'
 
 export interface Todo {
   id: string
@@ -16,6 +17,7 @@ async function getUserId(): Promise<string | null> {
 
 export function useTodos() {
   const queryClient = useQueryClient()
+  const addToast = useToastStore((s) => s.addToast)
 
   const query = useQuery({
     queryKey: ['todos'],
@@ -37,7 +39,7 @@ export function useTodos() {
 
   const addMutation = useMutation({
     mutationFn: async ({ list_name, text }: { list_name: string; text: string }) => {
-const uid = await getUserId()
+      const uid = await getUserId()
       if (!uid) throw new Error('Not authenticated')
       const { error } = await supabase
         .from('todos')
@@ -59,6 +61,7 @@ const uid = await getUserId()
     },
     onError: (_err, _vars, context) => {
       queryClient.setQueryData(['todos'], context?.previous)
+      addToast({ type: 'error', message: 'Todo konnte nicht gespeichert werden.' })
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
   })

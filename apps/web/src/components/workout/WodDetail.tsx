@@ -119,7 +119,7 @@ export function WodDetail({ wodName, onBack }: Props) {
     )
   }
 
-  const timerMode = WOD_TYPE_TO_MODE[wod.type] ?? 'fortime'
+  const timerMode = (WOD_TYPE_TO_MODE[wod.type] ?? 'fortime') as 'fortime' | 'amrap' | 'emom' | 'tabata'
 
   return (
     <div className="space-y-5">

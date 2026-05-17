@@ -6,17 +6,19 @@ import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
 import { WodList } from '../components/workout/WodList'
 import { WodDetail } from '../components/workout/WodDetail'
 import { TimerView } from '../components/workout/TimerView'
+import { KraftTimerView } from '../components/workout/KraftTimerView'
 import { WodHistoryList } from '../components/workout/WodHistoryList'
-import { FreeTimerWizard } from '../components/workout/FreeTimerWizard'
+import { FreeTimerWizard, type KraftConfig } from '../components/workout/FreeTimerWizard'
 import { WarmupTimer } from '../components/workout/WarmupTimer'
 import {
   loadCustomWorkouts,
   deleteCustomWorkout,
   type CustomWorkout,
 } from '../lib/customWorkouts'
+import { type TimerMode } from '../lib/timerLabels'
+import { WOD_CATEGORY_LABELS } from '../lib/categoryLabels'
 
 type Tab = 'wods' | 'timer' | 'history'
-type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'wods',    label: 'Workouts' },
@@ -25,11 +27,12 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 const WOD_CATEGORIES: { id: string; label: string }[] = [
-  { id: '',               label: 'Alle' },
-  { id: 'crossfit',       label: 'CrossFit' },
-  { id: 'hiit',           label: 'HIIT' },
-  { id: 'kraft_ausdauer', label: 'Kraft-Ausdauer' },
-  { id: 'kraft_auf_zeit', label: 'Kraft auf Zeit' },
+  { id: '',                label: 'Alle' },
+  { id: 'crossfit',        label: 'CrossFit' },
+  { id: 'hiit',            label: 'HIIT' },
+  { id: 'kraft_ausdauer',  label: 'Kraft-Ausdauer' },
+  { id: 'kraft_wenig_zeit', label: 'Kraft - Wenig Zeit' },
+  { id: 'krafttraining',   label: 'Krafttraining' },
 ]
 
 const LOCATIONS: { id: WorkoutLocation; label: string; emoji: string }[] = [
@@ -58,9 +61,10 @@ export function WorkoutPage() {
   const [location, setLocation]     = useState<WorkoutLocation | null>(getSavedLocation())
   const [wizardOpen, setWizardOpen] = useState(false)
   const [adhocOpen, setAdhocOpen]   = useState(false)
-  const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number } | null>(null)
+  const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number; kraftConfig?: KraftConfig } | null>(null)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [wodCategory, setWodCategory] = useState('')
+  const [tooltipCat, setTooltipCat] = useState<string | null>(null)
   const [savedWorkouts, setSavedWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
 
@@ -69,13 +73,13 @@ export function WorkoutPage() {
     if (!wodName) setTab('wods')
   }, [wodName])
 
-  function handleWizardStart(mode: TimerMode, minutes: number) {
-    setTimerConfig({ mode, minutes })
+  function handleWizardStart(mode: TimerMode, minutes: number, _withWarmup?: boolean, kraftConfig?: KraftConfig) {
+    setTimerConfig({ mode, minutes, kraftConfig })
     setTab('timer')
   }
 
-  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean) {
-    setTimerConfig({ mode, minutes })
+  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig) {
+    setTimerConfig({ mode, minutes, kraftConfig })
     if (withWarmup) setShowWarmupTimer(true)
   }
 
@@ -85,7 +89,10 @@ export function WorkoutPage() {
   }
 
   function handleStartSaved(w: CustomWorkout) {
-    setTimerConfig({ mode: w.mode, minutes: w.minutes })
+    const kraftConfig: KraftConfig | undefined = w.mode === 'krafttraining'
+      ? { exercises: w.exercises, restBetweenSets: w.restBetweenSets ?? 90, restBetweenExercises: w.restBetweenExercises ?? 60 }
+      : undefined
+    setTimerConfig({ mode: w.mode, minutes: w.minutes, kraftConfig })
     setTab('timer')
   }
 
@@ -223,21 +230,40 @@ export function WorkoutPage() {
               ))}
             </div>
             {/* Category chips */}
-            <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex gap-2 mb-1 overflow-x-auto pb-1 scrollbar-none">
               {WOD_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setWodCategory(cat.id)}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                  style={{
-                    backgroundColor: wodCategory === cat.id ? '#E8642A' : 'var(--color-bg-card)',
-                    color: wodCategory === cat.id ? 'white' : 'var(--color-text-muted)',
-                  }}
-                >
-                  {cat.label}
-                </button>
+                <div key={cat.id} className="flex-shrink-0 flex items-center gap-0.5">
+                  <button
+                    onClick={() => setWodCategory(cat.id)}
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                    style={{
+                      backgroundColor: wodCategory === cat.id ? '#E8642A' : 'var(--color-bg-card)',
+                      color: wodCategory === cat.id ? 'white' : 'var(--color-text-muted)',
+                    }}
+                  >
+                    {cat.label}
+                  </button>
+                  {cat.id && WOD_CATEGORY_LABELS[cat.id] && (
+                    <button
+                      onClick={() => setTooltipCat(tooltipCat === cat.id ? null : cat.id)}
+                      className="w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold flex-shrink-0"
+                      style={{ color: tooltipCat === cat.id ? '#E8642A' : 'var(--color-text-muted)', backgroundColor: 'transparent' }}
+                      aria-label={`Info zu ${cat.label}`}
+                    >
+                      ℹ
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
+            {tooltipCat && WOD_CATEGORY_LABELS[tooltipCat] && (
+              <div
+                className="mb-3 px-3 py-2 rounded-xl text-xs"
+                style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
+              >
+                {WOD_CATEGORY_LABELS[tooltipCat].description}
+              </div>
+            )}
             <WodList
               onSelectWod={(name) => navigate(`/workout/${encodeURIComponent(name)}`)}
               equipmentFilter={equipmentForLocation}
@@ -250,11 +276,20 @@ export function WorkoutPage() {
           <div className="py-4">
             {timerConfig ? (
               <>
-                <TimerView
-                  adHocLog
-                  initialMode={timerConfig.mode}
-                  initialMinutes={timerConfig.minutes}
-                />
+                {timerConfig.mode === 'krafttraining' && timerConfig.kraftConfig ? (
+                  <KraftTimerView
+                    exercises={timerConfig.kraftConfig.exercises}
+                    restBetweenSets={timerConfig.kraftConfig.restBetweenSets}
+                    restBetweenExercises={timerConfig.kraftConfig.restBetweenExercises}
+                    onComplete={() => setTimerConfig(null)}
+                  />
+                ) : (
+                  <TimerView
+                    adHocLog
+                    initialMode={timerConfig.mode as Exclude<typeof timerConfig.mode, 'krafttraining'>}
+                    initialMinutes={timerConfig.minutes}
+                  />
+                )}
                 <button
                   onClick={() => setTimerConfig(null)}
                   className="mt-4 w-full py-2.5 rounded-xl text-xs"

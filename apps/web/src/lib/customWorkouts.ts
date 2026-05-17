@@ -2,15 +2,20 @@ export interface WizardExercise {
   id: string
   name: string
   detail?: string
+  sets?: number
+  rep_count?: number
+  weight_level?: 'leicht' | 'mittel' | 'schwer'
 }
 
 export interface CustomWorkout {
   id: string
   name: string
-  mode: 'fortime' | 'amrap' | 'emom' | 'tabata'
+  mode: 'fortime' | 'amrap' | 'emom' | 'tabata' | 'krafttraining'
   minutes: number
   exercises: WizardExercise[]
   createdAt: string
+  restBetweenSets?: number
+  restBetweenExercises?: number
 }
 
 export interface CustomSession {

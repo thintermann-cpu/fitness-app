@@ -3,6 +3,7 @@ import type { StretchingRoutine, StretchingExercise } from '../../hooks/useStret
 import { useStretchingLogs } from '../../hooks/useStretchingLogs'
 import { useAudio } from '../../hooks/useAudio'
 import { ExerciseIllustration } from './ExerciseIllustration'
+import { CountdownOverlay } from '../shared/CountdownOverlay'
 
 const PILLAR_COLOR = '#7BC67E'
 const SWITCH_DURATION = 5
@@ -101,6 +102,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
 
   // Session state
   const [phase, setPhase] = useState<Phase>('config')
+  const [showCountdown, setShowCountdown] = useState(false)
   const [side, setSide] = useState<Side>('left')
   const [currentIndex, setCurrentIndex] = useState(0)
   const [timeLeft, setTimeLeft] = useState(0)
@@ -298,8 +300,12 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
           </div>
         </div>
 
+        <CountdownOverlay
+          isOpen={showCountdown}
+          onComplete={() => { setShowCountdown(false); startSession() }}
+        />
         <button
-          onClick={startSession}
+          onClick={() => setShowCountdown(true)}
           className="w-full py-4 rounded-[var(--radius-md)] font-bold text-white text-base transition-opacity active:opacity-80"
           style={{ backgroundColor: PILLAR_COLOR }}
         >

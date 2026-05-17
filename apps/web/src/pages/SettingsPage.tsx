@@ -395,6 +395,8 @@ export function SettingsPage() {
       </section>
 
       {/* ── Equipment ── */}
+      {/* ROADMAP: Krafttraining weight input — add toggle here: "Gewicht als Kategorie (leicht/mittel/schwer) oder kg eingeben?"
+          Store preference in profile.weight_input_mode ('category' | 'kg'). FreeTimerWizard + KraftTimerView read it. */}
       <section className="space-y-4">
         <div>
           <h2 className="font-semibold text-base">Equipment</h2>
