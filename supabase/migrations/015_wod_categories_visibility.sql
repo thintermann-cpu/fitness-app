@@ -2,8 +2,14 @@
 
 -- wods: neues Kategorie-Feld (Trainings-Stil)
 ALTER TABLE wods ADD COLUMN IF NOT EXISTS wod_category text DEFAULT 'crossfit';
-ALTER TABLE wods ADD CONSTRAINT IF NOT EXISTS wods_wod_category_check
-  CHECK (wod_category IN ('crossfit', 'hiit', 'kraft_ausdauer', 'kraft_auf_zeit'));
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'wods_wod_category_check'
+  ) THEN
+    ALTER TABLE wods ADD CONSTRAINT wods_wod_category_check
+      CHECK (wod_category IN ('crossfit', 'hiit', 'kraft_ausdauer', 'kraft_auf_zeit'));
+  END IF;
+END $$;
 
 -- wods: Soft-Delete Flag
 ALTER TABLE wods ADD COLUMN IF NOT EXISTS is_visible boolean NOT NULL DEFAULT true;
