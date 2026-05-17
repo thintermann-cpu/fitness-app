@@ -23,12 +23,11 @@ serve(async (req) => {
 
   // Supabase DB Webhook wraps the row in payload.record
   const record = (payload.record as Record<string, unknown>) ?? payload
-  const { kategorie, message, user_id, created_at } = record as {
-    kategorie?: string
-    message?: string
-    user_id?: string
-    created_at?: string
-  }
+  const rec = record as Record<string, unknown>
+  const kategorie  = (rec.kategorie ?? rec.category) as string | undefined
+  const message    = rec.message    as string | undefined
+  const user_id    = rec.user_id    as string | undefined
+  const created_at = rec.created_at as string | undefined
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
