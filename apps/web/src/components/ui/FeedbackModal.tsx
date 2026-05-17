@@ -49,8 +49,9 @@ export function FeedbackModal({ isOpen, onClose }: Props) {
       addToast({ type: 'success', message: 'Danke für dein Feedback! 🙏' })
       setMessage('')
       onClose()
-    } catch {
-      addToast({ type: 'error', message: 'Senden fehlgeschlagen. Bitte nochmal versuchen.' })
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : JSON.stringify(err)
+      addToast({ type: 'error', message: `Fehler: ${detail}` })
     } finally {
       setSending(false)
     }
