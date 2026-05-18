@@ -72,8 +72,8 @@ apps/web/src/
 │   ├── OnboardingPage.tsx     # 4 Schritte: Sprache → Ziel → Equipment → Pillars; Ziel (6 Optionen, `goal`-Feld, überspringbar); Equipment (14 Optionen, Mehrfachauswahl, überspringbar); Pillars (multi-select, min. 1 Pflicht); speichert language/goal/equipment/primary_pillar/active_pillars
 │   ├── WorkoutPage.tsx        # Tabs: Workouts / Timer / History (Tab-Label geändert: "WODs" → "Workouts"); Kategorie-Chips (Alle/CrossFit/HIIT/Kraft-Ausdauer/Kraft - Wenig Zeit/Krafttraining) über WodList; `wodCategory`-State → WodList-Prop; **Equipment-Filter**: wenn `profile.equipment` gesetzt → `userEquipment`-Prop an WodList; Toggle-Button "Equipment-Filter aktiv — Alle anzeigen" / "Equipment-Filter aus — aktivieren" (`showAllEquipment`-State); Timer-Tab idle-Zustand öffnet FreeTimerWizard (variant=adhoc) via "Timer konfigurieren"-Button; Krafttraining-Tab öffnet KrafttrainingView; timerConfig enthält exercises?: WizardExercise[]; handleWizardStart/handleAdhocStart nehmen 5. Param exercises auf; TimerView bekommt exercises={timerConfig.exercises}
 │   ├── RoutinePage.tsx        # Titel: Rituale; Tabs: Rituale / Todo / Woche (kein WaterTracker, kein MoodCheck)
-│   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); FilterBottomSheet (Goal/Kategorie inkl. Yoga-Subcategory, Dauer)
-│   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5); FilterBottomSheet (Kategorie + Dauer); view=free_meditation (Quick-Select 5/10/20 min via AdHocMeditationTimer)
+│   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); FilterBottomSheet (Goal/Kategorie inkl. Yoga-Subcategory + yoga_flow, Dauer); 5 Yoga Flows (YOGA_FLOWS-Array: Morgen-Flow/Hüft-Öffner/Rücken-Relief/Power-Flow/Schlaf-Flow) als clientseitige virtuelle Routinen — Exercises per Name-Hint-Match aus DB gelöst; `resolvedYogaFlows` useMemo; Flow-Cards mit Level-Badge + holdTime-Prop an GuidedSession
+│   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5); Sub-Tabs im Meditieren-Tab: Ungeführt (UnguidedTimer) / Geführt (GuidedPlayer + DB-Sessions + Freie Meditation); FilterBottomSheet (Kategorie + Dauer) nur im Geführt-Sub-Tab; view=free_meditation (Quick-Select 5/10/20 min via AdHocMeditationTimer)
 │   ├── FavoritesPage.tsx      # Drei Sektionen (Workouts / Stretch & Yoga / Meditationen), URL-Param ?section=
 │   ├── ProfilePage.tsx        # Name + Sprache bearbeiten, Passwort-Reset (E-Mail), Abo-Placeholder, Abmelden; Route /profile
 │   ├── SettingsPage.tsx       # Pillar-Auswahl, Push-Einstellungen, Substitution-Toggle, Silent-Mode; **Toggle "Inaktive Bereiche ausblenden"** (localStorage Key: `hide_inactive_pillars`; CustomEvent `hide_inactive_changed` → Sync zu BottomNav + Sidebar)
@@ -113,11 +113,14 @@ apps/web/src/
 │   │   ├── TodoList.tsx       # Bug-Fix Session L: leere Todo-Liste zeigte Fehler statt Empty-State; Null-Guard ergänzt
 │   │   └── WeekView.tsx
 │   ├── stretching/            # Alle Stretching-Komponenten
+│   │   ├── GuidedSession.tsx   # (bestehend) + `defaultExerciseDuration`-Prop (überschreibt config-Default, genutzt von Yoga Flows mit flow.holdTime); Yoga-Atemhinweis (subcategory=yoga_flow); ExerciseKeyframes integriert (Bild-Crossfade pro Übung)
 │   │   └── SessionCreator.tsx  # 3-Step Wizard (Auswählen nach muscle_group → Reihenfolge → Name); erstellt virtuelle StretchingRoutine; speichert benannte Sessions via customWorkouts.ts
 │   ├── wizard/
 │   │   ├── WizardShell.tsx    # Generischer 3-Step Full-Screen Modal-Wrapper; Progress-Bars, Back/Next/Close, canNext-Guard, body-overflow-lock
 │   │   └── ExerciseListEditor.tsx  # Reorderable Liste (↑/↓/✕) + optionales Add-Input-Feld; Props: items, onChange, placeholder, showAddInput
-│   ├── meditation/            # Alle Meditation-Komponenten (inkl. AdHocMeditationTimer.tsx — circular progress, gong, vibrate, wake lock, session-log)
+│   ├── meditation/            # Alle Meditation-Komponenten (inkl. AdHocMeditationTimer.tsx — circular progress, gong, vibrate, wake lock, session-log); **UnguidedTimer.tsx** (Phasen-Timer: 5 Typen breathing/box_breathing/body_scan/focus/open_awareness, 5–20 min, dreisprachig TYPE_LABELS, PHASES-Map); **GuidedPlayer.tsx** (lädt `public/audio/sessions/sessions.json`, MP3-Player mit Progress, `available`-Flag — Placeholder bis Audiodateien vorhanden)
+│   ├── shared/
+│   │   └── ExerciseKeyframes.tsx  # Bild-Crossfade-Komponente (interval-basierter Opacity-Wechsel, Props: exerciseId, frames, interval=2000ms); gibt null zurück wenn frames leer — kein Render bis Bilder vorhanden
 │   ├── ui/
 │   │   ├── Button.tsx
 │   │   ├── Card.tsx
@@ -145,10 +148,13 @@ apps/web/src/
 └── public/
     ├── wods.json              # 796 WODs lokal (aus wod-tracker migriert, 7 Duplikate bereinigt)
     ├── timer.worker.js        # Drift-korrigierter Web Worker
-    ├── favicon.svg
+    ├── favicon.svg            # SVG C-Bogen (Pfeil entfernt seit Session P)
     ├── icons.svg
     ├── manifest.json          # PWA-Manifest (name/short_name CarveOut, theme_color #0D0D14, SVG-Icon)
-    └── audio/ambient/         # Slot für Ambient-Sound-Dateien (Meditation); aktuell manuell befüllt — kein Build-Step
+    └── audio/
+        ├── ambient/           # Slot für Ambient-Sound-Dateien (Meditation); aktuell manuell befüllt — kein Build-Step
+        └── sessions/
+            └── sessions.json  # 7 Placeholder-Sessions (body_scan/breathing/focus/sleep/morning/stress_relief); alle available=false bis MP3s vorhanden; Felder: id, title, duration, type, file, available
 ```
 
 ### PWA-Konfiguration
@@ -450,7 +456,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Desktop Layout** | Sidebar (240px) ab lg-Breakpoint, BottomNav wird ausgeblendet |
 | **Admin-Bereich** | /admin/* mit AdminRoute (role-guard), AdminLayout, Dashboard, Users, Manual Tasks + Markdown-Export |
 | **Push Notifications (Client)** | Service Worker, subscribeToPush/unsubscribeFromPush, Settings-Toggles pro Reminder-Typ |
-| **Phase 7-9 Cleanup** | Zeit-Filter (`minDuration`/`maxDuration` in `useWods`), Substitution-Toggle (SettingsPage + WodDetail-Gate, localStorage), Silent Mode / Parent Mode (`is_jumping`-Flag auf WOD-Ebene, Keyword-Sweep 251 WODs, SettingsPage-Toggle + WodList-Filter), Stretching & Yoga Rebranding (i18n DE/EN/ES), Hybrid-Labels für WOD-Typen (`wodTypeLabels.ts`, WodCard + WodList + TimerView sprachabhängig), BottomNav i18n, LogoIcon SVG (C-Bogen + Pfeil, Sidebar + favicon.svg) |
+| **Phase 7-9 Cleanup** | Zeit-Filter (`minDuration`/`maxDuration` in `useWods`), Substitution-Toggle (SettingsPage + WodDetail-Gate, localStorage), Silent Mode / Parent Mode (`is_jumping`-Flag auf WOD-Ebene, Keyword-Sweep 251 WODs, SettingsPage-Toggle + WodList-Filter), Stretching & Yoga Rebranding (i18n DE/EN/ES), Hybrid-Labels für WOD-Typen (`wodTypeLabels.ts`, WodCard + WodList + TimerView sprachabhängig), BottomNav i18n, LogoIcon SVG (C-Bogen + Pfeil, Sidebar + favicon.svg — Pfeil entfernt in Session P) |
 | **Wake Lock (Stretching + Meditation)** | Screen Wake Lock in `GuidedSession`, `MeditationSession`, `CustomTimer` — selbes Pattern wie `TimerView` |
 | **Gong am Session-Ende** | `GuidedSession`, `MeditationSession`, `CustomTimer` spielen Gong bei Timer-Ende und manuellem Beenden |
 | **Routine-Create Modal** | Custom Routine direkt aus `RoutineList` erstellen via `RoutineEditModal`, optimistic Insert in `useRoutines` + `useTodos`; `useRoutines` (update + delete) und `useTodos` (complete) vollständig optimistic (onMutate/onError rollback/onSettled) |
@@ -469,6 +475,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session M** | **Pillar-Tabs immer sichtbar** — `BottomNav` + `Sidebar`: alle 5 Tabs sichtbar, inaktive Pillars gedimmt + Alert-Modal beim Antippen; **Toggle "Inaktive Bereiche ausblenden"** in `SettingsPage` (localStorage `hide_inactive_pillars`, CustomEvent `hide_inactive_changed`); **userEquipment-Filter** — `useWods.WodFilters` + `userEquipment`-Prop in `WodList`/`WorkoutPage`; Toggle-Button "Equipment-Filter aktiv / aus" (`showAllEquipment`-State); **goal-aware Suggestion** — `getSuggestedPillar(goal?)` mit Tiebreaker-Logik; `AdaptiveSuggestion` zeigt dreisprachige Ziel-Hinweis-Zeile (`GOAL_HINT`/`GOAL_PILLAR`); **Yoga-Tagging** — Migration 019: keyword-basiertes UPDATE auf `stretching_exercises.subcategory='yoga'`; **Migration 020**: DB-Webhook auf `feedback`-INSERT verknüpft mit `notify-feedback` Edge Function |
 | **Session N** | **WOD-Katalog-Erweiterung + Filter-Fixes** — Migration 021: 183 neue WODs (hiit 60, kraft_ausdauer 50, kraft_wenig_zeit 30, krafttraining 43; equipment_tags: bodyweight/dumbbell/kettlebell/barbell); Migration 022: CrossFit-WODs außer Girls (20) + Heroes (88) auf is_visible=false; **Equipment-Filter-Fix** in useWods: Normalisierung lowercase + Mapping dumbbells→dumbbell, bodyweight immer erlaubt; **Timer-Exercise-Anzeige**: FreeTimerWizard.onStart erhält 5. Parameter exercises?: WizardExercise[]; TimerView zeigt Übungsliste unterhalb Timer-Controls; WorkoutPage.timerConfig erweitert um exercises |
 | **Session O** | **Loading-Fix + AdaptiveSuggestion + Editor's Pick + Ambient Sounds** — **AdaptiveSuggestion Loading-Guard**: `adaptiveSuggestion.ts` Hinweis + `AdaptiveSuggestion.tsx` rendert null solange `profile` null (Supabase-Delay beim ersten Render); **TodaysWod `pickByDate`**: deterministischer Index (dayOfYear % pool.length), Fallback auf `EDITORS_PICK_IDS` wenn DB-Pool leer; **Migration 023**: partieller Index auf `wods.is_editors_pick = true` (Spalte seit Migration 010, Index neu); **Ambient Sounds Slot**: `public/audio/ambient/` als manueller Ablageort für Meditation-Ambient-Dateien |
+| **Session P** | **Meditation Sub-Tabs + Yoga Flows + ExerciseKeyframes** — **Logo-Fix**: Pfeil aus `LogoIcon.tsx` + `favicon.svg` entfernt, nur C-Bogen bleibt; **Meditation Ungeführt/Geführt**: `MeditationPage` hat Sub-Tabs im Meditieren-Tab; **UnguidedTimer**: Phasen-Timer (5 Typen: breathing/box_breathing/body_scan/focus/open_awareness, 5–20 min, dreisprachig); **GuidedPlayer**: lädt `sessions.json`, MP3-Player-Struktur mit `available`-Flag (7 Placeholder-Sessions); `public/audio/sessions/sessions.json` angelegt; **ExerciseKeyframes**: Shared-Komponente Bild-Crossfade, gibt null zurück bis Bilder vorhanden; **GuidedSession**: `defaultExerciseDuration`-Prop + Yoga-Atemhinweis + ExerciseKeyframes integriert; **Yoga Flows** in `StretchingPage`: 5 clientseitige virtuelle Flows (Morgen/Hüft/Rücken/Power/Schlaf), Exercises per Name-Hint aus DB gelöst, Filter `yoga_flow` zeigt Flow-Cards statt Routine-Liste |
 
 ### Offen / Roadmap
 
@@ -493,4 +500,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session O: Loading-Fix, AdaptiveSuggestion Guard, Editor's Pick Index, Ambient Sounds)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session P: Meditation Sub-Tabs, UnguidedTimer, GuidedPlayer, Yoga Flows, ExerciseKeyframes, Logo-Fix)*
