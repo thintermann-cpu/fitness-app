@@ -15,7 +15,7 @@ Das Produkt basiert auf **4 Pillars** (Domänen), die einzeln freischaltbar sind
 | **Workout** | `#E8642A` Orange | WOD-Datenbank (796 lokale / bis zu 981 Supabase-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), Krafttraining-Modus (Satz-basierter Flow mit Gewichts-/Rep-Tracking), History, Highscores |
 | **Routine** (Ritual) | `#4A90D9` Blau | Tagesrituale, To-dos, Wochenübersicht; MoodCheck jetzt auf HomePage |
 | **Stretching** | `#7BC67E` Grün | 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync |
-| **Meditation** | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer, Screen Wake Lock, Gong am Session-Ende |
+| **Meditation** | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer, Screen Wake Lock, Gong am Session-Ende; Ambient-Sound-Dateien unter `public/audio/ambient/` |
 
 Migrations-Hintergrund: Rebuild aus zwei Vorgänger-Apps (`wod-tracker/` Vanilla-JS-PWA mit ServiceWorker, `mein-tag/` v1.4.0 HTML). Beide Ordner liegen noch im Repo und bleiben unberührt.
 
@@ -58,7 +58,7 @@ apps/web/src/
 ├── lib/
 │   ├── supabase.ts            # Supabase-Client + isSupabaseConfigured()
 │   ├── push.ts                # Push Notification Helpers (subscribeToPush, unsubscribeFromPush)
-│   ├── adaptiveSuggestion.ts  # Pure Funktion `getSuggestedPillar(goal?: string | null): Pillar` — Empfehlung nach Uhrzeit (05–10 immer routine); Tiebreaker per goal: Mittag (10–17): `beweglichkeit`→stretching, `entspannen` ab 14h→meditation, sonst workout; Abend (17–21): `kraft`/`abnehmen`→workout, `entspannen`→meditation, sonst stretching; Nacht→meditation
+│   ├── adaptiveSuggestion.ts  # Pure Funktion `getSuggestedPillar(goal?: string | null): Pillar` — Empfehlung nach Uhrzeit (05–10 immer routine); Tiebreaker per goal: Mittag (10–17): `beweglichkeit`→stretching, `entspannen` ab 14h→meditation, sonst workout; Abend (17–21): `kraft`/`abnehmen`→workout, `entspannen`→meditation, sonst stretching; Nacht→meditation; **Loading-Fix**: `AdaptiveSuggestion` rendert erst wenn `profile` nicht null ist (Supabase-Delay-Guard)
 │   ├── customWorkouts.ts      # CustomWorkout + CustomSession Typen; localStorage CRUD (save/load/delete); Keys: carveout_custom_workouts / carveout_custom_sessions
 │   └── timerLabels.ts         # TimerMode, TimerLabel, TIMER_LABELS (name/desc/emoji/color pro Modus), TIMER_MODE_LIST, WOD_TYPE_TO_MODE (DB-Typ → TimerMode)
 ├── store/
@@ -90,8 +90,8 @@ apps/web/src/
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
 │   ├── home/
 │   │   ├── TodayPillarTracker.tsx  # 4 Chips (Done/Open) aus useTodayPillars; dreisprachig; Header-Label: "Aktueller Stand von heute · N von 4" (de/en/es); Chip-Reihenfolge: Ritual · Workout · Stretching · Meditation
-│   │   ├── AdaptiveSuggestion.tsx  # Empfehlungskarte nach Tageszeit; übergibt `profile.goal` an `getSuggestedPillar()`; zeigt Ziel-Hinweis-Zeile wenn Pillar zum Nutzer-Ziel passt (`GOAL_HINT` + `GOAL_PILLAR` Maps, dreisprachig); Pillar-Farbe + CTA → Navigation
-│   │   ├── TodaysWod.tsx           # Deterministischer Tages-WOD aus Editor's-Pick-Pool (pickByDate); staleTime 1 h
+│   │   ├── AdaptiveSuggestion.tsx  # Empfehlungskarte nach Tageszeit; übergibt `profile.goal` an `getSuggestedPillar()`; zeigt Ziel-Hinweis-Zeile wenn Pillar zum Nutzer-Ziel passt (`GOAL_HINT` + `GOAL_PILLAR` Maps, dreisprachig); Pillar-Farbe + CTA → Navigation; rendert null wenn `profile` noch nicht geladen (Loading-Guard gegen Supabase-Delay beim ersten Render)
+│   │   ├── TodaysWod.tsx           # Deterministischer Tages-WOD aus Editor's-Pick-Pool (`pickByDate`: Index = dayOfYear % pool.length); staleTime 1 h; Fallback auf `EDITORS_PICK_IDS`-Set wenn Supabase-Pool leer
 │   │   ├── WeekStats.tsx           # Session-Counts letzte 7 Tage: Workout / Stretching / Meditation (3 parallele Count-Queries)
 │   │   └── RecentActivity.tsx      # Letzte 3 WOD-Einträge aus wod_history; relatives Datum (Heute/Gestern/vor N Tagen)
 │   ├── workout/
@@ -132,7 +132,7 @@ apps/web/src/
 │   ├── useRoutineLogs.ts      # Completion-Logs
 │   ├── useDailyLog.ts         # Tages-Mood, Wasser
 │   ├── useTodos.ts            # To-do-Liste
-│   ├── useWods.ts             # Supabase oder /wods.json Fallback; Filter: equipmentFilter, silentMode, editorsPick, excludeEquipment, **userEquipment** (profile.equipment — zeigt nur WODs deren equipment_tags ⊆ userEquipment; Fallback auf altes `equipment`-Feld für lokales JSON; Normalisierung: lowercase + Mapping dumbbells→dumbbell; bodyweight immer in allowed-Set), minDuration, maxDuration, wodCategory (crossfit|hiit|kraft_ausdauer|kraft_wenig_zeit|krafttraining); Supabase-Query mit `.eq('is_visible', true)`; pickRandomWod() (gecachte lokale WODs + alle Filter)
+│   ├── useWods.ts             # Supabase oder /wods.json Fallback; Filter: equipmentFilter, silentMode, editorsPick, excludeEquipment, **userEquipment** (profile.equipment — zeigt nur WODs deren equipment_tags ⊆ userEquipment; Fallback auf altes `equipment`-Feld für lokales JSON; Normalisierung: lowercase + Mapping dumbbells→dumbbell; bodyweight immer in allowed-Set), minDuration, maxDuration, wodCategory (crossfit|hiit|kraft_ausdauer|kraft_wenig_zeit|krafttraining); Supabase-Query mit `.eq('is_visible', true)`; pickRandomWod() (gecachte lokale WODs + alle Filter); **pickByDate(wods)** (deterministisch: Index = dayOfYear % pool.length — genutzt von TodaysWod)
 │   ├── useWodHistory.ts       # localStorage + Supabase Dual-Write, personalBest
 │   ├── useHighscores.ts       # Top-10 pro WOD (Supabase oder local)
 │   ├── useStretching.ts       # Stretching-Übungen, Routinen, Logs
@@ -147,7 +147,8 @@ apps/web/src/
     ├── timer.worker.js        # Drift-korrigierter Web Worker
     ├── favicon.svg
     ├── icons.svg
-    └── manifest.json          # PWA-Manifest (name/short_name CarveOut, theme_color #0D0D14, SVG-Icon)
+    ├── manifest.json          # PWA-Manifest (name/short_name CarveOut, theme_color #0D0D14, SVG-Icon)
+    └── audio/ambient/         # Slot für Ambient-Sound-Dateien (Meditation); aktuell manuell befüllt — kein Build-Step
 ```
 
 ### PWA-Konfiguration
@@ -241,7 +242,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | `routine_logs` | Completion-Einträge pro Routine + Datum |
 | `todos` | To-do-Liste pro Nutzer + Datum |
 | `daily_logs` | Tageseinträge: Mood, Wasserkonsum, Notizen |
-| `wods` | WOD-Stammdaten (bis zu 981 Einträge, statisch, read-only für Users); `is_editors_pick` bool (Migration 010); `wod_category` text CHECK (crossfit\|hiit\|kraft_ausdauer\|kraft_wenig_zeit\|krafttraining), Default crossfit (Migration 015); `is_visible` bool NOT NULL DEFAULT true — Soft-Delete (Migration 015); `equipment_tags` text[] NOT NULL DEFAULT '{}', GIN-Index (Migration 016); lokaler Fallback: `EDITORS_PICK_IDS` Set in `useWods`; Migration 021: 183 neue WODs (hiit 60, kraft_ausdauer 50, kraft_wenig_zeit 30, krafttraining 43); Migration 022: CrossFit-WODs außer Girls/Heroes auf is_visible=false |
+| `wods` | WOD-Stammdaten (bis zu 981 Einträge, statisch, read-only für Users); `is_editors_pick` bool (Migration 010); `wod_category` text CHECK (crossfit\|hiit\|kraft_ausdauer\|kraft_wenig_zeit\|krafttraining), Default crossfit (Migration 015); `is_visible` bool NOT NULL DEFAULT true — Soft-Delete (Migration 015); `equipment_tags` text[] NOT NULL DEFAULT '{}', GIN-Index (Migration 016); lokaler Fallback: `EDITORS_PICK_IDS` Set in `useWods`; Migration 021: 183 neue WODs (hiit 60, kraft_ausdauer 50, kraft_wenig_zeit 30, krafttraining 43); Migration 022: CrossFit-WODs außer Girls/Heroes auf is_visible=false; **Migration 023**: partieller Index auf `is_editors_pick = true` (Spalte existiert seit Migration 010, Index neu für schnelle Editor's-Pick-Queries) |
 | `wod_history` | Workout-Logs pro Nutzer (WOD, Score, Datum, Notizen) |
 | `stretching_exercises` | 65 Übungen (dreisprachig, bilateral_support, category, `subcategory` VARCHAR NULL — Migration 011; Yoga-Tagging via keyword-basiertem UPDATE — Migration 019) |
 | `stretching_routines` | 18 Routinen mit exercise_ids; `subcategory` VARCHAR NULL (Migration 011, Yoga-Seed) |
@@ -467,6 +468,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session L** | **Krafttraining-Modus** — `KrafttrainingView` (Satz-basierter Flow: Übungsauswahl, Gewicht/Rep-Tracking pro Satz, Rest-Timer, Session-Log); neues Kategorie-Chip "Krafttraining" in `WorkoutPage` + `wodCategory`-Filter in `useWods`; `wod_category` CHECK-Constraint erweitert um `krafttraining`; **Migration 017**: kraft_auf_zeit → kraft_wenig_zeit (ALTER TABLE DROP/ADD CONSTRAINT + UPDATE); **CountdownOverlay** in `TimerView` + `WarmupTimer` (3-2-1-Go SVG-Animation vor Timer-Start, Wake Lock bereits aktiv); **TodoList-Bug-Fix** (Null-Guard: leere Liste zeigte Fehler statt Empty-State) |
 | **Session M** | **Pillar-Tabs immer sichtbar** — `BottomNav` + `Sidebar`: alle 5 Tabs sichtbar, inaktive Pillars gedimmt + Alert-Modal beim Antippen; **Toggle "Inaktive Bereiche ausblenden"** in `SettingsPage` (localStorage `hide_inactive_pillars`, CustomEvent `hide_inactive_changed`); **userEquipment-Filter** — `useWods.WodFilters` + `userEquipment`-Prop in `WodList`/`WorkoutPage`; Toggle-Button "Equipment-Filter aktiv / aus" (`showAllEquipment`-State); **goal-aware Suggestion** — `getSuggestedPillar(goal?)` mit Tiebreaker-Logik; `AdaptiveSuggestion` zeigt dreisprachige Ziel-Hinweis-Zeile (`GOAL_HINT`/`GOAL_PILLAR`); **Yoga-Tagging** — Migration 019: keyword-basiertes UPDATE auf `stretching_exercises.subcategory='yoga'`; **Migration 020**: DB-Webhook auf `feedback`-INSERT verknüpft mit `notify-feedback` Edge Function |
 | **Session N** | **WOD-Katalog-Erweiterung + Filter-Fixes** — Migration 021: 183 neue WODs (hiit 60, kraft_ausdauer 50, kraft_wenig_zeit 30, krafttraining 43; equipment_tags: bodyweight/dumbbell/kettlebell/barbell); Migration 022: CrossFit-WODs außer Girls (20) + Heroes (88) auf is_visible=false; **Equipment-Filter-Fix** in useWods: Normalisierung lowercase + Mapping dumbbells→dumbbell, bodyweight immer erlaubt; **Timer-Exercise-Anzeige**: FreeTimerWizard.onStart erhält 5. Parameter exercises?: WizardExercise[]; TimerView zeigt Übungsliste unterhalb Timer-Controls; WorkoutPage.timerConfig erweitert um exercises |
+| **Session O** | **Loading-Fix + AdaptiveSuggestion + Editor's Pick + Ambient Sounds** — **AdaptiveSuggestion Loading-Guard**: `adaptiveSuggestion.ts` Hinweis + `AdaptiveSuggestion.tsx` rendert null solange `profile` null (Supabase-Delay beim ersten Render); **TodaysWod `pickByDate`**: deterministischer Index (dayOfYear % pool.length), Fallback auf `EDITORS_PICK_IDS` wenn DB-Pool leer; **Migration 023**: partieller Index auf `wods.is_editors_pick = true` (Spalte seit Migration 010, Index neu); **Ambient Sounds Slot**: `public/audio/ambient/` als manueller Ablageort für Meditation-Ambient-Dateien |
 
 ### Offen / Roadmap
 
@@ -491,4 +493,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session N: WOD-Katalog 183 WODs, CrossFit-Visibility, Equipment-Filter, Timer-Exercise)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session O: Loading-Fix, AdaptiveSuggestion Guard, Editor's Pick Index, Ambient Sounds)*
