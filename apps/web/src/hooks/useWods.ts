@@ -127,11 +127,14 @@ function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[
     wods = wods.filter((w) => !w.equipment.some((eq) => excluded.has(eq.toLowerCase())))
   }
   if (filters.userEquipment?.length) {
-    const allowed = new Set(filters.userEquipment.map((e) => e.toLowerCase()))
+    // Normalize plural/capitalized profile values to match DB tag format (lowercase singular)
+    const NORM: Record<string, string> = { dumbbells: 'dumbbell', 'resistance bands': 'resistance band' }
+    const norm = (e: string) => { const l = e.toLowerCase(); return NORM[l] ?? l }
+    const allowed = new Set(filters.userEquipment.map(norm))
+    allowed.add('bodyweight') // bodyweight WODs are always accessible
     wods = wods.filter((w) => {
-      // Prefer equipment_tags (from DB migration 016); fall back to old equipment field for local JSON
       const tags = w.equipment_tags?.length ? w.equipment_tags : w.equipment
-      return tags.length === 0 || tags.every((eq) => allowed.has(eq.toLowerCase()))
+      return tags.length === 0 || tags.every((eq) => allowed.has(norm(eq)))
     })
   }
   if (filters.minDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes >= filters.minDuration!)

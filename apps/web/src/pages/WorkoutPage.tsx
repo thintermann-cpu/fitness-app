@@ -14,6 +14,7 @@ import {
   loadCustomWorkouts,
   deleteCustomWorkout,
   type CustomWorkout,
+  type WizardExercise,
 } from '../lib/customWorkouts'
 import { type TimerMode } from '../lib/timerLabels'
 import { WOD_CATEGORY_LABELS } from '../lib/categoryLabels'
@@ -62,7 +63,7 @@ export function WorkoutPage() {
   const [wizardOpen, setWizardOpen]       = useState(false)
   const [adhocOpen, setAdhocOpen]         = useState(false)
   const [showAllEquipment, setShowAllEquipment] = useState(false)
-  const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number; kraftConfig?: KraftConfig } | null>(null)
+  const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number; kraftConfig?: KraftConfig; exercises?: WizardExercise[] } | null>(null)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [wodCategory, setWodCategory] = useState('')
   const [tooltipCat, setTooltipCat] = useState<string | null>(null)
@@ -74,13 +75,13 @@ export function WorkoutPage() {
     if (!wodName) setTab('wods')
   }, [wodName])
 
-  function handleWizardStart(mode: TimerMode, minutes: number, _withWarmup?: boolean, kraftConfig?: KraftConfig) {
-    setTimerConfig({ mode, minutes, kraftConfig })
+  function handleWizardStart(mode: TimerMode, minutes: number, _withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[]) {
+    setTimerConfig({ mode, minutes, kraftConfig, exercises })
     setTab('timer')
   }
 
-  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig) {
-    setTimerConfig({ mode, minutes, kraftConfig })
+  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[]) {
+    setTimerConfig({ mode, minutes, kraftConfig, exercises })
     if (withWarmup) setShowWarmupTimer(true)
   }
 
@@ -302,6 +303,7 @@ export function WorkoutPage() {
                     adHocLog
                     initialMode={timerConfig.mode as Exclude<typeof timerConfig.mode, 'krafttraining'>}
                     initialMinutes={timerConfig.minutes}
+                    exercises={timerConfig.exercises}
                   />
                 )}
                 <button

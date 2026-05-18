@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
+import type { WizardExercise } from '../../lib/customWorkouts'
 
 type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
@@ -13,6 +14,7 @@ interface Props {
   onComplete?: () => void
   bilateral?: boolean
   adHocLog?: boolean
+  exercises?: WizardExercise[]
 }
 
 interface TickData {
@@ -104,7 +106,7 @@ function Stepper({
   )
 }
 
-export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, adHocLog }: Props) {
+export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, adHocLog, exercises }: Props) {
   const [mode, setMode]           = useState<TimerMode>(initialMode ?? 'fortime')
   const [minutes, setMinutes]     = useState(initialMinutes ?? 20)  // AMRAP total time
 
@@ -529,6 +531,24 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
                     : 'rgba(255,255,255,0.1)',
               }}
             />
+          ))}
+        </div>
+      )}
+
+      {/* Exercise list */}
+      {exercises && exercises.length > 0 && (
+        <div className="w-full mt-2 rounded-xl bg-white/5 px-4 py-3 space-y-1.5">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
+            Übungen
+          </p>
+          {exercises.map((ex, i) => (
+            <div key={ex.id} className="flex items-center gap-2">
+              <span className="text-xs text-[var(--color-text-muted)] w-4 flex-shrink-0">{i + 1}.</span>
+              <span className="text-sm text-[var(--color-text)] flex-1">{ex.name}</span>
+              {ex.detail && (
+                <span className="text-xs text-[var(--color-text-muted)]">{ex.detail}</span>
+              )}
+            </div>
           ))}
         </div>
       )}

@@ -19,7 +19,7 @@ interface Props {
   onClose: () => void
   /** 'save' = incl. name field + localStorage save; 'adhoc' = no save, adds warmup step */
   variant?: 'save' | 'adhoc'
-  onStart: (mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig) => void
+  onStart: (mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[]) => void
 }
 
 const REST_BETWEEN_SETS_OPTIONS    = [45, 60, 90, 120]
@@ -97,9 +97,10 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
     const m   = mode
     const min = isKraft ? 0 : minutes
     const w   = warmup ?? false
+    const exs = isKraft ? undefined : (exercises.length > 0 ? exercises : undefined)
     reset()
     onClose()
-    onStart(m, min, w, kraftCfg)
+    onStart(m, min, w, kraftCfg, exs)
   }
 
   const canNext = (() => {
