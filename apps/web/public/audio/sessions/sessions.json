@@ -1,0 +1,9 @@
+[
+  { "id": "body-scan-5",   "title": "Body Scan",              "duration": 5,  "type": "body_scan",      "file": "de/body-scan-5.mp3",   "available": false },
+  { "id": "body-scan-10",  "title": "Body Scan",              "duration": 10, "type": "body_scan",      "file": "de/body-scan-10.mp3",  "available": false },
+  { "id": "breathing-5",   "title": "Atemmeditation",         "duration": 5,  "type": "breathing",      "file": "de/breathing-5.mp3",   "available": false },
+  { "id": "focus-10",      "title": "Fokus-Meditation",       "duration": 10, "type": "focus",          "file": "de/focus-10.mp3",      "available": false },
+  { "id": "sleep-15",      "title": "Einschlaf-Meditation",   "duration": 15, "type": "sleep",          "file": "de/sleep-15.mp3",      "available": false },
+  { "id": "morning-10",    "title": "Morgen-Achtsamkeit",     "duration": 10, "type": "morning",        "file": "de/morning-10.mp3",    "available": false },
+  { "id": "stress-10",     "title": "Stressabbau",            "duration": 10, "type": "stress_relief",  "file": "de/stress-10.mp3",     "available": false }
+]

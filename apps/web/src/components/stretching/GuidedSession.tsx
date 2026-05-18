@@ -4,6 +4,7 @@ import { useStretchingLogs } from '../../hooks/useStretchingLogs'
 import { useAudio } from '../../hooks/useAudio'
 import { ExerciseIllustration } from './ExerciseIllustration'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
+import { ExerciseKeyframes } from '../shared/ExerciseKeyframes'
 
 const PILLAR_COLOR = '#7BC67E'
 const SWITCH_DURATION = 5
@@ -76,9 +77,10 @@ interface Props {
   exercises: StretchingExercise[]
   lang: Lang
   onFinish: () => void
+  defaultExerciseDuration?: number
 }
 
-export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
+export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerciseDuration }: Props) {
   const t = T[lang]
   const { addLog } = useStretchingLogs()
   const audio = useAudio()
@@ -97,7 +99,8 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
   const total = orderedExercises.length
 
   // Session config
-  const [exerciseDuration, setExerciseDuration] = useState(30)
+  const isYogaFlow = routine.subcategory === 'yoga_flow'
+  const [exerciseDuration, setExerciseDuration] = useState(defaultExerciseDuration ?? 30)
   const [pauseDuration, setPauseDuration] = useState(5)
 
   // Session state
@@ -439,10 +442,17 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
                 <span className="text-sm font-bold">{t.pause}</span>
               </div>
             ) : (
-              <ExerciseIllustration
-                imageKey={current?.image_key ?? null}
-                muscleGroup={current?.muscle_group ?? ''}
-              />
+              <>
+                <ExerciseKeyframes
+                  exerciseId={current?.id ?? ''}
+                  frames={[]}
+                  interval={2500}
+                />
+                <ExerciseIllustration
+                  imageKey={current?.image_key ?? null}
+                  muscleGroup={current?.muscle_group ?? ''}
+                />
+              </>
             )}
           </div>
         </div>
@@ -459,18 +469,25 @@ export function GuidedSession({ routine, exercises, lang, onFinish }: Props) {
 
         {/* Exercise name + info button */}
         {phase !== 'rest' && (
-          <div className="flex items-center gap-2 mt-4">
-            <h2 className="text-xl font-bold text-[var(--color-text)] text-center">
-              {current?.name}
-            </h2>
-            {(current?.instructions?.length ?? 0) > 0 && (
-              <button
-                onClick={() => setShowInfo(true)}
-                className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs text-[var(--color-text-muted)] hover:bg-white/20 transition-colors shrink-0"
-                aria-label={t.instructions}
-              >
-                ℹ
-              </button>
+          <div className="flex flex-col items-center gap-1 mt-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-[var(--color-text)] text-center">
+                {current?.name}
+              </h2>
+              {(current?.instructions?.length ?? 0) > 0 && (
+                <button
+                  onClick={() => setShowInfo(true)}
+                  className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs text-[var(--color-text-muted)] hover:bg-white/20 transition-colors shrink-0"
+                  aria-label={t.instructions}
+                >
+                  ℹ
+                </button>
+              )}
+            </div>
+            {isYogaFlow && phase === 'exercise' && (
+              <p className="text-xs" style={{ color: `${PILLAR_COLOR}80` }}>
+                Atme aus beim Dehnen
+              </p>
             )}
           </div>
         )}

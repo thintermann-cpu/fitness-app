@@ -11,13 +11,16 @@ import { CustomBreathworkEditor } from '../components/meditation/CustomBreathwor
 import { MeditationHistory }      from '../components/meditation/MeditationHistory'
 import { AdHocMeditationTimer }  from '../components/meditation/AdHocMeditationTimer'
 import { AmbientPlayer }         from '../components/meditation/AmbientPlayer'
+import { UnguidedTimer }         from '../components/meditation/UnguidedTimer'
+import { GuidedPlayer }          from '../components/meditation/GuidedPlayer'
 import { FilterBottomSheet }     from '../components/ui/FilterBottomSheet'
 
 const PILLAR_COLOR = '#9B7FD4'
 
 type Lang     = 'de' | 'en' | 'es'
-type Tab      = 'meditate' | 'breathwork' | 'history'
-type View     = 'list' | 'session' | 'breathwork_session' | 'custom_timer' | 'custom_breathwork_session' | 'free_meditation'
+type Tab         = 'meditate' | 'breathwork' | 'history'
+type MedSubTab   = 'unguided' | 'guided'
+type View        = 'list' | 'session' | 'breathwork_session' | 'custom_timer' | 'custom_breathwork_session' | 'free_meditation'
 type Category  = 'all' | 'mindfulness' | 'body_scan' | 'sleep' | 'focus' | 'stress_relief' | 'morning' | 'visualization' | 'movement'
 type DurFilter = 0 | 5 | 10 | 15 | 20 | 30
 
@@ -115,6 +118,7 @@ export function MeditationPage() {
   const t       = T[lang]
 
   const [tab,          setTab]          = useState<Tab>('meditate')
+  const [medSubTab,    setMedSubTab]    = useState<MedSubTab>('unguided')
   const [view,         setView]         = useState<View>('list')
   const [catFilter,    setCatFilter]    = useState<Category>('all')
   const [durFilter,    setDurFilter]    = useState<DurFilter>(0)
@@ -307,106 +311,141 @@ export function MeditationPage() {
         {/* ── MEDITATE TAB ─────────────────────────────────────── */}
         {tab === 'meditate' && (
           <>
-            {/* Ambient Sound */}
+            {/* Ambient Sound — always visible */}
             <div className="px-4 pt-4 pb-2">
               <AmbientPlayer />
             </div>
 
-            {/* Quick meditation */}
-            <div className="px-4 pt-2 pb-2">
-              <div
-                className="rounded-[var(--radius-md)] p-4 border"
-                style={{ backgroundColor: `${PILLAR_COLOR}10`, borderColor: `${PILLAR_COLOR}30` }}
-              >
-                <p className="text-sm font-semibold mb-3" style={{ color: PILLAR_COLOR }}>
-                  🧘 {t.freeTitle}
-                </p>
-                <div className="flex gap-2 mb-3">
-                  {([5, 10, 20] as const).map((min) => (
-                    <button
-                      key={min}
-                      onClick={() => setFreeDuration(min)}
-                      className="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors"
-                      style={
-                        freeDuration === min
-                          ? { backgroundColor: PILLAR_COLOR, color: 'white' }
-                          : { backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }
-                      }
-                    >
-                      {min} min
-                    </button>
-                  ))}
-                </div>
+            {/* Ungeführt / Geführt sub-tabs */}
+            <div className="px-4 flex gap-1 pt-2 pb-3 border-b border-white/5">
+              {(['unguided', 'guided'] as const).map((st) => (
                 <button
-                  onClick={() => setView('free_meditation')}
-                  className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
-                  style={{ backgroundColor: PILLAR_COLOR }}
+                  key={st}
+                  onClick={() => setMedSubTab(st)}
+                  className="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors"
+                  style={
+                    medSubTab === st
+                      ? { backgroundColor: `${PILLAR_COLOR}22`, color: PILLAR_COLOR }
+                      : { color: 'var(--color-text-muted)' }
+                  }
                 >
-                  ▶ {t.freeStart}
+                  {st === 'unguided' ? 'Ungeführt' : 'Geführt'}
                 </button>
+              ))}
+            </div>
+
+            {/* ── UNGEFÜHRT ─────────────────────────────────────── */}
+            {medSubTab === 'unguided' && (
+              <div className="px-4 pt-4">
+                <UnguidedTimer lang={lang} onFinish={() => {}} />
               </div>
-            </div>
+            )}
 
-            {/* Filter button bar */}
-            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-              <span className="text-xs text-[var(--color-text-muted)]">
-                {filtered.length}
-              </span>
-              <button
-                onClick={openFilter}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                style={
-                  activeFilterCount > 0
-                    ? { backgroundColor: `${PILLAR_COLOR}25`, color: PILLAR_COLOR, border: `1px solid ${PILLAR_COLOR}60` }
-                    : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)', border: '1px solid transparent' }
-                }
-              >
-                <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor">
-                  <path d="M1 2h10L7 6.5V10l-2-1V6.5L1 2z"/>
-                </svg>
-                {activeFilterCount > 0 ? `Filter · ${activeFilterCount}` : 'Filter'}
-              </button>
-            </div>
+            {/* ── GEFÜHRT ───────────────────────────────────────── */}
+            {medSubTab === 'guided' && (
+              <>
+                {/* Audio sessions (sessions.json) */}
+                <div className="px-4 pt-4">
+                  <GuidedPlayer />
+                </div>
 
-            <div className="px-4 space-y-3">
-              {isLoading ? (
-                <>
-                  {[0, 1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-[var(--radius-md)] bg-[var(--color-bg-card)] border border-white/5 p-4 animate-pulse">
-                      <div className="flex items-start gap-2 mb-2">
-                        <div className="h-4 rounded bg-white/10 flex-1" />
-                        <div className="h-5 w-20 rounded-full bg-white/10" />
-                      </div>
-                      <div className="h-3 rounded bg-white/10 mb-1.5 w-full" />
-                      <div className="h-3 rounded bg-white/10 w-2/3" />
-                      <div className="mt-3 flex gap-2">
-                        <div className="h-2.5 w-14 rounded bg-white/10" />
-                        <div className="h-2.5 w-10 rounded bg-white/10" />
-                      </div>
+                {/* Divider to existing DB sessions */}
+                <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+                  <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {filtered.length}
+                  </span>
+                  <button
+                    onClick={openFilter}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                    style={
+                      activeFilterCount > 0
+                        ? { backgroundColor: `${PILLAR_COLOR}25`, color: PILLAR_COLOR, border: `1px solid ${PILLAR_COLOR}60` }
+                        : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)', border: '1px solid transparent' }
+                    }
+                  >
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor">
+                      <path d="M1 2h10L7 6.5V10l-2-1V6.5L1 2z"/>
+                    </svg>
+                    {activeFilterCount > 0 ? `Filter · ${activeFilterCount}` : 'Filter'}
+                  </button>
+                </div>
+
+                <div className="px-4 space-y-3 pb-4">
+                  {isLoading ? (
+                    <>
+                      {[0, 1, 2, 3].map((i) => (
+                        <div key={i} className="rounded-[var(--radius-md)] bg-[var(--color-bg-card)] border border-white/5 p-4 animate-pulse">
+                          <div className="flex items-start gap-2 mb-2">
+                            <div className="h-4 rounded bg-white/10 flex-1" />
+                            <div className="h-5 w-20 rounded-full bg-white/10" />
+                          </div>
+                          <div className="h-3 rounded bg-white/10 mb-1.5 w-full" />
+                          <div className="h-3 rounded bg-white/10 w-2/3" />
+                        </div>
+                      ))}
+                    </>
+                  ) : isError ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                      <span className="text-4xl">⚠️</span>
+                      <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                        Daten konnten nicht geladen werden.
+                      </p>
                     </div>
-                  ))}
-                </>
-              ) : isError ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-3">
-                  <span className="text-4xl">⚠️</span>
-                  <p className="text-sm text-[var(--color-text-muted)]">Daten konnten nicht geladen werden.</p>
+                  ) : filtered.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                      <span className="text-4xl">🧘</span>
+                      <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                        {t.emptyMeditate}
+                      </p>
+                    </div>
+                  ) : (
+                    filtered.map((m) => (
+                      <MeditationCard
+                        key={m.id}
+                        meditation={m}
+                        lang={lang}
+                        onClick={() => handleSelectMeditation(m)}
+                      />
+                    ))
+                  )}
                 </div>
-              ) : filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-3">
-                  <span className="text-4xl">🧘</span>
-                  <p className="text-sm text-[var(--color-text-muted)]">{t.emptyMeditate}</p>
+
+                {/* Legacy free-meditation quick-start */}
+                <div className="px-4 pb-4">
+                  <div
+                    className="rounded-[var(--radius-md)] p-4 border"
+                    style={{ backgroundColor: `${PILLAR_COLOR}10`, borderColor: `${PILLAR_COLOR}30` }}
+                  >
+                    <p className="text-sm font-semibold mb-3" style={{ color: PILLAR_COLOR }}>
+                      🧘 {t.freeTitle}
+                    </p>
+                    <div className="flex gap-2 mb-3">
+                      {([5, 10, 20] as const).map((min) => (
+                        <button
+                          key={min}
+                          onClick={() => setFreeDuration(min)}
+                          className="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors"
+                          style={
+                            freeDuration === min
+                              ? { backgroundColor: PILLAR_COLOR, color: 'white' }
+                              : { backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }
+                          }
+                        >
+                          {min} min
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setView('free_meditation')}
+                      className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
+                      style={{ backgroundColor: PILLAR_COLOR }}
+                    >
+                      ▶ {t.freeStart}
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                filtered.map((m) => (
-                  <MeditationCard
-                    key={m.id}
-                    meditation={m}
-                    lang={lang}
-                    onClick={() => handleSelectMeditation(m)}
-                  />
-                ))
-              )}
-            </div>
+              </>
+            )}
           </>
         )}
 
