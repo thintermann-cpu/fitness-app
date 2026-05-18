@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { getSuggestedPillar, type Pillar } from '../../lib/adaptiveSuggestion'
 import { useAuthStore } from '../../store/authStore'
+import { useTodayPillars } from '../../hooks/useTodayPillars'
 
 type Lang = 'de' | 'en' | 'es'
 
@@ -90,21 +91,62 @@ const PILLAR_CONFIG = {
   },
 } as const
 
+const ALL_DONE: Record<Lang, string> = {
+  de: 'Alle Einheiten für heute erledigt 🎉',
+  en: 'All sessions for today done 🎉',
+  es: 'Todas las sesiones de hoy completadas 🎉',
+}
+const ALL_DONE_SUB: Record<Lang, string> = {
+  de: 'Großartig — komm morgen wieder.',
+  en: 'Great job — see you tomorrow.',
+  es: 'Excelente — vuelve mañana.',
+}
+
 export function AdaptiveSuggestion() {
-  const navigate    = useNavigate()
-  const { profile } = useAuthStore()
-  const lang        = (profile?.language ?? 'de') as Lang
-  const goal        = profile?.goal ?? null
-  const pillar      = getSuggestedPillar(goal)
-  const cfg         = PILLAR_CONFIG[pillar]
-  const goalHint    = getGoalHint(pillar, goal, lang)
+  const navigate              = useNavigate()
+  const { profile }           = useAuthStore()
+  const lang                  = (profile?.language ?? 'de') as Lang
+  const goal                  = profile?.goal ?? null
+  const { data: todayPillars } = useTodayPillars()
+
+  const completedPillars = todayPillars
+    ? (['workout', 'routine', 'stretching', 'meditation'] as const).filter(
+        (p) => todayPillars[p],
+      )
+    : []
+
+  const pillar = getSuggestedPillar(goal, completedPillars)
+
+  if (pillar === null) {
+    return (
+      <section
+        className="rounded-2xl p-4 relative overflow-hidden"
+        style={{ backgroundColor: 'var(--color-bg-card)' }}
+      >
+        <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ backgroundColor: '#4CAF50' }} />
+        <div className="pl-3 flex items-center gap-3">
+          <span className="text-3xl leading-none">🎉</span>
+          <div>
+            <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
+              {ALL_DONE[lang]}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+              {ALL_DONE_SUB[lang]}
+            </p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  const cfg      = PILLAR_CONFIG[pillar]
+  const goalHint = getGoalHint(pillar, goal, lang)
 
   return (
     <section
       className="rounded-2xl p-4 relative overflow-hidden"
       style={{ backgroundColor: 'var(--color-bg-card)' }}
     >
-      {/* Color accent — left border */}
       <div
         className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
         style={{ backgroundColor: cfg.color }}

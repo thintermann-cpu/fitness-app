@@ -43,7 +43,8 @@ const LOCATIONS: { id: WorkoutLocation; label: string; emoji: string }[] = [
   { id: 'outdoor',    label: 'Outdoor',    emoji: '🌲' },
 ]
 
-const LOCATION_STORAGE_KEY = 'carveout_workout_location'
+const LOCATION_STORAGE_KEY  = 'carveout_workout_location'
+const FILTER_STORAGE_KEY    = 'workout_filter_category'
 
 function getSavedLocation(): WorkoutLocation | null {
   try {
@@ -65,10 +66,18 @@ export function WorkoutPage() {
   const [showAllEquipment, setShowAllEquipment] = useState(false)
   const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number; kraftConfig?: KraftConfig; exercises?: WizardExercise[] } | null>(null)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
-  const [wodCategory, setWodCategory] = useState('')
-  const [tooltipCat, setTooltipCat] = useState<string | null>(null)
+  const [activeFilter, setActiveFilter]   = useState(() => localStorage.getItem(FILTER_STORAGE_KEY) ?? 'empfohlen')
+  const [tooltipCat, setTooltipCat]       = useState<string | null>(null)
   const [savedWorkouts, setSavedWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
-  const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
+  const silentMode      = localStorage.getItem('carveout_silent_mode') === 'true'
+  const isEditorsPick   = activeFilter === 'empfohlen'
+  const wodCategory     = isEditorsPick ? '' : activeFilter
+
+  const handleFilterSelect = (filter: string) => {
+    setActiveFilter(filter)
+    localStorage.setItem(FILTER_STORAGE_KEY, filter)
+    setTooltipCat(null)
+  }
 
   // When returning from WodDetail back to the list, always land on WODs tab
   useEffect(() => {
@@ -236,14 +245,25 @@ export function WorkoutPage() {
             </div>
             {/* Category chips */}
             <div className="flex gap-2 mb-1 overflow-x-auto pb-1 scrollbar-none">
+              {/* Empfohlen chip */}
+              <button
+                onClick={() => handleFilterSelect('empfohlen')}
+                className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                style={{
+                  backgroundColor: isEditorsPick ? '#E8642A' : 'var(--color-bg-card)',
+                  color: isEditorsPick ? 'white' : 'var(--color-text-muted)',
+                }}
+              >
+                ⭐ Empfohlen
+              </button>
               {WOD_CATEGORIES.map((cat) => (
                 <div key={cat.id} className="flex-shrink-0 flex items-center gap-0.5">
                   <button
-                    onClick={() => setWodCategory(cat.id)}
+                    onClick={() => handleFilterSelect(cat.id)}
                     className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
                     style={{
-                      backgroundColor: wodCategory === cat.id ? '#E8642A' : 'var(--color-bg-card)',
-                      color: wodCategory === cat.id ? 'white' : 'var(--color-text-muted)',
+                      backgroundColor: !isEditorsPick && wodCategory === cat.id ? '#E8642A' : 'var(--color-bg-card)',
+                      color: !isEditorsPick && wodCategory === cat.id ? 'white' : 'var(--color-text-muted)',
                     }}
                   >
                     {cat.label}
@@ -284,6 +304,7 @@ export function WorkoutPage() {
               userEquipment={userEquipment}
               silentMode={silentMode}
               wodCategory={wodCategory || undefined}
+              editorsPick={isEditorsPick}
             />
           </>
         )}

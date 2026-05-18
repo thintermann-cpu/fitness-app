@@ -23,9 +23,10 @@ interface Props {
   userEquipment?: string[]
   silentMode?: boolean
   wodCategory?: string
+  editorsPick?: boolean
 }
 
-export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMode, wodCategory }: Props) {
+export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMode, wodCategory, editorsPick: editorsPickProp }: Props) {
   const lang  = useAuthStore((s) => s.profile?.language ?? 'de')
   const toast = useToast()
 
@@ -94,7 +95,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
     silentMode:       silentMode ?? false,
     minDuration:      minDur || undefined,
     maxDuration:      maxDur || undefined,
-    editorsPick:      editorsPick || undefined,
+    editorsPick:      (editorsPickProp || editorsPick) || undefined,
     wodCategory:      wodCategory || undefined,
   })
 
@@ -116,7 +117,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
       silentMode:       silentMode ?? false,
       minDuration:      minDur || undefined,
       maxDuration:      maxDur || undefined,
-      editorsPick:      editorsPick || undefined,
+      editorsPick:      (editorsPickProp || editorsPick) || undefined,
       wodCategory:      wodCategory || undefined,
     })
     setPicking(false)

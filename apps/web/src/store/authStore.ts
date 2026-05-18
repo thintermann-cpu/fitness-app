@@ -93,19 +93,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     try {
       const { data } = await supabase.auth.getSession()
-      const profile = data.session?.user
-        ? await loadProfile(data.session.user.id)
-        : null
-      set({
-        session: data.session,
-        user: data.session?.user ?? null,
-        profile,
-        loading: false,
-      })
+      const session = data.session
+      const user    = session?.user ?? null
 
-      supabase.auth.onAuthStateChange(async (_event, session) => {
-        const profile = session?.user ? await loadProfile(session.user.id) : null
-        set({ session, user: session?.user ?? null, profile })
+      // Unblock rendering immediately — profile loads async in background
+      set({ session, user, loading: false })
+
+      if (user) {
+        loadProfile(user.id)
+          .then((profile) => set({ profile }))
+          .catch(() => {})
+      }
+
+      supabase.auth.onAuthStateChange(async (_event, newSession) => {
+        const profile = newSession?.user ? await loadProfile(newSession.user.id) : null
+        set({ session: newSession, user: newSession?.user ?? null, profile })
       })
     } catch {
       set({ loading: false })

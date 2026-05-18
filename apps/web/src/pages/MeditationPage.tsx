@@ -10,6 +10,7 @@ import { CustomTimer }            from '../components/meditation/CustomTimer'
 import { CustomBreathworkEditor } from '../components/meditation/CustomBreathworkEditor'
 import { MeditationHistory }      from '../components/meditation/MeditationHistory'
 import { AdHocMeditationTimer }  from '../components/meditation/AdHocMeditationTimer'
+import { AmbientPlayer }         from '../components/meditation/AmbientPlayer'
 import { FilterBottomSheet }     from '../components/ui/FilterBottomSheet'
 
 const PILLAR_COLOR = '#9B7FD4'
@@ -306,8 +307,13 @@ export function MeditationPage() {
         {/* ── MEDITATE TAB ─────────────────────────────────────── */}
         {tab === 'meditate' && (
           <>
-            {/* Quick meditation */}
+            {/* Ambient Sound */}
             <div className="px-4 pt-4 pb-2">
+              <AmbientPlayer />
+            </div>
+
+            {/* Quick meditation */}
+            <div className="px-4 pt-2 pb-2">
               <div
                 className="rounded-[var(--radius-md)] p-4 border"
                 style={{ backgroundColor: `${PILLAR_COLOR}10`, borderColor: `${PILLAR_COLOR}30` }}

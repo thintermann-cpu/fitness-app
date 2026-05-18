@@ -45,9 +45,10 @@ function ProtectedLayout() {
 
   if (!user) return <Navigate to="/login" replace />
 
-  // Not yet onboarded — send to /onboarding (avoid redirect loop, skip for admin)
+  // Not yet onboarded — send to /onboarding (only once profile has loaded)
   if (
-    !profile?.primary_pillar &&
+    profile !== null &&
+    !profile.primary_pillar &&
     location.pathname !== '/onboarding' &&
     !location.pathname.startsWith('/admin')
   ) {
