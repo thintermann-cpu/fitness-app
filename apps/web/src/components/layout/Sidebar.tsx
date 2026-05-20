@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { LogoIcon } from '../ui/LogoIcon'
 import { useAuthStore } from '../../store/authStore'
 import { useFavorites } from '../../hooks/useFavorites'
 
@@ -64,7 +63,7 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="px-6 py-5 border-b flex items-center gap-3" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <LogoIcon className="w-8 h-8" style={{ color: '#E8642A' }} />
+        <img src="/carveout_logo.jpg" alt="CarveOut" style={{ height: 32, width: 32, objectFit: 'contain', borderRadius: 6 }} />
         <span className="text-xl font-black" style={{ color: '#E8642A' }}>Carve</span>
         <span className="text-xl font-black" style={{ color: 'var(--color-text)' }}>Out</span>
       </div>

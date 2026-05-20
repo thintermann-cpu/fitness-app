@@ -2,7 +2,6 @@ import { useRef } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
-import { LogoIcon } from '../ui/LogoIcon'
 import { useFavorites } from '../../hooks/useFavorites'
 import { useAudioStore } from '../../store/audioStore'
 import { useAuthStore } from '../../store/authStore'
@@ -117,7 +116,7 @@ export function AppShell() {
         >
           {/* Left: logo */}
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            <LogoIcon className="w-5 h-5 flex-shrink-0" style={{ color: '#E8642A' }} />
+            <img src="/carveout_logo.jpg" alt="CarveOut" style={{ height: 20, width: 20, objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />
             <span className="font-black text-sm leading-none" style={{ color: '#E8642A' }}>Carve</span>
             <span className="font-black text-sm leading-none" style={{ color: 'var(--color-text)' }}>Out</span>
           </div>

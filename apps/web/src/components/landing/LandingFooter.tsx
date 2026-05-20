@@ -1,4 +1,3 @@
-import { LogoIcon } from '../ui/LogoIcon'
 
 interface Props {
   lang: 'de' | 'en'
@@ -19,7 +18,7 @@ export function LandingFooter({ lang, onToggleLang }: Props) {
     >
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <LogoIcon className="w-6 h-6" style={{ color: '#E8642A' }} />
+          <img src="/carveout_logo.jpg" alt="CarveOut" style={{ height: 24, width: 24, objectFit: 'contain', borderRadius: 5 }} />
           <span className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>
             CarveOut — {t.tagline}
           </span>

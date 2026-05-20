@@ -1,4 +1,3 @@
-import { LogoIcon } from '../ui/LogoIcon'
 
 interface Props {
   lang: 'de' | 'en'
@@ -21,7 +20,7 @@ export function LandingNav({ lang, onToggleLang, onLogin, onStart }: Props) {
     >
       {/* Logo */}
       <a href="#" className="flex items-center gap-2 shrink-0" aria-label="CarveOut">
-        <LogoIcon className="w-7 h-7" style={{ color: '#E8642A' }} />
+        <img src="/carveout_logo.jpg" alt="CarveOut" style={{ height: 28, width: 28, objectFit: 'contain', borderRadius: 6 }} />
         <span className="text-sm font-bold tracking-wide" style={{ color: 'var(--color-text)' }}>CarveOut</span>
       </a>
 

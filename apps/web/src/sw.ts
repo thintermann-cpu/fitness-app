@@ -29,8 +29,8 @@ self.addEventListener('push', (event) => {
   const data: Record<string, string> = event.data?.json() ?? {}
   const options: NotificationOptions = {
     body: data.body ?? '',
-    icon: '/favicon.svg',
-    badge: '/favicon.svg',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     data: { url: data.url ?? '/' },
   }
   event.waitUntil(self.registration.showNotification(data.title ?? 'CarveOut', options))
