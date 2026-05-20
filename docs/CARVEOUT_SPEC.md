@@ -69,6 +69,7 @@ apps/web/src/
 │   ├── audioStore.ts          # Zustand-Store (persist: 'audio-mute'): isMuted: boolean, toggleMute()
 │   └── toastStore.ts          # Zustand-Store: toasts[], addToast(), removeToast(); ToastType: success|error|info|warning; max. 3 gleichzeitig
 ├── pages/
+│   ├── LandingPage.tsx            # Marketing-Landingpage DE/EN; inline `useLang` (localStorage + Browser-Fallback, Default DE); 8 Sektionen (LandingNav, Hero, PersonaSection, PillarSection, HowItWorks, ResultsTimeline, PricingSection, CtaSection, LandingFooter); Fade-in on scroll via IntersectionObserver; öffentliche Route `/`
 │   ├── HomePage.tsx               # Dashboard: Greeting + i18n-Datum, TodayPillarTracker, MoodCheck (useDailyLog), AdaptiveSuggestion, TodaysWod, WeekStats, RecentActivity
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
@@ -86,10 +87,20 @@ apps/web/src/
 │       ├── AdminTasksPage.tsx
 │       └── AdminPlaceholderPage.tsx
 ├── components/
+│   ├── landing/
+│   │   ├── LandingNav.tsx      # Sticky Header; Anchor-Links #features / #pricing; DE/EN-Toggle; Login + Start-CTA
+│   │   ├── Hero.tsx            # Hero-Sektion mit Headline, Subline, Start-CTA
+│   │   ├── PersonaSection.tsx  # Zielgruppen-Karten (3 Personas)
+│   │   ├── PillarSection.tsx   # 4 Pillar-Karten mit Farbe + Feature-Liste
+│   │   ├── HowItWorks.tsx      # 3-Schritt-Erklärung
+│   │   ├── ResultsTimeline.tsx # Timeline „Was du in 4 Wochen erreichst"
+│   │   ├── PricingSection.tsx  # Pricing-Cards (CTAs disabled mit Tooltip; kein Feature-Flag nötig)
+│   │   ├── CtaSection.tsx      # Bottom-CTA mit Start-Button
+│   │   └── LandingFooter.tsx   # Footer mit DE/EN-Toggle + Links
 │   ├── layout/
-│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header (52px, bg: --color-bg-card + border): Links: CarveOut-Logo + Name; Rechts: Vorname als Link zu /profile (max-[360px]:hidden) · Mute · Favoriten · Settings-Link; MAIN_ROUTES-Reihenfolge: / · /routine · /workout · /stretching · /meditation; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge)
-│   │   ├── BottomNav.tsx      # Tab-Navigation (versteckt ab lg); Reihenfolge: Home · Ritual · Workout · Stretching · Meditation; alle 5 Tabs immer sichtbar — inaktive Pillars gedimmt + Alert-Modal beim Antippen; bei `hide_inactive_pillars=true` (localStorage) werden inaktive Tabs ausgeblendet (CustomEvent-Sync); erstes Item: Home `/` (de: Mein Tag, en: My Day, es: Mi Día); Routine-Item (de: Rituale, en: Rituals, es: Rituales)
-│   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint); Reihenfolge: Home · Ritual · Workout · Stretching · Meditation; alle Items immer sichtbar — inaktive Pillars gedimmt + Alert-Modal beim Antippen; `hide_inactive_pillars` CustomEvent-Sync; erstes Item: Home `/`; isActive-Fix für exakten `/`-Match
+│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header (52px, bg: --color-bg-card + border): Links: CarveOut-Logo + Name; Rechts: Vorname als Link zu /profile (max-[360px]:hidden) · Mute · Favoriten · Settings-Link; MAIN_ROUTES-Reihenfolge: /home · /routine · /workout · /stretching · /meditation; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge)
+│   │   ├── BottomNav.tsx      # Tab-Navigation (versteckt ab lg); Reihenfolge: Home · Ritual · Workout · Stretching · Meditation; alle 5 Tabs immer sichtbar — inaktive Pillars gedimmt + Alert-Modal beim Antippen; bei `hide_inactive_pillars=true` (localStorage) werden inaktive Tabs ausgeblendet (CustomEvent-Sync); erstes Item: Home `/home` (de: Mein Tag, en: My Day, es: Mi Día); Routine-Item (de: Rituale, en: Rituals, es: Rituales)
+│   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint); Reihenfolge: Home · Ritual · Workout · Stretching · Meditation; alle Items immer sichtbar — inaktive Pillars gedimmt + Alert-Modal beim Antippen; `hide_inactive_pillars` CustomEvent-Sync; erstes Item: Home `/home`; isActive-Fix für exakten `/home`-Match
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
 │   ├── home/
 │   │   ├── TodayPillarTracker.tsx  # 4 Chips (Done/Open) aus useTodayPillars; dreisprachig; Header-Label: "Aktueller Stand von heute · N von 4" (de/en/es); Chip-Reihenfolge: Ritual · Workout · Stretching · Meditation
@@ -183,9 +194,10 @@ apps/web/src/
 ### Routing (App.tsx)
 
 ```
-/login, /register              → AuthLayout (kein Auth nötig)
-/ → AppShell (ProtectedLayout)
-  /                            → HomePage (Dashboard — kein Redirect mehr auf /workout)
+/                              → LandingPublicRoute (nicht-auth: LandingPage; auth: Redirect /home)
+/login, /register              → AuthLayout (kein Auth nötig; auth: Redirect /home)
+/home → AppShell (ProtectedLayout)
+  /home                        → HomePage (Dashboard)
   /onboarding
   /workout
   /workout/:wodName
@@ -204,6 +216,12 @@ apps/web/src/
   /admin/feedback
   /admin/wods
 ```
+
+### Route Guards (App.tsx)
+
+- `LandingPublicRoute` — öffentlich; eingeloggte User werden nach `/home` redirected
+- `AuthLayout` — Login/Register; eingeloggte User werden nach `/home` redirected
+- `ProtectedLayout` — alle App-Routen; nicht-eingeloggte User → `/login`; nicht-ongeboardete User → `/onboarding`
 
 ### Fallback-Logik (`isSupabaseConfigured`)
 
@@ -487,12 +505,13 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session O** | **Loading-Fix + AdaptiveSuggestion + Editor's Pick + Ambient Sounds** — **AdaptiveSuggestion Loading-Guard**: `adaptiveSuggestion.ts` Hinweis + `AdaptiveSuggestion.tsx` rendert null solange `profile` null (Supabase-Delay beim ersten Render); **TodaysWod `pickByDate`**: deterministischer Index (dayOfYear % pool.length), Fallback auf `EDITORS_PICK_IDS` wenn DB-Pool leer; **Migration 023**: partieller Index auf `wods.is_editors_pick = true` (Spalte seit Migration 010, Index neu); **Ambient Sounds Slot**: `public/audio/ambient/` als manueller Ablageort für Meditation-Ambient-Dateien |
 | **Session P** | **Meditation Sub-Tabs + Yoga Flows + ExerciseKeyframes** — **Logo-Fix**: Pfeil aus `LogoIcon.tsx` + `favicon.svg` entfernt, nur C-Bogen bleibt; **Meditation Ungeführt/Geführt**: `MeditationPage` hat Sub-Tabs im Meditieren-Tab; **UnguidedTimer**: Phasen-Timer (5 Typen: breathing/box_breathing/body_scan/focus/open_awareness, 5–20 min, dreisprachig); **GuidedPlayer**: lädt `sessions.json`, MP3-Player-Struktur mit `available`-Flag (7 Placeholder-Sessions); `public/audio/sessions/sessions.json` angelegt; **ExerciseKeyframes**: Shared-Komponente Bild-Crossfade, gibt null zurück bis Bilder vorhanden; **GuidedSession**: `defaultExerciseDuration`-Prop + Yoga-Atemhinweis + ExerciseKeyframes integriert; **Yoga Flows** in `StretchingPage`: 5 clientseitige virtuelle Flows (Morgen/Hüft/Rücken/Power/Schlaf), Exercises per Name-Hint aus DB gelöst, Filter `yoga_flow` zeigt Flow-Cards statt Routine-Liste |
 | **Session Q** | **PostHog Analytics + PWA-Icons + Meditation-Ping** — **PostHog EU**: Init in `main.tsx` (`person_profiles: 'never'`, `persistence: 'memory'` — kein Cookie-Banner); **`useAnalytics.ts`**: schlanker Hook (`track(event, props?)`); Events: `meditation_started` (UnguidedTimer + GuidedPlayer), `yoga_flow_started` (GuidedSession), `workout_completed` (WodDetail), `ambient_sound_selected` (AmbientPlayer); **AmbientPlayer.tsx**: 10 Ambient-Sounds, Lautstärke-Slider, localStorage-Persist; **PWA-Icons neu generiert**: `icon-192.png` / `icon-512.png` / `apple-touch-icon.png` aus `icon-source.svg` via `scripts/generate_icons.mjs` (@resvg/resvg-js); **meditation-ping.wav**: 528 Hz Sinus (1,4 s Decay) via `scripts/generate_ping.mjs`; `.env.example` ergänzt um `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` |
+| **Session R** | **Marketing Landing Page** — `LandingPage.tsx` (`pages/`) mit 8 Sektionen (LandingNav, Hero, PersonaSection, PillarSection, HowItWorks, ResultsTimeline, PricingSection, CtaSection, LandingFooter); inline `useLang` (localStorage + Browser-Fallback, Default DE); DE/EN-Toggle; Fade-in on scroll via IntersectionObserver; PricingSection mit disabled CTAs + Tooltip; **Route `/`** öffentlich via `LandingPublicRoute` (auth → Redirect `/home`); **HomePage verschoben auf `/home`**; alle internen Redirects (`AuthLayout`, `ProtectedLayout`, `AppShell`, `BottomNav`, `Sidebar`) aktualisiert |
 
 ### Offen / Roadmap
 
 | Bereich | Inhalt |
 |---|---|
-| **Landingpage** | apps/landing — Marketing, Waitlist, Pricing |
+| **Landingpage (Erweiterung)** | Waitlist-Integration, Pricing live schalten (kein Feature-Flag nötig, CTAs aktuell disabled) |
 | **Stripe** | Abo-Integration (7-Tage Trial); subscription_status bereits im Schema |
 | **Bestätigungsemail** | Via Resend — wartet auf finales Logo |
 | **Push (Server-Side)** | Admin-Broadcast an alle User |
@@ -511,4 +530,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session Q: PostHog Analytics, AmbientPlayer, PWA-Icons, Meditation-Ping)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session R: Marketing Landing Page, Route-Umstrukturierung /home)*
