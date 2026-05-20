@@ -19,7 +19,7 @@ export function LoginPage() {
     setLoading(true)
     try {
       await signIn(email, password)
-      navigate('/')
+      navigate('/home')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {

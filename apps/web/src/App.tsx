@@ -12,6 +12,7 @@ import { RoutinePage } from './pages/RoutinePage'
 import { WorkoutPage } from './pages/WorkoutPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { HomePage } from './pages/HomePage'
+import { LandingPage } from './pages/LandingPage'
 import { StretchingPage } from './pages/StretchingPage'
 import { MeditationPage } from './pages/MeditationPage'
 import { FavoritesPage } from './pages/FavoritesPage'
@@ -61,7 +62,13 @@ function ProtectedLayout() {
 function AuthLayout() {
   const { user, loading } = useAuthStore()
   if (loading) return null
-  return user ? <Navigate to="/" replace /> : <Outlet />
+  return user ? <Navigate to="/home" replace /> : <Outlet />
+}
+
+function LandingPublicRoute() {
+  const { user, loading } = useAuthStore()
+  if (loading) return null
+  return user ? <Navigate to="/home" replace /> : <LandingPage />
 }
 
 function AppContent() {
@@ -73,6 +80,9 @@ function AppContent() {
 
   return (
     <Routes>
+      {/* Public landing page */}
+      <Route path="/" element={<LandingPublicRoute />} />
+
       <Route element={<AuthLayout />}>
         <Route path="/login"    element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -81,7 +91,7 @@ function AppContent() {
       <Route element={<ProtectedLayout />}>
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route element={<AppShell />}>
-          <Route path="/"                 element={<HomePage />} />
+          <Route path="/home"              element={<HomePage />} />
           <Route path="/workout"          element={<WorkoutPage />} />
           <Route path="/workout/:wodName" element={<WorkoutPage />} />
           <Route path="/routine"          element={<RoutinePage />} />

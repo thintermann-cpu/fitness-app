@@ -26,7 +26,7 @@ export default function AdminRoute({ children }: { children: ReactNode }) {
 
   const role = profile?.role
   if (role !== 'admin' && role !== 'moderator') {
-    return <Navigate to="/" replace />
+    return <Navigate to="/home" replace />
   }
 
   return <>{children}</>

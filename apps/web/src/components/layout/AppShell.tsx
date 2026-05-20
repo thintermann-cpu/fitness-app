@@ -8,9 +8,9 @@ import { useAudioStore } from '../../store/audioStore'
 import { useAuthStore } from '../../store/authStore'
 import { ToastContainer } from '../ui/ToastContainer'
 
-const MAIN_ROUTES = ['/', '/routine', '/workout', '/stretching', '/meditation']
+const MAIN_ROUTES = ['/home', '/routine', '/workout', '/stretching', '/meditation']
 const ROUTE_PILLAR: Record<string, string | null> = {
-  '/': null, '/routine': null, '/workout': 'workout',
+  '/home': null, '/routine': null, '/workout': 'workout',
   '/stretching': 'stretching', '/meditation': 'meditation',
 }
 

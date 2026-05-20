@@ -7,7 +7,7 @@ import { useFavorites } from '../../hooks/useFavorites'
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 const NAV_ITEMS = [
-  { path: '/',           icon: '🏠', key: 'home',       color: '#F0EDE8', pillarId: null },
+  { path: '/home',       icon: '🏠', key: 'home',       color: '#F0EDE8', pillarId: null },
   { path: '/routine',    icon: '📋', key: 'routine',    color: '#4A90D9', pillarId: null },
   { path: '/workout',    icon: '💪', key: 'workout',    color: '#E8642A', pillarId: 'workout' },
   { path: '/stretching', icon: '🧘', key: 'stretching', color: '#7BC67E', pillarId: 'stretching' },
@@ -69,8 +69,8 @@ export function Sidebar() {
         {visibleItems.map(({ path, icon, key, color, pillarId }) => {
           const label = labels[key] ?? key
           const isPillarActive = pillarId === null || activePillars.includes(pillarId)
-          const isActive = isPillarActive && (path === '/'
-            ? pathname === '/'
+          const isActive = isPillarActive && (path === '/home'
+            ? pathname === '/home'
             : (pathname === path
                 || (path !== '/workout' && pathname.startsWith(path))
                 || (path === '/workout' && (pathname === '/workout' || pathname.startsWith('/workout/')))))

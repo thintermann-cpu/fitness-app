@@ -5,7 +5,7 @@ import { useAuthStore } from '../../store/authStore'
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 const NAV_ITEMS = [
-  { path: '/',           icon: '🏠', key: 'home',       color: null,      pillarId: null },
+  { path: '/home',       icon: '🏠', key: 'home',       color: null,      pillarId: null },
   { path: '/routine',    icon: '📋', key: 'routine',    color: '#4A90D9', pillarId: null },
   { path: '/workout',    icon: '💪', key: 'workout',    color: '#E8642A', pillarId: 'workout' },
   { path: '/stretching', icon: '🧘', key: 'stretching', color: '#7BC67E', pillarId: 'stretching' },
