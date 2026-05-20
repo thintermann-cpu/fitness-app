@@ -23,8 +23,13 @@ const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
 export function Sidebar() {
   const { pathname }  = useLocation()
   const navigate      = useNavigate()
-  const { profile }   = useAuthStore()
+  const { profile, signOut } = useAuthStore()
   const { favorites } = useFavorites()
+
+  async function handleLogout() {
+    await signOut()
+    navigate('/')
+  }
   const activePillars = profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
   const favCount      = favorites.length
   const lang          = profile?.language ?? 'de'
@@ -145,8 +150,24 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* Footer: user info + settings */}
+      {/* Footer: user info + settings + logout */}
       <div className="px-3 py-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all mb-1"
+          style={{ backgroundColor: 'transparent', color: 'var(--color-text-muted)', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+        >
+          <span className="text-lg leading-none w-6 text-center flex-shrink-0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" style={{ display: 'inline' }}>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </span>
+          <span className="text-sm font-semibold">Abmelden</span>
+        </button>
+
         <div className="flex items-center gap-3 px-3 py-2 rounded-xl">
           {/* Avatar */}
           <div
