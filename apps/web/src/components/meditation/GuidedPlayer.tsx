@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useAnalytics } from '../../hooks/useAnalytics'
 
 const PILLAR_COLOR = '#9B7FD4'
 
@@ -27,6 +28,7 @@ export function GuidedPlayer() {
   const [playing,   setPlaying]   = useState(false)
   const [progress,  setProgress]  = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const { track } = useAnalytics()
 
   useEffect(() => {
     fetch('/audio/sessions/sessions.json')
@@ -56,7 +58,10 @@ export function GuidedPlayer() {
     audioRef.current = audio
     setActiveId(s.id)
     setProgress(0)
-    void audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false))
+    void audio.play().then(() => {
+      setPlaying(true)
+      track('meditation_started', { session_id: s.id, type: s.type, duration_min: s.duration, guided: true })
+    }).catch(() => setPlaying(false))
   }
 
   if (sessions.length === 0) return null

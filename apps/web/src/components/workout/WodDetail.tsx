@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useWod } from '../../hooks/useWods'
 import type { Wod } from '../../hooks/useWods'
+import { useAnalytics } from '../../hooks/useAnalytics'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { WOD_TYPE_TO_MODE } from '../../lib/timerLabels'
@@ -94,6 +95,7 @@ export function WodDetail({ wodName, onBack }: Props) {
   const lang = useAuthStore((s) => s.profile?.language ?? 'de')
   const { data: wod, isLoading } = useWod(wodName)
   const { personalBest, addEntry } = useWodHistory(wodName)
+  const { track } = useAnalytics()
   const [showTimer, setShowTimer]           = useState(false)
   const [showScore, setShowScore]           = useState(false)
   const [showHistory, setShowHistory]       = useState(false)
@@ -298,7 +300,7 @@ export function WodDetail({ wodName, onBack }: Props) {
           <TimerView
             initialMode={timerMode}
             initialMinutes={wod.estimated_minutes || 20}
-            onComplete={() => setShowScore(true)}
+            onComplete={() => { setShowScore(true); track('workout_completed', { wod_id: wod.id, duration_min: wod.estimated_minutes, category: wod.category }) }}
           />
         </div>
       )}

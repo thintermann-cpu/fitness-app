@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useAudioStore } from '../../store/audioStore'
+import { useAnalytics } from '../../hooks/useAnalytics'
 
 type Lang = 'de' | 'en' | 'es'
 type MeditationType = 'breathing' | 'box_breathing' | 'body_scan' | 'focus' | 'open_awareness'
@@ -135,6 +136,7 @@ interface Props {
 
 export function UnguidedTimer({ lang, onFinish }: Props) {
   const isMuted = useAudioStore((s) => s.isMuted)
+  const { track } = useAnalytics()
 
   const [meditationType, setMeditationType] = useState<MeditationType>('breathing')
   const [duration,       setDuration]       = useState<Duration>(10)
@@ -184,6 +186,7 @@ export function UnguidedTimer({ lang, onFinish }: Props) {
     setPaused(false)
     setMode('active')
     playGong(isMuted)
+    track('meditation_started', { type: meditationType, duration_min: duration, guided: false })
   }
 
   const phaseProgress = phaseTotal != null && phaseTotal > 0

@@ -5,6 +5,7 @@ import { useAudio } from '../../hooks/useAudio'
 import { ExerciseIllustration } from './ExerciseIllustration'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { ExerciseKeyframes } from '../shared/ExerciseKeyframes'
+import { useAnalytics } from '../../hooks/useAnalytics'
 
 const PILLAR_COLOR = '#7BC67E'
 const SWITCH_DURATION = 5
@@ -83,6 +84,7 @@ interface Props {
 export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerciseDuration }: Props) {
   const t = T[lang]
   const { addLog } = useStretchingLogs()
+  const { track } = useAnalytics()
   const audio = useAudio()
   const audioRef = useRef(audio)
   audioRef.current = audio
@@ -160,6 +162,9 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
     setTimeLeft(first.bilateral ? Math.floor(exerciseDuration / 2) : exerciseDuration)
     setPaused(false)
     void audioRef.current.playGong()
+    if (routine.subcategory === 'yoga_flow') {
+      track('yoga_flow_started', { flow_id: routine.id, flow_name: routine.name, exercise_count: orderedExercises.length })
+    }
   }
 
   function jumpToExercise(idx: number) {

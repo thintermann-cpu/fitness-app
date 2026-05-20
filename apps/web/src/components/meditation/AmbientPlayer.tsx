@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useAnalytics } from '../../hooks/useAnalytics'
 
 const AMBIENT_SOUNDS = [
   { id: 'rain',       label: 'Regen'           },
@@ -28,6 +29,7 @@ export function AmbientPlayer() {
   const [volume,      setVolume]      = useState(50)
   const [unavailable, setUnavailable] = useState<Set<SoundId>>(new Set())
   const audioRef = useRef<HTMLAudioElement>(null)
+  const { track } = useAnalytics()
 
   // Play / pause / switch sound
   useEffect(() => {
@@ -52,6 +54,7 @@ export function AmbientPlayer() {
       setSelected(id)
       localStorage.setItem(STORAGE_SOUND, id)
       setPlaying(true)
+      track('ambient_sound_selected', { sound_id: id })
     }
   }
 
