@@ -37,6 +37,9 @@ carveout/
 ├── turbo.json
 ├── package.json      # Root-Workspace-Config
 ├── setup-server.sh   # Server-Provisioning-Skript
+├── scripts/
+│   ├── generate_icons.mjs  # Generiert icon-192.png / icon-512.png / apple-touch-icon.png aus icon-source.svg via @resvg/resvg-js
+│   └── generate_ping.mjs   # Generiert meditation-ping.wav (528 Hz Sinus, 1,4 s Decay) via Node
 └── .github/
     └── workflows/
         └── deploy.yml
@@ -118,7 +121,7 @@ apps/web/src/
 │   ├── wizard/
 │   │   ├── WizardShell.tsx    # Generischer 3-Step Full-Screen Modal-Wrapper; Progress-Bars, Back/Next/Close, canNext-Guard, body-overflow-lock
 │   │   └── ExerciseListEditor.tsx  # Reorderable Liste (↑/↓/✕) + optionales Add-Input-Feld; Props: items, onChange, placeholder, showAddInput
-│   ├── meditation/            # Alle Meditation-Komponenten (inkl. AdHocMeditationTimer.tsx — circular progress, gong, vibrate, wake lock, session-log); **UnguidedTimer.tsx** (Phasen-Timer: 5 Typen breathing/box_breathing/body_scan/focus/open_awareness, 5–20 min, dreisprachig TYPE_LABELS, PHASES-Map); **GuidedPlayer.tsx** (lädt `public/audio/sessions/sessions.json`, MP3-Player mit Progress, `available`-Flag — Placeholder bis Audiodateien vorhanden)
+│   ├── meditation/            # Alle Meditation-Komponenten (inkl. AdHocMeditationTimer.tsx — circular progress, gong, vibrate, wake lock, session-log); **UnguidedTimer.tsx** (Phasen-Timer: 5 Typen breathing/box_breathing/body_scan/focus/open_awareness, 5–20 min, dreisprachig TYPE_LABELS, PHASES-Map); **GuidedPlayer.tsx** (lädt `public/audio/sessions/sessions.json`, MP3-Player mit Progress, `available`-Flag — Placeholder bis Audiodateien vorhanden); **AmbientPlayer.tsx** (10 Ambient-Sounds, Lautstärke-Slider, localStorage-Persist `meditation_ambient_sound`, trackt `ambient_sound_selected` via useAnalytics)
 │   ├── shared/
 │   │   └── ExerciseKeyframes.tsx  # Bild-Crossfade-Komponente (interval-basierter Opacity-Wechsel, Props: exerciseId, frames, interval=2000ms); gibt null zurück wenn frames leer — kein Render bis Bilder vorhanden
 │   ├── ui/
@@ -143,18 +146,24 @@ apps/web/src/
 │   ├── useBreathworkTechniques.ts  # Breathwork-Techniken
 │   ├── useFavorites.ts        # localStorage + Supabase Dual-Write, optimistic UI; content_type: wod | stretching_routine | meditation
 │   ├── useAudio.ts            # Web Audio API; isMuted-Check via audioStore in allen play*-Funktionen + startBackground
+│   ├── useAnalytics.ts        # Wrapper um posthog.capture: track(event, props?) — Events: meditation_started, yoga_flow_started, workout_completed, ambient_sound_selected
 │   └── useToast.ts            # Wrapper um toastStore: toast.success/error/info/warning/show
 ├── sw.ts                      # Service Worker (Workbox injectManifest; precaching + Push-Handler; gebaut zu dist/sw.js via vite-plugin-pwa)
 └── public/
     ├── wods.json              # 796 WODs lokal (aus wod-tracker migriert, 7 Duplikate bereinigt)
     ├── timer.worker.js        # Drift-korrigierter Web Worker
     ├── favicon.svg            # SVG C-Bogen (Pfeil entfernt seit Session P)
+    ├── icon-source.svg        # Master-SVG für Icon-Generierung (C-Logo, Hintergrund #0D0D14)
+    ├── icon-192.png           # PWA-Icon 192×192 (generiert via scripts/generate_icons.mjs)
+    ├── icon-512.png           # PWA-Icon 512×512 (generiert via scripts/generate_icons.mjs)
+    ├── apple-touch-icon.png   # Apple Touch Icon 180×180 (generiert via scripts/generate_icons.mjs)
     ├── icons.svg
     ├── manifest.json          # PWA-Manifest (name/short_name CarveOut, theme_color #0D0D14, SVG-Icon)
     └── audio/
         ├── ambient/           # Slot für Ambient-Sound-Dateien (Meditation); aktuell manuell befüllt — kein Build-Step
         └── sessions/
-            └── sessions.json  # 7 Placeholder-Sessions (body_scan/breathing/focus/sleep/morning/stress_relief); alle available=false bis MP3s vorhanden; Felder: id, title, duration, type, file, available
+            ├── sessions.json  # 7 Placeholder-Sessions (body_scan/breathing/focus/sleep/morning/stress_relief); alle available=false bis MP3s vorhanden; Felder: id, title, duration, type, file, available
+            └── meditation-ping.wav  # 528 Hz Sinus-Ping (1,4 s Decay), generiert via scripts/generate_ping.mjs
 ```
 
 ### PWA-Konfiguration
@@ -221,6 +230,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | Audio | Web Audio API | nativ (Gong, Klangschale, Regen, Wellen) |
 | Screen Wake Lock | Screen Wake Lock API | nativ (verhindert Display-Timeout während Timer läuft) |
 | Push | Web Push API + Service Worker | nativ |
+| Analytics | PostHog JS | EU-Cloud (`eu.i.posthog.com`), `person_profiles: 'never'`, `persistence: 'memory'` — kein Cookie-Banner nötig |
 | Linting | ESLint + TypeScript | — |
 | Node.js | (CI/Server) | 20 LTS |
 
@@ -476,6 +486,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session N** | **WOD-Katalog-Erweiterung + Filter-Fixes** — Migration 021: 183 neue WODs (hiit 60, kraft_ausdauer 50, kraft_wenig_zeit 30, krafttraining 43; equipment_tags: bodyweight/dumbbell/kettlebell/barbell); Migration 022: CrossFit-WODs außer Girls (20) + Heroes (88) auf is_visible=false; **Equipment-Filter-Fix** in useWods: Normalisierung lowercase + Mapping dumbbells→dumbbell, bodyweight immer erlaubt; **Timer-Exercise-Anzeige**: FreeTimerWizard.onStart erhält 5. Parameter exercises?: WizardExercise[]; TimerView zeigt Übungsliste unterhalb Timer-Controls; WorkoutPage.timerConfig erweitert um exercises |
 | **Session O** | **Loading-Fix + AdaptiveSuggestion + Editor's Pick + Ambient Sounds** — **AdaptiveSuggestion Loading-Guard**: `adaptiveSuggestion.ts` Hinweis + `AdaptiveSuggestion.tsx` rendert null solange `profile` null (Supabase-Delay beim ersten Render); **TodaysWod `pickByDate`**: deterministischer Index (dayOfYear % pool.length), Fallback auf `EDITORS_PICK_IDS` wenn DB-Pool leer; **Migration 023**: partieller Index auf `wods.is_editors_pick = true` (Spalte seit Migration 010, Index neu); **Ambient Sounds Slot**: `public/audio/ambient/` als manueller Ablageort für Meditation-Ambient-Dateien |
 | **Session P** | **Meditation Sub-Tabs + Yoga Flows + ExerciseKeyframes** — **Logo-Fix**: Pfeil aus `LogoIcon.tsx` + `favicon.svg` entfernt, nur C-Bogen bleibt; **Meditation Ungeführt/Geführt**: `MeditationPage` hat Sub-Tabs im Meditieren-Tab; **UnguidedTimer**: Phasen-Timer (5 Typen: breathing/box_breathing/body_scan/focus/open_awareness, 5–20 min, dreisprachig); **GuidedPlayer**: lädt `sessions.json`, MP3-Player-Struktur mit `available`-Flag (7 Placeholder-Sessions); `public/audio/sessions/sessions.json` angelegt; **ExerciseKeyframes**: Shared-Komponente Bild-Crossfade, gibt null zurück bis Bilder vorhanden; **GuidedSession**: `defaultExerciseDuration`-Prop + Yoga-Atemhinweis + ExerciseKeyframes integriert; **Yoga Flows** in `StretchingPage`: 5 clientseitige virtuelle Flows (Morgen/Hüft/Rücken/Power/Schlaf), Exercises per Name-Hint aus DB gelöst, Filter `yoga_flow` zeigt Flow-Cards statt Routine-Liste |
+| **Session Q** | **PostHog Analytics + PWA-Icons + Meditation-Ping** — **PostHog EU**: Init in `main.tsx` (`person_profiles: 'never'`, `persistence: 'memory'` — kein Cookie-Banner); **`useAnalytics.ts`**: schlanker Hook (`track(event, props?)`); Events: `meditation_started` (UnguidedTimer + GuidedPlayer), `yoga_flow_started` (GuidedSession), `workout_completed` (WodDetail), `ambient_sound_selected` (AmbientPlayer); **AmbientPlayer.tsx**: 10 Ambient-Sounds, Lautstärke-Slider, localStorage-Persist; **PWA-Icons neu generiert**: `icon-192.png` / `icon-512.png` / `apple-touch-icon.png` aus `icon-source.svg` via `scripts/generate_icons.mjs` (@resvg/resvg-js); **meditation-ping.wav**: 528 Hz Sinus (1,4 s Decay) via `scripts/generate_ping.mjs`; `.env.example` ergänzt um `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` |
 
 ### Offen / Roadmap
 
@@ -488,7 +499,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **GDPR** | Cookie-Banner, Privacy Policy, Daten-Export, Konto-Löschung |
 | **WOD-Übersetzungen** | EN/ES für 798 WODs (aktuell nur DE) |
 | **Integrationen (Phase 4+)** | Garmin Connect, Apple Health, Strava |
-| **Analytics** | Plausible oder Umami (self-hosted) |
+| **Analytics** | PostHog EU aktiv (anonymes Event-Tracking, kein Cookie-Banner); Self-hosted Plausible/Umami offen |
 | **Error Tracking** | Sentry |
 | **Supabase Redirect-URLs** | Konfigurieren für OAuth / Magic Link |
 | **packages/ui** | Shared Component Library befüllen |
@@ -500,4 +511,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session P: Meditation Sub-Tabs, UnguidedTimer, GuidedPlayer, Yoga Flows, ExerciseKeyframes, Logo-Fix)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session Q: PostHog Analytics, AmbientPlayer, PWA-Icons, Meditation-Ping)*
