@@ -13,6 +13,8 @@ import { WorkoutPage } from './pages/WorkoutPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { HomePage } from './pages/HomePage'
 import { LandingPage } from './pages/LandingPage'
+import { ImpressumPage } from './pages/ImpressumPage'
+import { DatenschutzPage } from './pages/DatenschutzPage'
 import { StretchingPage } from './pages/StretchingPage'
 import { MeditationPage } from './pages/MeditationPage'
 import { FavoritesPage } from './pages/FavoritesPage'
@@ -82,6 +84,8 @@ function AppContent() {
     <Routes>
       {/* Public landing page */}
       <Route path="/" element={<LandingPublicRoute />} />
+      <Route path="/impressum"   element={<ImpressumPage />} />
+      <Route path="/datenschutz" element={<DatenschutzPage />} />
 
       <Route element={<AuthLayout />}>
         <Route path="/login"    element={<LoginPage />} />
