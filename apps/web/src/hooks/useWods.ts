@@ -103,6 +103,18 @@ async function loadLocalWods(): Promise<Wod[]> {
   return cachedLocalWods
 }
 
+const EQUIPMENT_NORM: Record<string, string> = {
+  dumbbells:          'dumbbell',
+  'resistance bands': 'resistance band',
+  'rowing machine':   'rower',
+  'assault bike':     'bike',
+}
+
+function normEq(e: string): string {
+  const l = e.toLowerCase()
+  return EQUIPMENT_NORM[l] ?? l
+}
+
 function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[] {
   if (filters.type) wods = wods.filter((w) => w.type === filters.type)
   if (filters.category) wods = wods.filter((w) => w.category === filters.category)
@@ -117,9 +129,10 @@ function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[
     )
   }
   if (filters.equipmentFilter?.length) {
-    const allowed = new Set(filters.equipmentFilter.map((e) => e.toLowerCase()))
+    const allowed = new Set(filters.equipmentFilter.map(normEq))
+    allowed.add('bodyweight')
     wods = wods.filter(
-      (w) => w.equipment.length === 0 || w.equipment.every((eq) => allowed.has(eq.toLowerCase())),
+      (w) => w.equipment.length === 0 || w.equipment.every((eq) => allowed.has(normEq(eq))),
     )
   }
   if (filters.excludeEquipment?.length) {
@@ -127,14 +140,11 @@ function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[
     wods = wods.filter((w) => !w.equipment.some((eq) => excluded.has(eq.toLowerCase())))
   }
   if (filters.userEquipment?.length) {
-    // Normalize plural/capitalized profile values to match DB tag format (lowercase singular)
-    const NORM: Record<string, string> = { dumbbells: 'dumbbell', 'resistance bands': 'resistance band' }
-    const norm = (e: string) => { const l = e.toLowerCase(); return NORM[l] ?? l }
-    const allowed = new Set(filters.userEquipment.map(norm))
-    allowed.add('bodyweight') // bodyweight WODs are always accessible
+    const allowed = new Set(filters.userEquipment.map(normEq))
+    allowed.add('bodyweight')
     wods = wods.filter((w) => {
       const tags = w.equipment_tags?.length ? w.equipment_tags : w.equipment
-      return tags.length === 0 || tags.every((eq) => allowed.has(norm(eq)))
+      return tags.length === 0 || tags.every((eq) => allowed.has(normEq(eq)))
     })
   }
   if (filters.minDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes >= filters.minDuration!)

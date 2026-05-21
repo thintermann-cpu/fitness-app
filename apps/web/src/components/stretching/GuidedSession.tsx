@@ -5,6 +5,7 @@ import { useAudio } from '../../hooks/useAudio'
 import { ExerciseIllustration } from './ExerciseIllustration'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { ExerciseKeyframes } from '../shared/ExerciseKeyframes'
+import { NextExercisePreview } from '../shared/NextExercisePreview'
 import { useAnalytics } from '../../hooks/useAnalytics'
 
 const PILLAR_COLOR = '#7BC67E'
@@ -102,7 +103,13 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
 
   // Session config
   const isYogaFlow = routine.subcategory === 'yoga_flow'
-  const [exerciseDuration, setExerciseDuration] = useState(defaultExerciseDuration ?? 30)
+  const [exerciseDuration, setExerciseDuration] = useState(() => {
+    if (defaultExerciseDuration != null) return defaultExerciseDuration
+    const durs = orderedExercises.filter(e => e.duration_sec > 0).map(e => e.duration_sec)
+    if (durs.length === 0) return 30
+    const sorted = [...durs].sort((a, b) => a - b)
+    return sorted[Math.floor(sorted.length / 2)]
+  })
   const [pauseDuration, setPauseDuration] = useState(5)
 
   // Session state
@@ -479,7 +486,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
         {phase !== 'rest' && (
           <div className="flex flex-col items-center gap-1 mt-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-[var(--color-text)] text-center">
+              <h2 className="text-2xl font-bold text-[var(--color-text)] text-center">
                 {current?.name}
               </h2>
               {(current?.instructions?.length ?? 0) > 0 && (
@@ -500,15 +507,17 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
           </div>
         )}
 
-        {/* Next exercise preview */}
-        {phase === 'exercise' && timeLeft <= 10 && orderedExercises[currentIndex + 1] && (
-          <div
-            className="mt-3 px-4 py-2 rounded-xl text-xs font-medium text-center"
-            style={{ backgroundColor: `${PILLAR_COLOR}18`, color: PILLAR_COLOR }}
-          >
-            Als nächstes: {orderedExercises[currentIndex + 1].name}
-          </div>
-        )}
+        {/* Next exercise preview — last 10s of exercise, or entire rest phase (≥5s) */}
+        <div className="mt-3 w-full">
+          <NextExercisePreview
+            name={orderedExercises[currentIndex + 1]?.name}
+            visible={
+              (phase === 'exercise' && timeLeft <= 10) ||
+              (phase === 'rest' && pauseDuration >= 5)
+            }
+            color={PILLAR_COLOR}
+          />
+        </div>
 
         {/* Large timer */}
         <div className="mt-5 mb-6">

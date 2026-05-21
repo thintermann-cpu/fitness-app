@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
+import { NextExercisePreview } from '../shared/NextExercisePreview'
 import type { WizardExercise } from '../../lib/customWorkouts'
 
 type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
@@ -292,6 +293,31 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
   const isTabata   = mode === 'tabata'
   const phaseColor = tick.phase === 'rest' ? '#3B82F6' : modeColor
 
+  // Current/next exercise tracking for EMOM and Tabata
+  const hasExercises = (exercises?.length ?? 0) > 0
+  const currentExIdx = hasExercises ? (tick.interval - 1) % exercises!.length : 0
+  const nextExIdx    = hasExercises ? tick.interval % exercises!.length : 0
+  const currentExName = hasExercises ? exercises![currentExIdx]?.name : undefined
+  const nextExName    = hasExercises ? exercises![nextExIdx]?.name : undefined
+
+  let showNextExercise = false
+  if ((isRunning || isPaused) && hasExercises) {
+    if (mode === 'emom') {
+      const emomIntervalMs = emomInterval * 60_000
+      const timeLeftInInterval = tick.remaining - (emomRounds - tick.interval) * emomIntervalMs
+      showNextExercise = timeLeftInInterval <= 10_000 && tick.interval < emomRounds
+    } else if (isTabata) {
+      const cycleMs = (tabataWork + tabataRest) * 1_000
+      if (tick.phase === 'work') {
+        const timeLeftInWork = tick.remaining - (tabataRounds - tick.interval) * cycleMs - tabataRest * 1_000
+        showNextExercise = timeLeftInWork <= 10_000 && tick.interval < tabataRounds
+      } else {
+        // Rest phase — entire rest serves as preview for next exercise
+        showNextExercise = tick.interval < tabataRounds
+      }
+    }
+  }
+
   return (
     <div className="flex flex-col items-center gap-6 py-4">
       <CountdownOverlay
@@ -421,6 +447,20 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
           <span className="text-sm font-bold text-amber-400 tracking-wide uppercase">
             Seiten wechseln
           </span>
+        </div>
+      )}
+
+      {/* Current exercise name (EMOM / Tabata with exercises) */}
+      {(isRunning || isPaused) && hasExercises && (mode === 'emom' || isTabata) && currentExName && (
+        <div className="flex flex-col items-center gap-2 w-full">
+          <p className="text-lg font-bold text-center" style={{ color: 'var(--color-text)' }}>
+            {currentExName}
+          </p>
+          <NextExercisePreview
+            name={nextExName}
+            visible={showNextExercise}
+            color={modeColor}
+          />
         </div>
       )}
 
