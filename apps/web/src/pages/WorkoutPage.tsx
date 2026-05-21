@@ -244,11 +244,11 @@ export function WorkoutPage() {
               ))}
             </div>
             {/* Category chips */}
-            <div className="flex gap-2 mb-1 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex flex-wrap gap-2 mb-1">
               {/* Empfohlen chip */}
               <button
                 onClick={() => handleFilterSelect('empfohlen')}
-                className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
                 style={{
                   backgroundColor: isEditorsPick ? '#E8642A' : 'var(--color-bg-card)',
                   color: isEditorsPick ? 'white' : 'var(--color-text-muted)',
@@ -257,7 +257,7 @@ export function WorkoutPage() {
                 ⭐ Empfohlen
               </button>
               {WOD_CATEGORIES.map((cat) => (
-                <div key={cat.id} className="flex-shrink-0 flex items-center gap-0.5">
+                <div key={cat.id} className="flex items-center gap-0.5">
                   <button
                     onClick={() => handleFilterSelect(cat.id)}
                     className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"

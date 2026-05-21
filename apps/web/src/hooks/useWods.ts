@@ -75,7 +75,7 @@ function mapRawToWod(raw: RawWod): Wod {
     category: raw.kategorie,
     description: raw.beschreibung,
     exercises: raw.uebungen,
-    equipment: raw.equipment ? raw.equipment.split(',').map((s) => s.trim()) : [],
+    equipment: raw.equipment ? raw.equipment.split(',').map((s) => s.trim()).filter(Boolean) : [],
     difficulty: raw.schwierigkeit,
     estimated_minutes: parseInt(raw.dauer) || 0,
     is_editors_pick: raw.is_editors_pick ?? EDITORS_PICK_IDS.has(raw.id),

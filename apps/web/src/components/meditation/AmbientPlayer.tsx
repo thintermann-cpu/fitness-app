@@ -27,7 +27,6 @@ export function AmbientPlayer() {
   )
   const [playing,     setPlaying]     = useState(false)
   const [volume,      setVolume]      = useState(50)
-  const [unavailable, setUnavailable] = useState<Set<SoundId>>(new Set())
   const audioRef = useRef<HTMLAudioElement>(null)
   const { track } = useAnalytics()
 
@@ -47,7 +46,6 @@ export function AmbientPlayer() {
   }, [volume])
 
   const handleSelect = (id: SoundId) => {
-    if (unavailable.has(id)) return
     if (selected === id) {
       setPlaying((p) => !p)
     } else {
@@ -59,7 +57,6 @@ export function AmbientPlayer() {
   }
 
   const handleError = () => {
-    if (selected) setUnavailable((prev) => new Set([...prev, selected]))
     setPlaying(false)
   }
 
@@ -84,15 +81,12 @@ export function AmbientPlayer() {
 
       <div className="flex flex-wrap gap-2 mb-3">
         {AMBIENT_SOUNDS.map((s) => {
-          const isUnavail = unavailable.has(s.id)
-          const isActive  = selected === s.id && playing
+          const isActive = selected === s.id && playing
           return (
             <button
               key={s.id}
               onClick={() => handleSelect(s.id)}
-              disabled={isUnavail}
-              title={isUnavail ? 'Datei nicht verfügbar' : undefined}
-              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors disabled:opacity-35 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
               style={{
                 backgroundColor: isActive ? PILLAR_COLOR : `${PILLAR_COLOR}18`,
                 color:           isActive ? 'white' : PILLAR_COLOR,

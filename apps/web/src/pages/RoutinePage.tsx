@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRoutines } from '../hooks/useRoutines'
 import type { Routine, Category } from '../hooks/useRoutines'
@@ -64,6 +64,18 @@ export function RoutinePage() {
   const { routines, isLoading, create, update, remove, createError, createErrorMsg } = useRoutines()
   const { data: logsRaw }     = useRoutineLogs(todayStr)
   const { todos, add: addTodo, complete: completeTodo, remove: removeTodo, clearDone, addError, addErrorMsg } = useTodos()
+
+  useEffect(() => {
+    const KEYWORDS = /workout|training|sport/i
+    const handler = () => {
+      todos
+        .filter((t) => !t.completed && KEYWORDS.test(t.text))
+        .forEach((t) => completeTodo({ id: t.id, completed: true }))
+    }
+    window.addEventListener('carveout:workout-completed', handler)
+    return () => window.removeEventListener('carveout:workout-completed', handler)
+  }, [todos, completeTodo])
+
   const { data: weekLogsRaw } = useWeekLogs(weekDates)
   const toggleLog             = useToggleRoutineLog(todayStr)
 

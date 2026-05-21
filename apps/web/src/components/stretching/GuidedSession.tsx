@@ -139,11 +139,12 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
   }, [isTimerActive])
 
   // Progress ring
+  const currentDur = (current?.duration_sec ?? 0) > 0 ? (current?.duration_sec ?? 0) : exerciseDuration
   const phaseTotal = (() => {
     if (phase === 'switch') return SWITCH_DURATION
     if (phase === 'rest') return pauseDuration
-    if (phase === 'exercise') return current?.bilateral ? Math.floor(exerciseDuration / 2) : exerciseDuration
-    return exerciseDuration
+    if (phase === 'exercise') return current?.bilateral ? Math.floor(currentDur / 2) : currentDur
+    return currentDur
   })()
   const ringProgress = phaseTotal > 0 ? timeLeft / phaseTotal : 0
   const dashOffset = RING_CIRCUMFERENCE * (1 - ringProgress)
@@ -156,10 +157,11 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
   function startSession() {
     const first = orderedExercises[0]
     if (!first) return
+    const dur = first.duration_sec > 0 ? first.duration_sec : exerciseDuration
     setCurrentIndex(0)
     setSide('left')
     setPhase('exercise')
-    setTimeLeft(first.bilateral ? Math.floor(exerciseDuration / 2) : exerciseDuration)
+    setTimeLeft(first.bilateral ? Math.floor(dur / 2) : dur)
     setPaused(false)
     void audioRef.current.playGong()
     if (routine.subcategory === 'yoga_flow') {
@@ -170,10 +172,11 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
   function jumpToExercise(idx: number) {
     const ex = orderedExercises[idx]
     if (!ex) return
+    const dur = ex.duration_sec > 0 ? ex.duration_sec : exerciseDuration
     setCurrentIndex(idx)
     setSide('left')
     setPhase('exercise')
-    setTimeLeft(ex.bilateral ? Math.floor(exerciseDuration / 2) : exerciseDuration)
+    setTimeLeft(ex.bilateral ? Math.floor(dur / 2) : dur)
     setPaused(false)
   }
 
@@ -216,7 +219,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
         vibrate(); void audioRef.current.playBeep()
         setSide('right')
         setPhase('exercise')
-        setTimeLeft(Math.floor(exerciseDuration / 2))
+        setTimeLeft(Math.floor(currentDur / 2))
       } else if (phase === 'rest') {
         if (currentIndex < total - 1) {
           vibrate(); void audioRef.current.playBeep()
@@ -494,6 +497,16 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
                 Atme aus beim Dehnen
               </p>
             )}
+          </div>
+        )}
+
+        {/* Next exercise preview */}
+        {phase === 'exercise' && timeLeft <= 10 && orderedExercises[currentIndex + 1] && (
+          <div
+            className="mt-3 px-4 py-2 rounded-xl text-xs font-medium text-center"
+            style={{ backgroundColor: `${PILLAR_COLOR}18`, color: PILLAR_COLOR }}
+          >
+            Als nächstes: {orderedExercises[currentIndex + 1].name}
           </div>
         )}
 

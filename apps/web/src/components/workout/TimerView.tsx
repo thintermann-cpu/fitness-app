@@ -163,18 +163,17 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
     return () => worker.terminate()
   }, [])
 
-  // Reset displayed tick when config changes (not while running/paused)
+  // Reset displayed tick when config changes (not while running/paused/complete)
   useEffect(() => {
-    if (!isRunning && !isPaused) {
-      let initialRemaining: number
-      if (mode === 'tabata')      initialRemaining = (tabataWork + tabataRest) * 1000 * tabataRounds
-      else if (mode === 'emom')   initialRemaining = emomInterval * 60_000 * emomRounds
-      else if (mode === 'fortime') initialRemaining = (forTimeCap ?? 0) * 60_000
-      else                        initialRemaining = minutes * 60_000
-      setTick({ elapsed: 0, remaining: initialRemaining, phase: 'work', interval: 1 })
-      setIsComplete(false)
-    }
-  }, [mode, minutes, tabataWork, tabataRest, tabataRounds, emomInterval, emomRounds, forTimeCap, isRunning, isPaused])
+    if (isRunning || isPaused || isComplete) return
+    let initialRemaining: number
+    if (mode === 'tabata')      initialRemaining = (tabataWork + tabataRest) * 1000 * tabataRounds
+    else if (mode === 'emom')   initialRemaining = emomInterval * 60_000 * emomRounds
+    else if (mode === 'fortime') initialRemaining = (forTimeCap ?? 0) * 60_000
+    else                        initialRemaining = minutes * 60_000
+    setTick({ elapsed: 0, remaining: initialRemaining, phase: 'work', interval: 1 })
+    setIsComplete(false)
+  }, [mode, minutes, tabataWork, tabataRest, tabataRounds, emomInterval, emomRounds, forTimeCap, isRunning, isPaused, isComplete])
 
   // Bilateral side-switch: show overlay at halfway point (countdown modes only)
   useEffect(() => {
