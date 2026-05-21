@@ -39,9 +39,9 @@ const TABS: Record<Lang, Array<[Tab, string]>> = {
 }
 
 const PAGE_TITLE: Record<Lang, string> = {
-  de: 'Rituale',
-  en: 'Rituals',
-  es: 'Rituales',
+  de: 'Routine',
+  en: 'Routines',
+  es: 'Rutinas',
 }
 
 export function RoutinePage() {

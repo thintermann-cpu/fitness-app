@@ -13,9 +13,9 @@ const NAV_ITEMS = [
 ] as const
 
 const NAV_LABELS: Record<string, Record<string, string>> = {
-  de: { home: 'Mein Tag', workout: 'Training', routine: 'Rituale',  stretching: 'Stretch & Yoga',      meditation: 'Fokus' },
-  en: { home: 'My Day',   workout: 'Workout',  routine: 'Rituals',  stretching: 'Stretch & Yoga',      meditation: 'Meditate' },
-  es: { home: 'Mi Día',   workout: 'Entreno',  routine: 'Rituales', stretching: 'Estiramiento & Yoga', meditation: 'Meditar' },
+  de: { home: 'Mein Tag', workout: 'Training', routine: 'Routine',  stretching: 'Stretch & Yoga',      meditation: 'Fokus' },
+  en: { home: 'My Day',   workout: 'Workout',  routine: 'Routines', stretching: 'Stretch & Yoga',      meditation: 'Meditate' },
+  es: { home: 'Mi Día',   workout: 'Entreno',  routine: 'Rutinas',  stretching: 'Estiramiento & Yoga', meditation: 'Meditar' },
 }
 
 export function BottomNav() {

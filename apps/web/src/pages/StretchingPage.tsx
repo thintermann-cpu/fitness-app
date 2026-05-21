@@ -6,6 +6,7 @@ import { RoutineCard } from '../components/stretching/RoutineCard'
 import { RoutineDetail } from '../components/stretching/RoutineDetail'
 import { GuidedSession } from '../components/stretching/GuidedSession'
 import { StretchingHistory } from '../components/stretching/StretchingHistory'
+import { YogaTab } from '../components/stretching/YogaTab'
 import { FilterBottomSheet } from '../components/ui/FilterBottomSheet'
 import { SessionCreator } from '../components/stretching/SessionCreator'
 import {
@@ -17,13 +18,14 @@ import {
 const PILLAR_COLOR = '#7BC67E'
 
 type Lang = 'de' | 'en' | 'es'
-type Tab = 'routines' | 'history'
+type Tab = 'stretching' | 'yoga' | 'history'
 type View = 'list' | 'detail' | 'session'
 
 const T = {
   de: {
-    title: 'Stretch & Yoga',
-    tabRoutines: 'Routinen',
+    title:      'Stretch & Yoga',
+    tabStretching: 'Stretching',
+    tabYoga:    'Yoga',
     tabHistory: 'Verlauf',
     all: 'Alle',
     morning: 'Morgen',
@@ -35,7 +37,6 @@ const T = {
     lower_body: 'Unterkörper',
     recovery: 'Erholung',
     yoga: 'Yoga',
-    yoga_flow: 'Yoga Flow',
     loading: 'Laden…',
     empty: 'Keine Routinen gefunden.',
     filterGoal: 'Ziel',
@@ -44,8 +45,9 @@ const T = {
     filterReset: 'Zurücksetzen',
   },
   en: {
-    title: 'Stretch & Yoga',
-    tabRoutines: 'Routines',
+    title:      'Stretch & Yoga',
+    tabStretching: 'Stretching',
+    tabYoga:    'Yoga',
     tabHistory: 'History',
     all: 'All',
     morning: 'Morning',
@@ -57,7 +59,6 @@ const T = {
     lower_body: 'Lower Body',
     recovery: 'Recovery',
     yoga: 'Yoga',
-    yoga_flow: 'Yoga Flow',
     loading: 'Loading…',
     empty: 'No routines found.',
     filterGoal: 'Goal',
@@ -66,8 +67,9 @@ const T = {
     filterReset: 'Reset',
   },
   es: {
-    title: 'Estiramiento & Yoga',
-    tabRoutines: 'Rutinas',
+    title:      'Estiramiento & Yoga',
+    tabStretching: 'Estiramiento',
+    tabYoga:    'Yoga',
     tabHistory: 'Historial',
     all: 'Todas',
     morning: 'Mañana',
@@ -79,7 +81,6 @@ const T = {
     lower_body: 'Tren inferior',
     recovery: 'Recuperación',
     yoga: 'Yoga',
-    yoga_flow: 'Yoga Flow',
     loading: 'Cargando…',
     empty: 'No se encontraron rutinas.',
     filterGoal: 'Objetivo',
@@ -91,74 +92,10 @@ const T = {
 
 const GOAL_FILTERS = [
   'all', 'morning', 'post_workout', 'office', 'evening',
-  'full_body', 'upper_body', 'lower_body', 'recovery', 'yoga', 'yoga_flow',
+  'full_body', 'upper_body', 'lower_body', 'recovery', 'yoga',
 ] as const
 
 type GoalFilter = typeof GOAL_FILTERS[number]
-
-interface YogaFlowDef {
-  id: string
-  name: string
-  duration: number
-  level: 'anfänger' | 'mittel' | 'fortgeschritten'
-  focus: string
-  exerciseHints: string[]
-  holdTime: number
-}
-
-const YOGA_FLOWS: YogaFlowDef[] = [
-  {
-    id: 'flow-morgen',
-    name: 'Morgen-Flow',
-    duration: 10,
-    level: 'anfänger',
-    focus: 'Sanftes Aufwärmen',
-    exerciseHints: ['cat', 'cow', 'downward', 'child', 'mountain', 'bridge', 'savasana'],
-    holdTime: 30,
-  },
-  {
-    id: 'flow-hueft',
-    name: 'Hüft-Öffner',
-    duration: 15,
-    level: 'mittel',
-    focus: 'Hüftflexoren & Piriformis',
-    exerciseHints: ['cat', 'pigeon', 'warrior', 'triangle', 'child'],
-    holdTime: 45,
-  },
-  {
-    id: 'flow-ruecken',
-    name: 'Rücken-Relief',
-    duration: 12,
-    level: 'anfänger',
-    focus: 'Unterer Rücken',
-    exerciseHints: ['cat', 'child', 'cobra', 'supine', 'bridge', 'savasana'],
-    holdTime: 40,
-  },
-  {
-    id: 'flow-power',
-    name: 'Power-Flow',
-    duration: 20,
-    level: 'mittel',
-    focus: 'Kraft + Flexibilität',
-    exerciseHints: ['sun', 'warrior', 'triangle', 'chair', 'chaturanga', 'upward', 'downward', 'pigeon'],
-    holdTime: 30,
-  },
-  {
-    id: 'flow-schlaf',
-    name: 'Schlaf-Flow',
-    duration: 10,
-    level: 'anfänger',
-    focus: 'Abendliche Entspannung',
-    exerciseHints: ['child', 'seated', 'supine', 'bridge', 'savasana'],
-    holdTime: 45,
-  },
-]
-
-const LEVEL_BADGE: Record<YogaFlowDef['level'], string> = {
-  anfänger:       'Anfänger',
-  mittel:         'Mittel',
-  fortgeschritten:'Fortgeschritten',
-}
 
 type DurFilter = 0 | 5 | 10 | 20
 const DUR_OPTIONS: DurFilter[] = [0, 5, 10, 20]
@@ -168,11 +105,12 @@ export function StretchingPage() {
   const lang = ((profile?.language ?? 'en') as Lang)
   const t = T[lang]
 
-  const [tab, setTab] = useState<Tab>('routines')
+  const [tab, setTab] = useState<Tab>('stretching')
   const [goalFilter, setGoalFilter] = useState<GoalFilter>('all')
   const [durFilter, setDurFilter] = useState<DurFilter>(0)
   const [view, setView] = useState<View>('list')
   const [selectedRoutine, setSelectedRoutine] = useState<StretchingRoutine | null>(null)
+  const [selectedHoldTime, setSelectedHoldTime] = useState<number>(45)
   const [filterOpen, setFilterOpen] = useState(false)
   const [draftGoal, setDraftGoal] = useState<GoalFilter>('all')
   const [draftDur, setDraftDur] = useState<DurFilter>(0)
@@ -191,7 +129,6 @@ export function StretchingPage() {
   const isLoading = routinesLoading || exercisesLoading
 
   const filteredRoutines = useMemo(() => {
-    if (goalFilter === 'yoga_flow') return []
     let result = goalFilter === 'all'
       ? routines
       : routines.filter((r) => r.goal === goalFilter || r.subcategory === goalFilter)
@@ -199,33 +136,18 @@ export function StretchingPage() {
     return result
   }, [routines, goalFilter, durFilter])
 
-  const resolvedYogaFlows = useMemo(() => {
-    if (!exercises.length) return []
-    return YOGA_FLOWS.map((flow) => {
-      const matched = flow.exerciseHints
-        .map((hint) => exercises.find((e) => e.name.toLowerCase().includes(hint.toLowerCase())))
-        .filter((e): e is NonNullable<typeof e> => e !== undefined)
-      const unique = matched.filter((e, i, arr) => arr.findIndex((x) => x.id === e.id) === i)
-      const routine: StretchingRoutine = {
-        id:           flow.id,
-        name:         flow.name,
-        description:  flow.focus,
-        goal:         'yoga_flow',
-        difficulty:   flow.level === 'fortgeschritten' ? 'advanced' : flow.level === 'mittel' ? 'intermediate' : 'beginner',
-        duration_min: flow.duration,
-        exercise_ids: unique.map((e) => e.id),
-        subcategory:  'yoga_flow',
-      }
-      return { routine, flow, exerciseCount: unique.length }
-    })
-  }, [exercises])
-
   const handleSelectRoutine = (routine: StretchingRoutine) => {
     setSelectedRoutine(routine)
     setView('detail')
   }
 
   const handleStartSession = () => {
+    setView('session')
+  }
+
+  const handleSelectFlow = (routine: StretchingRoutine, holdTime: number) => {
+    setSelectedRoutine(routine)
+    setSelectedHoldTime(holdTime)
     setView('session')
   }
 
@@ -277,7 +199,7 @@ export function StretchingPage() {
               onFinish={handleFinishSession}
               defaultExerciseDuration={
                 selectedRoutine.subcategory === 'yoga_flow'
-                  ? (YOGA_FLOWS.find((f) => f.id === selectedRoutine.id)?.holdTime ?? 45)
+                  ? selectedHoldTime
                   : undefined
               }
             />
@@ -298,7 +220,11 @@ export function StretchingPage() {
 
       {/* Tab bar */}
       <div className="px-4 flex gap-1 bg-[var(--color-bg)] sticky top-0 z-10 pt-2 pb-3 border-b border-white/5">
-        {([['routines', t.tabRoutines], ['history', t.tabHistory]] as const).map(([id, label]) => (
+        {([
+          ['stretching', t.tabStretching],
+          ['yoga',       t.tabYoga],
+          ['history',    t.tabHistory],
+        ] as const).map(([id, label]) => (
           <button
             key={id}
             onClick={() => setTab(id)}
@@ -316,7 +242,9 @@ export function StretchingPage() {
 
       {/* Content */}
       <div className="flex-1 pb-24 max-w-lg mx-auto w-full">
-        {tab === 'routines' && (
+
+        {/* ─── Stretching tab ─── */}
+        {tab === 'stretching' && (
           <>
             {/* Custom sessions section */}
             <div className="px-4 pt-3 pb-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
@@ -390,66 +318,26 @@ export function StretchingPage() {
               )}
             </div>
 
-            {/* Filter button bar — hidden for yoga_flow */}
-            {goalFilter !== 'yoga_flow' && (
-              <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-                <span className="text-xs text-[var(--color-text-muted)]">
-                  {filteredRoutines.length}
-                </span>
-                <button
-                  onClick={openFilter}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                  style={
-                    activeFilterCount > 0
-                      ? { backgroundColor: `${PILLAR_COLOR}25`, color: PILLAR_COLOR, border: `1px solid ${PILLAR_COLOR}60` }
-                      : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)', border: '1px solid transparent' }
-                  }
-                >
-                  <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor">
-                    <path d="M1 2h10L7 6.5V10l-2-1V6.5L1 2z"/>
-                  </svg>
-                  {activeFilterCount > 0 ? `Filter · ${activeFilterCount}` : 'Filter'}
-                </button>
-              </div>
-            )}
-
-            {/* Yoga Flow cards */}
-            {goalFilter === 'yoga_flow' && (
-              <div className="px-4 pt-3 space-y-3">
-                {resolvedYogaFlows.map(({ routine, flow, exerciseCount }) => (
-                  <div
-                    key={flow.id}
-                    className="rounded-[var(--radius-md)] border border-white/5 p-4"
-                    style={{ backgroundColor: 'var(--color-bg-card)' }}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <p className="font-semibold text-[var(--color-text)]">{flow.name}</p>
-                      <span
-                        className="text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0"
-                        style={{ backgroundColor: `${PILLAR_COLOR}20`, color: PILLAR_COLOR }}
-                      >
-                        {LEVEL_BADGE[flow.level]}
-                      </span>
-                    </div>
-                    <p className="text-xs mb-2.5" style={{ color: 'var(--color-text-muted)' }}>
-                      {flow.focus} · {flow.duration} min
-                      {exerciseCount > 0 ? ` · ${exerciseCount} Übungen` : ''}
-                    </p>
-                    <button
-                      onClick={() => {
-                        setSelectedRoutine(routine)
-                        setView('session')
-                      }}
-                      disabled={exerciseCount === 0}
-                      className="px-4 py-1.5 rounded-xl text-xs font-bold transition-opacity active:opacity-70 disabled:opacity-30"
-                      style={{ backgroundColor: `${PILLAR_COLOR}22`, color: PILLAR_COLOR }}
-                    >
-                      {exerciseCount === 0 ? 'Übungen werden geladen…' : '▶ Flow starten'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Filter button bar */}
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+              <span className="text-xs text-[var(--color-text-muted)]">
+                {filteredRoutines.length}
+              </span>
+              <button
+                onClick={openFilter}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                style={
+                  activeFilterCount > 0
+                    ? { backgroundColor: `${PILLAR_COLOR}25`, color: PILLAR_COLOR, border: `1px solid ${PILLAR_COLOR}60` }
+                    : { backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)', border: '1px solid transparent' }
+                }
+              >
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M1 2h10L7 6.5V10l-2-1V6.5L1 2z"/>
+                </svg>
+                {activeFilterCount > 0 ? `Filter · ${activeFilterCount}` : 'Filter'}
+              </button>
+            </div>
 
             {/* Routine list */}
             <div className="px-4 space-y-3">
@@ -470,8 +358,7 @@ export function StretchingPage() {
                     </div>
                   ))}
                 </>
-              ) : goalFilter === 'yoga_flow' ? null
-              : filteredRoutines.length === 0 ? (
+              ) : filteredRoutines.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                   <span className="text-4xl">🤸</span>
                   <p className="text-sm text-[var(--color-text-muted)]">{t.empty}</p>
@@ -490,6 +377,16 @@ export function StretchingPage() {
           </>
         )}
 
+        {/* ─── Yoga tab ─── */}
+        {tab === 'yoga' && (
+          <YogaTab
+            exercises={exercises}
+            lang={lang}
+            onSelectFlow={handleSelectFlow}
+          />
+        )}
+
+        {/* ─── History tab ─── */}
         {tab === 'history' && (
           <div className="px-4 py-4">
             <StretchingHistory routines={routines} lang={lang} />

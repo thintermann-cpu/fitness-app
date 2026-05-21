@@ -4,7 +4,7 @@ import { useAuthStore } from '../../store/authStore'
 type Lang = 'de' | 'en' | 'es'
 
 const PILLARS = [
-  { id: 'routine',    label: { de: 'Ritual',          en: 'Ritual',        es: 'Ritual'        }, emoji: '📋', color: '#4A90D9' },
+  { id: 'routine',    label: { de: 'Routine',         en: 'Routine',       es: 'Rutina'        }, emoji: '📋', color: '#4A90D9' },
   { id: 'workout',    label: { de: 'Training',        en: 'Workout',       es: 'Entrenamiento' }, emoji: '💪', color: '#E8642A' },
   { id: 'stretching', label: { de: 'Stretch & Yoga',  en: 'Stretch & Yoga', es: 'Estiramiento'  }, emoji: '🤸', color: '#7BC67E' },
   { id: 'meditation', label: { de: 'Meditation',      en: 'Meditation',    es: 'Meditación'    }, emoji: '🧘', color: '#9B7FD4' },

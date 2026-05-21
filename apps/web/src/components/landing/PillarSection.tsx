@@ -6,8 +6,8 @@ const PILLARS = [
   {
     color: '#4A90D9',
     emoji: '📋',
-    de: { name: 'Ritual',             sub: 'Struktur & Gewohnheit',  benefits: ['Morgenroutine', 'Klarer Kopf', 'Tagesstruktur'],      dur: '5–10 Min' },
-    en: { name: 'Ritual',             sub: 'Structure & Habit',      benefits: ['Morning routine', 'Clear mind', 'Daily structure'],    dur: '5–10 min' },
+    de: { name: 'Routine',            sub: 'Struktur & Gewohnheit',  benefits: ['Morgenroutine', 'Klarer Kopf', 'Tagesstruktur'],      dur: '5–10 Min' },
+    en: { name: 'Routine',            sub: 'Structure & Habit',      benefits: ['Morning routine', 'Clear mind', 'Daily structure'],    dur: '5–10 min' },
   },
   {
     color: '#E8642A',
@@ -31,13 +31,13 @@ const PILLARS = [
 
 const WHY = {
   de: [
-    { dot: '#4A90D9', text: 'Ritual gibt dir Struktur. Ein klarer Morgen bedeutet einen klaren Tag — und ein klares Leben.' },
+    { dot: '#4A90D9', text: 'Routine gibt dir Struktur. Ein klarer Morgen bedeutet einen klaren Tag — und ein klares Leben.' },
     { dot: '#E8642A', text: 'Workout gibt dir Kraft und Grit. Jedes Training das du durchziehst beweist dir: Du kannst.' },
     { dot: '#7BC67E', text: 'Stretching & Yoga gibt dir Mobilität und Erholung. Dein Körper kann nicht geben was er nicht hat.' },
     { dot: '#9B7FD4', text: 'Meditation gibt dir Klarheit. Weniger Rauschen. Mehr du.' },
   ],
   en: [
-    { dot: '#4A90D9', text: 'Ritual gives you structure. A clear morning means a clear day — and a clearer life.' },
+    { dot: '#4A90D9', text: 'Routine gives you structure. A clear morning means a clear day — and a clearer life.' },
     { dot: '#E8642A', text: 'Workout gives you strength and grit. Every session you complete proves something to yourself: you can.' },
     { dot: '#7BC67E', text: 'Stretching & Yoga gives you mobility and recovery. Your body can\'t give what it doesn\'t have.' },
     { dot: '#9B7FD4', text: 'Meditation gives you clarity. Less noise. More you.' },

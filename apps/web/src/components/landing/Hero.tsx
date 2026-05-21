@@ -7,14 +7,14 @@ interface Props {
 
 const T = {
   de: {
-    h1a: 'Workout. Stretching. Meditation. Ritual.',
+    h1a: 'Workout. Stretching. Meditation. Routine.',
     h1b: 'Alles. Täglich. 30 Minuten.',
     sub: 'CarveOut ist die App für alle, die wissen, dass sie mehr könnten — und jetzt endlich anfangen.',
     cta: 'Jetzt kostenlos starten →',
     fine: 'Kein Abo erforderlich. Keine Kreditkarte. Einfach starten.',
   },
   en: {
-    h1a: 'Workout. Stretching. Meditation. Ritual.',
+    h1a: 'Workout. Stretching. Meditation. Routine.',
     h1b: 'Everything. Daily. 30 Minutes.',
     sub: 'CarveOut is the app for everyone who knows they could do more — and is finally ready to start.',
     cta: 'Start for free →',
