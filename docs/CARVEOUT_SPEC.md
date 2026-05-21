@@ -70,6 +70,8 @@ apps/web/src/
 │   └── toastStore.ts          # Zustand-Store: toasts[], addToast(), removeToast(); ToastType: success|error|info|warning; max. 3 gleichzeitig
 ├── pages/
 │   ├── LandingPage.tsx            # Marketing-Landingpage DE/EN; inline `useLang` (localStorage + Browser-Fallback, Default DE); 8 Sektionen (LandingNav, Hero, PersonaSection, PillarSection, HowItWorks, ResultsTimeline, PricingSection, CtaSection, LandingFooter); Fade-in on scroll via IntersectionObserver; öffentliche Route `/`
+│   ├── ImpressumPage.tsx          # Impressum DE/EN; inline `useLang` (localStorage + Browser-Fallback, Default DE); nutzt LandingNav + LandingFooter; öffentliche Route `/impressum`
+│   ├── DatenschutzPage.tsx        # Datenschutzerklärung DE/EN; inline `useLang`; nutzt LandingNav + LandingFooter; Abschnitte: Verantwortlicher, Daten, Zweck, Dritte, Rechte, Speicherdauer; öffentliche Route `/datenschutz`
 │   ├── HomePage.tsx               # Dashboard: Greeting + i18n-Datum, TodayPillarTracker, MoodCheck (useDailyLog), AdaptiveSuggestion, TodaysWod, WeekStats, RecentActivity
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
@@ -196,6 +198,8 @@ apps/web/src/
 
 ```
 /                              → LandingPublicRoute (nicht-auth: LandingPage; auth: Redirect /home)
+/impressum                     → ImpressumPage (öffentlich, kein Auth nötig)
+/datenschutz                   → DatenschutzPage (öffentlich, kein Auth nötig)
 /login, /register              → AuthLayout (kein Auth nötig; auth: Redirect /home)
 /home → AppShell (ProtectedLayout)
   /home                        → HomePage (Dashboard)
@@ -509,6 +513,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session R** | **Marketing Landing Page** — `LandingPage.tsx` (`pages/`) mit 8 Sektionen (LandingNav, Hero, PersonaSection, PillarSection, HowItWorks, ResultsTimeline, PricingSection, CtaSection, LandingFooter); inline `useLang` (localStorage + Browser-Fallback, Default DE); DE/EN-Toggle; Fade-in on scroll via IntersectionObserver; PricingSection mit disabled CTAs + Tooltip; **Route `/`** öffentlich via `LandingPublicRoute` (auth → Redirect `/home`); **HomePage verschoben auf `/home`**; alle internen Redirects (`AuthLayout`, `ProtectedLayout`, `AppShell`, `BottomNav`, `Sidebar`) aktualisiert |
 | **Session T** | **Timer-Restart-Bug-Fix** — `TimerView` Reset-useEffect prüft zusätzlich `isComplete` (Guard: kein Reset nach Timer-Ende); **Equipment-Filter-Fix** — `useWods.mapRawToWod` ergänzt `.filter(Boolean)` beim `equipment`-Splitting; **Category-Chips Wrap** — `WorkoutPage` Chip-Reihe: `overflow-x-auto` → `flex flex-wrap`; **AmbientPlayer** — `unavailable`-State + `disabled`-Logik entfernt (Buttons immer klickbar, Fehler stoppt nur Playback); **Ritual Auto-Check** — `RoutinePage` hört auf `carveout:workout-completed` CustomEvent + auto-completed Todos deren Text `/workout\|training\|sport/i` matcht; **WodDetail** — feuert `carveout:workout-completed` CustomEvent bei Timer-Ende (`onComplete`-Callback); **GuidedSession per-exercise duration** — `duration_sec`-Feld pro Übung überschreibt globales `exerciseDuration` (Props-Default bleibt als Fallback); **GuidedSession Next-Up-Banner** — zeigt nächste Übung wenn `phase === 'exercise' && timeLeft <= 10` |
 | **Session U** | **Equipment-Filter-Normalisierung** — `normEq()`-Funktion in `useWods` zentralisiert + erweitert (resistance bands→resistance band, rowing machine→rower, assault bike→bike); `equipmentFilter` nutzt jetzt ebenfalls `normEq` + bodyweight immer erlaubt; **GuidedSession Duration-Default** — kein `defaultExerciseDuration` → Median der `duration_sec`-Werte der Übungen (Fallback 30s); Übungsname auf `text-2xl`; **`NextExercisePreview.tsx`** — neue Shared-Komponente (opacity-Fade, Props: name/visible/color, rendert immer mit opacity 0 wenn inaktiv); **GuidedSession Next-Up via `NextExercisePreview`** — zeigt auch während gesamter Rest-Phase (wenn `pauseDuration >= 5`); **TimerView EMOM/Tabata Übungsrotation** — aktueller Übungsname + `NextExercisePreview` (EMOM letzte 10s; Tabata Work letzte 10s / Tabata Rest gesamte Phase) |
+| **Session V** | **Legal Pages** — `ImpressumPage.tsx` + `DatenschutzPage.tsx` (je DE/EN, inline `useLang`, nutzen LandingNav + LandingFooter); öffentliche Routen `/impressum` + `/datenschutz` in `App.tsx` (kein Auth nötig) |
 
 ### Offen / Roadmap
 
@@ -533,4 +538,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session U: Equipment-Normalisierung normEq, GuidedSession Duration-Median, NextExercisePreview, TimerView EMOM/Tabata Übungsrotation)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session V: Impressum + Datenschutz — öffentliche Legal-Routen)*
