@@ -5,6 +5,7 @@ import { useToastStore } from '../store/toastStore'
 import { supabase } from '../lib/supabase'
 import { useSubscription } from '../hooks/useSubscription'
 
+
 const LANGUAGES = [
   { id: 'de', label: 'Deutsch', flag: '🇩🇪' },
   { id: 'en', label: 'English', flag: '🇬🇧' },
