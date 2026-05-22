@@ -74,7 +74,9 @@ export function ImpressumPage() {
           >
             <div>
               <p className="font-semibold">Tim Hintermann</p>
-              <p style={{ color: 'var(--color-text-muted)' }}>[Adresse auf Anfrage]</p>
+              <p style={{ color: 'var(--color-text-muted)' }}>Brandstrasse</p>
+              <p style={{ color: 'var(--color-text-muted)' }}>8952 Schlieren</p>
+              <p style={{ color: 'var(--color-text-muted)' }}>Schweiz / Switzerland</p>
             </div>
 
             <div>
