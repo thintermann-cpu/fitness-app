@@ -81,7 +81,9 @@ apps/web/src/
 │   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); FilterBottomSheet (Goal/Kategorie inkl. Yoga-Subcategory + yoga_flow, Dauer); 5 Yoga Flows (YOGA_FLOWS-Array: Morgen-Flow/Hüft-Öffner/Rücken-Relief/Power-Flow/Schlaf-Flow) als clientseitige virtuelle Routinen — Exercises per Name-Hint-Match aus DB gelöst; `resolvedYogaFlows` useMemo; Flow-Cards mit Level-Badge + holdTime-Prop an GuidedSession
 │   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5); Sub-Tabs im Meditieren-Tab: Ungeführt (UnguidedTimer) / Geführt (GuidedPlayer + DB-Sessions + Freie Meditation); FilterBottomSheet (Kategorie + Dauer) nur im Geführt-Sub-Tab; view=free_meditation (Quick-Select 5/10/20 min via AdHocMeditationTimer)
 │   ├── FavoritesPage.tsx      # Drei Sektionen (Workouts / Stretch & Yoga / Meditationen), URL-Param ?section=
-│   ├── ProfilePage.tsx        # Name + Sprache bearbeiten, Passwort-Reset (E-Mail), Abo-Placeholder, Abmelden; Route /profile
+│   ├── CheckoutSuccessPage.tsx  # Bestätigungsseite nach Stripe-Checkout; liest `?session_id=`; zeigt Erfolgs-Meldung + Link zu /home; öffentliche Route `/checkout/success`
+│   ├── CheckoutCancelPage.tsx   # Abbruch-Seite; zeigt Meldung + Link zurück zu `/`; öffentliche Route `/checkout/cancel`
+│   ├── ProfilePage.tsx        # Name + Sprache bearbeiten, Passwort-Reset (E-Mail), Abo-Status via `useSubscription` (Plan-Badge, Trial-Countdown, Upgrade-CTA → Stripe-Checkout), Abmelden; Route /profile
 │   ├── SettingsPage.tsx       # Pillar-Auswahl, Push-Einstellungen, Substitution-Toggle, Silent-Mode; **Toggle "Inaktive Bereiche ausblenden"** (localStorage Key: `hide_inactive_pillars`; CustomEvent `hide_inactive_changed` → Sync zu BottomNav + Sidebar)
 │   └── admin/
 │       ├── AdminDashboardPage.tsx
@@ -96,7 +98,7 @@ apps/web/src/
 │   │   ├── PillarSection.tsx   # 4 Pillar-Karten mit Farbe + Feature-Liste; Routine-Karte mit Label "Routine" (nicht Ritual)
 │   │   ├── HowItWorks.tsx      # 3-Schritt-Erklärung
 │   │   ├── ResultsTimeline.tsx # Timeline „Was du in 4 Wochen erreichst"
-│   │   ├── PricingSection.tsx  # Pricing-Cards (CTAs disabled mit Tooltip; kein Feature-Flag nötig)
+│   │   ├── PricingSection.tsx  # Pricing-Cards mit Stripe-Checkout-Links; Plan-Auswahl → `/api/stripe/checkout` (POST); Erfolg → `/checkout/success?session_id=`; Abbruch → `/checkout/cancel`
 │   │   ├── CtaSection.tsx      # Bottom-CTA mit Start-Button
 │   │   └── LandingFooter.tsx   # Footer mit DE/EN-Toggle + Links
 │   ├── layout/
@@ -159,6 +161,7 @@ apps/web/src/
 │   ├── useMeditations.ts      # Meditationen, Session-Logs
 │   ├── useBreathworkTechniques.ts  # Breathwork-Techniken
 │   ├── useFavorites.ts        # localStorage + Supabase Dual-Write, optimistic UI; content_type: wod | stretching_routine | meditation
+│   ├── useSubscription.ts     # Liest `subscription_status` + `trial_ends_at` aus `user_profiles` (authStore); gibt zurück: `status`, `isActive`, `isTrial`, `isExpired`, `trialDaysLeft`, `startCheckout(priceId)` (POST `/api/stripe/checkout` → redirect)
 │   ├── useAudio.ts            # Web Audio API; isMuted-Check via audioStore in allen play*-Funktionen + startBackground
 │   ├── useAnalytics.ts        # Wrapper um posthog.capture: track(event, props?) — Events: meditation_started, yoga_flow_started, workout_completed, ambient_sound_selected
 │   └── useToast.ts            # Wrapper um toastStore: toast.success/error/info/warning/show
@@ -200,6 +203,8 @@ apps/web/src/
 /                              → LandingPublicRoute (nicht-auth: LandingPage; auth: Redirect /home)
 /impressum                     → ImpressumPage (öffentlich, kein Auth nötig)
 /datenschutz                   → DatenschutzPage (öffentlich, kein Auth nötig)
+/checkout/success              → CheckoutSuccessPage (öffentlich; liest `?session_id=`; zeigt Bestätigung + Link zu /home)
+/checkout/cancel               → CheckoutCancelPage (öffentlich; zeigt Abbruch-Meldung + Link zurück zu /)
 /login, /register              → AuthLayout (kein Auth nötig; auth: Redirect /home)
 /home → AppShell (ProtectedLayout)
   /home                        → HomePage (Dashboard)
@@ -253,6 +258,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | Audio | Web Audio API | nativ (Gong, Klangschale, Regen, Wellen) |
 | Screen Wake Lock | Screen Wake Lock API | nativ (verhindert Display-Timeout während Timer läuft) |
 | Push | Web Push API + Service Worker | nativ |
+| Payments | Stripe JS + Stripe Node | Checkout Sessions, Webhooks (stripe-signature Verifikation), Portal-Link |
 | Analytics | PostHog JS | EU-Cloud (`eu.i.posthog.com`), `person_profiles: 'never'`, `persistence: 'memory'` — kein Cookie-Banner nötig |
 | Linting | ESLint + TypeScript | — |
 | Node.js | (CI/Server) | 20 LTS |
@@ -276,7 +282,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 
 | Tabelle | Beschreibung |
 |---|---|
-| `user_profiles` | Nutzer-Metadaten: language, activePillars, primaryPillar, colorTheme, subscriptionStatus, trialEndsAt, **role** (admin/moderator/user), **subscription_status**, **equipment** (string[]), **equipment_by_location** (JSONB: Record\<WorkoutLocation, string[]\>), **goal** text NULL (Migration 015) |
+| `user_profiles` | Nutzer-Metadaten: language, activePillars, primaryPillar, colorTheme, subscriptionStatus, **trial_ends_at** (timestamptz NULL), **role** (admin/moderator/user), **subscription_status** (trial\|active\|expired\|cancelled), **stripe_customer_id** (text NULL), **stripe_subscription_id** (text NULL), **equipment** (string[]), **equipment_by_location** (JSONB: Record\<WorkoutLocation, string[]\>), **goal** text NULL (Migration 015) |
 | `routines` | Rituale eines Nutzers (Name, Beschreibung, Pillar, Uhrzeit, Wochentage, `linked_pillar` VARCHAR NULL — Migration 012) |
 | `routine_logs` | Completion-Einträge pro Routine + Datum |
 | `todos` | To-do-Liste pro Nutzer + Datum |
@@ -317,6 +323,9 @@ interface DbProfile {
   substitution_enabled: boolean
   role: UserRole | null
   subscription_status: SubscriptionStatus | null
+  trial_ends_at: string | null
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
   created_at: string
   updated_at: string
 }
@@ -515,13 +524,14 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session U** | **Equipment-Filter-Normalisierung** — `normEq()`-Funktion in `useWods` zentralisiert + erweitert (resistance bands→resistance band, rowing machine→rower, assault bike→bike); `equipmentFilter` nutzt jetzt ebenfalls `normEq` + bodyweight immer erlaubt; **GuidedSession Duration-Default** — kein `defaultExerciseDuration` → Median der `duration_sec`-Werte der Übungen (Fallback 30s); Übungsname auf `text-2xl`; **`NextExercisePreview.tsx`** — neue Shared-Komponente (opacity-Fade, Props: name/visible/color, rendert immer mit opacity 0 wenn inaktiv); **GuidedSession Next-Up via `NextExercisePreview`** — zeigt auch während gesamter Rest-Phase (wenn `pauseDuration >= 5`); **TimerView EMOM/Tabata Übungsrotation** — aktueller Übungsname + `NextExercisePreview` (EMOM letzte 10s; Tabata Work letzte 10s / Tabata Rest gesamte Phase) |
 | **Session V** | **Legal Pages** — `ImpressumPage.tsx` + `DatenschutzPage.tsx` (je DE/EN, inline `useLang`, nutzen LandingNav + LandingFooter); öffentliche Routen `/impressum` + `/datenschutz` in `App.tsx` (kein Auth nötig) |
 | **Session W** | **Ritual → Routine Rename** — Routine-Pillar-Label durchgängig zurück zu "Routine/Routinen" (rückgängig machen der Session-H-Umbenennung in Ritual/Rituale); betrifft: `BottomNav` (de: Routinen, en: Routines, es: Rutinas), `Sidebar`, `RoutinePage`-Titel, `RoutineList`-Vorschläge-Label, `TodayPillarTracker`-Chip, `OnboardingPage`-Pillar-Label, `PillarSection`-Karte, `Hero`-Erwähnung; i18n-Keys aktualisiert |
+| **Session X** | **Stripe-Integration** — `useSubscription.ts` (Hook: status/isActive/isTrial/isExpired/trialDaysLeft/startCheckout); `PricingSection` CTAs live (Stripe-Checkout-Links); `ProfilePage` Abo-Sektion via `useSubscription` (Plan-Badge, Trial-Countdown, Upgrade-CTA); `CheckoutSuccessPage` + `CheckoutCancelPage` (öffentliche Routen `/checkout/success` + `/checkout/cancel`); `user_profiles` erweitert um `trial_ends_at`, `stripe_customer_id`, `stripe_subscription_id`; `DbProfile` + `SubscriptionStatus`-Typ aktualisiert; Stripe JS + Stripe Node im Tech-Stack |
 
 ### Offen / Roadmap
 
 | Bereich | Inhalt |
 |---|---|
-| **Landingpage (Erweiterung)** | Waitlist-Integration, Pricing live schalten (kein Feature-Flag nötig, CTAs aktuell disabled) |
-| **Stripe** | Abo-Integration (7-Tage Trial); subscription_status bereits im Schema |
+| **Landingpage (Erweiterung)** | Waitlist-Integration; Pricing-CTAs live (Stripe-Checkout aktiv) |
+| **Stripe (Erweiterung)** | Customer Portal, Upgrade/Downgrade-Flow; Rechnungs-E-Mails via Stripe |
 | **Bestätigungsemail** | Via Resend — wartet auf finales Logo |
 | **Push (Server-Side)** | Admin-Broadcast an alle User |
 | **GDPR** | Cookie-Banner, Privacy Policy, Daten-Export, Konto-Löschung |
@@ -539,4 +549,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session W: Yoga-Tab + 20 neue Flows + Ritual→Routine Rename)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session X: Stripe-Integration — Checkout, Webhook, useSubscription, PricingSection, ProfilePage)*
