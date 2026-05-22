@@ -122,15 +122,21 @@ export function AppShell() {
           </div>
           {/* Right: vorname + icons */}
           <div className="flex items-center gap-0.5 flex-shrink-0">
-            {firstName && (
-              <Link
-                to="/profile"
-                className="max-[360px]:hidden text-xs px-1 truncate max-w-[72px]"
-                style={{ color: 'var(--color-text-muted)', textDecoration: 'none' }}
-              >
-                {firstName}
-              </Link>
-            )}
+            <Link
+              to="/profile"
+              className="flex items-center justify-center gap-1 max-[360px]:hidden text-xs px-1"
+              style={{ color: 'var(--color-text-muted)', textDecoration: 'none', minWidth: 44, minHeight: 44 }}
+              aria-label="Profil"
+            >
+              {firstName ? (
+                <span className="truncate max-w-[72px]">{firstName}</span>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="20" height="20" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" strokeLinecap="round" />
+                </svg>
+              )}
+            </Link>
             <MuteHeaderBtn />
             <FavoritesHeaderBtn />
             <Link

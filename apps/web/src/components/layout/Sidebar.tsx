@@ -167,7 +167,7 @@ export function Sidebar() {
           <span className="text-sm font-semibold">Abmelden</span>
         </button>
 
-        <div className="flex items-center gap-3 px-3 py-2 rounded-xl">
+        <Link to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl flex-1 min-w-0" style={{ textDecoration: 'none' }}>
           {/* Avatar */}
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
@@ -179,7 +179,7 @@ export function Sidebar() {
             className="text-sm font-medium truncate flex-1"
             style={{ color: 'var(--color-text)' }}
           >
-            {profile?.display_name ?? 'User'}
+            {profile?.display_name ?? 'Profil'}
           </span>
           <Link
             to="/settings"
@@ -188,10 +188,11 @@ export function Sidebar() {
               color: pathname === '/settings' ? '#E8642A' : 'var(--color-text-muted)',
             }}
             title="Settings"
+            onClick={e => e.stopPropagation()}
           >
             <span className="text-base leading-none">⚙️</span>
           </Link>
-        </div>
+        </Link>
       </div>
     </aside>
 
