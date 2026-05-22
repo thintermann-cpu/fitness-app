@@ -28,6 +28,11 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
           VITE_POSTHOG_HOST: https://eu.i.posthog.com
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+          VITE_STRIPE_PRICE_MONTHLY_CHF: ${{ secrets.VITE_STRIPE_PRICE_MONTHLY_CHF }}
+          VITE_STRIPE_PRICE_ANNUAL_CHF: ${{ secrets.VITE_STRIPE_PRICE_ANNUAL_CHF }}
+          VITE_STRIPE_PRICE_MONTHLY_EUR: ${{ secrets.VITE_STRIPE_PRICE_MONTHLY_EUR }}
+          VITE_STRIPE_PRICE_ANNUAL_EUR: ${{ secrets.VITE_STRIPE_PRICE_ANNUAL_EUR }}
         run: cd apps/web && npm run build
 
       - name: Deploy to server via rsync

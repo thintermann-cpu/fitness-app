@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useToastStore } from '../store/toastStore'
 import { supabase } from '../lib/supabase'
+import { useSubscription } from '../hooks/useSubscription'
 
 const LANGUAGES = [
   { id: 'de', label: 'Deutsch', flag: '🇩🇪' },
@@ -14,6 +15,8 @@ export function ProfilePage() {
   const navigate  = useNavigate()
   const { profile, user, updateProfile, signOut } = useAuthStore()
   const { addToast } = useToastStore()
+
+  const { status: subStatus, isActive, endDate } = useSubscription()
 
   const [name,      setName]      = useState(profile?.display_name ?? '')
   const [lang,      setLang]      = useState(profile?.language ?? 'de')
@@ -178,14 +181,45 @@ export function ProfilePage() {
           </button>
         </section>
 
-        {/* Subscription placeholder */}
+        {/* Subscription */}
         <section style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '16px' }}>
-          <p style={{ margin: '0 0 6px', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: '#6a6258' }}>
+          <p style={{ margin: '0 0 10px', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: '#6a6258' }}>
             Abo
           </p>
-          <p style={{ margin: 0, fontSize: 13, color: '#5a5248' }}>
-            CarveOut Free · Premium <span style={{ color: '#d4af37' }}>kommt bald ✨</span>
-          </p>
+          {isActive ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#7BC67E', display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: '#7BC67E' }}>CarveOut Premium aktiv</span>
+              </div>
+              {endDate && (
+                <p style={{ margin: 0, fontSize: 12, color: '#5a5248', paddingLeft: 16 }}>
+                  Verlängert am {new Date(endDate).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                </p>
+              )}
+            </div>
+          ) : subStatus === 'canceled' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ fontSize: 14, color: '#ef4444' }}>Abo gekündigt</span>
+              </div>
+              {endDate && (
+                <p style={{ margin: 0, fontSize: 12, color: '#5a5248', paddingLeft: 16 }}>
+                  Zugang bis {new Date(endDate).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                </p>
+              )}
+            </div>
+          ) : subStatus === 'past_due' ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', display: 'inline-block', flexShrink: 0 }} />
+              <span style={{ fontSize: 14, color: '#f59e0b' }}>Zahlung ausstehend</span>
+            </div>
+          ) : (
+            <p style={{ margin: 0, fontSize: 13, color: '#5a5248' }}>
+              Kein aktives Abo
+            </p>
+          )}
         </section>
 
         {/* Sign out */}
