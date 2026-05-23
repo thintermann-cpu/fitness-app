@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useToastStore } from '../store/toastStore'
 import { supabase } from '../lib/supabase'
@@ -14,7 +14,8 @@ const LANGUAGES = [
 
 export function ProfilePage() {
   const navigate  = useNavigate()
-  const { profile, user, updateProfile, signOut } = useAuthStore()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { profile, user, updateProfile, signOut, fetchProfile } = useAuthStore()
   const { addToast } = useToastStore()
 
   const { status: subStatus, isActive, endDate, loading, startCheckout } = useSubscription()
@@ -23,6 +24,15 @@ export function ProfilePage() {
   const [lang,      setLang]      = useState(profile?.language ?? 'de')
   const [saving,    setSaving]    = useState(false)
   const [pwSending, setPwSending] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get('checkout') === 'success') {
+      fetchProfile().then(() => {
+        addToast({ type: 'success', message: 'Zahlung erfolgreich — CarveOut Premium ist aktiv!' })
+      })
+      setSearchParams({}, { replace: true })
+    }
+  }, [])
 
   const handleSave = async () => {
     setSaving(true)
