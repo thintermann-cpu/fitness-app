@@ -37,6 +37,7 @@ jobs:
           VITE_STRIPE_PRICE_ANNUAL_CHF: ${{ secrets.VITE_STRIPE_PRICE_ANNUAL_CHF }}
           VITE_STRIPE_PRICE_MONTHLY_EUR: ${{ secrets.VITE_STRIPE_PRICE_MONTHLY_EUR }}
           VITE_STRIPE_PRICE_ANNUAL_EUR: ${{ secrets.VITE_STRIPE_PRICE_ANNUAL_EUR }}
+          VITE_VAPID_PUBLIC_KEY: ${{ secrets.VITE_VAPID_PUBLIC_KEY }}
         run: cd apps/web && npm run build
 
       - name: Deploy to server via rsync
