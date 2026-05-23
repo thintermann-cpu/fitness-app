@@ -75,7 +75,7 @@ apps/web/src/
 │   ├── HomePage.tsx               # Dashboard: Greeting + i18n-Datum, TodayPillarTracker, MoodCheck (useDailyLog), AdaptiveSuggestion, TodaysWod, WeekStats, RecentActivity
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
-│   ├── OnboardingPage.tsx     # 4 Schritte: Sprache → Ziel → Equipment → Pillars; Ziel (6 Optionen, `goal`-Feld, überspringbar); Equipment (14 Optionen, Mehrfachauswahl, überspringbar); Pillars (multi-select, min. 1 Pflicht; Pillar-Label: Routine — nicht Ritual); speichert language/goal/equipment/primary_pillar/active_pillars
+│   ├── OnboardingPage.tsx     # 3 Schritte: Sprache → Ziel → Equipment; Ziel (6 Optionen, `goal`-Feld, überspringbar); Equipment (14 Optionen, Mehrfachauswahl, überspringbar); Pillar-Auswahl entfernt — alle 4 Pillars immer aktiv (`primary_pillar: 'workout'`, `active_pillars: ALL_PILLARS`); speichert language/goal/equipment/primary_pillar/active_pillars
 │   ├── WorkoutPage.tsx        # Tabs: Workouts / Timer / History (Tab-Label geändert: "WODs" → "Workouts"); Kategorie-Chips (Alle/CrossFit/HIIT/Kraft-Ausdauer/Kraft - Wenig Zeit/Krafttraining) als `flex flex-wrap` (kein overflow-x-scroll) über WodList; `wodCategory`-State → WodList-Prop; **Equipment-Filter**: wenn `profile.equipment` gesetzt → `userEquipment`-Prop an WodList; Toggle-Button "Equipment-Filter aktiv — Alle anzeigen" / "Equipment-Filter aus — aktivieren" (`showAllEquipment`-State); Timer-Tab idle-Zustand öffnet FreeTimerWizard (variant=adhoc) via "Timer konfigurieren"-Button; Krafttraining-Tab öffnet KrafttrainingView; timerConfig enthält exercises?: WizardExercise[]; handleWizardStart/handleAdhocStart nehmen 5. Param exercises auf; TimerView bekommt exercises={timerConfig.exercises}
 │   ├── RoutinePage.tsx        # Titel: Routinen; Tabs: Routinen / Todo / Woche (kein WaterTracker, kein MoodCheck); hört auf `carveout:workout-completed` CustomEvent — auto-completed offene Todos deren Text `/workout|training|sport/i` matcht
 │   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); FilterBottomSheet (Goal/Kategorie inkl. Yoga-Subcategory + yoga_flow, Dauer); 5 Yoga Flows (YOGA_FLOWS-Array: Morgen-Flow/Hüft-Öffner/Rücken-Relief/Power-Flow/Schlaf-Flow) als clientseitige virtuelle Routinen — Exercises per Name-Hint-Match aus DB gelöst; `resolvedYogaFlows` useMemo; Flow-Cards mit Level-Badge + holdTime-Prop an GuidedSession
@@ -116,7 +116,7 @@ apps/web/src/
 │   │   ├── WodCard.tsx
 │   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); FilterBottomSheet (Typ, Kategorie, Schwierigkeit, Editor's Pick, Dauer Von-Bis, Equipment Exclude); Würfel-Button für Random-WOD; empfängt `userEquipment`-Prop (→ useWods)
 │   │   ├── WodDetail.tsx      # enthält FavoriteButton (contentType="wod", color="#E8642A"); "Warmup-Timer starten"-Button im Warmup-Akkordeon; nutzt WOD_TYPE_TO_MODE aus timerLabels.ts; feuert `carveout:workout-completed` CustomEvent bei Timer-Ende
-│   │   ├── TimerView.tsx      # Nutzt timer.worker.js; AMRAP/ForTime/EMOM/Tabata konfigurierbar; adHocLog-Prop: auto-Log in wod_history ohne WOD aus DB; CountdownOverlay: 3-2-1-Go Einblendung vor Timer-Start (SVG-Puls-Animation); exercises-Prop (WizardExercise[]): zeigt Übungsliste unterhalb Timer-Controls (Nummer, Name, optional Detail); Reset-useEffect prüft `isComplete` — kein Reset nach Timer-Ende (Restart-Bug-Fix); **EMOM/Tabata Übungsrotation**: aktueller Übungsname prominent + `NextExercisePreview` (EMOM: letzte 10s des Intervalls; Tabata Work: letzte 10s; Tabata Rest: gesamte Phase)
+│   │   ├── TimerView.tsx      # Nutzt timer.worker.js; AMRAP/ForTime/EMOM/Tabata konfigurierbar; adHocLog-Prop: auto-Log in wod_history ohne WOD aus DB; CountdownOverlay: 3-2-1-Go Einblendung vor Timer-Start (SVG-Puls-Animation); exercises-Prop (WizardExercise[]): zeigt Übungsliste unterhalb Timer-Controls (Nummer, Name, optional Detail); Reset-useEffect prüft `isComplete` — kein Reset nach Timer-Ende (Restart-Bug-Fix); **EMOM/Tabata Übungsrotation**: aktueller Übungsname prominent + `NextExercisePreview` (EMOM: letzte 10s des Intervalls; Tabata Work: letzte 10s; Tabata Rest: gesamte Phase); **autoStart**: wenn `initialMode` gesetzt → `autoStart=true` → Config-UI + Modus-Selektor ausgeblendet, Countdown startet direkt beim Mount (useEffect on [])
 │   │   ├── FreeTimerWizard.tsx  # Wizard; variant='save' (3 Steps: Modus → Übungen → Konfiguration/Name, speichert via customWorkouts.ts) | variant='adhoc' (4 Steps: Modus → Übungen → Konfiguration → Warmup-Frage); onStart(mode, minutes, withWarmup?, kraftConfig?, exercises?: WizardExercise[]) → triggert TimerView; bei nicht-Kraft-Modi werden exercises übergeben (wenn nicht leer); Dauer 1–120 min, 1-min-Schritte; Modus-Auswahl via TIMER_LABELS aus timerLabels.ts
 │   │   ├── WarmupTimer.tsx    # Bottom-Sheet mit Presets 3/5/10 min + manuellem Input; Countdown-Ring (SVG); CountdownOverlay: 3-2-1-Go vor Timer-Start; Wake Lock; playGong + vibrate + Toast bei Ende; eingebettet in WodDetail
 │   │   ├── KrafttrainingView.tsx  # Satz-basierter Krafttraining-Flow; Übungsauswahl aus FreeTimerWizard-Übungsliste; pro Satz: Gewicht (kg) + Wiederholungen; Satz-Abschluss per Tap; Rest-Timer zwischen Sätzen; Session-Log am Ende
@@ -427,6 +427,7 @@ Implementiert in `lib/push.ts`:
 - Settings-UI mit Toggles pro Reminder-Typ (morning / evening / wod / inactivity) inkl. Zeitauswahl
 - `pushError: string | null` State in `SettingsPage` — zeigt Fehlermeldung wenn `subscribeToPush()` false zurückgibt (z.B. Permission denied); Toggle-Buttons mit `type="button"` + `cursor: pointer`
 - Preferences gespeichert in `push_preferences` (Supabase)
+- VAPID Public Key via `VITE_VAPID_PUBLIC_KEY` (GitHub Secret, im CI-Build-Env seit Session Y)
 
 Server-Side Broadcast (Admin → alle User) ist noch offen (siehe Roadmap).
 
@@ -462,6 +463,9 @@ Trigger: `push` auf `main`
 2. Node.js 20 setup (npm cache)
 3. npm ci (root)
 4. cd apps/web && npm run build
+   Build-Env (Secrets): VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_POSTHOG_KEY, VITE_POSTHOG_HOST,
+   VITE_STRIPE_PUBLISHABLE_KEY, VITE_STRIPE_PRICE_MONTHLY_CHF, VITE_STRIPE_PRICE_ANNUAL_CHF,
+   VITE_STRIPE_PRICE_MONTHLY_EUR, VITE_STRIPE_PRICE_ANNUAL_EUR, VITE_VAPID_PUBLIC_KEY
 5. rsync dist/ → Server:/var/www/carveout/
    (via DEPLOY_SSH_KEY + DEPLOY_HOST Secrets)
 6. nginx -s reload (via SSH)
@@ -525,6 +529,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session V** | **Legal Pages** — `ImpressumPage.tsx` + `DatenschutzPage.tsx` (je DE/EN, inline `useLang`, nutzen LandingNav + LandingFooter); öffentliche Routen `/impressum` + `/datenschutz` in `App.tsx` (kein Auth nötig) |
 | **Session W** | **Ritual → Routine Rename** — Routine-Pillar-Label durchgängig zurück zu "Routine/Routinen" (rückgängig machen der Session-H-Umbenennung in Ritual/Rituale); betrifft: `BottomNav` (de: Routinen, en: Routines, es: Rutinas), `Sidebar`, `RoutinePage`-Titel, `RoutineList`-Vorschläge-Label, `TodayPillarTracker`-Chip, `OnboardingPage`-Pillar-Label, `PillarSection`-Karte, `Hero`-Erwähnung; i18n-Keys aktualisiert |
 | **Session X** | **Stripe-Integration** — `useSubscription.ts` (Hook: status/isActive/isTrial/isExpired/trialDaysLeft/startCheckout); `PricingSection` CTAs live (Stripe-Checkout-Links); `ProfilePage` Abo-Sektion via `useSubscription` (Plan-Badge, Trial-Countdown, Upgrade-CTA); `CheckoutSuccessPage` + `CheckoutCancelPage` (öffentliche Routen `/checkout/success` + `/checkout/cancel`); `user_profiles` erweitert um `trial_ends_at`, `stripe_customer_id`, `stripe_subscription_id`; `DbProfile` + `SubscriptionStatus`-Typ aktualisiert; Stripe JS + Stripe Node im Tech-Stack |
+| **Session Y** | **Onboarding Pillar-Removal** — Pillar-Auswahl-Schritt aus Onboarding entfernt; `TOTAL_STEPS` 4→3; alle 4 Pillars immer aktiv (`primary_pillar: 'workout'`, `active_pillars: ALL_PILLARS`); **TimerView autoStart** — wenn `initialMode` gesetzt: Config-UI + Modus-Selektor ausgeblendet, Countdown startet direkt beim Mount (useEffect on []); **Push VAPID-Key** — `VITE_VAPID_PUBLIC_KEY` als GitHub Secret in CI-Build-Env eingetragen (deploy.yml) |
 
 ### Offen / Roadmap
 
@@ -549,4 +554,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session X: Stripe-Integration — Checkout, Webhook, useSubscription, PricingSection, ProfilePage)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session Y: Onboarding Pillar-Removal, TimerView autoStart, Push VAPID-Key)*
