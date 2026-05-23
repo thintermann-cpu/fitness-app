@@ -108,6 +108,8 @@ function Stepper({
 }
 
 export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, adHocLog, exercises }: Props) {
+  const autoStart = !!initialMode
+
   const [mode, setMode]           = useState<TimerMode>(initialMode ?? 'fortime')
   const [minutes, setMinutes]     = useState(initialMinutes ?? 20)  // AMRAP total time
 
@@ -196,6 +198,12 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
   useEffect(() => {
     if (!isRunning) sideSwitchShownRef.current = false
   }, [isRunning])
+
+  // Auto-start when initialMode is provided (e.g. WodDetail — skip config UI)
+  useEffect(() => {
+    if (autoStart) setShowCountdown(true)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Ad-hoc history logging: fires when timer completes (no WOD from DB)
   useEffect(() => {
@@ -326,7 +334,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
       />
 
       {/* Mode selector */}
-      {!isRunning && !isPaused && (
+      {!autoStart && !isRunning && !isPaused && (
         <div className="w-full grid grid-cols-4 gap-1.5 bg-white/5 rounded-xl p-1">
           {(Object.keys(MODE_COLOR) as TimerMode[]).map((m) => (
             <button
@@ -345,7 +353,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
       )}
 
       {/* Config section — shown before start */}
-      {!isRunning && !isPaused && (
+      {!autoStart && !isRunning && !isPaused && (
         <div className="w-full rounded-xl bg-white/5 p-4 space-y-4">
 
           {/* AMRAP: total time */}
