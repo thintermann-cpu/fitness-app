@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import { Button } from '../components/ui/Button'
 
-const TOTAL_STEPS = 4
+const TOTAL_STEPS = 3
 
 const LANGUAGES = [
   { id: 'de', label: 'Deutsch',  flag: '🇩🇪' },
@@ -38,12 +38,7 @@ const EQUIPMENT_OPTIONS = [
   { id: 'Wall Ball',        label: 'Wall Ball',             emoji: '🎯' },
 ] as const
 
-const PILLARS = [
-  { id: 'workout',    label: 'Workout',         emoji: '🏋️', color: '#E8642A' },
-  { id: 'routine',    label: 'Routine',         emoji: '📋', color: '#4A90D9' },
-  { id: 'stretching', label: 'Stretch & Yoga',  emoji: '🤸', color: '#7BC67E' },
-  { id: 'meditation', label: 'Meditation',      emoji: '🧘', color: '#9B7FD4' },
-] as const
+const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 export function OnboardingPage() {
   const navigate = useNavigate()
@@ -55,7 +50,6 @@ export function OnboardingPage() {
   const [language,  setLanguage]  = useState('de')
   const [goal,      setGoal]      = useState<string | null>(null)
   const [equipment, setEquipment] = useState<string[]>([])
-  const [pillars,   setPillars]   = useState<string[]>([])
 
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState<string | null>(null)
@@ -68,11 +62,8 @@ export function OnboardingPage() {
   const toggleEquipment = (id: string) =>
     setEquipment((prev) => prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id])
 
-  const togglePillar = (id: string) =>
-    setPillars((prev) => prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id])
-
   const handleFinish = async () => {
-    if (!user || pillars.length === 0) return
+    if (!user) return
     setSaving(true)
     setError(null)
 
@@ -83,8 +74,8 @@ export function OnboardingPage() {
         language,
         goal,
         equipment,
-        primary_pillar: pillars[0],
-        active_pillars: pillars,
+        primary_pillar: 'workout',
+        active_pillars: ALL_PILLARS,
         updated_at: new Date().toISOString(),
       })
 
@@ -234,46 +225,6 @@ export function OnboardingPage() {
                 })}
               </div>
 
-              <Button className="w-full" onClick={advance}>
-                {equipment.length > 0 ? `Weiter (${equipment.length} gewählt)` : 'Überspringen'}
-              </Button>
-            </>
-          )}
-
-          {/* ── Step 3: Pillars ── */}
-          {step === 3 && (
-            <>
-              <div className="text-center space-y-3">
-                <div className="text-5xl">✨</div>
-                <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                  Deine Bereiche
-                </h1>
-                <p style={{ color: 'var(--color-text-muted)' }}>
-                  Was möchtest du in CarveOut nutzen?
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {PILLARS.map((p) => {
-                  const selected = pillars.includes(p.id)
-                  return (
-                    <button
-                      key={p.id}
-                      onClick={() => togglePillar(p.id)}
-                      className="rounded-2xl p-5 text-left transition-transform active:scale-95"
-                      style={{
-                        backgroundColor: selected ? `${p.color}22` : 'var(--color-bg-card)',
-                        border: `2px solid ${selected ? p.color : 'transparent'}`,
-                        color: 'var(--color-text)',
-                      }}
-                    >
-                      <div className="text-3xl mb-2">{p.emoji}</div>
-                      <div className="font-semibold text-sm">{p.label}</div>
-                    </button>
-                  )
-                })}
-              </div>
-
               {error && (
                 <p className="text-sm text-center" style={{ color: 'var(--color-error)' }}>
                   {error}
@@ -283,10 +234,9 @@ export function OnboardingPage() {
               <Button
                 className="w-full"
                 loading={saving}
-                disabled={pillars.length === 0}
                 onClick={handleFinish}
               >
-                Los geht's 🚀
+                {equipment.length > 0 ? 'Los geht\'s 🚀' : 'Überspringen 🚀'}
               </Button>
             </>
           )}
