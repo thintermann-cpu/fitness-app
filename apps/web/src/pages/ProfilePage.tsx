@@ -15,7 +15,7 @@ const LANGUAGES = [
 export function ProfilePage() {
   const navigate  = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { profile, user, updateProfile, signOut, fetchProfile } = useAuthStore()
+  const { profile, user, updateProfile, fetchProfile } = useAuthStore()
   const { addToast } = useToastStore()
 
   const { status: subStatus, isActive, endDate, loading, startCheckout } = useSubscription()
@@ -61,11 +61,6 @@ export function ProfilePage() {
     } finally {
       setPwSending(false)
     }
-  }
-
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/login')
   }
 
   return (
@@ -267,23 +262,6 @@ export function ProfilePage() {
           )}
         </section>
 
-        {/* Sign out */}
-        <button
-          onClick={handleSignOut}
-          style={{
-            padding: '13px',
-            background: 'transparent',
-            border: '1px solid rgba(239,68,68,0.25)',
-            borderRadius: 12,
-            color: '#ef4444',
-            fontSize: 14,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            marginTop: 8,
-          }}
-        >
-          Abmelden
-        </button>
       </div>
     </div>
   )

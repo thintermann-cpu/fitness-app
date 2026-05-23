@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import type { WorkoutLocation } from '../store/authStore'
 import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
@@ -7,9 +8,11 @@ import { Input } from '../components/ui/Input'
 import { supabase } from '../lib/supabase'
 import { subscribeToPush, unsubscribeFromPush, getPushSubscriptionStatus } from '../lib/push'
 import { FeedbackModal } from '../components/ui/FeedbackModal'
+import { useSubscription } from '../hooks/useSubscription'
+
+type View = 'main' | 'profile' | 'equipment' | 'pillars' | 'training' | 'notifications' | 'abo'
 
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
-
 
 const LANGUAGES = [
   { id: 'de', label: 'Deutsch', flag: '🇩🇪' },
@@ -30,100 +33,43 @@ const EQUIPMENT_ITEMS = [
   'Sandbag', 'Gewichtsweste', 'Laufen',
 ]
 
+const PILLAR_ITEMS = [
+  { id: 'workout',    emoji: '💪', label: 'Training',       color: '#E8642A' },
+  { id: 'routine',    emoji: '📋', label: 'Mein Tag',       color: '#4A90D9' },
+  { id: 'stretching', emoji: '🤸', label: 'Stretch & Yoga', color: '#7BC67E' },
+  { id: 'meditation', emoji: '🧘', label: 'Meditation',     color: '#9B7FD4' },
+] as const
+
 type PushEnabledKey = 'morning_enabled' | 'evening_enabled' | 'wod_enabled' | 'inactivity_enabled'
 type PushTimeKey    = 'morning_time' | 'evening_time' | 'wod_time'
-
 type PushPrefs = {
-  morning_enabled: boolean
-  evening_enabled: boolean
-  wod_enabled: boolean
+  morning_enabled:    boolean
+  evening_enabled:    boolean
+  wod_enabled:        boolean
   inactivity_enabled: boolean
-  morning_time: string
-  evening_time: string
-  wod_time: string
+  morning_time:       string
+  evening_time:       string
+  wod_time:           string
 }
 
 const PUSH_REMINDERS: {
-  id: string
-  emoji: string
-  label: string
-  description: string
-  enabledKey: PushEnabledKey
-  timeKey: PushTimeKey | null
+  id: string; emoji: string; label: string; description: string
+  enabledKey: PushEnabledKey; timeKey: PushTimeKey | null
 }[] = [
   { id: 'morning',    emoji: '🌅', label: 'Morgen-Routine',       description: 'Start in den Tag',            enabledKey: 'morning_enabled',    timeKey: 'morning_time' },
   { id: 'evening',    emoji: '🌙', label: 'Abend-Routine',         description: 'Tagesabschluss',              enabledKey: 'evening_enabled',    timeKey: 'evening_time' },
-  { id: 'wod',        emoji: '💪', label: 'WOD Reminder',          description: 'Workout of the Day',          enabledKey: 'wod_enabled',        timeKey: 'wod_time' },
-  { id: 'inactivity', emoji: '⏰', label: 'Inaktivitäts-Reminder', description: 'Nach 2 Tagen ohne Aktivität', enabledKey: 'inactivity_enabled', timeKey: null },
+  { id: 'wod',        emoji: '💪', label: 'WOD Reminder',          description: 'Workout of the Day',          enabledKey: 'wod_enabled',        timeKey: 'wod_time'    },
+  { id: 'inactivity', emoji: '⏰', label: 'Inaktivitäts-Reminder', description: 'Nach 2 Tagen ohne Aktivität', enabledKey: 'inactivity_enabled', timeKey: null          },
 ]
 
 const DEFAULT_PUSH_PREFS: PushPrefs = {
-  morning_enabled: true,
-  evening_enabled: true,
-  wod_enabled: false,
-  inactivity_enabled: true,
-  morning_time: '07:00',
-  evening_time: '21:00',
-  wod_time: '12:00',
+  morning_enabled: true, evening_enabled: true, wod_enabled: false, inactivity_enabled: true,
+  morning_time: '07:00', evening_time: '21:00', wod_time: '12:00',
 }
 
-type Lang = 'de' | 'en' | 'es'
+// ── Shared sub-components ─────────────────────────────────────────────────────
 
-const T = {
-  de: {
-    activePillars:    'Aktive Pillars',
-    activePillarsDesc:'Welche Bereiche möchtest du nutzen?',
-    alwaysActive:     'Immer aktiv',
-    pillarWorkout:    'Training',
-    pillarRoutine:    'Mein Tag',
-    pillarStretching: 'Stretch & Yoga',
-    pillarMeditation: 'Meditation',
-  },
-  en: {
-    activePillars:    'Active Pillars',
-    activePillarsDesc:'Which areas do you want to use?',
-    alwaysActive:     'Always active',
-    pillarWorkout:    'Workout',
-    pillarRoutine:    'My Day',
-    pillarStretching: 'Stretch & Yoga',
-    pillarMeditation: 'Meditation',
-  },
-  es: {
-    activePillars:    'Pilares activos',
-    activePillarsDesc:'¿Qué áreas quieres utilizar?',
-    alwaysActive:     'Siempre activo',
-    pillarWorkout:    'Entrenamiento',
-    pillarRoutine:    'Mi Día',
-    pillarStretching: 'Estiramiento & Yoga',
-    pillarMeditation: 'Meditación',
-  },
-} as const
-
-type TDict = { pillarWorkout: string; pillarRoutine: string; pillarStretching: string; pillarMeditation: string }
-
-const PILLAR_BASES = [
-  { id: 'workout'    as const, emoji: '🏋️', color: '#E8642A' },
-  { id: 'routine'    as const, emoji: '📋', color: '#4A90D9' },
-  { id: 'stretching' as const, emoji: '🤸', color: '#7BC67E' },
-  { id: 'meditation' as const, emoji: '🧘', color: '#9B7FD4' },
-]
-
-function getPillars(t: TDict) {
-  return PILLAR_BASES.map(p => ({
-    ...p,
-    label: t[`pillar${p.id.charAt(0).toUpperCase() + p.id.slice(1)}` as keyof TDict],
-  }))
-}
-
-function SaveButton({
-  loading,
-  saved,
-  onClick,
-}: {
-  loading: boolean
-  saved: boolean
-  onClick: () => void
-}) {
+function SaveButton({ loading, saved, onClick }: { loading: boolean; saved: boolean; onClick: () => void }) {
   return (
     <Button
       className="w-full"
@@ -136,48 +82,83 @@ function SaveButton({
   )
 }
 
+function TogglePill({ on, color = '#E8642A' }: { on: boolean; color?: string }) {
+  return (
+    <div
+      style={{
+        width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+        background: on ? color : 'rgba(255,255,255,0.1)',
+        transition: 'background 0.2s', position: 'relative',
+      }}
+    >
+      <div style={{
+        position: 'absolute', top: 3, left: on ? 23 : 3,
+        width: 18, height: 18, borderRadius: '50%',
+        background: 'white', transition: 'left 0.2s',
+      }} />
+    </div>
+  )
+}
+
+function SubHeader({ title, onBack }: { title: string; onBack: () => void }) {
+  return (
+    <div className="flex items-center gap-3 pb-5">
+      <button
+        onClick={onBack}
+        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 22, cursor: 'pointer', padding: '4px 8px 4px 0', lineHeight: 1 }}
+        aria-label="Zurück"
+      >
+        ←
+      </button>
+      <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>{title}</h1>
+    </div>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
 export function SettingsPage() {
-  const { profile, updateProfile } = useAuthStore()
+  const navigate = useNavigate()
+  const { profile, updateProfile, signOut } = useAuthStore()
+  const [view, setView] = useState<View>('main')
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
-  // ── Profil section state ──
+  // Profile
   const [displayName,   setDisplayName]   = useState(profile?.display_name ?? '')
   const [language,      setLanguage]      = useState(profile?.language ?? 'de')
-  const [primaryPillar, setPrimaryPillar] = useState(profile?.primary_pillar ?? '')
   const [savingProfile, setSavingProfile] = useState(false)
   const [savedProfile,  setSavedProfile]  = useState(false)
 
-  // ── Equipment section state ──
+  // Equipment — locations
   const [equipment,   setEquipment]   = useState<string[]>(profile?.equipment ?? [])
   const [savingEquip, setSavingEquip] = useState(false)
   const [savedEquip,  setSavedEquip]  = useState(false)
 
-  // ── Equipment per location state ──
-  const [equipByLoc, setEquipByLoc] = useState<Record<WorkoutLocation, string[]>>(
+  // Equipment — per location
+  const [equipByLoc,     setEquipByLoc]     = useState<Record<WorkoutLocation, string[]>>(
     profile?.equipment_by_location ?? DEFAULT_EQUIPMENT_BY_LOCATION
   )
-  const [activeLocTab, setActiveLocTab] = useState<WorkoutLocation>('home')
+  const [activeLocTab,   setActiveLocTab]   = useState<WorkoutLocation>('home')
   const [savingEquipLoc, setSavingEquipLoc] = useState(false)
   const [savedEquipLoc,  setSavedEquipLoc]  = useState(false)
 
-  // ── Active pillars section state ──
-  const [activePillars,   setActivePillars]   = useState<string[]>(
+  // Pillars
+  const [activePillars,  setActivePillars]  = useState<string[]>(
     profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
   )
-  const [savingPillars, setSavingPillars] = useState(false)
-  const [savedPillars,  setSavedPillars]  = useState(false)
+  const [savingPillars,  setSavingPillars]  = useState(false)
+  const [savedPillars,   setSavedPillars]   = useState(false)
 
-  // ── Hide inactive pillars toggle (localStorage, no server save) ──
-  const [hideInactive, setHideInactive] = useState(() => localStorage.getItem('hide_inactive_pillars') === 'true')
+  // Training (localStorage — instant, no Save button)
+  const [substitutionEnabled, setSubstitutionEnabled] = useState(() => {
+    const s = localStorage.getItem('carveout_substitution_enabled')
+    return s === null ? true : s === 'true'
+  })
+  const [silentMode, setSilentMode] = useState(() =>
+    localStorage.getItem('carveout_silent_mode') === 'true'
+  )
 
-  function toggleHideInactive() {
-    const next = !hideInactive
-    setHideInactive(next)
-    localStorage.setItem('hide_inactive_pillars', String(next))
-    window.dispatchEvent(new CustomEvent('hide_inactive_changed'))
-  }
-
-  // ── Push notifications state ──
+  // Push
   const [pushEnabled,   setPushEnabled]   = useState(false)
   const [pushLoading,   setPushLoading]   = useState(false)
   const [pushSupported, setPushSupported] = useState(false)
@@ -186,116 +167,87 @@ export function SettingsPage() {
   const [savingPush,    setSavingPush]    = useState(false)
   const [savedPush,     setSavedPush]     = useState(false)
 
-  // ── Substitution toggle (localStorage) ──
-  const SUBST_KEY = 'carveout_substitution_enabled'
-  const [substitutionEnabled, setSubstitutionEnabled] = useState<boolean>(() => {
-    const stored = localStorage.getItem(SUBST_KEY)
-    return stored === null ? true : stored === 'true'
-  })
-  const toggleSubstitution = () => {
-    setSubstitutionEnabled((prev) => {
-      localStorage.setItem(SUBST_KEY, String(!prev))
-      return !prev
-    })
-  }
+  // Abo
+  const { status: subStatus, isActive: subActive, endDate, loading: subLoading, startCheckout } = useSubscription()
+  const [currency, setCurrency] = useState<'chf' | 'eur'>('chf')
 
-  // ── Silent Mode toggle (localStorage) ──
-  const SILENT_KEY = 'carveout_silent_mode'
-  const [silentMode, setSilentMode] = useState<boolean>(() =>
-    localStorage.getItem(SILENT_KEY) === 'true'
-  )
-  const toggleSilentMode = () => {
-    setSilentMode((prev) => {
-      localStorage.setItem(SILENT_KEY, String(!prev))
-      return !prev
-    })
-  }
-
+  // Sync from profile
   useEffect(() => {
     if (!profile) return
     setDisplayName(profile.display_name ?? '')
     setLanguage(profile.language ?? 'de')
-    setPrimaryPillar(profile.primary_pillar ?? '')
     setEquipment(profile.equipment ?? [])
     setActivePillars(profile.active_pillars?.length ? profile.active_pillars : ALL_PILLARS)
     setEquipByLoc(profile.equipment_by_location ?? DEFAULT_EQUIPMENT_BY_LOCATION)
   }, [profile])
 
+  // Push init
   useEffect(() => {
     const supported = 'serviceWorker' in navigator && 'PushManager' in window
     setPushSupported(supported)
     if (!supported) return
-
     getPushSubscriptionStatus().then(setPushEnabled)
-
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
-      supabase
-        .from('push_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
+      supabase.from('push_preferences').select('*').eq('user_id', user.id).single()
         .then(({ data }) => {
-          if (data) {
-            setPushPrefs({
-              morning_enabled:    data.morning_enabled    ?? true,
-              evening_enabled:    data.evening_enabled    ?? true,
-              wod_enabled:        data.wod_enabled        ?? false,
-              inactivity_enabled: data.inactivity_enabled ?? true,
-              morning_time:       data.morning_time       ?? '07:00',
-              evening_time:       data.evening_time       ?? '21:00',
-              wod_time:           data.wod_time           ?? '12:00',
-            })
-          }
+          if (data) setPushPrefs({
+            morning_enabled:    data.morning_enabled    ?? true,
+            evening_enabled:    data.evening_enabled    ?? true,
+            wod_enabled:        data.wod_enabled        ?? false,
+            inactivity_enabled: data.inactivity_enabled ?? true,
+            morning_time:       data.morning_time       ?? '07:00',
+            evening_time:       data.evening_time       ?? '21:00',
+            wod_time:           data.wod_time           ?? '12:00',
+          })
         })
     })
   }, [])
 
+  // ── Save handlers ────────────────────────────────────────────────────────────
+
   const handleSaveProfile = async () => {
     setSavingProfile(true)
-    await updateProfile({ display_name: displayName.trim() || null, language, primary_pillar: primaryPillar || null })
-    setSavingProfile(false)
-    setSavedProfile(true)
-    setTimeout(() => setSavedProfile(false), 2000)
+    try {
+      await updateProfile({ display_name: displayName.trim() || null, language })
+      setSavedProfile(true)
+      setTimeout(() => setSavedProfile(false), 2000)
+    } finally {
+      setSavingProfile(false)
+    }
   }
-
-  const toggleEquipment = (id: string) =>
-    setEquipment(prev => prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id])
 
   const handleSaveEquip = async () => {
     setSavingEquip(true)
-    await updateProfile({ equipment })
-    setSavingEquip(false)
-    setSavedEquip(true)
-    setTimeout(() => setSavedEquip(false), 2000)
+    try {
+      await updateProfile({ equipment })
+      setSavedEquip(true)
+      setTimeout(() => setSavedEquip(false), 2000)
+    } finally {
+      setSavingEquip(false)
+    }
   }
-
-  const toggleEquipByLoc = (loc: WorkoutLocation, item: string) =>
-    setEquipByLoc(prev => ({
-      ...prev,
-      [loc]: prev[loc].includes(item) ? prev[loc].filter(e => e !== item) : [...prev[loc], item],
-    }))
 
   const handleSaveEquipLoc = async () => {
     setSavingEquipLoc(true)
-    await updateProfile({ equipment_by_location: equipByLoc })
-    setSavingEquipLoc(false)
-    setSavedEquipLoc(true)
-    setTimeout(() => setSavedEquipLoc(false), 2000)
-  }
-
-  const togglePillar = (id: string) => {
-    if (id === 'routine') return // always active
-    setActivePillars(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id])
+    try {
+      await updateProfile({ equipment_by_location: equipByLoc })
+      setSavedEquipLoc(true)
+      setTimeout(() => setSavedEquipLoc(false), 2000)
+    } finally {
+      setSavingEquipLoc(false)
+    }
   }
 
   const handleSavePillars = async () => {
     setSavingPillars(true)
-    const toSave = activePillars.includes('routine') ? activePillars : [...activePillars, 'routine']
-    await updateProfile({ active_pillars: toSave })
-    setSavingPillars(false)
-    setSavedPillars(true)
-    setTimeout(() => setSavedPillars(false), 2000)
+    try {
+      await updateProfile({ active_pillars: activePillars })
+      setSavedPillars(true)
+      setTimeout(() => setSavedPillars(false), 2000)
+    } finally {
+      setSavingPillars(false)
+    }
   }
 
   const handleTogglePush = async () => {
@@ -305,16 +257,14 @@ export function SettingsPage() {
       await unsubscribeFromPush()
       setPushEnabled(false)
     } else {
-      const success = await subscribeToPush()
-      if (success) {
+      const ok = await subscribeToPush()
+      if (ok) {
         setPushEnabled(true)
       } else {
         const denied = typeof Notification !== 'undefined' && Notification.permission === 'denied'
-        setPushError(
-          denied
-            ? 'Benachrichtigungen sind im Browser blockiert. Bitte in den Browser-Einstellungen erlauben.'
-            : 'Push-Aktivierung fehlgeschlagen. Bitte prüfe die Browser-Berechtigungen.'
-        )
+        setPushError(denied
+          ? 'Benachrichtigungen sind im Browser blockiert. Bitte in den Browser-Einstellungen erlauben.'
+          : 'Push-Aktivierung fehlgeschlagen. Bitte prüfe die Browser-Berechtigungen.')
       }
     }
     setPushLoading(false)
@@ -324,483 +274,444 @@ export function SettingsPage() {
     setSavingPush(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      await supabase
-        .from('push_preferences')
-        .upsert({ user_id: user.id, ...pushPrefs, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+      await supabase.from('push_preferences').upsert(
+        { user_id: user.id, ...pushPrefs, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
     }
     setSavingPush(false)
     setSavedPush(true)
     setTimeout(() => setSavedPush(false), 2000)
   }
 
-  const lang = (language as Lang)
-  const t = T[lang] ?? T.de
-  const pillars = getPillars(t)
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/login')
+  }
+
+  const toggleEquipment    = (id: string) =>
+    setEquipment(prev => prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id])
+
+  const toggleEquipByLoc   = (loc: WorkoutLocation, item: string) =>
+    setEquipByLoc(prev => ({
+      ...prev,
+      [loc]: prev[loc].includes(item) ? prev[loc].filter(e => e !== item) : [...prev[loc], item],
+    }))
+
+  const togglePillar = (id: string) => {
+    if (activePillars.length === 1 && activePillars.includes(id)) return
+    setActivePillars(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id])
+  }
+
+  const back = () => setView('main')
+
+  const VIEW_TITLES: Record<Exclude<View, 'main'>, string> = {
+    profile: 'Profil', equipment: 'Equipment', pillars: 'Pillars',
+    training: 'Training', notifications: 'Benachrichtigungen', abo: 'Abo',
+  }
+
+  // ── MAIN LIST ────────────────────────────────────────────────────────────────
+
+  if (view === 'main') return (
+    <div className="p-4 max-w-md mx-auto" style={{ color: 'var(--color-text)' }}>
+      <h1 className="text-xl font-bold pt-2 pb-5">Einstellungen</h1>
+
+      <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+        {([
+          { id: 'profile'       as View, emoji: '👤', label: 'Profil',             desc: 'Name, Sprache' },
+          { id: 'equipment'     as View, emoji: '⚙️', label: 'Equipment',          desc: 'Trainingsort & Geräte' },
+          { id: 'pillars'       as View, emoji: '🏛️', label: 'Pillars',            desc: 'Aktive Bereiche' },
+          { id: 'training'      as View, emoji: '🎯', label: 'Training',           desc: 'Skalierungen, Silent Mode' },
+          { id: 'notifications' as View, emoji: '🔔', label: 'Benachrichtigungen', desc: 'Push Reminders' },
+          { id: 'abo'           as View, emoji: '⭐', label: 'Abo',                desc: subActive ? 'Premium aktiv' : 'Kein aktives Abo' },
+        ] as const).map((item, idx, arr) => (
+          <button
+            key={item.id}
+            onClick={() => setView(item.id)}
+            className="w-full flex items-center gap-4 px-4 py-3.5 text-left transition-opacity active:opacity-60"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              borderBottom: idx < arr.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+            }}
+          >
+            <span className="text-xl w-7 flex-shrink-0 text-center">{item.emoji}</span>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{item.label}</div>
+              <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{item.desc}</div>
+            </div>
+            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 18 }}>›</span>
+          </button>
+        ))}
+      </div>
+
+      <button
+        onClick={() => setFeedbackOpen(true)}
+        className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl mt-3 transition-opacity active:opacity-60"
+        style={{ backgroundColor: 'var(--color-bg-card)', border: 'none', cursor: 'pointer' }}
+      >
+        <span className="text-xl w-7 flex-shrink-0 text-center">💬</span>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>Feedback</div>
+          <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Feedback geben</div>
+        </div>
+        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 18 }}>›</span>
+      </button>
+
+      <button
+        onClick={handleSignOut}
+        className="w-full px-4 py-3.5 rounded-2xl mt-3 text-sm font-semibold"
+        style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.25)', color: '#ef4444', cursor: 'pointer' }}
+      >
+        Abmelden
+      </button>
+
+      <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+    </div>
+  )
+
+  // ── SUB-VIEWS ────────────────────────────────────────────────────────────────
 
   return (
-    <div
-      className="p-4 max-w-md mx-auto space-y-8"
-      style={{ color: 'var(--color-text)' }}
-    >
-      <h1 className="text-xl font-bold pt-2">Einstellungen</h1>
+    <div className="p-4 max-w-md mx-auto" style={{ color: 'var(--color-text)' }}>
+      <SubHeader title={VIEW_TITLES[view]} onBack={back} />
 
-      {/* ── Profil ── */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold text-base">Profil</h2>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Name, Sprache und Fokus
-          </p>
+      {/* ── PROFIL ── */}
+      {view === 'profile' && (
+        <div className="space-y-4">
+          <Input
+            placeholder="Dein Name"
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value)}
+          />
+          <div className="flex gap-2">
+            {LANGUAGES.map(l => {
+              const sel = language === l.id
+              return (
+                <button
+                  key={l.id}
+                  onClick={() => setLanguage(l.id)}
+                  className="flex-1 rounded-xl py-3 flex flex-col items-center gap-1 transition-transform active:scale-95"
+                  style={{
+                    backgroundColor: sel ? 'var(--color-primary)22' : 'var(--color-bg-card)',
+                    border: `2px solid ${sel ? 'var(--color-primary)' : 'transparent'}`,
+                    color: 'var(--color-text)',
+                  }}
+                >
+                  <span className="text-xl">{l.flag}</span>
+                  <span className="text-xs font-medium">{l.label}</span>
+                </button>
+              )
+            })}
+          </div>
+          <SaveButton loading={savingProfile} saved={savedProfile} onClick={handleSaveProfile} />
         </div>
+      )}
 
-        <Input
-          placeholder="Dein Name"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-        />
+      {/* ── EQUIPMENT ── */}
+      {view === 'equipment' && (
+        <div className="space-y-6">
+          {/* Location selector */}
+          <div className="space-y-4">
+            <p className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>Wo trainierst du?</p>
+            <div className="grid grid-cols-2 gap-3">
+              {LOCATION_OPTIONS.map(opt => {
+                const sel = equipment.includes(opt.id)
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => toggleEquipment(opt.id)}
+                    className="rounded-2xl px-4 py-4 flex items-center gap-3 transition-transform active:scale-95 text-left"
+                    style={{
+                      backgroundColor: sel ? 'var(--color-primary)22' : 'var(--color-bg-card)',
+                      border: `2px solid ${sel ? 'var(--color-primary)' : 'transparent'}`,
+                      color: 'var(--color-text)',
+                    }}
+                  >
+                    <span className="text-2xl">{opt.emoji}</span>
+                    <span className="font-medium text-sm">{opt.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <SaveButton loading={savingEquip} saved={savedEquip} onClick={handleSaveEquip} />
+          </div>
 
-        <div className="flex gap-2">
-          {LANGUAGES.map((l) => {
-            const selected = language === l.id
-            return (
-              <button
-                key={l.id}
-                onClick={() => setLanguage(l.id)}
-                className="flex-1 rounded-xl py-3 flex flex-col items-center gap-1 transition-transform active:scale-95"
-                style={{
-                  backgroundColor: selected ? 'var(--color-primary)22' : 'var(--color-bg-card)',
-                  border: `2px solid ${selected ? 'var(--color-primary)' : 'transparent'}`,
-                  color: 'var(--color-text)',
-                }}
-              >
-                <span className="text-xl">{l.flag}</span>
-                <span className="text-xs font-medium">{l.label}</span>
-              </button>
-            )
-          })}
+          {/* Equipment per location */}
+          <div className="space-y-4">
+            <p className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>Equipment pro Trainingsort</p>
+            <div className="flex gap-1">
+              {LOCATION_OPTIONS.map(loc => (
+                <button
+                  key={loc.id}
+                  onClick={() => setActiveLocTab(loc.id)}
+                  className="flex-1 py-2 rounded-xl text-xs font-semibold transition-colors"
+                  style={{
+                    backgroundColor: activeLocTab === loc.id ? '#E8642A' : 'var(--color-bg-card)',
+                    color:           activeLocTab === loc.id ? 'white'   : 'var(--color-text-muted)',
+                  }}
+                >
+                  {loc.emoji} {loc.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {EQUIPMENT_ITEMS.map(item => {
+                const sel = (equipByLoc[activeLocTab] ?? []).includes(item)
+                return (
+                  <button
+                    key={item}
+                    onClick={() => toggleEquipByLoc(activeLocTab, item)}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+                    style={{
+                      backgroundColor: sel ? '#E8642A20' : 'var(--color-bg-card)',
+                      border:          `1.5px solid ${sel ? '#E8642A' : 'transparent'}`,
+                      color:           sel ? '#E8642A' : 'var(--color-text-muted)',
+                    }}
+                  >
+                    {item}
+                  </button>
+                )
+              })}
+            </div>
+            <SaveButton loading={savingEquipLoc} saved={savedEquipLoc} onClick={handleSaveEquipLoc} />
+          </div>
         </div>
+      )}
 
-        <div className="grid grid-cols-2 gap-3">
-          {pillars.map((p) => {
-            const selected = primaryPillar === p.id
-            return (
-              <button
-                key={p.id}
-                onClick={() => setPrimaryPillar(p.id)}
-                className="rounded-2xl p-4 text-left transition-transform active:scale-95"
-                style={{
-                  backgroundColor: selected ? p.color + '22' : 'var(--color-bg-card)',
-                  border: `2px solid ${selected ? p.color : 'transparent'}`,
-                  color: 'var(--color-text)',
-                }}
-              >
-                <div className="text-2xl mb-1">{p.emoji}</div>
-                <div className="font-semibold text-sm">{p.label}</div>
-              </button>
-            )
-          })}
-        </div>
-
-        <SaveButton loading={savingProfile} saved={savedProfile} onClick={handleSaveProfile} />
-      </section>
-
-      {/* ── Equipment ── */}
-      {/* ROADMAP: Krafttraining weight input — add toggle here: "Gewicht als Kategorie (leicht/mittel/schwer) oder kg eingeben?"
-          Store preference in profile.weight_input_mode ('category' | 'kg'). FreeTimerWizard + KraftTimerView read it. */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold text-base">Equipment</h2>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Wo trainierst du?
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          {LOCATION_OPTIONS.map((opt) => {
-            const selected = equipment.includes(opt.id)
-            return (
-              <button
-                key={opt.id}
-                onClick={() => toggleEquipment(opt.id)}
-                className="rounded-2xl px-4 py-4 flex items-center gap-3 transition-transform active:scale-95 text-left"
-                style={{
-                  backgroundColor: selected ? 'var(--color-primary)22' : 'var(--color-bg-card)',
-                  border: `2px solid ${selected ? 'var(--color-primary)' : 'transparent'}`,
-                  color: 'var(--color-text)',
-                }}
-              >
-                <span className="text-2xl">{opt.emoji}</span>
-                <span className="font-medium text-sm">{opt.label}</span>
-              </button>
-            )
-          })}
-        </div>
-
-        <SaveButton loading={savingEquip} saved={savedEquip} onClick={handleSaveEquip} />
-      </section>
-
-      {/* ── Equipment pro Trainingsort ── */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold text-base">Equipment pro Trainingsort</h2>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Welches Equipment hast du pro Ort verfügbar?
-          </p>
-        </div>
-
-        {/* Location tabs */}
-        <div className="flex gap-1">
-          {LOCATION_OPTIONS.map((loc) => (
-            <button
-              key={loc.id}
-              onClick={() => setActiveLocTab(loc.id)}
-              className="flex-1 py-2 rounded-xl text-xs font-semibold transition-colors"
-              style={{
-                backgroundColor: activeLocTab === loc.id ? '#E8642A' : 'var(--color-bg-card)',
-                color:           activeLocTab === loc.id ? 'white' : 'var(--color-text-muted)',
-              }}
-            >
-              {loc.emoji} {loc.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Equipment checkboxes for active location */}
-        <div className="flex flex-wrap gap-2">
-          {EQUIPMENT_ITEMS.map((item) => {
-            const selected = (equipByLoc[activeLocTab] ?? []).includes(item)
-            return (
-              <button
-                key={item}
-                onClick={() => toggleEquipByLoc(activeLocTab, item)}
-                className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
-                style={{
-                  backgroundColor: selected ? '#E8642A20' : 'var(--color-bg-card)',
-                  border:          `1.5px solid ${selected ? '#E8642A' : 'transparent'}`,
-                  color:           selected ? '#E8642A' : 'var(--color-text-muted)',
-                }}
-              >
-                {item}
-              </button>
-            )
-          })}
-        </div>
-
-        <SaveButton loading={savingEquipLoc} saved={savedEquipLoc} onClick={handleSaveEquipLoc} />
-      </section>
-
-      {/* ── Aktive Pillars ── */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold text-base">{t.activePillars}</h2>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            {t.activePillarsDesc}
-          </p>
-        </div>
-
+      {/* ── PILLARS ── */}
+      {view === 'pillars' && (
         <div className="space-y-3">
-          {pillars.map((p) => {
-            const isActive = activePillars.includes(p.id)
-            const isLocked = p.id === 'routine'
+          <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
+            Mindestens 1 Pillar muss aktiv bleiben.
+          </p>
+          {PILLAR_ITEMS.map(p => {
+            const isOn   = activePillars.includes(p.id)
+            const isLast = activePillars.length === 1 && isOn
             return (
               <button
                 key={p.id}
                 onClick={() => togglePillar(p.id)}
-                className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left transition-transform active:scale-95"
+                disabled={isLast}
+                className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left"
                 style={{
                   backgroundColor: 'var(--color-bg-card)',
-                  border: `2px solid ${isActive ? p.color : 'transparent'}`,
-                  color: 'var(--color-text)',
-                  opacity: isLocked ? 0.7 : 1,
-                  cursor: isLocked ? 'default' : 'pointer',
+                  border:  `2px solid ${isOn ? p.color : 'transparent'}`,
+                  color:   'var(--color-text)',
+                  opacity: isLast ? 0.5 : 1,
+                  cursor:  isLast ? 'default' : 'pointer',
                 }}
               >
                 <span className="text-2xl">{p.emoji}</span>
-                <div className="flex-1">
-                  <div className="font-semibold text-sm">{p.label}</div>
-                  {isLocked && (
-                    <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                      {t.alwaysActive}
-                    </div>
-                  )}
-                </div>
-                {/* Toggle pill */}
-                <div
-                  style={{
-                    width: 44,
-                    height: 24,
-                    borderRadius: 12,
-                    background: isActive ? p.color : 'rgba(255,255,255,0.1)',
-                    transition: 'background 0.2s',
-                    position: 'relative',
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 3,
-                      left: isActive ? 23 : 3,
-                      width: 18,
-                      height: 18,
-                      borderRadius: '50%',
-                      background: 'white',
-                      transition: 'left 0.2s',
-                    }}
-                  />
-                </div>
+                <span className="flex-1 font-semibold text-sm">{p.label}</span>
+                <TogglePill on={isOn} color={p.color} />
               </button>
             )
           })}
-        </div>
-
-        <SaveButton loading={savingPillars} saved={savedPillars} onClick={handleSavePillars} />
-
-        {/* Hide inactive toggle */}
-        <button
-          onClick={toggleHideInactive}
-          className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left"
-          style={{ backgroundColor: 'var(--color-bg-card)', border: 'none', cursor: 'pointer' }}
-        >
-          <div className="flex-1">
-            <div className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
-              Inaktive Bereiche ausblenden
-            </div>
-            <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-              Nicht aktive Tabs aus der Navigation entfernen
-            </div>
+          <div className="pt-1">
+            <SaveButton loading={savingPillars} saved={savedPillars} onClick={handleSavePillars} />
           </div>
-          <div
-            style={{
-              width: 44, height: 24, borderRadius: 12, flexShrink: 0,
-              background: hideInactive ? '#E8642A' : 'rgba(255,255,255,0.1)',
-              transition: 'background 0.2s', position: 'relative',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute', top: 3,
-                left: hideInactive ? 23 : 3,
-                width: 18, height: 18, borderRadius: '50%',
-                background: 'white', transition: 'left 0.2s',
-              }}
-            />
-          </div>
-        </button>
-      </section>
-
-      {/* ── Push Benachrichtigungen ── */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold text-base">Push Benachrichtigungen</h2>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Tägliche Reminder für deine aktiven Pillars
-          </p>
         </div>
+      )}
 
-        {!pushSupported ? (
-          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            Dein Browser unterstützt keine Push-Benachrichtigungen.
-          </p>
-        ) : (
-          <>
-            {/* Main enable/disable toggle */}
+      {/* ── TRAINING ── */}
+      {view === 'training' && (
+        <div className="space-y-3">
+          {[
+            {
+              label: 'Skalierungen anzeigen',
+              desc:  'Zeigt leichte und schwere Varianten bei jedem WOD an.',
+              on:    substitutionEnabled,
+              toggle: () => {
+                const next = !substitutionEnabled
+                setSubstitutionEnabled(next)
+                localStorage.setItem('carveout_substitution_enabled', String(next))
+              },
+            },
+            {
+              label: '🤫 Silent Mode',
+              desc:  'Blendet WODs mit Sprungübungen aus (für geräuscharmes Training).',
+              on:    silentMode,
+              toggle: () => {
+                const next = !silentMode
+                setSilentMode(next)
+                localStorage.setItem('carveout_silent_mode', String(next))
+              },
+            },
+          ].map(item => (
             <button
-              onClick={handleTogglePush}
-              disabled={pushLoading}
-              className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left transition-transform active:scale-95"
-              style={{
-                backgroundColor: 'var(--color-bg-card)',
-                border: `2px solid ${pushEnabled ? '#E8642A' : 'transparent'}`,
-                color: 'var(--color-text)',
-                opacity: pushLoading ? 0.6 : 1,
-              }}
+              key={item.label}
+              onClick={item.toggle}
+              className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left"
+              style={{ backgroundColor: 'var(--color-bg-card)', border: 'none', cursor: 'pointer' }}
             >
-              <span className="text-2xl">🔔</span>
               <div className="flex-1">
-                <div className="font-semibold text-sm">
-                  {pushLoading ? 'Wird aktualisiert…' : pushEnabled ? 'Push aktiviert' : 'Push deaktiviert'}
-                </div>
-                <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                  {pushEnabled ? 'Tippen zum Deaktivieren' : 'Tippen zum Aktivieren'}
-                </div>
+                <div className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{item.label}</div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{item.desc}</div>
               </div>
-              <div
+              <TogglePill on={item.on} />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── BENACHRICHTIGUNGEN ── */}
+      {view === 'notifications' && (
+        <div className="space-y-4">
+          {!pushSupported ? (
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+              Dein Browser unterstützt keine Push-Benachrichtigungen.
+            </p>
+          ) : (
+            <>
+              <button
+                onClick={handleTogglePush}
+                disabled={pushLoading}
+                className="w-full flex items-center gap-4 rounded-2xl px-4 py-3 text-left"
                 style={{
-                  width: 44, height: 24, borderRadius: 12,
-                  background: pushEnabled ? '#E8642A' : 'rgba(255,255,255,0.1)',
-                  transition: 'background 0.2s', position: 'relative', flexShrink: 0,
+                  backgroundColor: 'var(--color-bg-card)',
+                  border:  `2px solid ${pushEnabled ? '#E8642A' : 'transparent'}`,
+                  color:   'var(--color-text)',
+                  opacity: pushLoading ? 0.6 : 1,
+                  cursor:  'pointer',
                 }}
               >
-                <div
-                  style={{
-                    position: 'absolute', top: 3,
-                    left: pushEnabled ? 23 : 3,
-                    width: 18, height: 18, borderRadius: '50%',
-                    background: 'white', transition: 'left 0.2s',
-                  }}
-                />
-              </div>
-            </button>
+                <span className="text-2xl">🔔</span>
+                <div className="flex-1">
+                  <div className="font-semibold text-sm">
+                    {pushLoading ? 'Wird aktualisiert…' : pushEnabled ? 'Push aktiviert' : 'Push deaktiviert'}
+                  </div>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                    {pushEnabled ? 'Tippen zum Deaktivieren' : 'Tippen zum Aktivieren'}
+                  </div>
+                </div>
+                <TogglePill on={pushEnabled} />
+              </button>
 
-            {pushError && (
-              <p className="text-xs text-center" style={{ color: '#ef4444' }}>{pushError}</p>
-            )}
+              {pushError && (
+                <p className="text-xs text-center" style={{ color: '#ef4444' }}>{pushError}</p>
+              )}
 
-            {/* Per-reminder settings, visible only when push is enabled */}
-            {pushEnabled && (
-              <>
-                {PUSH_REMINDERS.map((reminder) => {
-                  const isEnabled = pushPrefs[reminder.enabledKey]
-                  return (
-                    <div
-                      key={reminder.id}
-                      className="rounded-2xl px-4 py-3 space-y-2"
-                      style={{ backgroundColor: 'var(--color-bg-card)' }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl">{reminder.emoji}</span>
-                        <div className="flex-1">
-                          <div className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
-                            {reminder.label}
+              {pushEnabled && (
+                <>
+                  {PUSH_REMINDERS.map(reminder => {
+                    const isOn = pushPrefs[reminder.enabledKey]
+                    return (
+                      <div
+                        key={reminder.id}
+                        className="rounded-2xl px-4 py-3 space-y-2"
+                        style={{ backgroundColor: 'var(--color-bg-card)' }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">{reminder.emoji}</span>
+                          <div className="flex-1">
+                            <div className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{reminder.label}</div>
+                            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{reminder.description}</div>
                           </div>
-                          <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                            {reminder.description}
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setPushPrefs(p => ({ ...p, [reminder.enabledKey]: !p[reminder.enabledKey] }))}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                          >
+                            <TogglePill on={isOn} />
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setPushPrefs((p) => ({ ...p, [reminder.enabledKey]: !p[reminder.enabledKey] }))
-                          }
-                          style={{
-                            width: 44, height: 24, borderRadius: 12,
-                            background: isEnabled ? '#E8642A' : 'rgba(255,255,255,0.1)',
-                            transition: 'background 0.2s', position: 'relative', flexShrink: 0,
-                            border: 'none', cursor: 'pointer',
-                          }}
-                        >
-                          <div
+                        {reminder.timeKey && isOn && (
+                          <input
+                            type="time"
+                            value={pushPrefs[reminder.timeKey]}
+                            onChange={e => setPushPrefs(p => ({ ...p, [reminder.timeKey!]: e.target.value }))}
+                            className="w-full rounded-xl px-3 py-2 text-sm"
                             style={{
-                              position: 'absolute', top: 3,
-                              left: isEnabled ? 23 : 3,
-                              width: 18, height: 18, borderRadius: '50%',
-                              background: 'white', transition: 'left 0.2s',
+                              backgroundColor: 'var(--color-bg)',
+                              color:  'var(--color-text)',
+                              border: '1px solid rgba(255,255,255,0.1)',
                             }}
                           />
-                        </button>
+                        )}
                       </div>
-                      {reminder.timeKey && isEnabled && (
-                        <input
-                          type="time"
-                          value={pushPrefs[reminder.timeKey]}
-                          onChange={(e) =>
-                            setPushPrefs((p) => ({ ...p, [reminder.timeKey!]: e.target.value }))
-                          }
-                          className="w-full rounded-xl px-3 py-2 text-sm"
-                          style={{
-                            backgroundColor: 'var(--color-bg)',
-                            color: 'var(--color-text)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                          }}
-                        />
-                      )}
-                    </div>
-                  )
-                })}
-
-                <SaveButton loading={savingPush} saved={savedPush} onClick={handleSavePushPrefs} />
-              </>
-            )}
-          </>
-        )}
-      </section>
-
-      {/* ── Substitutions ── */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold text-base">Skalierungen anzeigen</h2>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Zeigt leichte und schwere Varianten bei jedem WOD an.
-          </p>
+                    )
+                  })}
+                  <SaveButton loading={savingPush} saved={savedPush} onClick={handleSavePushPrefs} />
+                </>
+              )}
+            </>
+          )}
         </div>
-        <button
-          onClick={toggleSubstitution}
-          className="w-full flex items-center justify-between rounded-2xl px-4 py-3"
-          style={{ backgroundColor: 'var(--color-bg-card)' }}
-        >
-          <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-            Skalierungen aktiv
-          </span>
-          <div
-            style={{
-              width: 44, height: 24, borderRadius: 12,
-              background: substitutionEnabled ? '#E8642A' : 'rgba(255,255,255,0.1)',
-              transition: 'background 0.2s', position: 'relative', flexShrink: 0,
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute', top: 3,
-                left: substitutionEnabled ? 23 : 3,
-                width: 18, height: 18, borderRadius: '50%',
-                background: 'white', transition: 'left 0.2s',
-              }}
-            />
-          </div>
-        </button>
-      </section>
+      )}
 
-      {/* ── Silent Mode (Parent Mode) ── */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-semibold text-base">Silent Mode</h2>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-            Blendet WODs mit Sprungübungen aus (für geräuscharmes Training).
-          </p>
+      {/* ── ABO ── */}
+      {view === 'abo' && (
+        <div className="space-y-4">
+          {subActive ? (
+            <div className="rounded-2xl px-4 py-4 space-y-1" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+              <div className="flex items-center gap-2">
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#7BC67E', display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ fontSize: 14, fontWeight: 600, color: '#7BC67E' }}>CarveOut Premium aktiv</span>
+              </div>
+              {endDate && (
+                <p style={{ margin: 0, fontSize: 12, color: '#5a5248', paddingLeft: 16 }}>
+                  Verlängert am {new Date(endDate).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                </p>
+              )}
+            </div>
+          ) : subStatus === 'canceled' ? (
+            <div className="rounded-2xl px-4 py-4 space-y-1" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+              <div className="flex items-center gap-2">
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ fontSize: 14, color: '#ef4444' }}>Abo gekündigt</span>
+              </div>
+              {endDate && (
+                <p style={{ margin: 0, fontSize: 12, color: '#5a5248', paddingLeft: 16 }}>
+                  Zugang bis {new Date(endDate).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                </p>
+              )}
+            </div>
+          ) : subStatus === 'past_due' ? (
+            <div className="rounded-2xl px-4 py-4" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+              <div className="flex items-center gap-2">
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ fontSize: 14, color: '#f59e0b' }}>Zahlung ausstehend</span>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p style={{ fontSize: 13, color: '#5a5248' }}>Kein aktives Abo</p>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {(['chf', 'eur'] as const).map(c => (
+                  <button
+                    key={c}
+                    onClick={() => setCurrency(c)}
+                    style={{
+                      padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                      fontFamily: 'inherit', cursor: 'pointer', border: 'none',
+                      background: currency === c ? '#E8642A' : 'rgba(255,255,255,0.06)',
+                      color: currency === c ? '#fff' : 'var(--color-text-muted)',
+                    }}
+                  >
+                    {c.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <button
+                  onClick={() => startCheckout(`monthly_${currency}` as const)}
+                  disabled={subLoading}
+                  style={{ padding: '10px 8px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-text)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', opacity: subLoading ? 0.5 : 1 }}
+                >
+                  {currency === 'chf' ? 'CHF' : 'EUR'} 8.– / Monat
+                </button>
+                <button
+                  onClick={() => startCheckout(`annual_${currency}` as const)}
+                  disabled={subLoading}
+                  style={{ padding: '10px 8px', borderRadius: 10, background: '#E8642A', border: 'none', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: subLoading ? 0.5 : 1 }}
+                >
+                  {currency === 'chf' ? 'CHF' : 'EUR'} 60.– / Jahr
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-        <button
-          onClick={toggleSilentMode}
-          className="w-full flex items-center justify-between rounded-2xl px-4 py-3"
-          style={{ backgroundColor: 'var(--color-bg-card)' }}
-        >
-          <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-            🤫 Keine Sprungübungen
-          </span>
-          <div
-            style={{
-              width: 44, height: 24, borderRadius: 12,
-              background: silentMode ? '#E8642A' : 'rgba(255,255,255,0.1)',
-              transition: 'background 0.2s', position: 'relative', flexShrink: 0,
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute', top: 3,
-                left: silentMode ? 23 : 3,
-                width: 18, height: 18, borderRadius: '50%',
-                background: 'white', transition: 'left 0.2s',
-              }}
-            />
-          </div>
-        </button>
-      </section>
-
-      {/* ── Feedback ── */}
-      <section>
-        <button
-          onClick={() => setFeedbackOpen(true)}
-          className="w-full flex items-center justify-between rounded-2xl px-4 py-3"
-          style={{ backgroundColor: 'var(--color-bg-card)' }}
-        >
-          <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-            💬 Feedback geben
-          </span>
-          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 16 }}>›</span>
-        </button>
-      </section>
-
-      <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      )}
     </div>
   )
 }

@@ -83,9 +83,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateProfile: async (data) => {
     const { user } = get()
     if (!user) return
-    await supabase
+    const { error } = await supabase
       .from('user_profiles')
       .upsert({ id: user.id, ...data, updated_at: new Date().toISOString() })
+    if (error) throw error
     const profile = await loadProfile(user.id)
     set({ profile })
   },

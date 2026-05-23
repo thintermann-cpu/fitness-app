@@ -3,6 +3,8 @@ import { useAuthStore } from '../../store/authStore'
 
 type Lang = 'de' | 'en' | 'es'
 
+const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
+
 const PILLARS = [
   { id: 'routine',    label: { de: 'Routine',         en: 'Routine',       es: 'Rutina'        }, emoji: '📋', color: '#4A90D9' },
   { id: 'workout',    label: { de: 'Training',        en: 'Workout',       es: 'Entrenamiento' }, emoji: '💪', color: '#E8642A' },
@@ -10,18 +12,20 @@ const PILLARS = [
   { id: 'meditation', label: { de: 'Meditation',      en: 'Meditation',    es: 'Meditación'    }, emoji: '🧘', color: '#9B7FD4' },
 ] as const
 
-const HEADER: Record<Lang, (n: number) => string> = {
-  de: (n) => `Aktueller Stand von heute · ${n} von 4`,
-  en: (n) => `Today's overview · ${n} of 4`,
-  es: (n) => `Estado de hoy · ${n} de 4`,
+const HEADER: Record<Lang, (done: number, total: number) => string> = {
+  de: (done, total) => `Aktueller Stand von heute · ${done} von ${total}`,
+  en: (done, total) => `Today's overview · ${done} of ${total}`,
+  es: (done, total) => `Estado de hoy · ${done} de ${total}`,
 }
 
 export function TodayPillarTracker() {
-  const { profile }   = useAuthStore()
-  const lang          = (profile?.language ?? 'de') as Lang
+  const { profile }         = useAuthStore()
+  const lang                = (profile?.language ?? 'de') as Lang
   const { data, isLoading } = useTodayPillars()
 
-  const total = data?.total ?? 0
+  const activePillars  = profile?.active_pillars?.length ? profile.active_pillars : ALL_PILLARS
+  const visiblePillars = PILLARS.filter(p => activePillars.includes(p.id))
+  const doneCount      = isLoading ? 0 : visiblePillars.filter(p => (data?.[p.id as keyof typeof data] as boolean | undefined) ?? false).length
 
   return (
     <section
@@ -29,10 +33,10 @@ export function TodayPillarTracker() {
       style={{ backgroundColor: 'var(--color-bg-card)' }}
     >
       <p className="text-xs font-semibold mb-3" style={{ color: 'var(--color-text-muted)' }}>
-        {isLoading ? '…' : HEADER[lang](total)}
+        {isLoading ? '…' : HEADER[lang](doneCount, visiblePillars.length)}
       </p>
-      <div className="grid grid-cols-4 gap-2">
-        {PILLARS.map((p) => {
+      <div className={`grid gap-2`} style={{ gridTemplateColumns: `repeat(${visiblePillars.length}, 1fr)` }}>
+        {visiblePillars.map((p) => {
           const isDone = (data?.[p.id as keyof typeof data] as boolean | undefined) ?? false
           return (
             <div
