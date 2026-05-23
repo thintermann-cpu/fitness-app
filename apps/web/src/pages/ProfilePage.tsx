@@ -24,6 +24,7 @@ export function ProfilePage() {
   const [lang,      setLang]      = useState(profile?.language ?? 'de')
   const [saving,    setSaving]    = useState(false)
   const [pwSending, setPwSending] = useState(false)
+  const [currency,  setCurrency]  = useState<'chf' | 'eur'>('chf')
 
   useEffect(() => {
     if (searchParams.get('checkout') === 'success') {
@@ -229,20 +230,37 @@ export function ProfilePage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <p style={{ margin: 0, fontSize: 13, color: '#5a5248' }}>Kein aktives Abo</p>
+              {/* CHF / EUR Toggle */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                {(['chf', 'eur'] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCurrency(c)}
+                    style={{
+                      padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                      fontFamily: 'inherit', cursor: 'pointer', border: 'none',
+                      background: currency === c ? '#E8642A' : 'rgba(255,255,255,0.06)',
+                      color: currency === c ? '#fff' : 'var(--color-text-muted)',
+                    }}
+                  >
+                    {c.toUpperCase()}
+                  </button>
+                ))}
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <button
-                  onClick={() => startCheckout('monthly_chf')}
+                  onClick={() => startCheckout(`monthly_${currency}` as const)}
                   disabled={loading}
                   style={{ padding: '10px 8px', borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--color-text)', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', opacity: loading ? 0.5 : 1 }}
                 >
-                  CHF 8.– / Monat
+                  {currency === 'chf' ? 'CHF' : 'EUR'} 8.– / Monat
                 </button>
                 <button
-                  onClick={() => startCheckout('annual_chf')}
+                  onClick={() => startCheckout(`annual_${currency}` as const)}
                   disabled={loading}
                   style={{ padding: '10px 8px', borderRadius: 10, background: '#E8642A', border: 'none', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: loading ? 0.5 : 1 }}
                 >
-                  CHF 60.– / Jahr
+                  {currency === 'chf' ? 'CHF' : 'EUR'} 60.– / Jahr
                 </button>
               </div>
             </div>
