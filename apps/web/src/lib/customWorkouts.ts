@@ -16,6 +16,11 @@ export interface CustomWorkout {
   createdAt: string
   restBetweenSets?: number
   restBetweenExercises?: number
+  tabataWork?: number
+  tabataRest?: number
+  tabataRounds?: number
+  emomInterval?: number
+  emomRounds?: number
 }
 
 export interface CustomSession {

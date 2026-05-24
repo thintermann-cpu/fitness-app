@@ -279,20 +279,45 @@ export function WodDetail({ wodName, onBack }: Props) {
       )}
 
       {/* CTA buttons */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => setShowTimer((v) => !v)}
-          className="flex-1 py-3.5 rounded-xl bg-[#E8642A] text-white font-semibold text-base active:scale-[0.98] transition-transform"
-        >
-          {showTimer ? 'Hide Timer' : '▶ Start Timer'}
-        </button>
-        <button
-          onClick={() => setShowScore(true)}
-          className="px-5 py-3.5 rounded-xl border border-[#E8642A]/40 text-[#E8642A] font-semibold text-sm active:scale-[0.98] transition-transform"
-        >
-          Log
-        </button>
-      </div>
+      {!showTimer ? (
+        <div className="flex gap-3">
+          <button
+            onClick={() => { setShowTimer(true); setShowWarmupTimer(false) }}
+            className="flex-1 py-3.5 rounded-xl bg-[#E8642A] text-white font-semibold text-base active:scale-[0.98] transition-transform"
+          >
+            ▶ Start Timer
+          </button>
+          <button
+            onClick={() => { setShowTimer(true); setShowWarmupTimer(true) }}
+            className="px-4 py-3.5 rounded-xl font-semibold text-sm active:scale-[0.98] transition-transform"
+            style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: '1px solid #E8642A40' }}
+          >
+            🔥 Warmup
+          </button>
+          <button
+            onClick={() => setShowScore(true)}
+            className="px-4 py-3.5 rounded-xl border border-[#E8642A]/40 text-[#E8642A] font-semibold text-sm active:scale-[0.98] transition-transform"
+          >
+            Log
+          </button>
+        </div>
+      ) : (
+        <div className="flex gap-3">
+          <button
+            onClick={() => { setShowTimer(false); setShowWarmupTimer(false) }}
+            className="flex-1 py-3 rounded-xl text-sm font-semibold"
+            style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
+          >
+            ✕ Timer schließen
+          </button>
+          <button
+            onClick={() => setShowScore(true)}
+            className="px-4 py-3 rounded-xl border border-[#E8642A]/40 text-[#E8642A] font-semibold text-sm"
+          >
+            Log
+          </button>
+        </div>
+      )}
 
       {/* Embedded timer */}
       {showTimer && (
@@ -300,6 +325,7 @@ export function WodDetail({ wodName, onBack }: Props) {
           <TimerView
             initialMode={timerMode}
             initialMinutes={wod.estimated_minutes || 20}
+            warmupPending={showWarmupTimer}
             onComplete={() => {
               setShowScore(true)
               track('workout_completed', { wod_id: wod.id, duration_min: wod.estimated_minutes, category: wod.category })
@@ -335,6 +361,7 @@ export function WodDetail({ wodName, onBack }: Props) {
       <WarmupTimer
         isOpen={showWarmupTimer}
         onClose={() => setShowWarmupTimer(false)}
+        onStartWorkout={() => setShowWarmupTimer(false)}
       />
     </div>
   )

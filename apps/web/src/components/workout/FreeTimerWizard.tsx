@@ -13,12 +13,35 @@ export interface KraftConfig {
   restBetweenExercises: number
 }
 
+export interface TimerInitConfig {
+  tabataWork?: number
+  tabataRest?: number
+  tabataRounds?: number
+  emomInterval?: number
+  emomRounds?: number
+}
+
+export interface WizardInitialValues {
+  name?: string
+  mode?: TimerMode
+  minutes?: number
+  exercises?: WizardExercise[]
+  restBetweenSets?: number
+  restBetweenExercises?: number
+  tabataWork?: number
+  tabataRest?: number
+  tabataRounds?: number
+  emomInterval?: number
+  emomRounds?: number
+}
+
 interface Props {
   isOpen: boolean
   onClose: () => void
   /** 'save' = incl. name field + localStorage save; 'adhoc' = no save, adds warmup step */
   variant?: 'save' | 'adhoc'
-  onStart: (mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string) => void
+  initialValues?: WizardInitialValues
+  onStart: (mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerConfig?: TimerInitConfig) => void
 }
 
 const REST_BETWEEN_SETS_OPTIONS    = [45, 60, 90, 120]
@@ -46,19 +69,28 @@ function MiniStepper({
   )
 }
 
-export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: Props) {
+export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValues, onStart }: Props) {
   const isAdhoc   = variant === 'adhoc'
 
   const [step,      setStep]      = useState(0)
-  const [mode,      setMode]      = useState<TimerMode>('fortime')
-  const [exercises, setExercises] = useState<WizardExercise[]>([])
-  const [minutes,   setMinutes]   = useState(20)
-  const [name,      setName]      = useState('')
+  const [mode,      setMode]      = useState<TimerMode>(() => initialValues?.mode ?? 'fortime')
+  const [exercises, setExercises] = useState<WizardExercise[]>(() => initialValues?.exercises ?? [])
+  const [minutes,   setMinutes]   = useState(() => initialValues?.minutes ?? 20)
+  const [name,      setName]      = useState(() => initialValues?.name ?? '')
   const [warmup,    setWarmup]    = useState<boolean | null>(null)
 
   // Krafttraining config
-  const [restBetweenSets,      setRestBetweenSets]      = useState(90)
-  const [restBetweenExercises, setRestBetweenExercises] = useState(60)
+  const [restBetweenSets,      setRestBetweenSets]      = useState(() => initialValues?.restBetweenSets      ?? 90)
+  const [restBetweenExercises, setRestBetweenExercises] = useState(() => initialValues?.restBetweenExercises ?? 60)
+
+  // Tabata config
+  const [tabataWork,   setTabataWork]   = useState(() => initialValues?.tabataWork   ?? 20)
+  const [tabataRest,   setTabataRest]   = useState(() => initialValues?.tabataRest   ?? 10)
+  const [tabataRounds, setTabataRounds] = useState(() => initialValues?.tabataRounds ?? 8)
+
+  // EMOM config
+  const [emomInterval, setEmomInterval] = useState(() => initialValues?.emomInterval ?? 1)
+  const [emomRounds,   setEmomRounds]   = useState(() => initialValues?.emomRounds   ?? 10)
 
   const isKraft   = mode === 'krafttraining'
   const stepCount = isKraft ? 3 : 4
@@ -67,6 +99,8 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
     setStep(0); setMode('fortime'); setExercises([])
     setMinutes(20); setName(''); setWarmup(null)
     setRestBetweenSets(90); setRestBetweenExercises(60)
+    setTabataWork(20); setTabataRest(10); setTabataRounds(8)
+    setEmomInterval(1); setEmomRounds(10)
   }
 
   const handleClose = () => { reset(); onClose() }
@@ -80,14 +114,22 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
       ? { exercises, restBetweenSets, restBetweenExercises }
       : undefined
 
-    const m          = mode
-    const min        = isKraft ? 0 : minutes
+    const timerCfg: TimerInitConfig | undefined =
+      mode === 'tabata' ? { tabataWork, tabataRest, tabataRounds } :
+      mode === 'emom'   ? { emomInterval, emomRounds } :
+      undefined
+
+    const m = mode
+    const min = isKraft ? 0 :
+      mode === 'tabata' ? Math.round((tabataWork + tabataRest) * tabataRounds / 60) :
+      mode === 'emom'   ? emomInterval * emomRounds :
+      minutes
     const w          = warmup ?? false
     const exs        = isKraft ? undefined : (exercises.length > 0 ? exercises : undefined)
     const savedName  = !isAdhoc && name.trim() ? name.trim() : undefined
     reset()
     onClose()
-    onStart(m, min, w, kraftCfg, exs, savedName)
+    onStart(m, min, w, kraftCfg, exs, savedName, timerCfg)
   }
 
   const canNext = (() => {
@@ -263,15 +305,12 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
         </div>
       )}
 
-      {/* Step 2 (Standard): Duration + name */}
+      {/* Step 2 (Standard): Duration config (mode-specific) + name */}
       {step === 2 && !isKraft && (
         <div className="space-y-4">
           <div
             className="flex items-center gap-3 rounded-xl px-4 py-3"
-            style={{
-              backgroundColor: `${modeInfo.color}12`,
-              border: `1px solid ${modeInfo.color}35`,
-            }}
+            style={{ backgroundColor: `${modeInfo.color}12`, border: `1px solid ${modeInfo.color}35` }}
           >
             <span className="text-xl">{modeInfo.emoji}</span>
             <span className="font-bold text-sm" style={{ color: modeInfo.color }}>{modeInfo.name}</span>
@@ -282,27 +321,75 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
             )}
           </div>
 
-          <div className="rounded-xl px-4 py-4" style={{ backgroundColor: 'var(--color-bg-card)' }}>
-            <p className="text-xs font-semibold mb-3 tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
-              DAUER
-            </p>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setMinutes((m) => Math.max(1, m - 1))}
-                className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
-                style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
-              >−</button>
-              <div className="flex-1 text-center">
-                <span className="text-3xl font-black" style={{ color: 'var(--color-text)' }}>{minutes}</span>
-                <span className="text-sm font-medium ml-1.5" style={{ color: 'var(--color-text-muted)' }}>min</span>
+          {/* AMRAP / ForTime: minutes stepper */}
+          {(mode === 'amrap' || mode === 'fortime') && (
+            <div className="rounded-xl px-4 py-4" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+              <p className="text-xs font-semibold mb-3 tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+                {mode === 'fortime' ? 'ZEIT-CAP (0 = kein Cap)' : 'DAUER'}
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setMinutes((m) => Math.max(mode === 'fortime' ? 0 : 1, m - 1))}
+                  className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
+                >−</button>
+                <div className="flex-1 text-center">
+                  <span className="text-3xl font-black" style={{ color: 'var(--color-text)' }}>{minutes}</span>
+                  <span className="text-sm font-medium ml-1.5" style={{ color: 'var(--color-text-muted)' }}>min</span>
+                </div>
+                <button
+                  onClick={() => setMinutes((m) => Math.min(120, m + 1))}
+                  className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
+                >+</button>
               </div>
-              <button
-                onClick={() => setMinutes((m) => Math.min(120, m + 1))}
-                className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
-                style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
-              >+</button>
             </div>
-          </div>
+          )}
+
+          {/* Tabata: work / rest / rounds */}
+          {mode === 'tabata' && (
+            <div className="rounded-xl px-4 py-4 space-y-4" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+              <p className="text-xs font-semibold tracking-wide" style={{ color: 'var(--color-text-muted)' }}>TABATA EINSTELLUNGEN</p>
+              <div className="flex justify-around">
+                {[
+                  { label: 'Work', value: tabataWork, set: setTabataWork, unit: 's', min: 5, max: 120 },
+                  { label: 'Pause', value: tabataRest, set: setTabataRest, unit: 's', min: 5, max: 120 },
+                  { label: 'Runden', value: tabataRounds, set: setTabataRounds, unit: '', min: 1, max: 20 },
+                ].map(({ label, value, set, unit, min, max }) => (
+                  <div key={label} className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
+                    <MiniStepper value={value} onChange={set} min={min} max={max} />
+                    {unit && <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{unit}</span>}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
+                Gesamt: ~{Math.round((tabataWork + tabataRest) * tabataRounds / 60)} min
+              </p>
+            </div>
+          )}
+
+          {/* EMOM: interval + rounds */}
+          {mode === 'emom' && (
+            <div className="rounded-xl px-4 py-4 space-y-4" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+              <p className="text-xs font-semibold tracking-wide" style={{ color: 'var(--color-text-muted)' }}>EMOM EINSTELLUNGEN</p>
+              <div className="flex justify-around">
+                {[
+                  { label: 'Intervall', value: emomInterval, set: setEmomInterval, unit: 'min', min: 1, max: 10 },
+                  { label: 'Runden', value: emomRounds, set: setEmomRounds, unit: '', min: 1, max: 30 },
+                ].map(({ label, value, set, unit, min, max }) => (
+                  <div key={label} className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
+                    <MiniStepper value={value} onChange={set} min={min} max={max} />
+                    {unit && <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{unit}</span>}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
+                Gesamt: {emomInterval * emomRounds} min
+              </p>
+            </div>
+          )}
 
           {!isAdhoc && (
             <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--color-bg-card)' }}>

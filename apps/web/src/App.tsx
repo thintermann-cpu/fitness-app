@@ -10,6 +10,7 @@ import { RegisterPage } from './pages/RegisterPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { RoutinePage } from './pages/RoutinePage'
 import { WorkoutPage } from './pages/WorkoutPage'
+import { CustomWorkoutsPage } from './pages/CustomWorkoutsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { HomePage } from './pages/HomePage'
 import { LandingPage } from './pages/LandingPage'
@@ -95,8 +96,9 @@ function AppContent() {
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route element={<AppShell />}>
           <Route path="/home"              element={<HomePage />} />
-          <Route path="/workout"          element={<WorkoutPage />} />
-          <Route path="/workout/:wodName" element={<WorkoutPage />} />
+          <Route path="/workout"             element={<WorkoutPage />} />
+          <Route path="/workout/custom"     element={<CustomWorkoutsPage />} />
+          <Route path="/workout/:wodName"   element={<WorkoutPage />} />
           <Route path="/routine"          element={<RoutinePage />} />
           <Route path="/stretching"       element={<StretchingPage />} />
           <Route path="/meditation"       element={<MeditationPage />} />

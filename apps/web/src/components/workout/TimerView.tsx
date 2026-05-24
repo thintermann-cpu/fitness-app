@@ -17,6 +17,13 @@ interface Props {
   bilateral?: boolean
   adHocLog?: boolean
   exercises?: WizardExercise[]
+  warmupPending?: boolean
+  workoutName?: string
+  initialTabataWork?: number
+  initialTabataRest?: number
+  initialTabataRounds?: number
+  initialEmomInterval?: number
+  initialEmomRounds?: number
 }
 
 interface TickData {
@@ -116,19 +123,24 @@ function Stepper({
   )
 }
 
-export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, adHocLog, exercises }: Props) {
+export function TimerView({
+  initialMode, initialMinutes, onComplete, bilateral, adHocLog, exercises,
+  warmupPending, workoutName,
+  initialTabataWork, initialTabataRest, initialTabataRounds,
+  initialEmomInterval, initialEmomRounds,
+}: Props) {
   const autoStart = !!initialMode
 
   const [mode, setMode]           = useState<TimerMode>(initialMode ?? 'fortime')
   const [minutes, setMinutes]     = useState(initialMinutes ?? 20)  // AMRAP total time
 
   // EMOM config
-  const [emomInterval, setEmomInterval] = useState(1)   // minutes per interval
-  const [emomRounds,   setEmomRounds]   = useState(10)
+  const [emomInterval, setEmomInterval] = useState(initialEmomInterval ?? 1)
+  const [emomRounds,   setEmomRounds]   = useState(initialEmomRounds   ?? 10)
   // Tabata config
-  const [tabataWork,   setTabataWork]   = useState(20)  // seconds
-  const [tabataRest,   setTabataRest]   = useState(10)  // seconds
-  const [tabataRounds, setTabataRounds] = useState(8)
+  const [tabataWork,   setTabataWork]   = useState(initialTabataWork   ?? 20)
+  const [tabataRest,   setTabataRest]   = useState(initialTabataRest   ?? 10)
+  const [tabataRounds, setTabataRounds] = useState(initialTabataRounds ?? 8)
   // ForTime cap (null = no cap, just count up)
   const [forTimeCap,   setForTimeCap]   = useState<number | null>(null)
 
@@ -144,6 +156,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
   const onCompleteRef = useRef(onComplete)
   onCompleteRef.current = onComplete
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
+  const autoStartedRef = useRef(false)
 
   const { addEntry }      = useWodHistory()
   const loggedRef         = useRef(false)
@@ -211,11 +224,14 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
     if (!isRunning) sideSwitchShownRef.current = false
   }, [isRunning])
 
-  // Auto-start when initialMode is provided (e.g. WodDetail — skip config UI)
+  // Auto-start when initialMode is provided; waits for warmup to finish if warmupPending
   useEffect(() => {
-    if (autoStart) setShowCountdown(true)
+    if (autoStart && !warmupPending && !autoStartedRef.current) {
+      autoStartedRef.current = true
+      setShowCountdown(true)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [warmupPending])
 
   // Session active: block accidental swipe-navigation while timer is running/paused
   useEffect(() => {
@@ -228,7 +244,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
     if (!adHocLog || !isComplete || loggedRef.current) return
     loggedRef.current = true
     addEntry.mutate({
-      wod_name: `Ad-hoc ${MODE_TO_WOD_TYPE[mode]}`,
+      wod_name: workoutName ?? `Ad-hoc ${MODE_TO_WOD_TYPE[mode]}`,
       score_type: 'time',
       score_value: formatMs(tickRef.current.elapsed > 0 ? tickRef.current.elapsed : 0),
     })

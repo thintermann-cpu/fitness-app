@@ -24,13 +24,15 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   showExercises?: boolean
+  onStartWorkout?: () => void
 }
 
-export function WarmupTimer({ isOpen, onClose, showExercises }: Props) {
+export function WarmupTimer({ isOpen, onClose, showExercises, onStartWorkout }: Props) {
   const [selectedMin, setSelectedMin]   = useState(5)
   const [customMin,   setCustomMin]     = useState('')
   const [running,     setRunning]       = useState(false)
   const [timeLeft,    setTimeLeft]      = useState(0)
+  const [warmupDone,  setWarmupDone]    = useState(false)
   const [showCountdown, setShowCountdown] = useState(false)
   const intervalRef = useRef<number | null>(null)
   const audio = useAudio()
@@ -64,10 +66,10 @@ export function WarmupTimer({ isOpen, onClose, showExercises }: Props) {
     if (timeLeft <= 0) {
       clearInterval(intervalRef.current ?? undefined)
       setRunning(false)
+      setWarmupDone(true)
       if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
       void audio.playGong()
       addToast({ type: 'success', message: '🔥 Warmup abgeschlossen!' })
-      onClose()
       return
     }
     intervalRef.current = window.setInterval(() => {
@@ -95,6 +97,7 @@ export function WarmupTimer({ isOpen, onClose, showExercises }: Props) {
     clearInterval(intervalRef.current ?? undefined)
     setRunning(false)
     setTimeLeft(0)
+    setWarmupDone(false)
   }
 
   const handleClose = () => {
@@ -133,7 +136,29 @@ export function WarmupTimer({ isOpen, onClose, showExercises }: Props) {
           </button>
         </div>
 
-        {!running ? (
+        {warmupDone ? (
+          <div className="flex flex-col items-center gap-5 py-2">
+            <span className="text-5xl">🔥</span>
+            <div className="text-center">
+              <p className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>Warmup abgeschlossen!</p>
+              <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Bereit fürs Workout?</p>
+            </div>
+            <button
+              onClick={() => { onStartWorkout?.(); onClose() }}
+              className="w-full py-3.5 rounded-xl font-semibold text-white text-base active:scale-[0.98] transition-transform"
+              style={{ backgroundColor: '#E8642A' }}
+            >
+              ▶ Workout starten
+            </button>
+            <button
+              onClick={handleClose}
+              className="text-sm"
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              Schließen
+            </button>
+          </div>
+        ) : !running ? (
           <>
             {/* Exercise list */}
             {showExercises && (

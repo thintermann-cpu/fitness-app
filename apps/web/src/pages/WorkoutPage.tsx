@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import type { WorkoutLocation } from '../store/authStore'
 import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
+import { useSessionStore } from '../store/sessionStore'
 import { WodList } from '../components/workout/WodList'
 import { WodDetail } from '../components/workout/WodDetail'
 import { TimerView } from '../components/workout/TimerView'
 import { KraftTimerView } from '../components/workout/KraftTimerView'
 import { WodHistoryList } from '../components/workout/WodHistoryList'
-import { FreeTimerWizard, type KraftConfig } from '../components/workout/FreeTimerWizard'
+import { FreeTimerWizard, type KraftConfig, type TimerInitConfig } from '../components/workout/FreeTimerWizard'
 import { WarmupTimer } from '../components/workout/WarmupTimer'
 import {
   loadCustomWorkouts,
   saveCustomWorkout,
-  deleteCustomWorkout,
   type CustomWorkout,
   type WizardExercise,
 } from '../lib/customWorkouts'
@@ -44,17 +44,26 @@ function getSavedLocation(): WorkoutLocation | null {
   return null
 }
 
+type TimerConfig = {
+  mode: TimerMode; minutes: number
+  kraftConfig?: KraftConfig; exercises?: WizardExercise[]; workoutName?: string
+  tabataWork?: number; tabataRest?: number; tabataRounds?: number
+  emomInterval?: number; emomRounds?: number
+}
+
 export function WorkoutPage() {
-  const { wodName } = useParams<{ wodName: string }>()
-  const navigate    = useNavigate()
-  const { profile } = useAuthStore()
+  const { wodName }    = useParams<{ wodName: string }>()
+  const navigate       = useNavigate()
+  const routerLocation = useLocation()
+  const { profile }    = useAuthStore()
+  const isSessionActive = useSessionStore((s) => s.isSessionActive)
 
   const [tab, setTab]                     = useState<Tab>('wods')
   const [location, setLocation]           = useState<WorkoutLocation | null>(getSavedLocation())
   const [wizardOpen, setWizardOpen]       = useState(false)
   const [adhocOpen, setAdhocOpen]         = useState(false)
   const [showAllEquipment, setShowAllEquipment] = useState(false)
-  const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number; kraftConfig?: KraftConfig; exercises?: WizardExercise[]; workoutName?: string } | null>(null)
+  const [timerConfig, setTimerConfig]     = useState<TimerConfig | null>(null)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [savedWorkouts, setSavedWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
@@ -64,40 +73,54 @@ export function WorkoutPage() {
     if (!wodName) setTab('wods')
   }, [wodName])
 
-  function handleWizardStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string) {
+  // Start a saved workout when navigated from CustomWorkoutsPage
+  useEffect(() => {
+    const sw = (routerLocation.state as { startWorkout?: CustomWorkout } | null)?.startWorkout
+    if (sw) {
+      handleStartSaved(sw)
+      navigate('/workout', { replace: true, state: null })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function handleWizardStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
     if (workoutName) {
       saveCustomWorkout({
         id: crypto.randomUUID(),
         name: workoutName,
         mode,
-        minutes: mode === 'krafttraining' ? 0 : minutes,
+        minutes,
         exercises: exercises ?? (kraftConfig?.exercises ?? []),
         createdAt: new Date().toISOString(),
         restBetweenSets:      kraftConfig?.restBetweenSets,
         restBetweenExercises: kraftConfig?.restBetweenExercises,
+        tabataWork:   timerCfg?.tabataWork,
+        tabataRest:   timerCfg?.tabataRest,
+        tabataRounds: timerCfg?.tabataRounds,
+        emomInterval: timerCfg?.emomInterval,
+        emomRounds:   timerCfg?.emomRounds,
       })
       setSavedWorkouts(loadCustomWorkouts())
     }
-    setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName })
+    setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, ...timerCfg })
     setTab('timer')
     if (withWarmup) setShowWarmupTimer(true)
   }
 
-  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], _workoutName?: string) {
-    setTimerConfig({ mode, minutes, kraftConfig, exercises })
+  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], _workoutName?: string, timerCfg?: TimerInitConfig) {
+    setTimerConfig({ mode, minutes, kraftConfig, exercises, ...timerCfg })
     if (withWarmup) setShowWarmupTimer(true)
-  }
-
-  function handleDeleteSaved(id: string) {
-    deleteCustomWorkout(id)
-    setSavedWorkouts(loadCustomWorkouts())
   }
 
   function handleStartSaved(w: CustomWorkout) {
     const kraftConfig: KraftConfig | undefined = w.mode === 'krafttraining'
       ? { exercises: w.exercises, restBetweenSets: w.restBetweenSets ?? 90, restBetweenExercises: w.restBetweenExercises ?? 60 }
       : undefined
-    setTimerConfig({ mode: w.mode, minutes: w.minutes, kraftConfig, workoutName: w.name })
+    setTimerConfig({
+      mode: w.mode, minutes: w.minutes, kraftConfig, workoutName: w.name,
+      tabataWork: w.tabataWork, tabataRest: w.tabataRest, tabataRounds: w.tabataRounds,
+      emomInterval: w.emomInterval, emomRounds: w.emomRounds,
+    })
     setTab('timer')
   }
 
@@ -140,83 +163,47 @@ export function WorkoutPage() {
 
       {/* Tab bar */}
       <div className="px-4 flex gap-1 bg-[var(--color-bg)] sticky top-0 z-10 pt-2 pb-3 border-b border-white/5">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-              tab === t.id
-                ? 'bg-[#E8642A] text-white'
-                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+        {TABS.map((t) => {
+          const locked = isSessionActive && t.id !== 'timer'
+          return (
+            <button
+              key={t.id}
+              onClick={() => !locked && setTab(t.id)}
+              disabled={locked}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                tab === t.id
+                  ? 'bg-[#E8642A] text-white'
+                  : locked
+                  ? 'text-[var(--color-text-muted)] opacity-30 cursor-not-allowed'
+                  : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+              }`}
+            >
+              {t.label}
+            </button>
+          )
+        })}
       </div>
 
       {/* Content */}
       <div className="flex-1 px-4 py-4 pb-24 max-w-lg mx-auto w-full">
         {tab === 'wods' && (
           <>
-            {/* Custom workouts section */}
-            <div className="mb-5">
-              <div className="flex items-center justify-between mb-2.5">
-                <span
-                  className="text-[10px] font-semibold uppercase tracking-wider"
-                  style={{ color: 'var(--color-text-muted)' }}
-                >
-                  Eigene Workouts
-                </span>
-                <button
-                  onClick={() => { setSavedWorkouts(loadCustomWorkouts()); setWizardOpen(true) }}
-                  className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                  style={{ backgroundColor: '#E8642A18', color: '#E8642A' }}
-                >
-                  + Neu
-                </button>
-              </div>
-              {savedWorkouts.length === 0 ? (
-                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  Noch keine gespeicherten Workouts.
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {savedWorkouts.map((w) => (
-                    <div
-                      key={w.id}
-                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-                      style={{ backgroundColor: 'var(--color-bg-card)' }}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
-                          {w.name}
-                        </p>
-                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                          {w.mode.toUpperCase()} · {w.minutes} min
-                          {w.exercises.length > 0 ? ` · ${w.exercises.length} Übungen` : ''}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleStartSaved(w)}
-                        className="text-xs font-bold px-2.5 py-1.5 rounded-lg flex-shrink-0"
-                        style={{ backgroundColor: '#E8642A20', color: '#E8642A' }}
-                        aria-label="Starten"
-                      >
-                        ▶
-                      </button>
-                      <button
-                        onClick={() => handleDeleteSaved(w.id)}
-                        className="text-xs flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-lg"
-                        style={{ color: 'rgba(255,255,255,0.3)' }}
-                        aria-label="Löschen"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+            {/* Custom workouts section — link to /workout/custom */}
+            <div className="mb-5 flex items-center justify-between">
+              <button
+                onClick={() => navigate('/workout/custom')}
+                className="text-sm font-semibold"
+                style={{ color: '#E8642A' }}
+              >
+                Eigene Workouts{savedWorkouts.length > 0 ? ` (${savedWorkouts.length})` : ''} →
+              </button>
+              <button
+                onClick={() => { setSavedWorkouts(loadCustomWorkouts()); setWizardOpen(true) }}
+                className="text-xs font-bold px-2.5 py-1 rounded-lg"
+                style={{ backgroundColor: '#E8642A18', color: '#E8642A' }}
+              >
+                + Neu
+              </button>
             </div>
 
             {/* Location selector */}
@@ -272,6 +259,13 @@ export function WorkoutPage() {
                     initialMode={timerConfig.mode as Exclude<typeof timerConfig.mode, 'krafttraining'>}
                     initialMinutes={timerConfig.minutes}
                     exercises={timerConfig.exercises}
+                    workoutName={timerConfig.workoutName}
+                    warmupPending={showWarmupTimer}
+                    initialTabataWork={timerConfig.tabataWork}
+                    initialTabataRest={timerConfig.tabataRest}
+                    initialTabataRounds={timerConfig.tabataRounds}
+                    initialEmomInterval={timerConfig.emomInterval}
+                    initialEmomRounds={timerConfig.emomRounds}
                   />
                 )}
                 <button
@@ -317,6 +311,7 @@ export function WorkoutPage() {
       <WarmupTimer
         isOpen={showWarmupTimer}
         onClose={() => setShowWarmupTimer(false)}
+        onStartWorkout={() => setShowWarmupTimer(false)}
         showExercises
       />
     </div>
