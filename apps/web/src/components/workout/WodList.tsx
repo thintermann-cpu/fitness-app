@@ -8,6 +8,16 @@ import { WodCard } from './WodCard'
 
 const PILLAR_COLOR = '#E8642A'
 
+const PROGRAM_STORAGE_KEY = 'workout_filter_category'
+const WOD_PROGRAMS = [
+  { id: 'empfohlen',        label: '⭐ Empfohlen' },
+  { id: 'crossfit',         label: 'CrossFit' },
+  { id: 'hiit',             label: 'HIIT' },
+  { id: 'kraft_ausdauer',   label: 'Kraft-Ausdauer' },
+  { id: 'kraft_wenig_zeit', label: 'Kraft - Wenig Zeit' },
+  { id: 'krafttraining',    label: 'Krafttraining' },
+]
+
 const TYPES        = ['', 'AMRAP', 'ForTime', 'EMOM', 'Tabata']
 const CATEGORIES   = ['', 'Girl WOD', 'Hero WOD', 'Other Benchmark', 'CrossFit Open', 'HomeWOD', 'Core WOD']
 const DIFFICULTIES = ['', 'Beginner', 'Intermediate', 'Advanced']
@@ -22,11 +32,9 @@ interface Props {
   equipmentFilter?: string[]
   userEquipment?: string[]
   silentMode?: boolean
-  wodCategory?: string
-  editorsPick?: boolean
 }
 
-export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMode, wodCategory, editorsPick: editorsPickProp }: Props) {
+export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMode }: Props) {
   const lang  = useAuthStore((s) => s.profile?.language ?? 'de')
   const toast = useToast()
 
@@ -41,6 +49,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
   const [minDur,     setMinDur]     = useState(0)
   const [maxDur,     setMaxDur]     = useState(0)
   const [excludeEq,  setExcludeEq]  = useState<string[]>([])
+  const [program,    setProgram]    = useState(() => localStorage.getItem(PROGRAM_STORAGE_KEY) ?? 'empfohlen')
 
   // Draft state (while sheet is open)
   const [filterOpen,    setFilterOpen]    = useState(false)
@@ -50,15 +59,17 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
   const [draftMinDur,   setDraftMinDur]   = useState(0)
   const [draftMaxDur,   setDraftMaxDur]   = useState(0)
   const [draftExclude,  setDraftExclude]  = useState<string[]>([])
+  const [draftProgram,  setDraftProgram]  = useState('')
 
   const activeFilterCount =
     (type ? 1 : 0) + (category ? 1 : 0) + (difficulty ? 1 : 0) +
-    ((minDur > 0 || maxDur > 0) ? 1 : 0) + (excludeEq.length > 0 ? 1 : 0)
+    ((minDur > 0 || maxDur > 0) ? 1 : 0) + (excludeEq.length > 0 ? 1 : 0) +
+    (program ? 1 : 0)
 
   const openFilter = () => {
     setDraftType(type); setDraftCat(category); setDraftDiff(difficulty)
     setDraftMinDur(minDur); setDraftMaxDur(maxDur)
-    setDraftExclude(excludeEq)
+    setDraftExclude(excludeEq); setDraftProgram(program)
     setFilterOpen(true)
   }
 
@@ -66,6 +77,9 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
     setType(draftType); setCategory(draftCat); setDifficulty(draftDiff)
     setMinDur(draftMinDur); setMaxDur(draftMaxDur)
     setExcludeEq(draftExclude)
+    setProgram(draftProgram)
+    if (draftProgram) localStorage.setItem(PROGRAM_STORAGE_KEY, draftProgram)
+    else localStorage.removeItem(PROGRAM_STORAGE_KEY)
     setPage(0)
     setFilterOpen(false)
   }
@@ -73,6 +87,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
   const resetFilter = () => {
     setType(''); setCategory(''); setDifficulty('')
     setMinDur(0); setMaxDur(0); setExcludeEq([])
+    setProgram(''); localStorage.removeItem(PROGRAM_STORAGE_KEY)
     setPage(0)
     setFilterOpen(false)
   }
@@ -92,8 +107,8 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
     silentMode:       silentMode ?? false,
     minDuration:      minDur || undefined,
     maxDuration:      maxDur || undefined,
-    editorsPick:      editorsPickProp || undefined,
-    wodCategory:      wodCategory || undefined,
+    editorsPick:      program === 'empfohlen' || undefined,
+    wodCategory:      program && program !== 'empfohlen' ? program : undefined,
   })
 
   const wods    = data?.data  ?? []
@@ -114,8 +129,8 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
       silentMode:       silentMode ?? false,
       minDuration:      minDur || undefined,
       maxDuration:      maxDur || undefined,
-      editorsPick:      editorsPickProp || undefined,
-      wodCategory:      wodCategory || undefined,
+      editorsPick:      program === 'empfohlen' || undefined,
+      wodCategory:      program && program !== 'empfohlen' ? program : undefined,
     })
     setPicking(false)
     if (!wod) { toast.info('Keine WODs gefunden'); return }
@@ -221,6 +236,17 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
         applyLabel={`${total > 0 ? `${total} ` : ''}Workouts anzeigen`}
         resetLabel="Zurücksetzen"
       >
+        {/* Program / Category */}
+        <SheetSection label="Programm">
+          <ChipRow
+            options={['', ...WOD_PROGRAMS.map((p) => p.id)]}
+            value={draftProgram}
+            onChange={setDraftProgram}
+            renderLabel={(v) => v === '' ? 'Alle' : WOD_PROGRAMS.find((p) => p.id === v)?.label ?? v}
+            color={PILLAR_COLOR}
+          />
+        </SheetSection>
+
         {/* Type */}
         <SheetSection label="Typ">
           <ChipRow

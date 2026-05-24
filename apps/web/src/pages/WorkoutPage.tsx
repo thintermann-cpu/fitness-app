@@ -17,7 +17,6 @@ import {
   type WizardExercise,
 } from '../lib/customWorkouts'
 import { type TimerMode } from '../lib/timerLabels'
-import { WOD_CATEGORY_LABELS } from '../lib/categoryLabels'
 
 type Tab = 'wods' | 'timer' | 'history'
 
@@ -27,15 +26,6 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'history', label: 'History' },
 ]
 
-const WOD_CATEGORIES: { id: string; label: string }[] = [
-  { id: '',                label: 'Alle' },
-  { id: 'crossfit',        label: 'CrossFit' },
-  { id: 'hiit',            label: 'HIIT' },
-  { id: 'kraft_ausdauer',  label: 'Kraft-Ausdauer' },
-  { id: 'kraft_wenig_zeit', label: 'Kraft - Wenig Zeit' },
-  { id: 'krafttraining',   label: 'Krafttraining' },
-]
-
 const LOCATIONS: { id: WorkoutLocation; label: string; emoji: string }[] = [
   { id: 'home',       label: 'Home',       emoji: '🏠' },
   { id: 'gym',        label: 'Gym',        emoji: '🏋️' },
@@ -43,8 +33,7 @@ const LOCATIONS: { id: WorkoutLocation; label: string; emoji: string }[] = [
   { id: 'outdoor',    label: 'Outdoor',    emoji: '🌲' },
 ]
 
-const LOCATION_STORAGE_KEY  = 'carveout_workout_location'
-const FILTER_STORAGE_KEY    = 'workout_filter_category'
+const LOCATION_STORAGE_KEY = 'carveout_workout_location'
 
 function getSavedLocation(): WorkoutLocation | null {
   try {
@@ -66,27 +55,18 @@ export function WorkoutPage() {
   const [showAllEquipment, setShowAllEquipment] = useState(false)
   const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number; kraftConfig?: KraftConfig; exercises?: WizardExercise[] } | null>(null)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
-  const [activeFilter, setActiveFilter]   = useState(() => localStorage.getItem(FILTER_STORAGE_KEY) ?? 'empfohlen')
-  const [tooltipCat, setTooltipCat]       = useState<string | null>(null)
   const [savedWorkouts, setSavedWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
-  const silentMode      = localStorage.getItem('carveout_silent_mode') === 'true'
-  const isEditorsPick   = activeFilter === 'empfohlen'
-  const wodCategory     = isEditorsPick ? '' : activeFilter
-
-  const handleFilterSelect = (filter: string) => {
-    setActiveFilter(filter)
-    localStorage.setItem(FILTER_STORAGE_KEY, filter)
-    setTooltipCat(null)
-  }
+  const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
 
   // When returning from WodDetail back to the list, always land on WODs tab
   useEffect(() => {
     if (!wodName) setTab('wods')
   }, [wodName])
 
-  function handleWizardStart(mode: TimerMode, minutes: number, _withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[]) {
+  function handleWizardStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[]) {
     setTimerConfig({ mode, minutes, kraftConfig, exercises })
     setTab('timer')
+    if (withWarmup) setShowWarmupTimer(true)
   }
 
   function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[]) {
@@ -243,52 +223,6 @@ export function WorkoutPage() {
                 </button>
               ))}
             </div>
-            {/* Category chips */}
-            <div className="flex flex-wrap gap-2 mb-1">
-              {/* Empfohlen chip */}
-              <button
-                onClick={() => handleFilterSelect('empfohlen')}
-                className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                style={{
-                  backgroundColor: isEditorsPick ? '#E8642A' : 'var(--color-bg-card)',
-                  color: isEditorsPick ? 'white' : 'var(--color-text-muted)',
-                }}
-              >
-                ⭐ Empfohlen
-              </button>
-              {WOD_CATEGORIES.map((cat) => (
-                <div key={cat.id} className="flex items-center gap-0.5">
-                  <button
-                    onClick={() => handleFilterSelect(cat.id)}
-                    className="px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
-                    style={{
-                      backgroundColor: !isEditorsPick && wodCategory === cat.id ? '#E8642A' : 'var(--color-bg-card)',
-                      color: !isEditorsPick && wodCategory === cat.id ? 'white' : 'var(--color-text-muted)',
-                    }}
-                  >
-                    {cat.label}
-                  </button>
-                  {cat.id && WOD_CATEGORY_LABELS[cat.id] && (
-                    <button
-                      onClick={() => setTooltipCat(tooltipCat === cat.id ? null : cat.id)}
-                      className="w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold flex-shrink-0"
-                      style={{ color: tooltipCat === cat.id ? '#E8642A' : 'var(--color-text-muted)', backgroundColor: 'transparent' }}
-                      aria-label={`Info zu ${cat.label}`}
-                    >
-                      ℹ
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-            {tooltipCat && WOD_CATEGORY_LABELS[tooltipCat] && (
-              <div
-                className="mb-3 px-3 py-2 rounded-xl text-xs"
-                style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
-              >
-                {WOD_CATEGORY_LABELS[tooltipCat].description}
-              </div>
-            )}
             {hasProfileEquipment && (
               <button
                 onClick={() => setShowAllEquipment((v) => !v)}
@@ -303,8 +237,6 @@ export function WorkoutPage() {
               equipmentFilter={equipmentForLocation}
               userEquipment={userEquipment}
               silentMode={silentMode}
-              wodCategory={wodCategory || undefined}
-              editorsPick={isEditorsPick}
             />
           </>
         )}
@@ -370,6 +302,7 @@ export function WorkoutPage() {
       <WarmupTimer
         isOpen={showWarmupTimer}
         onClose={() => setShowWarmupTimer(false)}
+        showExercises
       />
     </div>
   )

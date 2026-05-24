@@ -3,6 +3,8 @@ import type { WizardExercise } from '../../lib/customWorkouts'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 
+type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
+
 interface Props {
   exercises: WizardExercise[]
   restBetweenSets: number       // seconds
@@ -31,8 +33,22 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   const [setIdx,      setSetIdx]      = useState(0)
   const [timeLeft,    setTimeLeft]    = useState(0)
   const [showCountdown, setShowCountdown] = useState(false)
-  const restTypeRef = useRef<'set' | 'exercise'>('set')
+  const restTypeRef  = useRef<'set' | 'exercise'>('set')
+  const wakeLockRef  = useRef<{ release: () => Promise<void> } | null>(null)
   const { addEntry } = useWodHistory()
+
+  useEffect(() => {
+    const nav = navigator as WakeLockNav
+    if (!nav.wakeLock) return
+    const isActive = phase === 'work' || phase === 'rest'
+    if (isActive) {
+      nav.wakeLock.request('screen').then((s) => { wakeLockRef.current = s }).catch(() => {})
+    } else {
+      wakeLockRef.current?.release().catch(() => {})
+      wakeLockRef.current = null
+    }
+    return () => { wakeLockRef.current?.release().catch(() => {}); wakeLockRef.current = null }
+  }, [phase])
 
   const ex = exercises[exIdx]
   const totalSets    = ex?.sets ?? 3

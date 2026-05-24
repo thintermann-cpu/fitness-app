@@ -11,12 +11,22 @@ function formatTime(secs: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
+const DEFAULT_EXERCISES = [
+  { name: 'Jumping Jacks', sek: 40 },
+  { name: 'High Knees',    sek: 40 },
+  { name: 'Burpees',       sek: 40 },
+  { name: 'Leg Swings',    sek: 30 },
+  { name: 'Arm Circles',   sek: 30 },
+  { name: 'Air Squats',    sek: 40 },
+]
+
 interface Props {
   isOpen: boolean
   onClose: () => void
+  showExercises?: boolean
 }
 
-export function WarmupTimer({ isOpen, onClose }: Props) {
+export function WarmupTimer({ isOpen, onClose, showExercises }: Props) {
   const [selectedMin, setSelectedMin]   = useState(5)
   const [customMin,   setCustomMin]     = useState('')
   const [running,     setRunning]       = useState(false)
@@ -119,6 +129,23 @@ export function WarmupTimer({ isOpen, onClose }: Props) {
 
         {!running ? (
           <>
+            {/* Exercise list */}
+            {showExercises && (
+              <div className="mb-4 rounded-xl px-3 py-2.5" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
+                <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                  Übungen
+                </p>
+                <div className="space-y-1">
+                  {DEFAULT_EXERCISES.map((ex) => (
+                    <div key={ex.name} className="flex items-center justify-between">
+                      <span className="text-xs" style={{ color: 'var(--color-text)' }}>{ex.name}</span>
+                      <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{ex.sek}s</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Preset chips */}
             <div className="flex gap-2 mb-4">
               {PRESETS.map((p) => (

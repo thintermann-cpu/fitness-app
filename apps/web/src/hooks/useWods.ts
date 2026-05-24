@@ -151,6 +151,7 @@ function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[
   if (filters.maxDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes <= filters.maxDuration!)
   if (filters.silentMode) wods = wods.filter((w) => !w.is_jumping)
   if (filters.editorsPick) wods = wods.filter((w) => w.is_editors_pick ?? EDITORS_PICK_IDS.has(w.id))
+  if (filters.wodCategory) wods = wods.filter((w) => w.wod_category === filters.wodCategory)
   return wods
 }
 

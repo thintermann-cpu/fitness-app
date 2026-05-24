@@ -49,7 +49,6 @@ function MiniStepper({
 
 export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: Props) {
   const isAdhoc   = variant === 'adhoc'
-  const stepCount = isAdhoc ? 4 : 3
 
   const [step,      setStep]      = useState(0)
   const [mode,      setMode]      = useState<TimerMode>('fortime')
@@ -62,7 +61,8 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
   const [restBetweenSets,      setRestBetweenSets]      = useState(90)
   const [restBetweenExercises, setRestBetweenExercises] = useState(60)
 
-  const isKraft = mode === 'krafttraining'
+  const isKraft   = mode === 'krafttraining'
+  const stepCount = isKraft ? 3 : 4
 
   const reset = () => {
     setStep(0); setMode('fortime'); setExercises([])
@@ -104,7 +104,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
   }
 
   const canNext = (() => {
-    if (isAdhoc && step === lastStep) return warmup !== null
+    if (!isKraft && step === lastStep) return warmup !== null
     if (isKraft && step === 1) return exercises.length > 0
     return true
   })()
@@ -414,8 +414,8 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', onStart }: 
         </div>
       )}
 
-      {/* Step 3 (adhoc only): Warmup? */}
-      {isAdhoc && step === 3 && (
+      {/* Step 3 (non-kraft): Warmup? */}
+      {!isKraft && step === 3 && (
         <div>
           <p className="text-lg font-black mb-2" style={{ color: 'var(--color-text)' }}>🔥 Warmup zuerst?</p>
           <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
