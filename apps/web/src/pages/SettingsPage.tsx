@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import type { WorkoutLocation } from '../store/authStore'
 import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
-import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { supabase } from '../lib/supabase'
 import { subscribeToPush, unsubscribeFromPush, getPushSubscriptionStatus } from '../lib/push'
@@ -70,15 +69,22 @@ const DEFAULT_PUSH_PREFS: PushPrefs = {
 // ── Shared sub-components ─────────────────────────────────────────────────────
 
 function SaveButton({ loading, saved, onClick }: { loading: boolean; saved: boolean; onClick: () => void }) {
+  const accent = saved ? 'var(--color-success)' : 'var(--color-primary)'
   return (
-    <Button
-      className="w-full"
-      loading={loading}
+    <button
       onClick={onClick}
-      style={saved ? { backgroundColor: 'var(--color-success)' } : undefined}
+      disabled={loading}
+      className="w-full py-3 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+      style={{
+        background: 'transparent',
+        border: `1.5px solid ${accent}`,
+        color: accent,
+        cursor: loading ? 'not-allowed' : 'pointer',
+        fontFamily: 'inherit',
+      }}
     >
-      {saved ? 'Gespeichert ✓' : 'Speichern'}
-    </Button>
+      {loading ? 'Speichert…' : saved ? 'Gespeichert ✓' : 'Speichern'}
+    </button>
   )
 }
 
@@ -119,7 +125,7 @@ function SubHeader({ title, onBack }: { title: string; onBack: () => void }) {
 
 export function SettingsPage() {
   const navigate = useNavigate()
-  const { profile, updateProfile, signOut } = useAuthStore()
+  const { profile, user, updateProfile, signOut } = useAuthStore()
   const [view, setView] = useState<View>('main')
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
@@ -128,6 +134,8 @@ export function SettingsPage() {
   const [language,      setLanguage]      = useState(profile?.language ?? 'de')
   const [savingProfile, setSavingProfile] = useState(false)
   const [savedProfile,  setSavedProfile]  = useState(false)
+  const [pwSending,     setPwSending]     = useState(false)
+  const [pwSent,        setPwSent]        = useState(false)
 
   // Equipment — locations
   const [equipment,   setEquipment]   = useState<string[]>(profile?.equipment ?? [])
@@ -214,6 +222,21 @@ export function SettingsPage() {
       setTimeout(() => setSavedProfile(false), 2000)
     } finally {
       setSavingProfile(false)
+    }
+  }
+
+  const handlePasswordReset = async () => {
+    if (!user?.email) return
+    setPwSending(true)
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/login`,
+      })
+      if (error) throw error
+      setPwSent(true)
+      setTimeout(() => setPwSent(false), 4000)
+    } finally {
+      setPwSending(false)
     }
   }
 
@@ -404,6 +427,28 @@ export function SettingsPage() {
             })}
           </div>
           <SaveButton loading={savingProfile} saved={savedProfile} onClick={handleSaveProfile} />
+
+          {user?.email && (
+            <div
+              className="rounded-2xl px-4 py-3 space-y-2"
+              style={{ backgroundColor: 'var(--color-bg-card)' }}
+            >
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{user.email}</p>
+              <button
+                onClick={() => void handlePasswordReset()}
+                disabled={pwSending || pwSent}
+                className="w-full py-2.5 rounded-xl text-sm font-medium transition-opacity disabled:opacity-50"
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: pwSent ? 'var(--color-success)' : 'var(--color-text-muted)',
+                  cursor: pwSending || pwSent ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {pwSending ? 'Sendet…' : pwSent ? '✓ Link gesendet' : '🔑 Passwort zurücksetzen'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

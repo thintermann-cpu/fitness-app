@@ -38,6 +38,9 @@ export function WodCard({ wod, onClick }: Props) {
           {wod.name}
         </span>
         <div className="flex items-center gap-0.5 shrink-0">
+          {wod.is_editors_pick && (
+            <span className="text-[11px] leading-none" title="Editor's Pick">⭐</span>
+          )}
           <span
             className={`text-[10px] font-medium px-2 py-0.5 rounded-full max-w-[120px] truncate ${typeCls}`}
             title={label}

@@ -38,7 +38,6 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
   const [type,       setType]       = useState('')
   const [category,   setCategory]   = useState('')
   const [difficulty, setDifficulty] = useState('')
-  const [editorsPick, setEditorsPick] = useState(false)
   const [minDur,     setMinDur]     = useState(0)
   const [maxDur,     setMaxDur]     = useState(0)
   const [excludeEq,  setExcludeEq]  = useState<string[]>([])
@@ -48,26 +47,24 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
   const [draftType,     setDraftType]     = useState('')
   const [draftCat,      setDraftCat]      = useState('')
   const [draftDiff,     setDraftDiff]     = useState('')
-  const [draftPick,     setDraftPick]     = useState(false)
   const [draftMinDur,   setDraftMinDur]   = useState(0)
   const [draftMaxDur,   setDraftMaxDur]   = useState(0)
   const [draftExclude,  setDraftExclude]  = useState<string[]>([])
 
   const activeFilterCount =
     (type ? 1 : 0) + (category ? 1 : 0) + (difficulty ? 1 : 0) +
-    (editorsPick ? 1 : 0) + ((minDur > 0 || maxDur > 0) ? 1 : 0) +
-    (excludeEq.length > 0 ? 1 : 0)
+    ((minDur > 0 || maxDur > 0) ? 1 : 0) + (excludeEq.length > 0 ? 1 : 0)
 
   const openFilter = () => {
     setDraftType(type); setDraftCat(category); setDraftDiff(difficulty)
-    setDraftPick(editorsPick); setDraftMinDur(minDur); setDraftMaxDur(maxDur)
+    setDraftMinDur(minDur); setDraftMaxDur(maxDur)
     setDraftExclude(excludeEq)
     setFilterOpen(true)
   }
 
   const applyFilter = () => {
     setType(draftType); setCategory(draftCat); setDifficulty(draftDiff)
-    setEditorsPick(draftPick); setMinDur(draftMinDur); setMaxDur(draftMaxDur)
+    setMinDur(draftMinDur); setMaxDur(draftMaxDur)
     setExcludeEq(draftExclude)
     setPage(0)
     setFilterOpen(false)
@@ -75,7 +72,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
 
   const resetFilter = () => {
     setType(''); setCategory(''); setDifficulty('')
-    setEditorsPick(false); setMinDur(0); setMaxDur(0); setExcludeEq([])
+    setMinDur(0); setMaxDur(0); setExcludeEq([])
     setPage(0)
     setFilterOpen(false)
   }
@@ -95,7 +92,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
     silentMode:       silentMode ?? false,
     minDuration:      minDur || undefined,
     maxDuration:      maxDur || undefined,
-    editorsPick:      (editorsPickProp || editorsPick) || undefined,
+    editorsPick:      editorsPickProp || undefined,
     wodCategory:      wodCategory || undefined,
   })
 
@@ -117,7 +114,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
       silentMode:       silentMode ?? false,
       minDuration:      minDur || undefined,
       maxDuration:      maxDur || undefined,
-      editorsPick:      (editorsPickProp || editorsPick) || undefined,
+      editorsPick:      editorsPickProp || undefined,
       wodCategory:      wodCategory || undefined,
     })
     setPicking(false)
@@ -255,27 +252,6 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
             renderLabel={(v) => v || 'Alle'}
             color={PILLAR_COLOR}
           />
-        </SheetSection>
-
-        {/* Editor's Pick */}
-        <SheetSection label="Kuratiert">
-          <div style={{ display: 'flex', gap: 8 }}>
-            {([false, true] as const).map((v) => (
-              <button
-                key={String(v)}
-                onClick={() => setDraftPick(v)}
-                style={{
-                  padding: '7px 14px', borderRadius: 20, border: 'none',
-                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: 'var(--font-sans)',
-                  backgroundColor: draftPick === v ? PILLAR_COLOR : 'rgba(255,255,255,0.07)',
-                  color: draftPick === v ? 'white' : 'rgba(255,255,255,0.5)',
-                }}
-              >
-                {v ? '⭐ Editor\'s Pick' : 'Alle'}
-              </button>
-            ))}
-          </div>
         </SheetSection>
 
         {/* Duration range */}

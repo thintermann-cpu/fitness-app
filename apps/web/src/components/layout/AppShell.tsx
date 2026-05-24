@@ -123,10 +123,10 @@ export function AppShell() {
           {/* Right: vorname + icons */}
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <Link
-              to="/profile"
+              to="/settings"
               className="flex items-center justify-center gap-1 max-[360px]:hidden text-xs px-1"
               style={{ color: 'var(--color-text-muted)', textDecoration: 'none', minWidth: 44, minHeight: 44 }}
-              aria-label="Profil"
+              aria-label="Einstellungen"
             >
               {firstName ? (
                 <span className="truncate max-w-[72px]">{firstName}</span>
