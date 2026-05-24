@@ -49,7 +49,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
   const [minDur,     setMinDur]     = useState(0)
   const [maxDur,     setMaxDur]     = useState(0)
   const [excludeEq,  setExcludeEq]  = useState<string[]>([])
-  const [program,    setProgram]    = useState(() => localStorage.getItem(PROGRAM_STORAGE_KEY) ?? 'empfohlen')
+  const [program,    setProgram]    = useState(() => localStorage.getItem(PROGRAM_STORAGE_KEY) ?? '')
 
   // Draft state (while sheet is open)
   const [filterOpen,    setFilterOpen]    = useState(false)
