@@ -83,8 +83,8 @@ apps/web/src/
 │   ├── FavoritesPage.tsx      # Drei Sektionen (Workouts / Stretch & Yoga / Meditationen), URL-Param ?section=
 │   ├── CheckoutSuccessPage.tsx  # Bestätigungsseite nach Stripe-Checkout; liest `?session_id=`; zeigt Erfolgs-Meldung + Link zu /home; öffentliche Route `/checkout/success`
 │   ├── CheckoutCancelPage.tsx   # Abbruch-Seite; zeigt Meldung + Link zurück zu `/`; öffentliche Route `/checkout/cancel`
-│   ├── ProfilePage.tsx        # Name + Sprache bearbeiten, Passwort-Reset (E-Mail), Abo-Status via `useSubscription` (Plan-Badge, Trial-Countdown, Upgrade-CTA → Stripe-Checkout) — Abo bleibt hier parallel zu SettingsPage, Abmelden; Route /profile
-│   ├── SettingsPage.tsx       # Submenüs: Allgemein (Sprache, Ziel, Equipment), Pillar-Toggle (aktive Pillars + Primary Pillar Hinweis), Benachrichtigungen (Push), Weitere (Substitution-Toggle, Silent-Mode, Feedback); Abo-Status als zusätzliches Submenu (parallel zu ProfilePage); **Toggle "Inaktive Bereiche ausblenden"** (localStorage Key: `hide_inactive_pillars`; CustomEvent `hide_inactive_changed` → Sync zu BottomNav + Sidebar)
+│   ├── ProfilePage.tsx        # **entfernt als eigenständige Route** — Route `/profile` redirectet auf `/settings`; Passwort-Reset + E-Mail-Anzeige in SettingsPage (Allgemein-Submenu) integriert; Abo-Sektion in SettingsPage (parallel zu früherer ProfilePage)
+│   ├── SettingsPage.tsx       # Submenüs: Allgemein (Sprache, Ziel, Equipment, E-Mail-Anzeige + Passwort-Reset via `supabase.auth.resetPasswordForEmail`), Pillar-Toggle (aktive Pillars + Primary Pillar Hinweis), Benachrichtigungen (Push), Weitere (Substitution-Toggle, Silent-Mode, Feedback); Abo-Status als zusätzliches Submenu; **Toggle "Inaktive Bereiche ausblenden"** (localStorage Key: `hide_inactive_pillars`; CustomEvent `hide_inactive_changed` → Sync zu BottomNav + Sidebar); SaveButton als Outline-Button (border accent, transparent background); liest `user` (zusätzlich zu `profile`) aus authStore
 │   └── admin/
 │       ├── AdminDashboardPage.tsx
 │       ├── AdminUsersPage.tsx
@@ -102,7 +102,7 @@ apps/web/src/
 │   │   ├── CtaSection.tsx      # Bottom-CTA mit Start-Button
 │   │   └── LandingFooter.tsx   # Footer mit DE/EN-Toggle + Links
 │   ├── layout/
-│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header (52px, bg: --color-bg-card + border): Links: CarveOut-Logo + Name; Rechts: Vorname als Link zu /profile (max-[360px]:hidden) · Mute · Favoriten · Settings-Link; MAIN_ROUTES-Reihenfolge: /home · /routine · /workout · /stretching · /meditation; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge)
+│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header (52px, bg: --color-bg-card + border): Links: CarveOut-Logo + Name; Rechts: Vorname als Link zu /settings (max-[360px]:hidden, aria-label "Einstellungen") · Mute · Favoriten · Settings-Link; MAIN_ROUTES-Reihenfolge: /home · /routine · /workout · /stretching · /meditation; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge)
 │   │   ├── BottomNav.tsx      # Tab-Navigation (versteckt ab lg); Reihenfolge: Home · Routine · Workout · Stretching · Meditation; alle 5 Tabs immer sichtbar — inaktive Pillars gedimmt + Alert-Modal beim Antippen; bei `hide_inactive_pillars=true` (localStorage) werden inaktive Tabs ausgeblendet; aktive Pillars aus `user_profiles.active_pillars` (CustomEvent-Sync via `hide_inactive_changed` + `active_pillars_changed`); erstes Item: Home `/home` (de: Mein Tag, en: My Day, es: Mi Día); Routine-Item (de: Routinen, en: Routines, es: Rutinas)
 │   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint); Reihenfolge: Home · Routine · Workout · Stretching · Meditation; alle Items immer sichtbar — inaktive Pillars gedimmt + Alert-Modal beim Antippen; aktive Pillars aus `user_profiles.active_pillars` (CustomEvent-Sync via `hide_inactive_changed` + `active_pillars_changed`); `hide_inactive_pillars` blendet inaktive Items aus; erstes Item: Home `/home`; isActive-Fix für exakten `/home`-Match
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
@@ -113,8 +113,8 @@ apps/web/src/
 │   │   ├── WeekStats.tsx           # Session-Counts letzte 7 Tage: Workout / Stretching / Meditation (3 parallele Count-Queries)
 │   │   └── RecentActivity.tsx      # Letzte 3 WOD-Einträge aus wod_history; relatives Datum (Heute/Gestern/vor N Tagen)
 │   ├── workout/
-│   │   ├── WodCard.tsx
-│   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); FilterBottomSheet (Typ, Kategorie, Schwierigkeit, Editor's Pick, Dauer Von-Bis, Equipment Exclude); Würfel-Button für Random-WOD; empfängt `userEquipment`-Prop (→ useWods)
+│   │   ├── WodCard.tsx        # zeigt `⭐` (title "Editor's Pick") wenn `wod.is_editors_pick = true`
+│   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search); FilterBottomSheet (Typ, Kategorie, Schwierigkeit, Dauer Von-Bis, Equipment Exclude — Editor's-Pick-Filter **entfernt**); Würfel-Button für Random-WOD; empfängt `userEquipment`-Prop (→ useWods); `editorsPick`-State intern entfernt, nur noch `editorsPickProp` als externer Prop
 │   │   ├── WodDetail.tsx      # enthält FavoriteButton (contentType="wod", color="#E8642A"); "Warmup-Timer starten"-Button im Warmup-Akkordeon; nutzt WOD_TYPE_TO_MODE aus timerLabels.ts; feuert `carveout:workout-completed` CustomEvent bei Timer-Ende
 │   │   ├── TimerView.tsx      # Nutzt timer.worker.js; AMRAP/ForTime/EMOM/Tabata konfigurierbar; adHocLog-Prop: auto-Log in wod_history ohne WOD aus DB; CountdownOverlay: 3-2-1-Go Einblendung vor Timer-Start (SVG-Puls-Animation); exercises-Prop (WizardExercise[]): zeigt Übungsliste unterhalb Timer-Controls (Nummer, Name, optional Detail); Reset-useEffect prüft `isComplete` — kein Reset nach Timer-Ende (Restart-Bug-Fix); **EMOM/Tabata Übungsrotation**: aktueller Übungsname prominent + `NextExercisePreview` (EMOM: letzte 10s des Intervalls; Tabata Work: letzte 10s; Tabata Rest: gesamte Phase); **autoStart**: wenn `initialMode` gesetzt → `autoStart=true` → Config-UI + Modus-Selektor ausgeblendet, Countdown startet direkt beim Mount (useEffect on [])
 │   │   ├── FreeTimerWizard.tsx  # Wizard; variant='save' (3 Steps: Modus → Übungen → Konfiguration/Name, speichert via customWorkouts.ts) | variant='adhoc' (4 Steps: Modus → Übungen → Konfiguration → Warmup-Frage); onStart(mode, minutes, withWarmup?, kraftConfig?, exercises?: WizardExercise[]) → triggert TimerView; bei nicht-Kraft-Modi werden exercises übergeben (wenn nicht leer); Dauer 1–120 min, 1-min-Schritte; Modus-Auswahl via TIMER_LABELS aus timerLabels.ts
@@ -216,7 +216,7 @@ apps/web/src/
   /meditation
   /favorites
   /settings
-  /profile
+  /profile                      → Navigate to="/settings" replace (kein eigener Render)
 /admin → AdminLayout (AdminRoute: role admin/moderator)
   /admin
   /admin/users
@@ -531,6 +531,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session X** | **Stripe-Integration** — `useSubscription.ts` (Hook: status/isActive/isTrial/isExpired/trialDaysLeft/startCheckout); `PricingSection` CTAs live (Stripe-Checkout-Links); `ProfilePage` Abo-Sektion via `useSubscription` (Plan-Badge, Trial-Countdown, Upgrade-CTA); `CheckoutSuccessPage` + `CheckoutCancelPage` (öffentliche Routen `/checkout/success` + `/checkout/cancel`); `user_profiles` erweitert um `trial_ends_at`, `stripe_customer_id`, `stripe_subscription_id`; `DbProfile` + `SubscriptionStatus`-Typ aktualisiert; Stripe JS + Stripe Node im Tech-Stack |
 | **Session Y** | **Onboarding Pillar-Removal** — Pillar-Auswahl-Schritt aus Onboarding entfernt; `TOTAL_STEPS` 4→3; alle 4 Pillars immer aktiv (`primary_pillar: 'workout'`, `active_pillars: ALL_PILLARS`); **TimerView autoStart** — wenn `initialMode` gesetzt: Config-UI + Modus-Selektor ausgeblendet, Countdown startet direkt beim Mount (useEffect on []); **Push VAPID-Key** — `VITE_VAPID_PUBLIC_KEY` als GitHub Secret in CI-Build-Env eingetragen (deploy.yml) |
 | **Session Z** | **Settings-Umbau** — `SettingsPage` strukturiert in Submenüs (Allgemein, Pillar-Toggle, Benachrichtigungen, Weitere, Abo); **Pillar-Toggle** — `active_pillars` + `primary_pillar` in Settings editierbar; Primary-Pillar-Hinweis in Pillar-Toggle-Sektion; Abo-Status zusätzlich in Settings (parallel zu ProfilePage); **BottomNav + Sidebar Cleanup** — Pillar-Sichtbarkeit reagiert auf `active_pillars_changed` CustomEvent (zusätzlich zu `hide_inactive_changed`); aktive Pillars kommen aus `user_profiles.active_pillars` |
+| **Session AA** | **ProfilePage entfernt + Settings-Polish** — Route `/profile` → `Navigate to="/settings" replace`; Passwort-Reset + E-Mail-Anzeige aus `ProfilePage` in `SettingsPage` (Allgemein-Submenu) integriert; `SaveButton` in SettingsPage als Outline-Button (transparent bg, border accent); `AppShell` Mobile-Header: Vorname-Link zeigt auf `/settings` statt `/profile`; **WodList FilterBottomSheet**: "Kuratiert / Editor's Pick"-Filter-Sektion entfernt (interner `editorsPick`-State entfernt — Filter nur noch per `editorsPickProp` von außen); **WodCard**: zeigt `⭐` wenn `is_editors_pick = true` |
 
 ### Offen / Roadmap
 
@@ -555,4 +556,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session Z: Settings-Umbau, Pillar-Toggle, BottomNav/Sidebar-Cleanup)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session AA: ProfilePage entfernt, Settings-Polish, WodCard Editor's-Pick-Stern, WodList Filter-Cleanup)*
