@@ -12,6 +12,7 @@ import { FreeTimerWizard, type KraftConfig } from '../components/workout/FreeTim
 import { WarmupTimer } from '../components/workout/WarmupTimer'
 import {
   loadCustomWorkouts,
+  saveCustomWorkout,
   deleteCustomWorkout,
   type CustomWorkout,
   type WizardExercise,
@@ -53,7 +54,7 @@ export function WorkoutPage() {
   const [wizardOpen, setWizardOpen]       = useState(false)
   const [adhocOpen, setAdhocOpen]         = useState(false)
   const [showAllEquipment, setShowAllEquipment] = useState(false)
-  const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number; kraftConfig?: KraftConfig; exercises?: WizardExercise[] } | null>(null)
+  const [timerConfig, setTimerConfig] = useState<{ mode: TimerMode; minutes: number; kraftConfig?: KraftConfig; exercises?: WizardExercise[]; workoutName?: string } | null>(null)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [savedWorkouts, setSavedWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
@@ -63,13 +64,26 @@ export function WorkoutPage() {
     if (!wodName) setTab('wods')
   }, [wodName])
 
-  function handleWizardStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[]) {
-    setTimerConfig({ mode, minutes, kraftConfig, exercises })
+  function handleWizardStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string) {
+    if (workoutName) {
+      saveCustomWorkout({
+        id: crypto.randomUUID(),
+        name: workoutName,
+        mode,
+        minutes: mode === 'krafttraining' ? 0 : minutes,
+        exercises: exercises ?? (kraftConfig?.exercises ?? []),
+        createdAt: new Date().toISOString(),
+        restBetweenSets:      kraftConfig?.restBetweenSets,
+        restBetweenExercises: kraftConfig?.restBetweenExercises,
+      })
+      setSavedWorkouts(loadCustomWorkouts())
+    }
+    setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName })
     setTab('timer')
     if (withWarmup) setShowWarmupTimer(true)
   }
 
-  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[]) {
+  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], _workoutName?: string) {
     setTimerConfig({ mode, minutes, kraftConfig, exercises })
     if (withWarmup) setShowWarmupTimer(true)
   }
@@ -83,7 +97,7 @@ export function WorkoutPage() {
     const kraftConfig: KraftConfig | undefined = w.mode === 'krafttraining'
       ? { exercises: w.exercises, restBetweenSets: w.restBetweenSets ?? 90, restBetweenExercises: w.restBetweenExercises ?? 60 }
       : undefined
-    setTimerConfig({ mode: w.mode, minutes: w.minutes, kraftConfig })
+    setTimerConfig({ mode: w.mode, minutes: w.minutes, kraftConfig, workoutName: w.name })
     setTab('timer')
   }
 
@@ -249,6 +263,7 @@ export function WorkoutPage() {
                     exercises={timerConfig.kraftConfig.exercises}
                     restBetweenSets={timerConfig.kraftConfig.restBetweenSets}
                     restBetweenExercises={timerConfig.kraftConfig.restBetweenExercises}
+                    workoutName={timerConfig.workoutName}
                     onComplete={() => setTimerConfig(null)}
                   />
                 ) : (

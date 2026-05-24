@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { useWodHistory } from '../../hooks/useWodHistory'
+import { useSessionStore } from '../../store/sessionStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { NextExercisePreview } from '../shared/NextExercisePreview'
 import type { WizardExercise } from '../../lib/customWorkouts'
@@ -48,7 +49,7 @@ function formatMs(ms: number): string {
 
 let audioCtx: AudioContext | null = null
 
-function beep(type: 'start' | 'interval' | 'end') {
+function beep(type: 'start' | 'interval' | 'end' | 'countdown') {
   if ('vibrate' in navigator) {
     if (type === 'end') navigator.vibrate([500, 100, 500])
     else if (type === 'interval') navigator.vibrate([200, 100, 200])
@@ -60,13 +61,21 @@ function beep(type: 'start' | 'interval' | 'end') {
     const gain = audioCtx.createGain()
     osc.connect(gain)
     gain.connect(audioCtx.destination)
-    osc.frequency.value = type === 'end' ? 880 : type === 'interval' ? 660 : 440
     osc.type = 'sine'
     const t = audioCtx.currentTime
-    gain.gain.setValueAtTime(0.4, t)
-    gain.gain.exponentialRampToValueAtTime(0.001, t + (type === 'end' ? 1.0 : 0.4))
-    osc.start(t)
-    osc.stop(t + (type === 'end' ? 1.0 : 0.4))
+    if (type === 'countdown') {
+      osc.frequency.value = 880
+      gain.gain.setValueAtTime(0.55, t)
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12)
+      osc.start(t)
+      osc.stop(t + 0.12)
+    } else {
+      osc.frequency.value = type === 'end' ? 880 : type === 'interval' ? 660 : 440
+      gain.gain.setValueAtTime(0.8, t)
+      gain.gain.exponentialRampToValueAtTime(0.001, t + (type === 'end' ? 1.0 : 0.4))
+      osc.start(t)
+      osc.stop(t + (type === 'end' ? 1.0 : 0.4))
+    }
   } catch {
     // Audio not available
   }
@@ -136,8 +145,11 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
   onCompleteRef.current = onComplete
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
 
-  const { addEntry } = useWodHistory()
-  const loggedRef = useRef(false)
+  const { addEntry }      = useWodHistory()
+  const loggedRef         = useRef(false)
+  const tickRef           = useRef(tick)
+  tickRef.current         = tick
+  const setSessionActive  = useSessionStore((s) => s.setSessionActive)
 
   useEffect(() => {
     const worker = new Worker('/timer.worker.js')
@@ -156,7 +168,7 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
         setIsComplete(true)
         onCompleteRef.current?.()
       } else if (type === 'beep') {
-        beep(e.data.beepType as 'start' | 'interval' | 'end')
+        beep(e.data.beepType as 'start' | 'interval' | 'end' | 'countdown')
       } else if (type === 'reset') {
         setTick({ elapsed: 0, remaining: 0, phase: 'work', interval: 1 })
       }
@@ -205,14 +217,20 @@ export function TimerView({ initialMode, initialMinutes, onComplete, bilateral, 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Ad-hoc history logging: fires when timer completes (no WOD from DB)
+  // Session active: block accidental swipe-navigation while timer is running/paused
+  useEffect(() => {
+    setSessionActive(isRunning || isPaused)
+    return () => setSessionActive(false)
+  }, [isRunning, isPaused, setSessionActive])
+
+  // Ad-hoc history logging: uses ref so elapsed value is always current at fire time
   useEffect(() => {
     if (!adHocLog || !isComplete || loggedRef.current) return
     loggedRef.current = true
     addEntry.mutate({
       wod_name: `Ad-hoc ${MODE_TO_WOD_TYPE[mode]}`,
       score_type: 'time',
-      score_value: formatMs(tick.elapsed > 0 ? tick.elapsed : 0),
+      score_value: formatMs(tickRef.current.elapsed > 0 ? tickRef.current.elapsed : 0),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComplete])

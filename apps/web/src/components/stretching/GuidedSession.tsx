@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import type { StretchingRoutine, StretchingExercise } from '../../hooks/useStretching'
 import { useStretchingLogs } from '../../hooks/useStretchingLogs'
 import { useAudio } from '../../hooks/useAudio'
+import { useSessionStore } from '../../store/sessionStore'
 import { ExerciseIllustration } from './ExerciseIllustration'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { ExerciseKeyframes } from '../shared/ExerciseKeyframes'
@@ -144,6 +145,13 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
       wakeLockRef.current = null
     }
   }, [isTimerActive])
+
+  const setSessionActive = useSessionStore((s) => s.setSessionActive)
+  useEffect(() => {
+    const active = phase !== 'config' && phase !== 'done'
+    setSessionActive(active)
+    return () => setSessionActive(false)
+  }, [phase, setSessionActive])
 
   // Progress ring
   const currentDur = (current?.duration_sec ?? 0) > 0 ? (current?.duration_sec ?? 0) : exerciseDuration

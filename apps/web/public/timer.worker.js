@@ -3,7 +3,7 @@
 //               { type: 'pause' } | { type: 'resume' } | { type: 'reset' }
 // Messages out: { type: 'tick', elapsed, remaining, phase, interval }
 //               { type: 'complete' }
-//               { type: 'beep', beepType: 'start'|'interval'|'end' }
+//               { type: 'beep', beepType: 'start'|'interval'|'end'|'countdown' }
 //               { type: 'reset' }
 
 let state         = 'idle'  // idle | running | paused
@@ -20,23 +20,25 @@ let tabataRounds   = 8
 let emomIntervalMs = 60_000
 
 // Track previous tick values for edge detection (beep on transitions)
-let prevInterval  = 0
-let prevPhase     = 'work'
+let prevInterval      = 0
+let prevPhase         = 'work'
+let lastCountdownSec  = -1
 
 self.onmessage = ({ data }) => {
   switch (data.type) {
     case 'start':
-      mode           = data.mode
-      durationMs     = data.durationMs
-      tabataWorkMs   = data.tabataWorkMs   ?? 20_000
-      tabataRestMs   = data.tabataRestMs   ?? 10_000
-      tabataRounds   = data.tabataRounds   ?? 8
-      emomIntervalMs = data.emomIntervalMs ?? 60_000
-      startTime      = Date.now()
-      pausedElapsed  = 0
-      prevInterval   = 0
-      prevPhase      = 'work'
-      state          = 'running'
+      mode              = data.mode
+      durationMs        = data.durationMs
+      tabataWorkMs      = data.tabataWorkMs   ?? 20_000
+      tabataRestMs      = data.tabataRestMs   ?? 10_000
+      tabataRounds      = data.tabataRounds   ?? 8
+      emomIntervalMs    = data.emomIntervalMs ?? 60_000
+      startTime         = Date.now()
+      pausedElapsed     = 0
+      prevInterval      = 0
+      prevPhase         = 'work'
+      lastCountdownSec  = -1
+      state             = 'running'
       clearTimeout(tickId)
       scheduleTick()
       self.postMessage({ type: 'beep', beepType: 'start' })
@@ -75,6 +77,7 @@ function scheduleTick() {
   // Detect interval transitions and emit beep signals
   if (prevInterval !== 0 && info.interval !== prevInterval) {
     self.postMessage({ type: 'beep', beepType: 'interval' })
+    lastCountdownSec = -1  // reset countdown on new interval
   }
   prevInterval = info.interval
   prevPhase    = info.phase
@@ -88,10 +91,41 @@ function scheduleTick() {
     return
   }
 
+  // Countdown beep: last 3 seconds of current phase (not for fortime)
+  if (mode !== 'fortime') {
+    const phaseRem = computePhaseRemaining(elapsed, info)
+    if (phaseRem > 0 && phaseRem <= 3000) {
+      const secLeft = Math.ceil(phaseRem / 1000)
+      if (secLeft !== lastCountdownSec) {
+        lastCountdownSec = secLeft
+        self.postMessage({ type: 'beep', beepType: 'countdown' })
+      }
+    } else if (phaseRem > 3000) {
+      lastCountdownSec = -1
+    }
+  }
+
   // Schedule next tick aligned to the next 100 ms boundary
   const drift  = elapsed % 100
   const nextMs = drift === 0 ? 100 : 100 - drift
   tickId = setTimeout(scheduleTick, nextMs)
+}
+
+function computePhaseRemaining(elapsed, info) {
+  if (mode === 'amrap') {
+    return info.remaining
+  }
+  if (mode === 'emom') {
+    return emomIntervalMs - (elapsed % emomIntervalMs)
+  }
+  if (mode === 'tabata') {
+    const cycleMs = tabataWorkMs + tabataRestMs
+    const pos     = elapsed % cycleMs
+    return info.phase === 'work'
+      ? tabataWorkMs - pos
+      : cycleMs - pos
+  }
+  return 0
 }
 
 function computeTick(elapsed) {

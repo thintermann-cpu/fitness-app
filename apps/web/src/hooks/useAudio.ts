@@ -46,7 +46,7 @@ export function useAudio() {
       g.connect(ctx.destination)
       osc.type = 'sine'
       osc.frequency.value = 660
-      g.gain.setValueAtTime(0.25, ctx.currentTime)
+      g.gain.setValueAtTime(0.7, ctx.currentTime)
       g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 0.3)

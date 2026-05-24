@@ -12,12 +12,12 @@ function formatTime(secs: number): string {
 }
 
 const DEFAULT_EXERCISES = [
-  { name: 'Jumping Jacks', sek: 40 },
-  { name: 'High Knees',    sek: 40 },
-  { name: 'Burpees',       sek: 40 },
-  { name: 'Leg Swings',    sek: 30 },
-  { name: 'Arm Circles',   sek: 30 },
-  { name: 'Air Squats',    sek: 40 },
+  { name: 'Jumping Jacks', desc: 'Arme und Beine gleichzeitig spreizen',       sek: 40 },
+  { name: 'High Knees',    desc: 'Knie hoch ziehen, schnelles Tempo',           sek: 40 },
+  { name: 'Burpees',       desc: 'Langsam und kontrolliert – Körper aufwärmen', sek: 40 },
+  { name: 'Leg Swings',    desc: 'Bein vor und zurück schwingen, je Seite',     sek: 30 },
+  { name: 'Arm Circles',   desc: 'Große Kreise mit beiden Armen',               sek: 30 },
+  { name: 'Air Squats',    desc: 'Tief in die Knie, Brust hoch',                sek: 40 },
 ]
 
 interface Props {
@@ -52,6 +52,12 @@ export function WarmupTimer({ isOpen, onClose, showExercises }: Props) {
     }
     return () => { wakeLockRef.current?.release().catch(() => {}); wakeLockRef.current = null }
   }, [running])
+
+  // Countdown beep: last 3 seconds
+  useEffect(() => {
+    if (!running || timeLeft <= 0 || timeLeft > 3) return
+    void audio.playBeep()
+  }, [running, timeLeft, audio])
 
   useEffect(() => {
     if (!running) return
@@ -135,11 +141,14 @@ export function WarmupTimer({ isOpen, onClose, showExercises }: Props) {
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-muted)' }}>
                   Übungen
                 </p>
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {DEFAULT_EXERCISES.map((ex) => (
-                    <div key={ex.name} className="flex items-center justify-between">
-                      <span className="text-xs" style={{ color: 'var(--color-text)' }}>{ex.name}</span>
-                      <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{ex.sek}s</span>
+                    <div key={ex.name} className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-medium" style={{ color: 'var(--color-text)' }}>{ex.name}</span>
+                        <p className="text-[10px] leading-tight" style={{ color: 'var(--color-text-muted)' }}>{ex.desc}</p>
+                      </div>
+                      <span className="text-xs tabular-nums flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>{ex.sek}s</span>
                     </div>
                   ))}
                 </div>

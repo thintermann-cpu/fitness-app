@@ -3,6 +3,7 @@ import type { Meditation } from '../../hooks/useMeditations'
 import type { SoundKey } from '../../hooks/useAudio'
 import { useAudio } from '../../hooks/useAudio'
 import { useMeditationLogs } from '../../hooks/useMeditationLogs'
+import { useSessionStore } from '../../store/sessionStore'
 
 const PILLAR_COLOR = '#9B7FD4'
 
@@ -119,6 +120,12 @@ export function MeditationSession({ meditation, lang, onFinish }: Props) {
       wakeLockRef.current = null
     }
   }, [isTimerActive])
+
+  const setSessionActive = useSessionStore((s) => s.setSessionActive)
+  useEffect(() => {
+    setSessionActive(started && !finished)
+    return () => setSessionActive(false)
+  }, [started, finished, setSessionActive])
 
   // Start session: gong + background
   const handleStart = useCallback(() => {

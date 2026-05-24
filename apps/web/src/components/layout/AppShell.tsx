@@ -5,6 +5,7 @@ import { Sidebar } from './Sidebar'
 import { useFavorites } from '../../hooks/useFavorites'
 import { useAudioStore } from '../../store/audioStore'
 import { useAuthStore } from '../../store/authStore'
+import { useSessionStore } from '../../store/sessionStore'
 import { ToastContainer } from '../ui/ToastContainer'
 
 const MAIN_ROUTES = ['/home', '/routine', '/workout', '/stretching', '/meditation']
@@ -74,9 +75,10 @@ export function AppShell() {
   const location    = useLocation()
   const navigate    = useNavigate()
   const { profile } = useAuthStore()
-  const touchX      = useRef(0)
-  const touchY      = useRef(0)
-  const firstName   = profile?.display_name?.trim().split(' ')[0] ?? ''
+  const touchX           = useRef(0)
+  const touchY           = useRef(0)
+  const isSessionActive  = useSessionStore((s) => s.isSessionActive)
+  const firstName        = profile?.display_name?.trim().split(' ')[0] ?? ''
 
   const activePillars = profile?.active_pillars?.length
     ? profile.active_pillars
@@ -93,6 +95,7 @@ export function AppShell() {
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    if (isSessionActive) return
     const dx = e.changedTouches[0].clientX - touchX.current
     const dy = e.changedTouches[0].clientY - touchY.current
     if (Math.abs(dx) < 50 || Math.abs(dy) > 30) return

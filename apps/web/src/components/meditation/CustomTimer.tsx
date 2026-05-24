@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import type { SoundKey } from '../../hooks/useAudio'
 import { useAudio } from '../../hooks/useAudio'
 import { useMeditationLogs } from '../../hooks/useMeditationLogs'
+import { useSessionStore } from '../../store/sessionStore'
 
 const PILLAR_COLOR = '#9B7FD4'
 
@@ -134,6 +135,12 @@ export function CustomTimer({ lang, onFinish }: Props) {
   const wakeLockRef       = useRef<{ release: () => Promise<void> } | null>(null)
 
   const isTimerActive = status === 'running' || status === 'prep'
+  const setSessionActive = useSessionStore((s) => s.setSessionActive)
+  useEffect(() => {
+    setSessionActive(isTimerActive)
+    return () => setSessionActive(false)
+  }, [isTimerActive, setSessionActive])
+
   useEffect(() => {
     type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
     const nav = navigator as WakeLockNav

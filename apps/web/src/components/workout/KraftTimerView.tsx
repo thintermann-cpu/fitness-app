@@ -1,9 +1,26 @@
 import { useState, useEffect, useRef } from 'react'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { useWodHistory } from '../../hooks/useWodHistory'
+import { useSessionStore } from '../../store/sessionStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 
 type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
+
+let kraftAudioCtx: AudioContext | null = null
+function beepKraft(freq: number, gainVal: number, dur: number) {
+  try {
+    if (!kraftAudioCtx) kraftAudioCtx = new AudioContext()
+    if (kraftAudioCtx.state === 'suspended') void kraftAudioCtx.resume()
+    const osc = kraftAudioCtx.createOscillator()
+    const g   = kraftAudioCtx.createGain()
+    osc.connect(g); g.connect(kraftAudioCtx.destination)
+    const t = kraftAudioCtx.currentTime
+    osc.frequency.value = freq
+    g.gain.setValueAtTime(gainVal, t)
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur)
+    osc.start(t); osc.stop(t + dur)
+  } catch {}
+}
 
 interface Props {
   exercises: WizardExercise[]
@@ -33,9 +50,10 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   const [setIdx,      setSetIdx]      = useState(0)
   const [timeLeft,    setTimeLeft]    = useState(0)
   const [showCountdown, setShowCountdown] = useState(false)
-  const restTypeRef  = useRef<'set' | 'exercise'>('set')
-  const wakeLockRef  = useRef<{ release: () => Promise<void> } | null>(null)
-  const { addEntry } = useWodHistory()
+  const restTypeRef      = useRef<'set' | 'exercise'>('set')
+  const wakeLockRef      = useRef<{ release: () => Promise<void> } | null>(null)
+  const { addEntry }     = useWodHistory()
+  const setSessionActive = useSessionStore((s) => s.setSessionActive)
 
   useEffect(() => {
     const nav = navigator as WakeLockNav
@@ -49,6 +67,18 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
     }
     return () => { wakeLockRef.current?.release().catch(() => {}); wakeLockRef.current = null }
   }, [phase])
+
+  useEffect(() => {
+    const active = phase !== 'idle' && phase !== 'done'
+    setSessionActive(active)
+    return () => setSessionActive(false)
+  }, [phase, setSessionActive])
+
+  // Countdown beep in last 3 seconds of rest phase
+  useEffect(() => {
+    if (phase !== 'rest' || timeLeft <= 0 || timeLeft > 3) return
+    beepKraft(880, 0.55, 0.12)
+  }, [phase, timeLeft])
 
   const ex = exercises[exIdx]
   const totalSets    = ex?.sets ?? 3
