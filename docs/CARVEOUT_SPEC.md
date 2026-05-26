@@ -157,7 +157,7 @@ apps/web/src/
 │   ├── useDailyLog.ts         # Tages-Mood, Wasser
 │   ├── useTodos.ts            # To-do-Liste
 │   ├── useWods.ts             # Supabase oder /wods.json Fallback; Filter: equipmentFilter, silentMode, editorsPick, excludeEquipment, **userEquipment** (profile.equipment — zeigt nur WODs deren equipment_tags ⊆ userEquipment; Fallback auf altes `equipment`-Feld für lokales JSON; Normalisierung via `normEq()`: lowercase + Mapping dumbbells→dumbbell, resistance bands→resistance band, rowing machine→rower, assault bike→bike; bodyweight immer in allowed-Set (sowohl `equipmentFilter` als auch `userEquipment`); `mapRawToWod` splittet `equipment`-String mit `.filter(Boolean)` — leere Strings werden entfernt), minDuration, maxDuration, wodCategory (crossfit|hiit|kraft_ausdauer|kraft_wenig_zeit|krafttraining); Supabase-Query mit `.eq('is_visible', true)`; pickRandomWod() (gecachte lokale WODs + alle Filter); **pickByDate(wods)** (deterministisch: Index = dayOfYear % pool.length — genutzt von TodaysWod)
-│   ├── useWodHistory.ts       # localStorage + Supabase Dual-Write, personalBest
+│   ├── useWodHistory.ts       # localStorage + Supabase Dual-Write, personalBest; INSERT payload enthält user_id aus getSession(); onSuccess: setQueryData(['wod_history', '_all'] + ['wod_history', wod_name]) für sofortige Cache-Aktualisierung, invalidateQueries für Background-Sync
 │   ├── useHighscores.ts       # Top-10 pro WOD (Supabase oder local)
 │   ├── useStretching.ts       # Stretching-Übungen, Routinen, Logs
 │   ├── useMeditations.ts      # Meditationen, Session-Logs
@@ -191,7 +191,7 @@ apps/web/src/
 - `<title>CarveOut</title>`
 - `<link rel="manifest" href="/manifest.json" />`
 - `<meta name="theme-color" content="#0D0D14" />`
-- Apple-Meta-Tags: `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style` (black-translucent), `apple-mobile-web-app-title` (CarveOut)
+- Apple-Meta-Tags: `mobile-web-app-capable (ersetzt deprecated apple-mobile-web-app-capable)`, `apple-mobile-web-app-status-bar-style` (black-translucent), `apple-mobile-web-app-title` (CarveOut)
 
 `apps/web/public/manifest.json`:
 - `name` / `short_name`: CarveOut
@@ -426,10 +426,10 @@ Layout: `AdminLayout.tsx` mit eigenem Navigations-Wrapper.
 
 Implementiert in `lib/push.ts`:
 - Service Worker (`src/sw.ts`, via vite-plugin-pwa zu `dist/sw.js` gebaut) registriert + verwaltet; Workbox precaching (6 Einträge) + NetworkFirst (Supabase) + StaleWhileRevalidate (lokale JSON-Dateien)
-- `subscribeToPush()` — erzeugt Web Push Subscription, persistiert in `push_subscriptions`
+- `subscribeToPush()` — erzeugt Web Push Subscription, persistiert in `push_subscriptions`; SW-Registrierung + pushManager.subscribe je in eigenem try/catch → return false statt throw (kein unhandled rejection)
 - `unsubscribeFromPush()` — entfernt Subscription aus DB und Browser
 - Settings-UI mit Toggles pro Reminder-Typ (morning / evening / wod / inactivity) inkl. Zeitauswahl
-- `pushError: string | null` State in `SettingsPage` — zeigt Fehlermeldung wenn `subscribeToPush()` false zurückgibt (z.B. Permission denied); Toggle-Buttons mit `type="button"` + `cursor: pointer`
+- `pushError: string | null` State in `SettingsPage` — zeigt Fehlermeldung wenn `subscribeToPush()` false zurückgibt (z.B. Permission denied); Toggle-Buttons mit `type="button"` + `cursor: pointer`; handleTogglePush + handleSavePushPrefs je try/catch/finally — setPushLoading(false) / setSavingPush(false) garantiert in finally; handleSavePushPrefs early-return wenn !pushEnabled
 - Preferences gespeichert in `push_preferences` (Supabase)
 - VAPID Public Key via `VITE_VAPID_PUBLIC_KEY` (GitHub Secret, im CI-Build-Env seit Session Y)
 
@@ -539,6 +539,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session AC** | **sessionStore** — neuer `sessionStore.ts` (Zustand, kein persist): `activeSession: { pillar, startedAt, meta? } | null`; `startSession`/`endSession`/`isSessionActive`; genutzt von `TimerView`, `GuidedSession`, `AdHocMeditationTimer` um laufende Session app-weit zu tracken (z.B. für TodayPillarTracker-Echtzeit-Update) |
 | **Session AD** | **WarmupTimer Beep + TimerView Beep** — `WarmupTimer` und `TimerView` (ForTime/AMRAP) spielen bei `timeLeft === 10` kurzen Warnton (880 Hz, Web Audio API); EMOM/Tabata kein Beep (Intervall-Wechsel übernimmt Orientierung); Beep respektiert `audioStore.isMuted`; **Filter-Persistenz** in `WodList`: Filter-State (Typ/Kategorie/Schwierigkeit/Dauer/Equipment) wird in sessionStorage (Key: `wod_filters`) persistiert — Filter bleiben beim Seitenwechsel erhalten |
 | **Session AE** | **CustomWorkoutsPage + AdaptiveSuggestion + TodayPillarTracker-Buttons** — `CustomWorkoutsPage.tsx` in `components/workout/`: Liste gespeicherter Custom Workouts; Start-Button → FreeTimerWizard (variant=adhoc, vorausgefüllt); Löschen mit Bestätigungs-Prompt; leerer State mit CTA; als neuer Tab "Eigene" in `WorkoutPage` eingebunden; **TodayPillarTracker**: Chip-Tap navigiert direkt zur Pillar-Route (useNavigate); **AdaptiveSuggestion** kein funktionaler Change (Loading-Guard bereits seit Session O aktiv) |
+| **Sessions AF–AG** | **useWodHistory Cache-Fix + Push-Robustheit** — onSuccess setzt setQueryData für _all + wod_name-Keys (sofortige UI-Aktualisierung ohne Page-Refresh); INSERT-Payload user_id aus getSession(); subscribeToPush: SW-Registrierung + pushManager.subscribe je try/catch → return false statt throw; handleTogglePush + handleSavePushPrefs: try/catch/finally, Loading-States garantiert in finally; index.html: apple-mobile-web-app-capable → mobile-web-app-capable |
 
 ### Offen / Roadmap
 
@@ -563,4 +564,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Sessions AC–AE: sessionStore, WarmupTimer/TimerView Beep, Filter-Persistenz, CustomWorkoutsPage, TodayPillarTracker-Buttons)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Sessions AF–AG: useWodHistory Cache-Fix, Push-Robustheit, deprecated Meta-Tag)*
