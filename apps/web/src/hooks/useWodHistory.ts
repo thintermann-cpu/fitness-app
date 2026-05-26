@@ -45,6 +45,7 @@ export function useWodHistory(wodName?: string) {
       if (wodName) q = q.eq('wod_name', wodName)
 
       const { data, error } = await q
+      console.log('[useWodHistory] SELECT:', { error: error?.message, rowCount: data?.length, wodName })
       if (error) {
         const all = readLocal()
         return wodName ? all.filter((e) => e.wod_name === wodName) : all

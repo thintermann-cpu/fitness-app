@@ -288,7 +288,7 @@ export function WodDetail({ wodName, onBack }: Props) {
             ▶ Start Timer
           </button>
           <button
-            onClick={() => { setShowTimer(true); setShowWarmupTimer(true) }}
+            onClick={() => setShowWarmupTimer(true)}
             className="px-4 py-3.5 rounded-xl font-semibold text-sm active:scale-[0.98] transition-transform"
             style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: '1px solid #E8642A40' }}
           >
@@ -325,7 +325,6 @@ export function WodDetail({ wodName, onBack }: Props) {
           <TimerView
             initialMode={timerMode}
             initialMinutes={wod.estimated_minutes || 20}
-            warmupPending={showWarmupTimer}
             onComplete={() => {
               setShowScore(true)
               track('workout_completed', { wod_id: wod.id, duration_min: wod.estimated_minutes, category: wod.category })
@@ -361,7 +360,7 @@ export function WodDetail({ wodName, onBack }: Props) {
       <WarmupTimer
         isOpen={showWarmupTimer}
         onClose={() => setShowWarmupTimer(false)}
-        onStartWorkout={() => setShowWarmupTimer(false)}
+        onStartWorkout={() => { setShowWarmupTimer(false); setShowTimer(true) }}
       />
     </div>
   )

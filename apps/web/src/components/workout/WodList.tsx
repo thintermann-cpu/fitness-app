@@ -8,7 +8,25 @@ import { WodCard } from './WodCard'
 
 const PILLAR_COLOR = '#E8642A'
 
-const PROGRAM_STORAGE_KEY = 'workout_filter_category'
+const PROGRAM_STORAGE_KEY  = 'workout_filter_category'
+const SESSION_FILTERS_KEY  = 'workout_filters_active'
+
+interface SavedFilters {
+  type: string; category: string; difficulty: string
+  minDur: number; maxDur: number; excludeEq: string[]
+}
+
+function readFilterSession(): SavedFilters {
+  try {
+    const v = sessionStorage.getItem(SESSION_FILTERS_KEY)
+    if (v) return JSON.parse(v) as SavedFilters
+  } catch {}
+  return { type: '', category: '', difficulty: '', minDur: 0, maxDur: 0, excludeEq: [] }
+}
+
+function writeFilterSession(f: SavedFilters) {
+  try { sessionStorage.setItem(SESSION_FILTERS_KEY, JSON.stringify(f)) } catch {}
+}
 const WOD_PROGRAMS = [
   { id: 'empfohlen',        label: '⭐ Empfohlen' },
   { id: 'crossfit',         label: 'CrossFit' },
@@ -42,13 +60,13 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
   const [page, setPage]       = useState(0)
   const [picking, setPicking] = useState(false)
 
-  // Committed filter state
-  const [type,       setType]       = useState('')
-  const [category,   setCategory]   = useState('')
-  const [difficulty, setDifficulty] = useState('')
-  const [minDur,     setMinDur]     = useState(0)
-  const [maxDur,     setMaxDur]     = useState(0)
-  const [excludeEq,  setExcludeEq]  = useState<string[]>([])
+  // Committed filter state — persisted to sessionStorage so back-nav preserves them
+  const [type,       setType]       = useState(() => readFilterSession().type)
+  const [category,   setCategory]   = useState(() => readFilterSession().category)
+  const [difficulty, setDifficulty] = useState(() => readFilterSession().difficulty)
+  const [minDur,     setMinDur]     = useState(() => readFilterSession().minDur)
+  const [maxDur,     setMaxDur]     = useState(() => readFilterSession().maxDur)
+  const [excludeEq,  setExcludeEq]  = useState<string[]>(() => readFilterSession().excludeEq)
   const [program,    setProgram]    = useState(() => localStorage.getItem(PROGRAM_STORAGE_KEY) ?? '')
 
   // Draft state (while sheet is open)
@@ -80,6 +98,8 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
     setProgram(draftProgram)
     if (draftProgram) localStorage.setItem(PROGRAM_STORAGE_KEY, draftProgram)
     else localStorage.removeItem(PROGRAM_STORAGE_KEY)
+    writeFilterSession({ type: draftType, category: draftCat, difficulty: draftDiff,
+      minDur: draftMinDur, maxDur: draftMaxDur, excludeEq: draftExclude })
     setPage(0)
     setFilterOpen(false)
   }
@@ -88,6 +108,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
     setType(''); setCategory(''); setDifficulty('')
     setMinDur(0); setMaxDur(0); setExcludeEq([])
     setProgram(''); localStorage.removeItem(PROGRAM_STORAGE_KEY)
+    try { sessionStorage.removeItem(SESSION_FILTERS_KEY) } catch {}
     setPage(0)
     setFilterOpen(false)
   }
