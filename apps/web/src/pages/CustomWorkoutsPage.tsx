@@ -178,6 +178,7 @@ export function CustomWorkoutsPage() {
 
       {/* Edit wizard */}
       <FreeTimerWizard
+        key={editWorkout?.id ?? 'closed'}
         isOpen={editWorkout !== null}
         onClose={() => setEditWorkout(null)}
         variant="save"

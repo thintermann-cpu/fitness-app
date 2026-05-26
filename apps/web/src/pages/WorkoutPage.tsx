@@ -312,7 +312,6 @@ export function WorkoutPage() {
         isOpen={showWarmupTimer}
         onClose={() => setShowWarmupTimer(false)}
         onStartWorkout={() => setShowWarmupTimer(false)}
-        showExercises
       />
     </div>
   )

@@ -69,13 +69,17 @@ export function useWodHistory(wodName?: string) {
         return newEntry
       }
 
+      const { data: { session } } = await supabase.auth.getSession()
+      const userId = session?.user.id
+
       const { data, error } = await supabase
         .from('wod_history')
-        .insert(newEntry)
+        .insert({ ...newEntry, ...(userId ? { user_id: userId } : {}) })
         .select()
         .single()
 
       if (error) {
+        console.error('[useWodHistory] insert error:', error.message, error.code, 'user_id:', userId)
         const all = readLocal()
         writeLocal([newEntry, ...all])
         return newEntry

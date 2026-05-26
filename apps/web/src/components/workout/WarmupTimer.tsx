@@ -23,11 +23,10 @@ const DEFAULT_EXERCISES = [
 interface Props {
   isOpen: boolean
   onClose: () => void
-  showExercises?: boolean
   onStartWorkout?: () => void
 }
 
-export function WarmupTimer({ isOpen, onClose, showExercises, onStartWorkout }: Props) {
+export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
   const [selectedMin, setSelectedMin]   = useState(5)
   const [customMin,   setCustomMin]     = useState('')
   const [running,     setRunning]       = useState(false)
@@ -161,8 +160,7 @@ export function WarmupTimer({ isOpen, onClose, showExercises, onStartWorkout }: 
         ) : !running ? (
           <>
             {/* Exercise list */}
-            {showExercises && (
-              <div className="mb-4 rounded-xl px-3 py-2.5" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
+            <div className="mb-4 rounded-xl px-3 py-2.5" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-text-muted)' }}>
                   Übungen
                 </p>
@@ -177,8 +175,7 @@ export function WarmupTimer({ isOpen, onClose, showExercises, onStartWorkout }: 
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+            </div>
 
             {/* Preset chips */}
             <div className="flex gap-2 mb-4">
