@@ -300,17 +300,23 @@ export function SettingsPage() {
   }
 
   const handleSavePushPrefs = async () => {
+    if (!pushEnabled) return
     setSavingPush(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await supabase.from('push_preferences').upsert(
-        { user_id: user.id, ...pushPrefs, updated_at: new Date().toISOString() },
-        { onConflict: 'user_id' }
-      )
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('push_preferences').upsert(
+          { user_id: user.id, ...pushPrefs, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        )
+      }
+      setSavedPush(true)
+      setTimeout(() => setSavedPush(false), 2000)
+    } catch (e) {
+      console.error('[push] save prefs error:', e)
+    } finally {
+      setSavingPush(false)
     }
-    setSavingPush(false)
-    setSavedPush(true)
-    setTimeout(() => setSavedPush(false), 2000)
   }
 
   const handleSignOut = async () => {
