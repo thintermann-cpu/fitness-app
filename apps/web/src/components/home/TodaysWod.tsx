@@ -15,7 +15,7 @@ interface RawWod {
 }
 
 const LABELS: Record<Lang, { badge: string; cta: string; header: string }> = {
-  de: { badge: "Editor's Pick ⭐", cta: 'WOD starten', header: 'WOD des Tages' },
+  de: { badge: "Editor's Pick ⭐", cta: 'Workout starten', header: 'Workout des Tages' },
   en: { badge: "Editor's Pick ⭐", cta: 'Start WOD',   header: "Today's WOD"   },
   es: { badge: "Editor's Pick ⭐", cta: 'Empezar WOD', header: 'WOD del día'   },
 }

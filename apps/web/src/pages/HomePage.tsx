@@ -46,13 +46,13 @@ export function HomePage() {
         </p>
       </header>
 
+      <AdaptiveSuggestion />
       <TodayPillarTracker />
       <MoodCheck
         mood={dailyLog?.mood ?? null}
         moodComment={dailyLog?.mood_comment ?? null}
         onSave={(mood, comment) => setMood({ mood, mood_comment: comment })}
       />
-      <AdaptiveSuggestion />
       <TodaysWod />
       <WeekStats />
       <RecentActivity />

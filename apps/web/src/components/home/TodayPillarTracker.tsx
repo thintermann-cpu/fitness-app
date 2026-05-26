@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useTodayPillars } from '../../hooks/useTodayPillars'
 import { useAuthStore } from '../../store/authStore'
 
@@ -12,6 +13,10 @@ const PILLARS = [
   { id: 'meditation', label: { de: 'Meditation',      en: 'Meditation',    es: 'Meditación'    }, emoji: '🧘', color: '#9B7FD4' },
 ] as const
 
+const PILLAR_ROUTES: Record<string, string> = {
+  routine: '/routine', workout: '/workout', stretching: '/stretching', meditation: '/meditation',
+}
+
 const HEADER: Record<Lang, (done: number, total: number) => string> = {
   de: (done, total) => `Aktueller Stand von heute · ${done} von ${total}`,
   en: (done, total) => `Today's overview · ${done} of ${total}`,
@@ -19,6 +24,7 @@ const HEADER: Record<Lang, (done: number, total: number) => string> = {
 }
 
 export function TodayPillarTracker() {
+  const navigate            = useNavigate()
   const { profile }         = useAuthStore()
   const lang                = (profile?.language ?? 'de') as Lang
   const { data, isLoading } = useTodayPillars()
@@ -39,9 +45,10 @@ export function TodayPillarTracker() {
         {visiblePillars.map((p) => {
           const isDone = (data?.[p.id as keyof typeof data] as boolean | undefined) ?? false
           return (
-            <div
+            <button
               key={p.id}
-              className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl transition-colors"
+              onClick={() => navigate(PILLAR_ROUTES[p.id])}
+              className="flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl transition-colors active:scale-[0.97]"
               style={{
                 backgroundColor: isDone ? `${p.color}20` : 'var(--color-bg-elevated)',
                 border: `1px solid ${isDone ? `${p.color}60` : 'transparent'}`,
@@ -62,7 +69,7 @@ export function TodayPillarTracker() {
               >
                 {p.label[lang]}
               </span>
-            </div>
+            </button>
           )
         })}
       </div>

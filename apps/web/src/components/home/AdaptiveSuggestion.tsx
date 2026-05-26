@@ -1,34 +1,12 @@
-import { useNavigate } from 'react-router-dom'
 import { getSuggestedPillar, type Pillar } from '../../lib/adaptiveSuggestion'
 import { useAuthStore } from '../../store/authStore'
 import { useTodayPillars } from '../../hooks/useTodayPillars'
 
 type Lang = 'de' | 'en' | 'es'
 
-const GOAL_HINT: Record<string, Record<Lang, string>> = {
-  abnehmen:      { de: 'Gut für dein Ziel: Abnehmen & Körper formen.', en: 'Good for your goal: weight loss.',          es: 'Bueno para tu objetivo: perder peso.' },
-  kraft:         { de: 'Gut für dein Ziel: Kraft aufbauen.',            en: 'Good for your goal: build strength.',        es: 'Bueno para tu objetivo: ganar fuerza.' },
-  beweglichkeit: { de: 'Gut für dein Ziel: Beweglichkeit verbessern.', en: 'Good for your goal: improve flexibility.',  es: 'Bueno para tu objetivo: mejorar flexibilidad.' },
-  entspannen:    { de: 'Gut für dein Ziel: Entspannen & Fokus.',       en: 'Good for your goal: relax & focus.',         es: 'Bueno para tu objetivo: relajarte y enfocarte.' },
-}
-
-const GOAL_PILLAR: Record<string, Pillar[]> = {
-  abnehmen:      ['workout', 'stretching'],
-  kraft:         ['workout'],
-  beweglichkeit: ['stretching', 'meditation'],
-  entspannen:    ['meditation', 'stretching'],
-}
-
-function getGoalHint(pillar: Pillar, goal: string | null | undefined, lang: Lang): string | null {
-  if (!goal || !GOAL_PILLAR[goal]?.includes(pillar)) return null
-  return GOAL_HINT[goal]?.[lang] ?? null
-}
-
-const PILLAR_CONFIG = {
+const PILLAR_CONFIG: Record<Pillar, { emoji: string; headline: Record<Lang, string>; sub: Record<Lang, string> }> = {
   workout: {
-    color:  '#E8642A',
-    emoji:  '💪',
-    route:  '/workout',
+    emoji: '💪',
     headline: {
       de: 'Perfekte Zeit für ein Workout 🏋️',
       en: 'Perfect time for a workout 🏋️',
@@ -39,12 +17,9 @@ const PILLAR_CONFIG = {
       en: 'Channel your energy now.',
       es: 'Aprovecha tu energía ahora.',
     },
-    cta: { de: 'Workout starten', en: 'Start workout', es: 'Empezar entreno' },
   },
   routine: {
-    color:  '#4A90D9',
-    emoji:  '📋',
-    route:  '/routine',
+    emoji: '📋',
     headline: {
       de: 'Guten Morgen 🌅 — Zeit für deine Routine',
       en: 'Good morning 🌅 — Time for your routine',
@@ -55,12 +30,9 @@ const PILLAR_CONFIG = {
       en: 'Start your day with structure.',
       es: 'Empieza el día con estructura.',
     },
-    cta: { de: 'Routine öffnen', en: 'Open routine', es: 'Abrir rutina' },
   },
   stretching: {
-    color:  '#7BC67E',
-    emoji:  '🤸',
-    route:  '/stretching',
+    emoji: '🤸',
     headline: {
       de: 'Guter Abend 🌆 — Jetzt dehnen & entspannen',
       en: 'Good evening 🌆 — Time to stretch & unwind',
@@ -71,12 +43,9 @@ const PILLAR_CONFIG = {
       en: 'Let the day go.',
       es: 'Deja ir el día.',
     },
-    cta: { de: 'Stretching starten', en: 'Start stretching', es: 'Empezar estiramiento' },
   },
   meditation: {
-    color:  '#9B7FD4',
-    emoji:  '🧘',
-    route:  '/meditation',
+    emoji: '🧘',
     headline: {
       de: 'Gute Nacht 🌙 — Zeit für Ruhe & Fokus',
       en: 'Good night 🌙 — Time for calm & focus',
@@ -87,9 +56,8 @@ const PILLAR_CONFIG = {
       en: 'Wind down and find stillness.',
       es: 'Relájate y encuentra la calma.',
     },
-    cta: { de: 'Meditation starten', en: 'Start meditation', es: 'Empezar meditación' },
   },
-} as const
+}
 
 const ALL_DONE: Record<Lang, string> = {
   de: 'Alle Einheiten für heute erledigt 🎉',
@@ -103,10 +71,9 @@ const ALL_DONE_SUB: Record<Lang, string> = {
 }
 
 export function AdaptiveSuggestion() {
-  const navigate              = useNavigate()
-  const { profile }           = useAuthStore()
-  const lang                  = (profile?.language ?? 'de') as Lang
-  const goal                  = profile?.goal ?? null
+  const { profile }            = useAuthStore()
+  const lang                   = (profile?.language ?? 'de') as Lang
+  const goal                   = profile?.goal ?? null
   const { data: todayPillars } = useTodayPillars()
 
   const completedPillars = todayPillars
@@ -119,63 +86,26 @@ export function AdaptiveSuggestion() {
 
   if (pillar === null) {
     return (
-      <section
-        className="rounded-2xl p-4 relative overflow-hidden"
-        style={{ backgroundColor: 'var(--color-bg-card)' }}
-      >
-        <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ backgroundColor: '#4CAF50' }} />
-        <div className="pl-3 flex items-center gap-3">
-          <span className="text-3xl leading-none">🎉</span>
-          <div>
-            <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
-              {ALL_DONE[lang]}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-              {ALL_DONE_SUB[lang]}
-            </p>
-          </div>
-        </div>
-      </section>
+      <div>
+        <p className="text-sm font-semibold" style={{ color: '#4CAF50' }}>
+          {ALL_DONE[lang]}
+        </p>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+          {ALL_DONE_SUB[lang]}
+        </p>
+      </div>
     )
   }
 
-  const cfg      = PILLAR_CONFIG[pillar]
-  const goalHint = getGoalHint(pillar, goal, lang)
-
+  const cfg = PILLAR_CONFIG[pillar]
   return (
-    <section
-      className="rounded-2xl p-4 relative overflow-hidden"
-      style={{ backgroundColor: 'var(--color-bg-card)' }}
-    >
-      <div
-        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
-        style={{ backgroundColor: cfg.color }}
-      />
-      <div className="pl-3">
-        <div className="flex items-start gap-3">
-          <span className="text-3xl leading-none flex-shrink-0">{cfg.emoji}</span>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-sm leading-snug" style={{ color: 'var(--color-text)' }}>
-              {cfg.headline[lang]}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-              {cfg.sub[lang]}
-            </p>
-            {goalHint && (
-              <p className="text-xs mt-1 font-medium" style={{ color: cfg.color }}>
-                {goalHint}
-              </p>
-            )}
-          </div>
-        </div>
-        <button
-          onClick={() => navigate(cfg.route)}
-          className="mt-3 px-4 py-2 rounded-xl text-sm font-semibold transition-opacity active:opacity-70"
-          style={{ backgroundColor: `${cfg.color}22`, color: cfg.color }}
-        >
-          {cfg.cta[lang]}
-        </button>
-      </div>
-    </section>
+    <div>
+      <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+        {cfg.headline[lang]}
+      </p>
+      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+        {cfg.sub[lang]}
+      </p>
+    </div>
   )
 }
