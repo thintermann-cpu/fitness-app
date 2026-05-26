@@ -90,7 +90,11 @@ export function useWodHistory(wodName?: string) {
 
       return data as WodHistoryEntry
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      const prepend = (old: WodHistoryEntry[] | undefined) =>
+        old ? [data, ...old] : [data]
+      queryClient.setQueryData(['wod_history', '_all'], prepend)
+      queryClient.setQueryData(['wod_history', data.wod_name], prepend)
       void queryClient.invalidateQueries({ queryKey: ['wod_history'] })
     },
   })
