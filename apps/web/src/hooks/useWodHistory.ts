@@ -72,10 +72,12 @@ export function useWodHistory(wodName?: string) {
 
       const { data: { session } } = await supabase.auth.getSession()
       const userId = session?.user.id
+      const payload = { ...newEntry, ...(userId ? { user_id: userId } : {}) }
+      console.log('[useWodHistory] INSERT attempt', payload)
 
       const { data, error } = await supabase
         .from('wod_history')
-        .insert({ ...newEntry, ...(userId ? { user_id: userId } : {}) })
+        .insert(payload)
         .select()
         .single()
 
