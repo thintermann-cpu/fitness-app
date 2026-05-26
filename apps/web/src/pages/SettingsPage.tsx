@@ -276,21 +276,27 @@ export function SettingsPage() {
   const handleTogglePush = async () => {
     setPushLoading(true)
     setPushError(null)
-    if (pushEnabled) {
-      await unsubscribeFromPush()
-      setPushEnabled(false)
-    } else {
-      const ok = await subscribeToPush()
-      if (ok) {
-        setPushEnabled(true)
+    try {
+      if (pushEnabled) {
+        await unsubscribeFromPush()
+        setPushEnabled(false)
       } else {
-        const denied = typeof Notification !== 'undefined' && Notification.permission === 'denied'
-        setPushError(denied
-          ? 'Benachrichtigungen sind im Browser blockiert. Bitte in den Browser-Einstellungen erlauben.'
-          : 'Push-Aktivierung fehlgeschlagen. Bitte prüfe die Browser-Berechtigungen.')
+        const ok = await subscribeToPush()
+        if (ok) {
+          setPushEnabled(true)
+        } else {
+          const denied = typeof Notification !== 'undefined' && Notification.permission === 'denied'
+          setPushError(denied
+            ? 'Benachrichtigungen sind im Browser blockiert. Bitte in den Browser-Einstellungen erlauben.'
+            : 'Push-Aktivierung fehlgeschlagen. Bitte prüfe die Browser-Berechtigungen.')
+        }
       }
+    } catch (e) {
+      console.error('[push] toggle error:', e)
+      setPushError('Push-Aktivierung fehlgeschlagen. Bitte prüfe die Browser-Berechtigungen.')
+    } finally {
+      setPushLoading(false)
     }
-    setPushLoading(false)
   }
 
   const handleSavePushPrefs = async () => {

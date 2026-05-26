@@ -19,16 +19,28 @@ export async function subscribeToPush(): Promise<boolean> {
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') return false
 
-  const registration = await navigator.serviceWorker.register('/sw.js')
-  await navigator.serviceWorker.ready
+  let registration: ServiceWorkerRegistration
+  try {
+    registration = await navigator.serviceWorker.register('/sw.js')
+    await navigator.serviceWorker.ready
+  } catch (e) {
+    console.error('[push] SW registration failed:', e)
+    return false
+  }
 
-  const existing = await registration.pushManager.getSubscription()
-  const subscription =
-    existing ??
-    (await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
-    }))
+  let subscription: PushSubscription
+  try {
+    const existing = await registration.pushManager.getSubscription()
+    subscription =
+      existing ??
+      (await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
+      }))
+  } catch (e) {
+    console.error('[push] subscribe failed:', e)
+    return false
+  }
 
   const {
     data: { user },
