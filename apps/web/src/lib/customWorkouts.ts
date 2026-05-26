@@ -48,18 +48,20 @@ function persist<T>(key: string, items: T[]): void {
   } catch {}
 }
 
-export function loadCustomWorkouts(): CustomWorkout[] {
+// localStorage fallbacks used by useCustomWorkouts hook
+export function loadLocalWorkouts(): CustomWorkout[] {
   return load<CustomWorkout>(WK_KEY)
 }
 
-export function saveCustomWorkout(w: CustomWorkout): void {
-  persist(WK_KEY, [w, ...loadCustomWorkouts().filter((x) => x.id !== w.id)])
+export function saveLocalWorkout(w: CustomWorkout): void {
+  persist(WK_KEY, [w, ...loadLocalWorkouts().filter((x) => x.id !== w.id)])
 }
 
-export function deleteCustomWorkout(id: string): void {
-  persist(WK_KEY, loadCustomWorkouts().filter((w) => w.id !== id))
+export function deleteLocalWorkout(id: string): void {
+  persist(WK_KEY, loadLocalWorkouts().filter((w) => w.id !== id))
 }
 
+// CustomSession remains localStorage-only
 export function loadCustomSessions(): CustomSession[] {
   return load<CustomSession>(SS_KEY)
 }

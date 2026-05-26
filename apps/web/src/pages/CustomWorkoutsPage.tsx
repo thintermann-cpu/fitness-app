@@ -1,14 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  loadCustomWorkouts,
-  saveCustomWorkout,
-  deleteCustomWorkout,
-  type CustomWorkout,
-} from '../lib/customWorkouts'
+import { useCustomWorkouts } from '../hooks/useCustomWorkouts'
 import { FreeTimerWizard, type KraftConfig, type TimerInitConfig, type WizardInitialValues } from '../components/workout/FreeTimerWizard'
 import type { TimerMode } from '../lib/timerLabels'
-import type { WizardExercise } from '../lib/customWorkouts'
+import type { WizardExercise, CustomWorkout } from '../lib/customWorkouts'
 
 const MODE_LABELS: Record<string, string> = {
   fortime: 'ForTime', amrap: 'AMRAP', emom: 'EMOM',
@@ -17,14 +12,13 @@ const MODE_LABELS: Record<string, string> = {
 
 export function CustomWorkoutsPage() {
   const navigate = useNavigate()
-  const [workouts, setWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
+  const { data: workouts = [], isLoading, updateWorkout, deleteWorkout } = useCustomWorkouts()
   const [editWorkout, setEditWorkout] = useState<CustomWorkout | null>(null)
   const [renamingId, setRenamingId]   = useState<string | null>(null)
   const [renameVal,  setRenameVal]    = useState('')
 
   function handleDelete(id: string) {
-    deleteCustomWorkout(id)
-    setWorkouts(loadCustomWorkouts())
+    deleteWorkout.mutate(id)
   }
 
   function handleStart(w: CustomWorkout) {
@@ -41,10 +35,10 @@ export function CustomWorkoutsPage() {
     timerCfg?: TimerInitConfig,
   ) {
     if (!editWorkout) return
-    saveCustomWorkout({
+    updateWorkout.mutate({
       id:        editWorkout.id,
       createdAt: editWorkout.createdAt,
-      name:   workoutName ?? editWorkout.name,
+      name:      workoutName ?? editWorkout.name,
       mode,
       minutes,
       exercises: exercises ?? kraftConfig?.exercises ?? [],
@@ -56,7 +50,6 @@ export function CustomWorkoutsPage() {
       emomInterval: timerCfg?.emomInterval,
       emomRounds:   timerCfg?.emomRounds,
     })
-    setWorkouts(loadCustomWorkouts())
     setEditWorkout(null)
   }
 
@@ -64,7 +57,7 @@ export function CustomWorkoutsPage() {
     const val = renameVal.trim()
     if (val) {
       const w = workouts.find((x) => x.id === id)
-      if (w) { saveCustomWorkout({ ...w, name: val }); setWorkouts(loadCustomWorkouts()) }
+      if (w) updateWorkout.mutate({ ...w, name: val })
     }
     setRenamingId(null)
   }
@@ -89,7 +82,11 @@ export function CustomWorkoutsPage() {
         </span>
       </div>
 
-      {workouts.length === 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center py-16">
+          <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Lädt…</span>
+        </div>
+      ) : workouts.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-16 text-center">
           <span className="text-5xl">⏱</span>
           <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
@@ -147,9 +144,7 @@ export function CustomWorkoutsPage() {
                   ▶ Start
                 </button>
                 <button
-                  onClick={() => {
-                    setEditWorkout(w)
-                  }}
+                  onClick={() => setEditWorkout(w)}
                   className="px-3 py-2 rounded-lg text-xs font-semibold"
                   style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
                 >

@@ -11,12 +11,8 @@ import { KraftTimerView } from '../components/workout/KraftTimerView'
 import { WodHistoryList } from '../components/workout/WodHistoryList'
 import { FreeTimerWizard, type KraftConfig, type TimerInitConfig } from '../components/workout/FreeTimerWizard'
 import { WarmupTimer } from '../components/workout/WarmupTimer'
-import {
-  loadCustomWorkouts,
-  saveCustomWorkout,
-  type CustomWorkout,
-  type WizardExercise,
-} from '../lib/customWorkouts'
+import { useCustomWorkouts } from '../hooks/useCustomWorkouts'
+import { type CustomWorkout, type WizardExercise } from '../lib/customWorkouts'
 import { type TimerMode } from '../lib/timerLabels'
 
 type Tab = 'wods' | 'timer' | 'history'
@@ -65,7 +61,7 @@ export function WorkoutPage() {
   const [showAllEquipment, setShowAllEquipment] = useState(false)
   const [timerConfig, setTimerConfig]     = useState<TimerConfig | null>(null)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
-  const [savedWorkouts, setSavedWorkouts] = useState<CustomWorkout[]>(() => loadCustomWorkouts())
+  const { data: savedWorkouts = [], addWorkout } = useCustomWorkouts()
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
 
   // When returning from WodDetail back to the list, always land on WODs tab
@@ -85,9 +81,9 @@ export function WorkoutPage() {
 
   function handleWizardStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
     if (workoutName) {
-      saveCustomWorkout({
-        id: crypto.randomUUID(),
-        name: workoutName,
+      addWorkout.mutate({
+        id:        crypto.randomUUID(),
+        name:      workoutName,
         mode,
         minutes,
         exercises: exercises ?? (kraftConfig?.exercises ?? []),
@@ -100,7 +96,6 @@ export function WorkoutPage() {
         emomInterval: timerCfg?.emomInterval,
         emomRounds:   timerCfg?.emomRounds,
       })
-      setSavedWorkouts(loadCustomWorkouts())
     }
     setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, ...timerCfg })
     setTab('timer')
@@ -198,7 +193,7 @@ export function WorkoutPage() {
                 Eigene Workouts{savedWorkouts.length > 0 ? ` (${savedWorkouts.length})` : ''} →
               </button>
               <button
-                onClick={() => { setSavedWorkouts(loadCustomWorkouts()); setWizardOpen(true) }}
+                onClick={() => setWizardOpen(true)}
                 className="text-xs font-bold px-2.5 py-1 rounded-lg"
                 style={{ backgroundColor: '#E8642A18', color: '#E8642A' }}
               >
@@ -298,7 +293,7 @@ export function WorkoutPage() {
 
       <FreeTimerWizard
         isOpen={wizardOpen}
-        onClose={() => { setWizardOpen(false); setSavedWorkouts(loadCustomWorkouts()) }}
+        onClose={() => setWizardOpen(false)}
         onStart={handleWizardStart}
         variant="save"
       />
