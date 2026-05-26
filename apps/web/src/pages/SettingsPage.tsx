@@ -194,11 +194,21 @@ export function SettingsPage() {
     const supported = 'serviceWorker' in navigator && 'PushManager' in window
     setPushSupported(supported)
     if (!supported) return
-    getPushSubscriptionStatus().then(setPushEnabled)
+
+    // BUG 2: Permission direkt prüfen und Fehlermeldung setzen
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+      setPushEnabled(false)
+      setPushError('Benachrichtigungen im Browser blockiert. Bitte in den Browser-Einstellungen aktivieren.')
+    } else {
+      getPushSubscriptionStatus().then(setPushEnabled)
+    }
+
+    // BUG 1: Präferenzen laden — maybeSingle() statt single()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
-      supabase.from('push_preferences').select('*').eq('user_id', user.id).single()
-        .then(({ data }) => {
+      supabase.from('push_preferences').select('*').eq('user_id', user.id).maybeSingle()
+        .then(({ data, error }) => {
+          if (error) { console.error('[push] load prefs error:', error.message); return }
           if (data) setPushPrefs({
             morning_enabled:    data.morning_enabled    ?? true,
             evening_enabled:    data.evening_enabled    ?? true,
