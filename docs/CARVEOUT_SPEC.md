@@ -62,7 +62,7 @@ apps/web/src/
 │   ├── supabase.ts            # Supabase-Client + isSupabaseConfigured()
 │   ├── push.ts                # Push Notification Helpers (subscribeToPush, unsubscribeFromPush)
 │   ├── adaptiveSuggestion.ts  # Pure Funktion `getSuggestedPillar(goal?: string | null): Pillar` — Empfehlung nach Uhrzeit (05–10 immer routine); Tiebreaker per goal: Mittag (10–17): `beweglichkeit`→stretching, `entspannen` ab 14h→meditation, sonst workout; Abend (17–21): `kraft`/`abnehmen`→workout, `entspannen`→meditation, sonst stretching; Nacht→meditation; **Loading-Fix**: `AdaptiveSuggestion` rendert erst wenn `profile` nicht null ist (Supabase-Delay-Guard); **TodayPillarTracker-Buttons**: Chip-Tap navigiert direkt zur Pillar-Route (nicht nur visuell)
-│   ├── customWorkouts.ts      # CustomWorkout + CustomSession Typen; localStorage CRUD (save/load/delete); Keys: carveout_custom_workouts / carveout_custom_sessions
+│   ├── customWorkouts.ts      # CustomWorkout + CustomSession Typen; localStorage-Fallback-Funktionen: `loadLocalWorkouts` / `saveLocalWorkout` / `deleteLocalWorkout` (Key: carveout_custom_workouts); CustomSession bleibt localStorage-only (loadCustomSessions / saveCustomSession / deleteCustomSession; Key: carveout_custom_sessions)
 │   └── timerLabels.ts         # TimerMode, TimerLabel, TIMER_LABELS (name/desc/emoji/color pro Modus), TIMER_MODE_LIST, WOD_TYPE_TO_MODE (DB-Typ → TimerMode)
 ├── store/
 │   ├── authStore.ts           # Zustand-Store: user, session, loading, profile; signIn/signUp/signOut/initialize/fetchProfile/updateProfile; WorkoutLocation + DEFAULT_EQUIPMENT_BY_LOCATION + equipment_by_location
@@ -85,7 +85,7 @@ apps/web/src/
 │   ├── CheckoutSuccessPage.tsx  # Bestätigungsseite nach Stripe-Checkout; liest `?session_id=`; zeigt Erfolgs-Meldung + Link zu /home; öffentliche Route `/checkout/success`
 │   ├── CheckoutCancelPage.tsx   # Abbruch-Seite; zeigt Meldung + Link zurück zu `/`; öffentliche Route `/checkout/cancel`
 │   ├── ProfilePage.tsx        # **entfernt als eigenständige Route** — Route `/profile` redirectet auf `/settings`; Passwort-Reset + E-Mail-Anzeige in SettingsPage (Allgemein-Submenu) integriert; Abo-Sektion in SettingsPage (parallel zu früherer ProfilePage)
-│   ├── SettingsPage.tsx       # Submenüs: Allgemein (Sprache, Ziel, Equipment, E-Mail-Anzeige + Passwort-Reset via `supabase.auth.resetPasswordForEmail`), Pillar-Toggle (aktive Pillars + Primary Pillar Hinweis), Benachrichtigungen (Push), Weitere (Substitution-Toggle, Silent-Mode, Feedback); Abo-Status als zusätzliches Submenu; **Toggle "Inaktive Bereiche ausblenden"** (localStorage Key: `hide_inactive_pillars`; CustomEvent `hide_inactive_changed` → Sync zu BottomNav + Sidebar); SaveButton als Outline-Button (border accent, transparent background); liest `user` (zusätzlich zu `profile`) aus authStore
+│   ├── SettingsPage.tsx       # Submenüs: Allgemein (Sprache, Ziel, Equipment, E-Mail-Anzeige + Passwort-Reset via `supabase.auth.resetPasswordForEmail`), Pillar-Toggle (aktive Pillars + Primary Pillar Hinweis), Benachrichtigungen (Push), Weitere (Substitution-Toggle, Silent-Mode, Feedback); Abo-Status als zusätzliches Submenu; **Toggle "Inaktive Bereiche ausblenden"** (localStorage Key: `hide_inactive_pillars`; CustomEvent `hide_inactive_changed` → Sync zu BottomNav + Sidebar); SaveButton als Outline-Button (border accent, transparent background); liest `user` (zusätzlich zu `profile`) aus authStore; **Push-Fixes (Session AI)**: Permission-denied Check beim Mount → `pushError` sofort gesetzt wenn `Notification.permission === 'denied'`; Push-Präferenzen laden via `maybeSingle()` statt `single()` (kein 406-Fehler wenn Zeile fehlt)
 │   └── admin/
 │       ├── AdminDashboardPage.tsx
 │       ├── AdminUsersPage.tsx
@@ -121,7 +121,7 @@ apps/web/src/
 │   │   ├── FreeTimerWizard.tsx  # Wizard; variant='save' (3 Steps: Modus → Übungen → Konfiguration/Name, speichert via customWorkouts.ts) | variant='adhoc' (4 Steps: Modus → Übungen → Konfiguration → Warmup-Frage); onStart(mode, minutes, withWarmup?, kraftConfig?, exercises?: WizardExercise[]) → triggert TimerView; bei nicht-Kraft-Modi werden exercises übergeben (wenn nicht leer); Dauer 1–120 min, 1-min-Schritte; Modus-Auswahl via TIMER_LABELS aus timerLabels.ts; gespeicherte Workouts erscheinen in CustomWorkoutsPage
 │   │   ├── WarmupTimer.tsx    # Bottom-Sheet mit Presets 3/5/10 min + manuellem Input; Countdown-Ring (SVG); CountdownOverlay: 3-2-1-Go vor Timer-Start; Wake Lock; playGong + vibrate + Toast bei Ende; **Beep 10s vor Ende** (Web Audio API, kurzer 880 Hz Ton); eingebettet in WodDetail
 │   │   ├── KrafttrainingView.tsx  # Satz-basierter Krafttraining-Flow; Übungsauswahl aus FreeTimerWizard-Übungsliste; pro Satz: Gewicht (kg) + Wiederholungen; Satz-Abschluss per Tap; Rest-Timer zwischen Sätzen; Session-Log am Ende
-│   │   ├── CustomWorkoutsPage.tsx  # Liste gespeicherter Custom Workouts (aus customWorkouts.ts); Start-Button → FreeTimerWizard (variant=adhoc, vorausgefüllt); Löschen mit Bestätigungs-Prompt; leerer State mit CTA zum Wizard
+│   │   ├── CustomWorkoutsPage.tsx  # Liste gespeicherter Custom Workouts; nutzt `useCustomWorkouts` (Supabase + localStorage Fallback); Loading-State; Start-Button → FreeTimerWizard (variant=adhoc, vorausgefüllt); Löschen mit Bestätigungs-Prompt; leerer State mit CTA zum Wizard
 │   │   ├── WodHistoryList.tsx
 │   │   └── ScoreInput.tsx
 │   ├── routine/
@@ -157,6 +157,7 @@ apps/web/src/
 │   ├── useDailyLog.ts         # Tages-Mood, Wasser
 │   ├── useTodos.ts            # To-do-Liste
 │   ├── useWods.ts             # Supabase oder /wods.json Fallback; Filter: equipmentFilter, silentMode, editorsPick, excludeEquipment, **userEquipment** (profile.equipment — zeigt nur WODs deren equipment_tags ⊆ userEquipment; Fallback auf altes `equipment`-Feld für lokales JSON; Normalisierung via `normEq()`: lowercase + Mapping dumbbells→dumbbell, resistance bands→resistance band, rowing machine→rower, assault bike→bike; bodyweight immer in allowed-Set (sowohl `equipmentFilter` als auch `userEquipment`); `mapRawToWod` splittet `equipment`-String mit `.filter(Boolean)` — leere Strings werden entfernt), minDuration, maxDuration, wodCategory (crossfit|hiit|kraft_ausdauer|kraft_wenig_zeit|krafttraining); Supabase-Query mit `.eq('is_visible', true)`; pickRandomWod() (gecachte lokale WODs + alle Filter); **pickByDate(wods)** (deterministisch: Index = dayOfYear % pool.length — genutzt von TodaysWod)
+│   ├── useCustomWorkouts.ts   # TanStack Query + Supabase Dual-Write für Custom Workouts (Supabase primary, localStorage Fallback); Mutations: addWorkout / updateWorkout / deleteWorkout; dbToWorkout / workoutToDb Mapping; staleTime 5 min
 │   ├── useWodHistory.ts       # localStorage + Supabase Dual-Write, personalBest; INSERT payload enthält user_id aus getSession(); onSuccess: setQueryData(['wod_history', '_all'] + ['wod_history', wod_name]) für sofortige Cache-Aktualisierung, invalidateQueries für Background-Sync
 │   ├── useHighscores.ts       # Top-10 pro WOD (Supabase oder local)
 │   ├── useStretching.ts       # Stretching-Übungen, Routinen, Logs
@@ -301,6 +302,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | `push_preferences` | Reminder-Einstellungen (morning/evening/wod/inactivity + Zeiten) |
 | `favorites` | Favoriten pro Nutzer: `content_type` (wod \| stretching_routine \| meditation), `content_id` (string); DDL als Kommentar in `useFavorites.ts` |
 | `feedback` | User-Feedback: `category` (bug \| idee \| lob), `message` text; RLS: User kann nur eigene Einträge einfügen + lesen (Migration 014); DB-Webhook auf INSERT → `notify-feedback` Edge Function (Migration 020) |
+| `custom_workouts` | Custom Workouts pro Nutzer: `id` UUID PK, `user_id` UUID FK, `name` text, `mode` text, `config` JSONB (minutes/rest/tabata/emom-Parameter), `exercises` JSONB, `with_warmup` bool, `created_at`/`updated_at` timestamptz; RLS: User verwaltet nur eigene Einträge; GIN-Index auf user_id (Migration 026) |
 
 DDL + RLS für `wods` und `wod_history`: `supabase/seed-wods.sql`
 
@@ -540,6 +542,8 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session AD** | **WarmupTimer Beep + TimerView Beep** — `WarmupTimer` und `TimerView` (ForTime/AMRAP) spielen bei `timeLeft === 10` kurzen Warnton (880 Hz, Web Audio API); EMOM/Tabata kein Beep (Intervall-Wechsel übernimmt Orientierung); Beep respektiert `audioStore.isMuted`; **Filter-Persistenz** in `WodList`: Filter-State (Typ/Kategorie/Schwierigkeit/Dauer/Equipment) wird in sessionStorage (Key: `wod_filters`) persistiert — Filter bleiben beim Seitenwechsel erhalten |
 | **Session AE** | **CustomWorkoutsPage + AdaptiveSuggestion + TodayPillarTracker-Buttons** — `CustomWorkoutsPage.tsx` in `components/workout/`: Liste gespeicherter Custom Workouts; Start-Button → FreeTimerWizard (variant=adhoc, vorausgefüllt); Löschen mit Bestätigungs-Prompt; leerer State mit CTA; als neuer Tab "Eigene" in `WorkoutPage` eingebunden; **TodayPillarTracker**: Chip-Tap navigiert direkt zur Pillar-Route (useNavigate); **AdaptiveSuggestion** kein funktionaler Change (Loading-Guard bereits seit Session O aktiv) |
 | **Sessions AF–AG** | **useWodHistory Cache-Fix + Push-Robustheit** — onSuccess setzt setQueryData für _all + wod_name-Keys (sofortige UI-Aktualisierung ohne Page-Refresh); INSERT-Payload user_id aus getSession(); subscribeToPush: SW-Registrierung + pushManager.subscribe je try/catch → return false statt throw; handleTogglePush + handleSavePushPrefs: try/catch/finally, Loading-States garantiert in finally; index.html: apple-mobile-web-app-capable → mobile-web-app-capable |
+| **Session AH** | **Push-Settings-Fixes** — `SettingsPage`: Permission-denied Check beim Mount → `pushError` sofort gesetzt wenn `Notification.permission === 'denied'` (kein unnötiger Subscription-Versuch); Push-Präferenzen laden via `maybeSingle()` statt `single()` (kein 406-Fehler wenn noch keine Zeile in push_preferences vorhanden) |
+| **Session AI** | **Custom Workouts Supabase-Migration** — neue Tabelle `custom_workouts` (Migration 026: UUID PK, user_id FK, name, mode, config JSONB, exercises JSONB, with_warmup, RLS); `lib/customWorkouts.ts`: Funktionen in `loadLocalWorkouts` / `saveLocalWorkout` / `deleteLocalWorkout` umbenannt (localStorage bleibt Fallback); neuer Hook `useCustomWorkouts.ts` (TanStack Query, Supabase primary, localStorage Fallback, Mutations: addWorkout/updateWorkout/deleteWorkout); `CustomWorkoutsPage` nutzt Hook statt direktem localStorage, Loading-State ergänzt |
 
 ### Offen / Roadmap
 
@@ -564,4 +568,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Sessions AF–AG: useWodHistory Cache-Fix, Push-Robustheit, deprecated Meta-Tag)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Sessions AH–AI: Push-Settings-Fixes, Custom-Workouts-Supabase-Migration)*
