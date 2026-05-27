@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { useAuthStore } from '../store/authStore'
 
 export type Category = 'morning' | 'day' | 'evening'
 
@@ -21,16 +22,16 @@ const MON_WED_FRI = [1, 3, 5]
 
 export const SUGGESTED_ROUTINES: Record<string, Array<Omit<Routine, 'id'>>> = {
   de: [
-    { category: 'morning', name: 'Morgenroutine',        icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Post-Workout Stretch',  icon: '💪', time: '12:00', link_url: null, linked_pillar: null, active_days: MON_WED_FRI, sort_order: 0 },
-    { category: 'evening', name: 'Abend-Reflexion',       icon: '📖', time: '21:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Wasser trinken',        icon: '💧', time: '12:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 1 },
+    { category: 'morning', name: 'Morgenroutine',       icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Post-Workout Stretch', icon: '💪', time: '12:00', link_url: null, linked_pillar: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'evening', name: 'Abend-Reflexion',      icon: '📖', time: '21:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Wasser trinken',       icon: '💧', time: '12:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 1 },
   ],
   en: [
-    { category: 'morning', name: 'Morning Routine',       icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Post-Workout Stretch',  icon: '💪', time: '12:00', link_url: null, linked_pillar: null, active_days: MON_WED_FRI, sort_order: 0 },
-    { category: 'evening', name: 'Evening Reflection',    icon: '📖', time: '21:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Drink Water',           icon: '💧', time: '12:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 1 },
+    { category: 'morning', name: 'Morning Routine',      icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Post-Workout Stretch', icon: '💪', time: '12:00', link_url: null, linked_pillar: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'evening', name: 'Evening Reflection',   icon: '📖', time: '21:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 0 },
+    { category: 'day',     name: 'Drink Water',          icon: '💧', time: '12:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 1 },
   ],
   es: [
     { category: 'morning', name: 'Rutina Matutina',                    icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
@@ -40,24 +41,19 @@ export const SUGGESTED_ROUTINES: Record<string, Array<Omit<Routine, 'id'>>> = {
   ],
 }
 
-async function getUserId(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession()
-  return session?.user?.id ?? null
-}
-
 export function useRoutines() {
+  const userId = useAuthStore((s) => s.user?.id ?? null)
   const queryClient = useQueryClient()
+  const qk = ['routines', userId ?? 'anon'] as const
 
   const query = useQuery({
-    queryKey: ['routines'],
+    queryKey: qk,
+    enabled: !!userId,
     queryFn: async (): Promise<Routine[]> => {
-      const uid = await getUserId()
-      if (!uid) return []
-
       const { data, error } = await supabase
         .from('routines')
         .select('*')
-        .eq('user_id', uid)
+        .eq('user_id', userId!)
         .order('category')
         .order('sort_order')
 
@@ -76,24 +72,23 @@ export function useRoutines() {
 
   const createMutation = useMutation({
     mutationFn: async (routine: Omit<Routine, 'id'>) => {
-const uid = await getUserId()
-      if (!uid) throw new Error('Not authenticated')
+      if (!userId) throw new Error('Not authenticated')
       const { error } = await supabase
         .from('routines')
-        .insert({ ...routine, user_id: uid })
+        .insert({ ...routine, user_id: userId })
       if (error) throw error
     },
     onMutate: async (routine) => {
-      await queryClient.cancelQueries({ queryKey: ['routines'] })
-      const previous = queryClient.getQueryData<Routine[]>(['routines']) ?? []
+      await queryClient.cancelQueries({ queryKey: qk })
+      const previous = queryClient.getQueryData<Routine[]>(qk) ?? []
       const optimistic: Routine = { ...routine, id: `opt-${Date.now()}` }
-      queryClient.setQueryData<Routine[]>(['routines'], (old = []) => [...old, optimistic])
+      queryClient.setQueryData<Routine[]>(qk, (old = []) => [...old, optimistic])
       return { previous }
     },
     onError: (_err, _vars, context) => {
-      queryClient.setQueryData(['routines'], context?.previous)
+      queryClient.setQueryData(qk, context?.previous)
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: qk }),
   })
 
   const updateMutation = useMutation({
@@ -102,17 +97,17 @@ const uid = await getUserId()
       if (error) throw error
     },
     onMutate: async ({ id, ...updates }) => {
-      await queryClient.cancelQueries({ queryKey: ['routines'] })
-      const previous = queryClient.getQueryData<Routine[]>(['routines']) ?? []
-      queryClient.setQueryData<Routine[]>(['routines'], (old = []) =>
-        old.map(r => r.id === id ? { ...r, ...updates } : r)
+      await queryClient.cancelQueries({ queryKey: qk })
+      const previous = queryClient.getQueryData<Routine[]>(qk) ?? []
+      queryClient.setQueryData<Routine[]>(qk, (old = []) =>
+        old.map(r => r.id === id ? { ...r, ...updates } : r),
       )
       return { previous }
     },
     onError: (_err, _vars, context) => {
-      queryClient.setQueryData(['routines'], context?.previous)
+      queryClient.setQueryData(qk, context?.previous)
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: qk }),
   })
 
   const deleteMutation = useMutation({
@@ -121,15 +116,15 @@ const uid = await getUserId()
       if (error) throw error
     },
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['routines'] })
-      const previous = queryClient.getQueryData<Routine[]>(['routines']) ?? []
-      queryClient.setQueryData<Routine[]>(['routines'], (old = []) => old.filter(r => r.id !== id))
+      await queryClient.cancelQueries({ queryKey: qk })
+      const previous = queryClient.getQueryData<Routine[]>(qk) ?? []
+      queryClient.setQueryData<Routine[]>(qk, (old = []) => old.filter(r => r.id !== id))
       return { previous }
     },
     onError: (_err, _id, context) => {
-      queryClient.setQueryData(['routines'], context?.previous)
+      queryClient.setQueryData(qk, context?.previous)
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['routines'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: qk }),
   })
 
   return {

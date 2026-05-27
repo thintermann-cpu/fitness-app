@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { useAuthStore } from '../store/authStore'
 
 /*
  * Supabase SQL — einmal im SQL-Editor ausführen:
@@ -40,10 +41,12 @@ function writeLocal(favs: Favorite[]): void {
 }
 
 export function useFavorites() {
+  const userId = useAuthStore((s) => s.user?.id ?? null)
   const queryClient = useQueryClient()
+  const qk = ['favorites', userId ?? 'anon'] as const
 
   const query = useQuery({
-    queryKey: ['favorites'],
+    queryKey: qk,
     staleTime: 5 * 60 * 1000,
     gcTime:    10 * 60 * 1000,
     queryFn: async (): Promise<Favorite[]> => {
@@ -72,18 +75,18 @@ export function useFavorites() {
 
   const toggle = useMutation({
     onMutate: async ({ content_type, content_id }: { content_type: string; content_id: string }) => {
-      await queryClient.cancelQueries({ queryKey: ['favorites'] })
-      const prev = queryClient.getQueryData<Favorite[]>(['favorites']) ?? []
+      await queryClient.cancelQueries({ queryKey: qk })
+      const prev = queryClient.getQueryData<Favorite[]>(qk) ?? []
       const isCurrentlyFav = prev.some(
         f => f.content_type === content_type && f.content_id === content_id,
       )
       if (isCurrentlyFav) {
         queryClient.setQueryData(
-          ['favorites'],
+          qk,
           prev.filter(f => !(f.content_type === content_type && f.content_id === content_id)),
         )
       } else {
-        queryClient.setQueryData(['favorites'], [
+        queryClient.setQueryData(qk, [
           ...prev,
           {
             id: crypto.randomUUID(),
@@ -141,10 +144,10 @@ export function useFavorites() {
       }
     },
     onError: (_err, _vars, context) => {
-      if (context?.prev) queryClient.setQueryData(['favorites'], context.prev)
+      if (context?.prev) queryClient.setQueryData(qk, context.prev)
     },
     onSettled: () => {
-      void queryClient.invalidateQueries({ queryKey: ['favorites'] })
+      void queryClient.invalidateQueries({ queryKey: qk })
     },
   })
 

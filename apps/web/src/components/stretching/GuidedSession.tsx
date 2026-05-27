@@ -24,6 +24,7 @@ const T = {
     done: 'Geschafft!',
     doneMsg: 'Du hast die Session abgeschlossen.',
     backToRoutines: 'Zurück zu Routinen',
+    backToYoga: 'Zurück zu Yoga',
     instructions: 'Anleitung',
     configure: 'Session konfigurieren',
     exerciseDuration: 'Übungsdauer',
@@ -40,6 +41,7 @@ const T = {
     done: 'Done!',
     doneMsg: 'You completed the session.',
     backToRoutines: 'Back to Routines',
+    backToYoga: 'Back to Yoga',
     instructions: 'Instructions',
     configure: 'Configure Session',
     exerciseDuration: 'Exercise duration',
@@ -56,6 +58,7 @@ const T = {
     done: '¡Listo!',
     doneMsg: 'Completaste la sesión.',
     backToRoutines: 'Volver a rutinas',
+    backToYoga: 'Volver a Yoga',
     instructions: 'Instrucciones',
     configure: 'Configurar sesión',
     exerciseDuration: 'Duración del ejercicio',
@@ -196,7 +199,12 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
   function finishSession() {
     setPhase('done')
     const durationMin = Math.round((Date.now() - startTime) / 60000)
-    addLog.mutate({ routine_id: routine.id, duration_min: durationMin || 1 })
+    addLog.mutate({
+      routine_id: routine.id,
+      duration_min: durationMin || 1,
+      display_name: routine.name,
+      subcategory: routine.subcategory ?? undefined,
+    })
     if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
     void audioRef.current.playComplete()
     void audioRef.current.playGong()
@@ -359,7 +367,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
           className="w-full max-w-xs py-4 rounded-[var(--radius-md)] font-bold text-white"
           style={{ backgroundColor: PILLAR_COLOR }}
         >
-          {t.backToRoutines}
+          {isYogaFlow ? t.backToYoga : t.backToRoutines}
         </button>
       </div>
     )

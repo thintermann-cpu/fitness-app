@@ -54,14 +54,17 @@ export function useStretchingLogs() {
       routine_id: string | null
       duration_min: number
       completed_at?: string
+      display_name?: string
+      subcategory?: string
     }): Promise<StretchingLog> => {
-      const newLog: StretchingLog = {
+      const meta = { _displayName: entry.display_name, _subcategory: entry.subcategory }
+      const newLog = Object.assign({
         id: crypto.randomUUID(),
         user_id: user?.id ?? 'local',
         routine_id: entry.routine_id,
         completed_at: entry.completed_at ?? new Date().toISOString().slice(0, 10),
         duration_min: entry.duration_min,
-      }
+      }, meta) as StretchingLog
 
       if (!user) {
         const all = readLocal()
@@ -90,14 +93,15 @@ export function useStretchingLogs() {
         return Object.assign({ ...newLog }, { _fromLocal: true }) as StretchingLog
       }
 
-      return data as StretchingLog
+      return Object.assign(data as StretchingLog, meta)
     },
     onSuccess: (data) => {
       const prepend = (old: StretchingLog[] | undefined) =>
         old ? [data, ...old.filter((e) => e.id !== data.id)] : [data]
       queryClient.setQueryData(qk, prepend)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (!(data as any)._fromLocal) {
+      const d = data as any
+      if (!d._fromLocal && d._subcategory !== 'yoga_flow') {
         void queryClient.invalidateQueries({ queryKey: ['stretching_logs'] })
       }
     },

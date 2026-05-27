@@ -56,6 +56,10 @@ export function StretchingHistory({ routines, lang }: Props) {
     <div className="space-y-2">
       {logs.map((log) => {
         const routine = log.routine_id ? routineMap.get(log.routine_id) : null
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const logAny = log as any
+        const isYoga = logAny._subcategory === 'yoga_flow'
+        const label = (logAny._displayName as string | undefined) ?? routine?.name ?? (isYoga ? 'Yoga' : 'Stretching')
         const isToday = log.completed_at === today
 
         return (
@@ -65,10 +69,10 @@ export function StretchingHistory({ routines, lang }: Props) {
           >
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-xl">🤸</span>
+                <span className="text-xl">{isYoga ? '🧘' : '🤸'}</span>
                 <div>
                   <p className="font-semibold text-sm text-[var(--color-text)]">
-                    {routine?.name ?? 'Stretching'}
+                    {label}
                   </p>
                   <p className="text-xs text-[var(--color-text-muted)]">
                     {isToday ? t.today : log.completed_at}

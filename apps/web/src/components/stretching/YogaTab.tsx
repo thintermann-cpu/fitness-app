@@ -315,17 +315,18 @@ export function YogaTab({ exercises, lang, onSelectFlow }: Props) {
         .map((hint) => exercises.find((e) => e.name_en.toLowerCase().includes(hint.toLowerCase())))
         .filter((e): e is NonNullable<typeof e> => e !== undefined)
       const unique = matched.filter((e, i, arr) => arr.findIndex((x) => x.id === e.id) === i)
+      const actualMin = Math.max(1, Math.ceil((unique.length * flow.holdTime + Math.max(0, unique.length - 1) * 5) / 60))
       const routine: StretchingRoutine = {
         id:           flow.id,
         name:         flow.name,
         description:  flow.focus,
         goal:         'yoga_flow',
         difficulty:   flow.level === 'fortgeschritten' ? 'advanced' : flow.level === 'mittel' ? 'intermediate' : 'beginner',
-        duration_min: flow.duration,
+        duration_min: actualMin,
         exercise_ids: unique.map((e) => e.id),
         subcategory:  'yoga_flow',
       }
-      return { routine, flow, exerciseCount: unique.length }
+      return { routine, flow, exerciseCount: unique.length, actualMin }
     })
   }, [exercises])
 
@@ -398,7 +399,7 @@ export function YogaTab({ exercises, lang, onSelectFlow }: Props) {
             </p>
           </div>
         ) : (
-          filtered.map(({ routine, flow, exerciseCount }) => (
+          filtered.map(({ routine, flow, exerciseCount, actualMin }) => (
             <div
               key={flow.id}
               className="rounded-[var(--radius-md)] border border-white/5 p-4"
@@ -421,7 +422,7 @@ export function YogaTab({ exercises, lang, onSelectFlow }: Props) {
                   {CAT_LABELS[flow.category][lang]}
                 </span>
                 <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  {flow.focus} · {flow.duration} min
+                  {flow.focus} · {actualMin} min
                 </p>
               </div>
               <button

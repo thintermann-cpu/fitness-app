@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { useAuthStore } from '../store/authStore'
 import { useToastStore } from '../store/toastStore'
 
 export interface Todo {
@@ -10,24 +11,20 @@ export interface Todo {
   created_at: string
 }
 
-async function getUserId(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession()
-  return session?.user?.id ?? null
-}
-
 export function useTodos() {
+  const userId = useAuthStore((s) => s.user?.id ?? null)
   const queryClient = useQueryClient()
   const addToast = useToastStore((s) => s.addToast)
+  const qk = ['todos', userId ?? 'anon'] as const
 
   const query = useQuery({
-    queryKey: ['todos'],
+    queryKey: qk,
+    enabled: !!userId,
     queryFn: async (): Promise<Todo[]> => {
-      const uid = await getUserId()
-      if (!uid) return []
       const { data, error } = await supabase
         .from('todos')
         .select('*')
-        .eq('user_id', uid)
+        .eq('user_id', userId!)
         .order('created_at')
       if (error) throw error
       return (data ?? []) as Todo[]
@@ -39,16 +36,15 @@ export function useTodos() {
 
   const addMutation = useMutation({
     mutationFn: async ({ list_name, text }: { list_name: string; text: string }) => {
-      const uid = await getUserId()
-      if (!uid) throw new Error('Not authenticated')
+      if (!userId) throw new Error('Not authenticated')
       const { error } = await supabase
         .from('todos')
-        .insert({ user_id: uid, list_name, text, completed: false })
+        .insert({ user_id: userId, list_name, text, completed: false })
       if (error) throw error
     },
     onMutate: async ({ list_name, text }) => {
-      await queryClient.cancelQueries({ queryKey: ['todos'] })
-      const previous = queryClient.getQueryData<Todo[]>(['todos']) ?? []
+      await queryClient.cancelQueries({ queryKey: qk })
+      const previous = queryClient.getQueryData<Todo[]>(qk) ?? []
       const optimistic: Todo = {
         id: `opt-${Date.now()}`,
         list_name,
@@ -56,69 +52,66 @@ export function useTodos() {
         completed: false,
         created_at: new Date().toISOString(),
       }
-      queryClient.setQueryData<Todo[]>(['todos'], (old = []) => [...old, optimistic])
+      queryClient.setQueryData<Todo[]>(qk, (old = []) => [...old, optimistic])
       return { previous }
     },
     onError: (_err, _vars, context) => {
-      queryClient.setQueryData(['todos'], context?.previous)
+      queryClient.setQueryData(qk, context?.previous)
       addToast({ type: 'error', message: 'Todo konnte nicht gespeichert werden.' })
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: qk }),
   })
 
   const completeMutation = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
-      const uid = await getUserId()
-      if (!uid) throw new Error('Not authenticated')
-      const { error } = await supabase.from('todos').update({ completed }).eq('id', id).eq('user_id', uid)
+      if (!userId) throw new Error('Not authenticated')
+      const { error } = await supabase.from('todos').update({ completed }).eq('id', id).eq('user_id', userId)
       if (error) throw error
     },
     onMutate: async ({ id, completed }) => {
-      await queryClient.cancelQueries({ queryKey: ['todos'] })
-      const previous = queryClient.getQueryData<Todo[]>(['todos']) ?? []
-      queryClient.setQueryData<Todo[]>(['todos'], (old = []) =>
-        old.map(t => t.id === id ? { ...t, completed } : t)
+      await queryClient.cancelQueries({ queryKey: qk })
+      const previous = queryClient.getQueryData<Todo[]>(qk) ?? []
+      queryClient.setQueryData<Todo[]>(qk, (old = []) =>
+        old.map(t => t.id === id ? { ...t, completed } : t),
       )
       return { previous }
     },
     onError: (_err, _vars, context) => {
-      queryClient.setQueryData(['todos'], context?.previous)
+      queryClient.setQueryData(qk, context?.previous)
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: qk }),
   })
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const uid = await getUserId()
-      if (!uid) throw new Error('Not authenticated')
-      const { error } = await supabase.from('todos').delete().eq('id', id).eq('user_id', uid)
+      if (!userId) throw new Error('Not authenticated')
+      const { error } = await supabase.from('todos').delete().eq('id', id).eq('user_id', userId)
       if (error) throw error
     },
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ['todos'] })
-      const previous = queryClient.getQueryData<Todo[]>(['todos']) ?? []
-      queryClient.setQueryData<Todo[]>(['todos'], (old = []) => old.filter(t => t.id !== id))
+      await queryClient.cancelQueries({ queryKey: qk })
+      const previous = queryClient.getQueryData<Todo[]>(qk) ?? []
+      queryClient.setQueryData<Todo[]>(qk, (old = []) => old.filter(t => t.id !== id))
       return { previous }
     },
     onError: (_err, _id, context) => {
-      queryClient.setQueryData(['todos'], context?.previous)
+      queryClient.setQueryData(qk, context?.previous)
     },
-    onSettled: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: qk }),
   })
 
   const clearDoneMutation = useMutation({
     mutationFn: async (listName: string) => {
-      const uid = await getUserId()
-      if (!uid) return
+      if (!userId) return
       const { error } = await supabase
         .from('todos')
         .delete()
-        .eq('user_id', uid)
+        .eq('user_id', userId)
         .eq('list_name', listName)
         .eq('completed', true)
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
   })
 
   return {
