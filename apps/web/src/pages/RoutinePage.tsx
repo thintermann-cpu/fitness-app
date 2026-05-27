@@ -63,7 +63,7 @@ export function RoutinePage() {
 
   const { routines, isLoading, create, update, remove, createError, createErrorMsg } = useRoutines()
   const { data: logsRaw }     = useRoutineLogs(todayStr)
-  const { todos, add: addTodo, complete: completeTodo, remove: removeTodo, clearDone, addError, addErrorMsg } = useTodos()
+  const { todos, isLoading: todosLoading, add: addTodo, complete: completeTodo, remove: removeTodo, clearDone, addError, addErrorMsg } = useTodos()
 
   useEffect(() => {
     const KEYWORDS = /workout|training|sport/i
@@ -284,17 +284,23 @@ export function RoutinePage() {
         )}
 
         {/* ── To-Do ── */}
-        {tab === 'todo' && (
-          <TodoList
-            todos={todos}
-            onAdd={(listName, text) => addTodo({ list_name: listName, text })}
-            onComplete={(id, completed) => completeTodo({ id, completed })}
-            onDelete={id => removeTodo(id)}
-            onClearDone={listName => clearDone(listName)}
-            addError={addError}
-            addErrorMsg={addErrorMsg}
-          />
-        )}
+        <div style={{ display: tab === 'todo' ? 'block' : 'none' }}>
+          {todosLoading && todos.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#4a4238', fontSize: 13 }}>
+              Laden…
+            </div>
+          ) : (
+            <TodoList
+              todos={todos}
+              onAdd={(listName, text) => addTodo({ list_name: listName, text })}
+              onComplete={(id, completed) => completeTodo({ id, completed })}
+              onDelete={id => removeTodo(id)}
+              onClearDone={listName => clearDone(listName)}
+              addError={addError}
+              addErrorMsg={addErrorMsg}
+            />
+          )}
+        </div>
 
         {/* ── Woche ── */}
         {tab === 'woche' && (

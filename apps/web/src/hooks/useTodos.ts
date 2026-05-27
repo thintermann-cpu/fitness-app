@@ -29,9 +29,9 @@ export function useTodos() {
       if (error) throw error
       return (data ?? []) as Todo[]
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     gcTime: 10 * 60 * 1000,
-    retry: false,
+    retry: 1,
   })
 
   const addMutation = useMutation({
