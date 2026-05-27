@@ -31,6 +31,7 @@ interface RawRoutine {
 export interface StretchingExercise {
   id: string
   name: string
+  name_en: string
   description: string
   instructions: string[]
   muscle_group: string
@@ -67,6 +68,7 @@ function mapExercise(raw: RawExercise, lang: Lang): StretchingExercise {
   return {
     id: raw.id,
     name: resolve(raw.name, lang),
+    name_en: resolve(raw.name, 'en'),
     description: resolve(raw.description, lang),
     instructions: parseInstructions(raw.instructions, lang),
     muscle_group: raw.muscle_group,

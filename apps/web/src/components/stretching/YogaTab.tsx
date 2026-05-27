@@ -312,7 +312,7 @@ export function YogaTab({ exercises, lang, onSelectFlow }: Props) {
   const resolvedFlows = useMemo(() => {
     return YOGA_FLOWS.map((flow) => {
       const matched = flow.exerciseHints
-        .map((hint) => exercises.find((e) => e.name.toLowerCase().includes(hint.toLowerCase())))
+        .map((hint) => exercises.find((e) => e.name_en.toLowerCase().includes(hint.toLowerCase())))
         .filter((e): e is NonNullable<typeof e> => e !== undefined)
       const unique = matched.filter((e, i, arr) => arr.findIndex((x) => x.id === e.id) === i)
       const routine: StretchingRoutine = {

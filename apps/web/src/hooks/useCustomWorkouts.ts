@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { useAuthStore } from '../store/authStore'
 import {
   type CustomWorkout,
   loadLocalWorkouts,
@@ -59,27 +60,21 @@ function workoutToDb(w: CustomWorkout, userId: string) {
   }
 }
 
-async function getUserId(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession()
-  return session?.user.id ?? null
-}
-
 export function useCustomWorkouts() {
   const queryClient = useQueryClient()
+  const userId = useAuthStore((s) => s.user?.id ?? null)
+  const qk = ['custom_workouts', userId ?? 'local'] as const
 
   const query = useQuery({
-    queryKey: ['custom_workouts'],
-    staleTime: 5 * 60 * 1000,
+    queryKey: qk,
+    // Wait for auth to resolve before querying (avoids caching empty result for unauthenticated state)
+    enabled: isSupabaseConfigured ? !!userId : true,
     queryFn: async (): Promise<CustomWorkout[]> => {
-      if (!isSupabaseConfigured) return loadLocalWorkouts()
-      const userId = await getUserId()
-      if (!userId) return loadLocalWorkouts()
-
+      if (!isSupabaseConfigured || !userId) return loadLocalWorkouts()
       const { data, error } = await supabase
         .from('custom_workouts')
         .select('*')
         .order('created_at', { ascending: false })
-
       if (error) {
         console.error('[useCustomWorkouts] SELECT error:', error.message)
         return loadLocalWorkouts()
@@ -90,12 +85,7 @@ export function useCustomWorkouts() {
 
   const addWorkout = useMutation({
     mutationFn: async (w: CustomWorkout): Promise<CustomWorkout> => {
-      if (!isSupabaseConfigured) {
-        saveLocalWorkout(w)
-        return w
-      }
-      const userId = await getUserId()
-      if (!userId) {
+      if (!isSupabaseConfigured || !userId) {
         saveLocalWorkout(w)
         return w
       }
@@ -112,7 +102,7 @@ export function useCustomWorkouts() {
       return dbToWorkout(data as DbRow)
     },
     onSuccess: (data) => {
-      queryClient.setQueryData<CustomWorkout[]>(['custom_workouts'], (old) =>
+      queryClient.setQueryData<CustomWorkout[]>(qk, (old) =>
         old ? [data, ...old.filter((x) => x.id !== data.id)] : [data],
       )
     },
@@ -120,12 +110,7 @@ export function useCustomWorkouts() {
 
   const updateWorkout = useMutation({
     mutationFn: async (w: CustomWorkout): Promise<CustomWorkout> => {
-      if (!isSupabaseConfigured) {
-        saveLocalWorkout(w)
-        return w
-      }
-      const userId = await getUserId()
-      if (!userId) {
+      if (!isSupabaseConfigured || !userId) {
         saveLocalWorkout(w)
         return w
       }
@@ -143,7 +128,7 @@ export function useCustomWorkouts() {
       return dbToWorkout(data as DbRow)
     },
     onSuccess: (data) => {
-      queryClient.setQueryData<CustomWorkout[]>(['custom_workouts'], (old) =>
+      queryClient.setQueryData<CustomWorkout[]>(qk, (old) =>
         old ? old.map((x) => (x.id === data.id ? data : x)) : [data],
       )
     },
@@ -151,12 +136,7 @@ export function useCustomWorkouts() {
 
   const deleteWorkout = useMutation({
     mutationFn: async (id: string): Promise<string> => {
-      if (!isSupabaseConfigured) {
-        deleteLocalWorkout(id)
-        return id
-      }
-      const userId = await getUserId()
-      if (!userId) {
+      if (!isSupabaseConfigured || !userId) {
         deleteLocalWorkout(id)
         return id
       }
@@ -171,7 +151,7 @@ export function useCustomWorkouts() {
       return id
     },
     onSuccess: (id) => {
-      queryClient.setQueryData<CustomWorkout[]>(['custom_workouts'], (old) =>
+      queryClient.setQueryData<CustomWorkout[]>(qk, (old) =>
         old ? old.filter((x) => x.id !== id) : [],
       )
     },

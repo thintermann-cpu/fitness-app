@@ -85,17 +85,24 @@ export function useWodHistory(wodName?: string) {
         console.error('[useWodHistory] insert error:', error.message, error.code, 'user_id:', userId)
         const all = readLocal()
         writeLocal([newEntry, ...all])
-        return newEntry
+        // Mark as local-only so onSuccess skips the Supabase refetch
+        return Object.assign({ ...newEntry }, { _fromLocal: true }) as WodHistoryEntry
       }
 
       return data as WodHistoryEntry
     },
     onSuccess: (data) => {
       const prepend = (old: WodHistoryEntry[] | undefined) =>
-        old ? [data, ...old] : [data]
+        old ? [data, ...old.filter((e) => e.id !== data.id)] : [data]
       queryClient.setQueryData(['wod_history', '_all'], prepend)
       queryClient.setQueryData(['wod_history', data.wod_name], prepend)
-      void queryClient.invalidateQueries({ queryKey: ['wod_history'] })
+      // Only re-fetch from Supabase when the entry actually reached the DB.
+      // If INSERT failed and fell back to localStorage, a refetch would overwrite
+      // the setQueryData cache with Supabase results that don't contain the entry.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!(data as any)._fromLocal) {
+        void queryClient.invalidateQueries({ queryKey: ['wod_history'] })
+      }
     },
   })
 

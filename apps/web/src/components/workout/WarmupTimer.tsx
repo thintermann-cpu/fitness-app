@@ -111,17 +111,15 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60"
-      onClick={handleClose}
+      className="fixed inset-0 z-50 flex flex-col overflow-y-auto"
+      style={{ backgroundColor: 'var(--color-bg)' }}
     >
       <CountdownOverlay
         isOpen={showCountdown}
         onComplete={() => { setShowCountdown(false); startTimer() }}
       />
       <div
-        className="w-full max-w-sm rounded-t-2xl p-6 pb-8"
-        style={{ backgroundColor: 'var(--color-bg-card)' }}
-        onClick={(e) => e.stopPropagation()}
+        className="flex-1 w-full max-w-sm mx-auto px-4 pt-8 pb-10"
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
