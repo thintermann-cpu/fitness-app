@@ -104,6 +104,7 @@ export function WorkoutPage() {
 
   function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], _workoutName?: string, timerCfg?: TimerInitConfig) {
     setTimerConfig({ mode, minutes, kraftConfig, exercises, ...timerCfg })
+    setTab('timer')
     if (withWarmup) setShowWarmupTimer(true)
   }
 
@@ -159,7 +160,7 @@ export function WorkoutPage() {
       {/* Tab bar */}
       <div className="px-4 flex gap-1 bg-[var(--color-bg)] sticky top-0 z-10 pt-2 pb-3 border-b border-white/5">
         {TABS.map((t) => {
-          const locked = isSessionActive && t.id !== 'timer'
+          const locked = (isSessionActive || showWarmupTimer) && t.id !== 'timer'
           return (
             <button
               key={t.id}

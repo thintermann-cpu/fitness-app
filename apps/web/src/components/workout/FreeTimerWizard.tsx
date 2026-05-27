@@ -321,13 +321,13 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
             )}
           </div>
 
-          {/* AMRAP / ForTime: minutes stepper */}
+          {/* AMRAP / ForTime: minutes stepper + slider */}
           {(mode === 'amrap' || mode === 'fortime') && (
             <div className="rounded-xl px-4 py-4" style={{ backgroundColor: 'var(--color-bg-card)' }}>
               <p className="text-xs font-semibold mb-3 tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
                 {mode === 'fortime' ? 'ZEIT-CAP (0 = kein Cap)' : 'DAUER'}
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mb-3">
                 <button
                   onClick={() => setMinutes((m) => Math.max(mode === 'fortime' ? 0 : 1, m - 1))}
                   className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
@@ -338,10 +338,24 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
                   <span className="text-sm font-medium ml-1.5" style={{ color: 'var(--color-text-muted)' }}>min</span>
                 </div>
                 <button
-                  onClick={() => setMinutes((m) => Math.min(120, m + 1))}
+                  onClick={() => setMinutes((m) => Math.min(60, m + 1))}
                   className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
                   style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
                 >+</button>
+              </div>
+              <input
+                type="range"
+                min={mode === 'fortime' ? 0 : 1}
+                max={60}
+                step={1}
+                value={Math.min(minutes, 60)}
+                onChange={(e) => setMinutes(Number(e.target.value))}
+                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                style={{ accentColor: modeInfo.color }}
+              />
+              <div className="flex justify-between text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                <span>{mode === 'fortime' ? '0' : '1'} min</span>
+                <span>60 min</span>
               </div>
             </div>
           )}

@@ -11,6 +11,7 @@ export interface StretchingLog {
 }
 
 const STORAGE_KEY = 'carveout_stretching_logs'
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function readLocal(): StretchingLog[] {
   try {
@@ -27,9 +28,10 @@ function writeLocal(entries: StretchingLog[]) {
 export function useStretchingLogs() {
   const user = useAuthStore((s) => s.user)
   const queryClient = useQueryClient()
+  const qk = ['stretching_logs', user?.id ?? 'anon'] as const
 
   const query = useQuery({
-    queryKey: ['stretching_logs', user?.id ?? 'anon'],
+    queryKey: qk,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     queryFn: async (): Promise<StretchingLog[]> => {
@@ -67,11 +69,14 @@ export function useStretchingLogs() {
         return newLog
       }
 
+      // Non-UUID routine_ids (custom sessions) cannot reference the FK column
+      const dbRoutineId = entry.routine_id && UUID_RE.test(entry.routine_id) ? entry.routine_id : null
+
       const { data, error } = await supabase
         .from('stretching_logs')
         .insert({
           user_id: user.id,
-          routine_id: entry.routine_id,
+          routine_id: dbRoutineId,
           duration_min: entry.duration_min,
           completed_at: newLog.completed_at,
         })
@@ -79,15 +84,22 @@ export function useStretchingLogs() {
         .single()
 
       if (error) {
+        console.error('[useStretchingLogs] insert error:', error.message)
         const all = readLocal()
         writeLocal([newLog, ...all])
-        return newLog
+        return Object.assign({ ...newLog }, { _fromLocal: true }) as StretchingLog
       }
 
       return data as StretchingLog
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['stretching_logs'] })
+    onSuccess: (data) => {
+      const prepend = (old: StretchingLog[] | undefined) =>
+        old ? [data, ...old.filter((e) => e.id !== data.id)] : [data]
+      queryClient.setQueryData(qk, prepend)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (!(data as any)._fromLocal) {
+        void queryClient.invalidateQueries({ queryKey: ['stretching_logs'] })
+      }
     },
   })
 

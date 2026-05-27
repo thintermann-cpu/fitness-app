@@ -94,10 +94,11 @@ function mapRoutine(raw: RawRoutine, lang: Lang): StretchingRoutine {
 }
 
 export function useStretchingExercises() {
-  const lang = (useAuthStore((s) => s.profile?.language) ?? 'en') as Lang
+  const lang   = (useAuthStore((s) => s.profile?.language) ?? 'en') as Lang
+  const userId = useAuthStore((s) => s.user?.id ?? null)
 
   return useQuery({
-    queryKey: ['stretching_exercises', lang],
+    queryKey: ['stretching_exercises', lang, userId ?? 'anon'],
     queryFn: async (): Promise<StretchingExercise[]> => {
       if (!isSupabaseConfigured) {
         console.warn('[useStretchingExercises] Supabase not configured — returning empty list')
@@ -112,16 +113,17 @@ export function useStretchingExercises() {
       if (error) { console.error('[useStretchingExercises]', error.message); return [] }
       return ((data ?? []) as RawExercise[]).map((r) => mapExercise(r, lang))
     },
-    staleTime: 30 * 60 * 1000,
-    gcTime:    60 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    gcTime:    30 * 60 * 1000,
   })
 }
 
 export function useStretchingRoutines() {
-  const lang = (useAuthStore((s) => s.profile?.language) ?? 'en') as Lang
+  const lang   = (useAuthStore((s) => s.profile?.language) ?? 'en') as Lang
+  const userId = useAuthStore((s) => s.user?.id ?? null)
 
   return useQuery({
-    queryKey: ['stretching_routines', lang],
+    queryKey: ['stretching_routines', lang, userId ?? 'anon'],
     queryFn: async (): Promise<StretchingRoutine[]> => {
       if (!isSupabaseConfigured) {
         console.warn('[useStretchingRoutines] Supabase not configured — returning empty list')
@@ -136,7 +138,7 @@ export function useStretchingRoutines() {
       if (error) { console.error('[useStretchingRoutines]', error.message); return [] }
       return ((data ?? []) as RawRoutine[]).map((r) => mapRoutine(r, lang))
     },
-    staleTime: 30 * 60 * 1000,
-    gcTime:    60 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    gcTime:    30 * 60 * 1000,
   })
 }

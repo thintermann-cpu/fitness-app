@@ -20,6 +20,8 @@ const DEFAULT_EXERCISES = [
   { name: 'Air Squats',    desc: 'Tief in die Knie, Brust hoch',                sek: 40 },
 ]
 
+const TOTAL_EXERCISE_CYCLE_SEC = DEFAULT_EXERCISES.reduce((sum, ex) => sum + ex.sek, 0)
+
 interface Props {
   isOpen: boolean
   onClose: () => void
@@ -106,6 +108,18 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
 
   const total = activeMins * 60
   const progress = running && total > 0 ? timeLeft / total : 1
+
+  const currentExIdx = (() => {
+    if (!running || total <= 0) return 0
+    const elapsed = total - timeLeft
+    const posInCycle = elapsed % TOTAL_EXERCISE_CYCLE_SEC
+    let cumSek = 0
+    for (let i = 0; i < DEFAULT_EXERCISES.length; i++) {
+      cumSek += DEFAULT_EXERCISES[i].sek
+      if (posInCycle < cumSek) return i
+    }
+    return DEFAULT_EXERCISES.length - 1
+  })()
   const circumference = 2 * Math.PI * 70
   const dashOffset = circumference * (1 - progress)
 
@@ -225,8 +239,8 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
         ) : (
           <>
             {/* Countdown ring */}
-            <div className="flex flex-col items-center mb-5">
-              <div className="relative w-40 h-40">
+            <div className="flex flex-col items-center mb-4">
+              <div className="relative w-36 h-36">
                 <svg className="absolute inset-0 w-full h-full" viewBox="0 0 160 160" style={{ transform: 'rotate(-90deg)' }}>
                   <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
                   <circle
@@ -245,6 +259,39 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
                     {formatTime(timeLeft)}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            {/* Exercise list with current exercise highlighted */}
+            <div className="w-full rounded-xl px-3 py-2 mb-4" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
+              <div className="space-y-0.5">
+                {DEFAULT_EXERCISES.map((ex, i) => (
+                  <div
+                    key={ex.name}
+                    className="flex items-start gap-2 px-2 py-1.5 rounded-lg transition-colors"
+                    style={i === currentExIdx ? { backgroundColor: 'rgba(232,100,42,0.12)' } : {}}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="text-xs font-medium"
+                        style={{ color: i === currentExIdx ? '#E8642A' : 'var(--color-text-muted)' }}
+                      >
+                        {i === currentExIdx && '▶ '}{ex.name}
+                      </p>
+                      {i === currentExIdx && (
+                        <p className="text-[10px] leading-tight mt-0.5" style={{ color: 'rgba(232,100,42,0.65)' }}>
+                          {ex.desc}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className="text-[10px] tabular-nums flex-shrink-0 mt-0.5"
+                      style={{ color: i === currentExIdx ? '#E8642A' : 'rgba(255,255,255,0.2)' }}
+                    >
+                      {ex.sek}s
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
