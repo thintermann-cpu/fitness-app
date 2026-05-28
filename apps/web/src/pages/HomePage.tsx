@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { TodayPillarTracker } from '../components/home/TodayPillarTracker'
+import { WeekStrip } from '../components/home/WeekStrip'
 import { AdaptiveSuggestion } from '../components/home/AdaptiveSuggestion'
 import { TodaysWod } from '../components/home/TodaysWod'
 import { WeekStats } from '../components/home/WeekStats'
@@ -48,6 +49,7 @@ export function HomePage() {
 
       <AdaptiveSuggestion />
       <TodayPillarTracker />
+      <WeekStrip />
       <MoodCheck
         mood={dailyLog?.mood ?? null}
         moodComment={dailyLog?.mood_comment ?? null}

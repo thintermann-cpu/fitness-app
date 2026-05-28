@@ -18,8 +18,8 @@ interface RecentUser {
 const PILLARS = [
   { id: 'workout',    label: 'Workout',    color: '#E8642A' },
   { id: 'routine',    label: 'Mein Tag',   color: '#4A90D9' },
-  { id: 'stretching', label: 'Stretching', color: '#7BC67E' },
-  { id: 'meditation', label: 'Meditation', color: '#9B7FD4' },
+  { id: 'stretching', label: 'Mobilität',   color: '#7BC67E' },
+  { id: 'meditation', label: 'Achtsamkeit', color: '#9B7FD4' },
 ]
 
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {

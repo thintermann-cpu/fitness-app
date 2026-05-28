@@ -12,8 +12,8 @@ const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 const PILLARS = [
   { id: 'routine',    label: { de: 'Routine',         en: 'Routine',       es: 'Rutina'        }, emoji: '📋', color: '#4A90D9' },
   { id: 'workout',    label: { de: 'Training',        en: 'Workout',       es: 'Entrenamiento' }, emoji: '💪', color: '#E8642A' },
-  { id: 'stretching', label: { de: 'Stretch & Yoga',  en: 'Stretch & Yoga', es: 'Estiramiento'  }, emoji: '🤸', color: '#7BC67E' },
-  { id: 'meditation', label: { de: 'Meditation',      en: 'Meditation',    es: 'Meditación'    }, emoji: '🧘', color: '#9B7FD4' },
+  { id: 'stretching', label: { de: 'Mobilität',   en: 'Mobility',    es: 'Movilidad' }, emoji: '🤸', color: '#7BC67E' },
+  { id: 'meditation', label: { de: 'Achtsamkeit', en: 'Mindfulness', es: 'Atención'  }, emoji: '🧘', color: '#9B7FD4' },
 ] as const
 
 const PILLAR_ROUTES: Record<string, string> = {
@@ -149,7 +149,6 @@ export function TodayPillarTracker() {
     {contextPillar && ctxPillarData && (
       <div
         style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', backgroundColor: 'rgba(0,0,0,0.55)' }}
-        onClick={() => setContextPillar(null)}
       >
         <div
           style={{ width: '100%', padding: '20px 20px 32px', background: 'var(--color-bg-card)', borderRadius: '16px 16px 0 0', display: 'flex', flexDirection: 'column', gap: 12 }}

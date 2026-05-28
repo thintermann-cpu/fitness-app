@@ -35,8 +35,8 @@ const EQUIPMENT_ITEMS = [
 const PILLAR_ITEMS = [
   { id: 'workout',    emoji: '💪', label: 'Training',       color: '#E8642A' },
   { id: 'routine',    emoji: '📋', label: 'Mein Tag',       color: '#4A90D9' },
-  { id: 'stretching', emoji: '🤸', label: 'Stretch & Yoga', color: '#7BC67E' },
-  { id: 'meditation', emoji: '🧘', label: 'Meditation',     color: '#9B7FD4' },
+  { id: 'stretching', emoji: '🤸', label: 'Mobilität',   color: '#7BC67E' },
+  { id: 'meditation', emoji: '🧘', label: 'Achtsamkeit', color: '#9B7FD4' },
 ] as const
 
 type PushEnabledKey = 'morning_enabled' | 'evening_enabled' | 'wod_enabled' | 'inactivity_enabled'
