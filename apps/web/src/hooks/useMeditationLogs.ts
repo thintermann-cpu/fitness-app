@@ -46,7 +46,7 @@ export function useMeditationLogs() {
       if (error) return readLocal()
       return (data ?? []) as MeditationLog[]
     },
-    enabled: true,
+    enabled: !!user,
   })
 
   const addLog = useMutation({

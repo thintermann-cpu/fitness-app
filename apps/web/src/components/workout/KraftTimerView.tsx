@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { useSessionStore } from '../../store/sessionStore'
+import { useAuthStore } from '../../store/authStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 
 type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
@@ -55,6 +56,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   const wakeLockRef      = useRef<{ release: () => Promise<void> } | null>(null)
   const { addEntry }     = useWodHistory()
   const setSessionActive = useSessionStore((s) => s.setSessionActive)
+  const lang             = useAuthStore((s) => s.profile?.language ?? 'de')
 
   useEffect(() => {
     const nav = navigator as WakeLockNav
@@ -70,8 +72,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   }, [phase])
 
   useEffect(() => {
-    const active = phase !== 'idle' && phase !== 'done'
-    setSessionActive(active)
+    setSessionActive(phase !== 'idle')
     return () => setSessionActive(false)
   }, [phase, setSessionActive])
 
@@ -224,13 +225,13 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
       <div className="flex flex-col items-center gap-5 py-8 text-center">
         <p style={{ fontSize: 64, lineHeight: 1 }}>🎉</p>
         <div>
-          <p className="text-2xl font-black" style={{ color: '#10B981' }}>Well done!</p>
+          <p className="text-2xl font-black" style={{ color: '#10B981' }}>{lang === 'de' ? 'Gut gemacht!' : 'Well done!'}</p>
           {workoutName && (
             <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>{workoutName}</p>
           )}
         </div>
         <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-          {totalSetsAll} Sätze abgeschlossen
+          {totalSetsAll} {lang === 'de' ? 'Sätze abgeschlossen' : 'sets completed'}
         </p>
         <div className="flex flex-col gap-3 w-full mt-2">
           {onShowHistory && (
@@ -239,7 +240,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
               className="py-3.5 rounded-2xl font-bold text-base text-white"
               style={{ backgroundColor: '#E8642A' }}
             >
-              In History anzeigen
+              {lang === 'de' ? 'In History anzeigen' : 'Show in History'}
             </button>
           )}
           <button
@@ -247,7 +248,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
             className="py-3.5 rounded-2xl font-bold text-base"
             style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
           >
-            Schliessen
+            {lang === 'de' ? 'Schliessen' : 'Close'}
           </button>
         </div>
       </div>

@@ -326,7 +326,6 @@ export function WodDetail({ wodName, onBack }: Props) {
             initialMode={timerMode}
             initialMinutes={wod.estimated_minutes || 20}
             onComplete={() => {
-              setShowScore(true)
               track('workout_completed', { wod_id: wod.id, duration_min: wod.estimated_minutes, category: wod.category })
               window.dispatchEvent(new CustomEvent('carveout:workout-completed'))
             }}

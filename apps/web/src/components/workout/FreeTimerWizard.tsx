@@ -368,14 +368,43 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
                 {[
                   { label: 'Work', value: tabataWork, set: setTabataWork, unit: 's', min: 5, max: 120 },
                   { label: 'Pause', value: tabataRest, set: setTabataRest, unit: 's', min: 5, max: 120 },
-                  { label: 'Runden', value: tabataRounds, set: setTabataRounds, unit: '', min: 1, max: 20 },
                 ].map(({ label, value, set, unit, min, max }) => (
                   <div key={label} className="flex flex-col items-center gap-2">
                     <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
                     <MiniStepper value={value} onChange={set} min={min} max={max} />
-                    {unit && <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{unit}</span>}
+                    <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{unit}</span>
                   </div>
                 ))}
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-2 tracking-wide" style={{ color: 'var(--color-text-muted)' }}>RUNDEN</p>
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    onClick={() => setTabataRounds((r) => Math.max(1, r - 1))}
+                    className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
+                    style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
+                  >-</button>
+                  <span className="text-xl font-black w-16 text-center" style={{ color: 'var(--color-text)' }}>{tabataRounds}</span>
+                  <button
+                    onClick={() => setTabataRounds((r) => Math.min(20, r + 1))}
+                    className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
+                    style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
+                  >+</button>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={20}
+                  step={1}
+                  value={tabataRounds}
+                  onChange={(e) => setTabataRounds(Number(e.target.value))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                  style={{ accentColor: modeInfo.color }}
+                />
+                <div className="flex justify-between text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                  <span>1</span>
+                  <span>20 Runden</span>
+                </div>
               </div>
               <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
                 Gesamt: ~{Math.round((tabataWork + tabataRest) * tabataRounds / 60)} min
@@ -388,16 +417,41 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
             <div className="rounded-xl px-4 py-4 space-y-4" style={{ backgroundColor: 'var(--color-bg-card)' }}>
               <p className="text-xs font-semibold tracking-wide" style={{ color: 'var(--color-text-muted)' }}>EMOM EINSTELLUNGEN</p>
               <div className="flex justify-around">
-                {[
-                  { label: 'Intervall', value: emomInterval, set: setEmomInterval, unit: 'min', min: 1, max: 10 },
-                  { label: 'Runden', value: emomRounds, set: setEmomRounds, unit: '', min: 1, max: 30 },
-                ].map(({ label, value, set, unit, min, max }) => (
-                  <div key={label} className="flex flex-col items-center gap-2">
-                    <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
-                    <MiniStepper value={value} onChange={set} min={min} max={max} />
-                    {unit && <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{unit}</span>}
-                  </div>
-                ))}
+                <div className="flex flex-col items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>Intervall</span>
+                  <MiniStepper value={emomInterval} onChange={setEmomInterval} min={1} max={10} />
+                  <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>min</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-2 tracking-wide" style={{ color: 'var(--color-text-muted)' }}>RUNDEN</p>
+                <div className="flex items-center justify-center gap-4">
+                  <button
+                    onClick={() => setEmomRounds((r) => Math.max(1, r - 1))}
+                    className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
+                    style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
+                  >-</button>
+                  <span className="text-xl font-black w-16 text-center" style={{ color: 'var(--color-text)' }}>{emomRounds}</span>
+                  <button
+                    onClick={() => setEmomRounds((r) => Math.min(30, r + 1))}
+                    className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
+                    style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
+                  >+</button>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={30}
+                  step={1}
+                  value={emomRounds}
+                  onChange={(e) => setEmomRounds(Number(e.target.value))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                  style={{ accentColor: modeInfo.color }}
+                />
+                <div className="flex justify-between text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                  <span>1</span>
+                  <span>30 Runden</span>
+                </div>
               </div>
               <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
                 Gesamt: {emomInterval * emomRounds} min

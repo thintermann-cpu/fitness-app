@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { useAuthStore } from '../store/authStore'
 
 export interface WodHistoryEntry {
   id: string
@@ -25,12 +26,15 @@ function writeLocal(entries: WodHistoryEntry[]) {
 }
 
 export function useWodHistory(wodName?: string) {
+  const userId      = useAuthStore((s) => s.user?.id ?? null)
   const queryClient = useQueryClient()
+  const userScope   = isSupabaseConfigured ? (userId ?? 'anon') : 'local'
 
   const query = useQuery({
-    queryKey: ['wod_history', wodName ?? '_all'],
+    queryKey: ['wod_history', userScope, wodName ?? '_all'],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: isSupabaseConfigured ? !!userId : true,
     queryFn: async (): Promise<WodHistoryEntry[]> => {
       if (!isSupabaseConfigured) {
         const all = readLocal()
@@ -70,8 +74,6 @@ export function useWodHistory(wodName?: string) {
         return newEntry
       }
 
-      const { data: { session } } = await supabase.auth.getSession()
-      const userId = session?.user.id
       const payload = { ...newEntry, ...(userId ? { user_id: userId } : {}) }
       console.log('[useWodHistory] INSERT attempt', payload)
 
@@ -94,8 +96,8 @@ export function useWodHistory(wodName?: string) {
     onSuccess: (data) => {
       const prepend = (old: WodHistoryEntry[] | undefined) =>
         old ? [data, ...old.filter((e) => e.id !== data.id)] : [data]
-      queryClient.setQueryData(['wod_history', '_all'], prepend)
-      queryClient.setQueryData(['wod_history', data.wod_name], prepend)
+      queryClient.setQueryData(['wod_history', userScope, '_all'], prepend)
+      queryClient.setQueryData(['wod_history', userScope, data.wod_name], prepend)
       // Only re-fetch from Supabase when the entry actually reached the DB.
       // If INSERT failed and fell back to localStorage, a refetch would overwrite
       // the setQueryData cache with Supabase results that don't contain the entry.

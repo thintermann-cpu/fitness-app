@@ -46,7 +46,7 @@ export function useStretchingLogs() {
       if (error) return readLocal()
       return (data ?? []) as StretchingLog[]
     },
-    enabled: true,
+    enabled: !!user,
   })
 
   const addLog = useMutation({
