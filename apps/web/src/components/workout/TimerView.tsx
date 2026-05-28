@@ -14,6 +14,7 @@ interface Props {
   initialMode?: TimerMode
   initialMinutes?: number
   onComplete?: () => void
+  onShowHistory?: () => void
   bilateral?: boolean
   adHocLog?: boolean
   exercises?: WizardExercise[]
@@ -124,7 +125,7 @@ function Stepper({
 }
 
 export function TimerView({
-  initialMode, initialMinutes, onComplete, bilateral, adHocLog, exercises,
+  initialMode, initialMinutes, onComplete, onShowHistory, bilateral, adHocLog, exercises,
   warmupPending, workoutName,
   initialTabataWork, initialTabataRest, initialTabataRounds,
   initialEmomInterval, initialEmomRounds,
@@ -358,6 +359,47 @@ export function TimerView({
         showNextExercise = tick.interval < tabataRounds
       }
     }
+  }
+
+  if (isComplete) {
+    const scoreText = mode === 'fortime'
+      ? `Finished in ${formatMs(tick.elapsed)}`
+      : mode === 'emom'
+      ? `${emomRounds} Intervals · ${formatMs(tick.elapsed)}`
+      : mode === 'tabata'
+      ? `${tabataRounds} Rounds · ${formatMs(tick.elapsed)}`
+      : formatMs(tick.elapsed)
+
+    return (
+      <div className="flex flex-col items-center gap-6 py-8 text-center">
+        <p style={{ fontSize: 64, lineHeight: 1 }}>🎉</p>
+        <div>
+          <p className="text-2xl font-black" style={{ color: '#10B981' }}>Well done!</p>
+          {workoutName && (
+            <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>{workoutName}</p>
+          )}
+        </div>
+        <p className="font-mono font-bold text-xl" style={{ color: 'var(--color-text)' }}>{scoreText}</p>
+        <div className="flex flex-col gap-3 w-full mt-2">
+          {onShowHistory && (
+            <button
+              onClick={onShowHistory}
+              className="py-3.5 rounded-2xl font-bold text-base text-white"
+              style={{ backgroundColor: '#E8642A' }}
+            >
+              In History anzeigen
+            </button>
+          )}
+          <button
+            onClick={handleReset}
+            className="py-3.5 rounded-2xl font-bold text-base"
+            style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
+          >
+            Schliessen
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -161,7 +161,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
   const phaseTotal = (() => {
     if (phase === 'switch') return SWITCH_DURATION
     if (phase === 'rest') return pauseDuration
-    if (phase === 'exercise') return current?.bilateral ? Math.floor(currentDur / 2) : currentDur
+    if (phase === 'exercise') return currentDur
     return currentDur
   })()
   const ringProgress = phaseTotal > 0 ? timeLeft / phaseTotal : 0
@@ -178,7 +178,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
     setCurrentIndex(0)
     setSide('left')
     setPhase('exercise')
-    setTimeLeft(first.bilateral ? Math.floor(exerciseDuration / 2) : exerciseDuration)
+    setTimeLeft(exerciseDuration)
     setPaused(false)
     void audioRef.current.playGong()
     if (routine.subcategory === 'yoga_flow') {
@@ -192,7 +192,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
     setCurrentIndex(idx)
     setSide('left')
     setPhase('exercise')
-    setTimeLeft(ex.bilateral ? Math.floor(exerciseDuration / 2) : exerciseDuration)
+    setTimeLeft(exerciseDuration)
     setPaused(false)
   }
 
@@ -240,7 +240,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
         vibrate(); void audioRef.current.playBeep()
         setSide('right')
         setPhase('exercise')
-        setTimeLeft(Math.floor(currentDur / 2))
+        setTimeLeft(currentDur)
       } else if (phase === 'rest') {
         if (currentIndex < total - 1) {
           vibrate(); void audioRef.current.playBeep()

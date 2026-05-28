@@ -26,7 +26,7 @@ export function useTodayPillars() {
       const today = todayStr()
       const todayStart = `${today}T00:00:00`
 
-      const [wodRes, stretchRes, medRes, routineRes] = await Promise.all([
+      const [wodRes, stretchRes, medRes, routineRes, manualRes] = await Promise.all([
         supabase
           .from('wod_history')
           .select('*', { count: 'exact', head: true })
@@ -44,12 +44,17 @@ export function useTodayPillars() {
           .select('*', { count: 'exact', head: true })
           .eq('date', today)
           .eq('completed', true),
+        supabase
+          .from('pillar_manual_logs')
+          .select('pillar')
+          .eq('date', today),
       ])
 
-      const workout    = (wodRes.count     ?? 0) > 0
-      const stretching = (stretchRes.count ?? 0) > 0
-      const meditation = (medRes.count     ?? 0) > 0
-      const routine    = (routineRes.count ?? 0) > 0
+      const manual     = new Set((manualRes.data ?? []).map((r: { pillar: string }) => r.pillar))
+      const workout    = (wodRes.count     ?? 0) > 0 || manual.has('workout')
+      const stretching = (stretchRes.count ?? 0) > 0 || manual.has('stretching')
+      const meditation = (medRes.count     ?? 0) > 0 || manual.has('meditation')
+      const routine    = (routineRes.count ?? 0) > 0 || manual.has('routine')
       const total      = [workout, routine, stretching, meditation].filter(Boolean).length
 
       return { workout, routine, stretching, meditation, total }

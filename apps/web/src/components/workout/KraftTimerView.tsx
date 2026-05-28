@@ -28,6 +28,7 @@ interface Props {
   restBetweenExercises: number  // seconds
   workoutName?: string
   onComplete?: () => void
+  onShowHistory?: () => void
 }
 
 type KraftPhase = 'idle' | 'work' | 'rest' | 'done'
@@ -44,7 +45,7 @@ const WEIGHT_COLORS = {
   schwer: '#EF4444',
 }
 
-export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercises, workoutName, onComplete }: Props) {
+export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercises, workoutName, onComplete, onShowHistory }: Props) {
   const [phase,       setPhase]       = useState<KraftPhase>('idle')
   const [exIdx,       setExIdx]       = useState(0)
   const [setIdx,      setSetIdx]      = useState(0)
@@ -218,13 +219,37 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
 
   // ── Done ──────────────────────────────────────────────────────────────────
   if (phase === 'done') {
+    const totalSetsAll = exercises.reduce((a, e) => a + (e.sets ?? 3), 0)
     return (
-      <div className="flex flex-col items-center gap-5 py-8">
-        <p className="text-5xl">🏆</p>
-        <p className="text-2xl font-black" style={{ color: '#10B981' }}>Geschafft!</p>
+      <div className="flex flex-col items-center gap-5 py-8 text-center">
+        <p style={{ fontSize: 64, lineHeight: 1 }}>🎉</p>
+        <div>
+          <p className="text-2xl font-black" style={{ color: '#10B981' }}>Well done!</p>
+          {workoutName && (
+            <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>{workoutName}</p>
+          )}
+        </div>
         <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-          {exercises.reduce((a, e) => a + (e.sets ?? 3), 0)} Sätze abgeschlossen
+          {totalSetsAll} Sätze abgeschlossen
         </p>
+        <div className="flex flex-col gap-3 w-full mt-2">
+          {onShowHistory && (
+            <button
+              onClick={onShowHistory}
+              className="py-3.5 rounded-2xl font-bold text-base text-white"
+              style={{ backgroundColor: '#E8642A' }}
+            >
+              In History anzeigen
+            </button>
+          )}
+          <button
+            onClick={() => onComplete?.()}
+            className="py-3.5 rounded-2xl font-bold text-base"
+            style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
+          >
+            Schliessen
+          </button>
+        </div>
       </div>
     )
   }

@@ -248,6 +248,7 @@ export function WorkoutPage() {
                     restBetweenExercises={timerConfig.kraftConfig.restBetweenExercises}
                     workoutName={timerConfig.workoutName}
                     onComplete={() => setTimerConfig(null)}
+                    onShowHistory={() => setTab('history')}
                   />
                 ) : (
                   <TimerView
@@ -262,6 +263,7 @@ export function WorkoutPage() {
                     initialTabataRounds={timerConfig.tabataRounds}
                     initialEmomInterval={timerConfig.emomInterval}
                     initialEmomRounds={timerConfig.emomRounds}
+                    onShowHistory={() => setTab('history')}
                   />
                 )}
                 <button
