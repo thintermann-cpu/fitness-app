@@ -521,12 +521,17 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
           </div>
         )}
 
-        {/* Next exercise preview — last 10s of exercise, or entire rest phase (≥5s) */}
+        {/* Next exercise preview — last 10s of exercise, or entire switch/rest phase */}
         <div className="mt-3 w-full">
           <NextExercisePreview
-            name={orderedExercises[currentIndex + 1]?.name}
+            name={
+              current?.bilateral && side === 'left'
+                ? `${t.rightSide}: ${current.name}`
+                : orderedExercises[currentIndex + 1]?.name
+            }
             visible={
               (phase === 'exercise' && timeLeft <= 10) ||
+              phase === 'switch' ||
               (phase === 'rest' && pauseDuration >= 5)
             }
             color={PILLAR_COLOR}
