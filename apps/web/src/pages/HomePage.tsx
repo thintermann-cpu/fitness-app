@@ -4,8 +4,7 @@ import { TodayPillarTracker } from '../components/home/TodayPillarTracker'
 import { WeekStrip } from '../components/home/WeekStrip'
 import { AdaptiveSuggestion } from '../components/home/AdaptiveSuggestion'
 import { TodaysWod } from '../components/home/TodaysWod'
-import { WeekStats } from '../components/home/WeekStats'
-import { RecentActivity } from '../components/home/RecentActivity'
+
 import { MoodCheck } from '../components/routine/MoodCheck'
 import { useDailyLog } from '../hooks/useDailyLog'
 
@@ -56,8 +55,6 @@ export function HomePage() {
         onSave={(mood, comment) => setMood({ mood, mood_comment: comment })}
       />
       <TodaysWod />
-      <WeekStats />
-      <RecentActivity />
     </div>
   )
 }
