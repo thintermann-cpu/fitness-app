@@ -542,7 +542,7 @@ export function TimerView({
       {/* Current exercise name (EMOM / Tabata with exercises) */}
       {(isRunning || isPaused) && hasExercises && (mode === 'emom' || isTabata) && currentExName && (
         <div className="flex flex-col items-center gap-2 w-full">
-          <p className="text-lg font-bold text-center" style={{ color: 'var(--color-text)' }}>
+          <p className="text-2xl font-bold text-center" style={{ color: 'var(--color-text)' }}>
             {currentExName}
           </p>
           <NextExercisePreview

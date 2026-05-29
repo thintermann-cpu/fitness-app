@@ -216,7 +216,7 @@ export function MeditationSession({ meditation, lang, onFinish: _onFinish }: Pro
     <div className="space-y-5">
       {/* Title */}
       <div className="text-center">
-        <h2 className="text-xl font-bold text-[var(--color-text)]">{meditation.name}</h2>
+        <h2 className="text-2xl font-bold text-[var(--color-text)]">{meditation.name}</h2>
         <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{meditation.duration_min} min</p>
       </div>
 

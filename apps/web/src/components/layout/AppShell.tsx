@@ -1,18 +1,10 @@
-import { useRef } from 'react'
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, Link, useLocation } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { Sidebar } from './Sidebar'
 import { useFavorites } from '../../hooks/useFavorites'
 import { useAudioStore } from '../../store/audioStore'
 import { useAuthStore } from '../../store/authStore'
-import { useSessionStore } from '../../store/sessionStore'
 import { ToastContainer } from '../ui/ToastContainer'
-
-const MAIN_ROUTES = ['/home', '/routine', '/workout', '/stretching', '/meditation']
-const ROUTE_PILLAR: Record<string, string | null> = {
-  '/home': null, '/routine': null, '/workout': 'workout',
-  '/stretching': 'stretching', '/meditation': 'meditation',
-}
 
 function FavoritesHeaderBtn() {
   const { favorites } = useFavorites()
@@ -73,37 +65,8 @@ function MuteHeaderBtn() {
 
 export function AppShell() {
   const location    = useLocation()
-  const navigate    = useNavigate()
   const { profile } = useAuthStore()
-  const touchX           = useRef(0)
-  const touchY           = useRef(0)
-  const isSessionActive  = useSessionStore((s) => s.isSessionActive)
-  const firstName        = profile?.display_name?.trim().split(' ')[0] ?? ''
-
-  const activePillars = profile?.active_pillars?.length
-    ? profile.active_pillars
-    : ['workout', 'routine', 'stretching', 'meditation']
-
-  const swipeRoutes = MAIN_ROUTES.filter(r => {
-    const p = ROUTE_PILLAR[r]
-    return p === null || activePillars.includes(p)
-  })
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchX.current = e.touches[0].clientX
-    touchY.current = e.touches[0].clientY
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (isSessionActive) return
-    const dx = e.changedTouches[0].clientX - touchX.current
-    const dy = e.changedTouches[0].clientY - touchY.current
-    if (Math.abs(dx) < 50 || Math.abs(dy) > 30) return
-    const idx = swipeRoutes.indexOf(location.pathname)
-    if (idx < 0) return
-    if (dx < 0 && idx < swipeRoutes.length - 1) navigate(swipeRoutes[idx + 1])
-    else if (dx > 0 && idx > 0) navigate(swipeRoutes[idx - 1])
-  }
+  const firstName   = profile?.display_name?.trim().split(' ')[0] ?? ''
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
@@ -156,11 +119,7 @@ export function AppShell() {
           </div>
         </div>
 
-        <main
-          className="flex-1 overflow-y-auto pb-[60px] lg:pb-0"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
+        <main className="flex-1 overflow-y-auto pb-[60px] lg:pb-0">
           <Outlet />
         </main>
         <BottomNav />

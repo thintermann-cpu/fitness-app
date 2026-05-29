@@ -511,7 +511,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
         {phase !== 'rest' && (
           <div className="flex flex-col items-center gap-1 mt-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold text-[var(--color-text)] text-center">
+              <h2 className="text-3xl font-bold text-[var(--color-text)] text-center">
                 {current?.name}
               </h2>
               {(current?.instructions?.length ?? 0) > 0 && (
