@@ -14,8 +14,8 @@ Das Produkt basiert auf **4 Pillars** (Domänen), die einzeln freischaltbar sind
 |---|---|---|
 | **Workout** | `#E8642A` Orange | WOD-Datenbank (796 lokale / bis zu 981 Supabase-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), Krafttraining-Modus (Satz-basierter Flow mit Gewichts-/Rep-Tracking), History, Highscores |
 | **Routine** | `#4A90D9` Blau | Tagesroutinen, To-dos, Wochenübersicht; MoodCheck jetzt auf HomePage |
-| **Stretching** | `#7BC67E` Grün | 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync |
-| **Meditation** | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer, Screen Wake Lock, Gong am Session-Ende; Ambient-Sound-Dateien unter `public/audio/ambient/` |
+| **Mobilität** (Stretching) | `#7BC67E` Grün | 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync; Nav-Label: DE Mobilität / EN Mobility / ES Movilidad — DB-ID `stretching` unverändert |
+| **Achtsamkeit** (Meditation) | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer, Screen Wake Lock, Gong am Session-Ende; Ambient-Sound-Dateien unter `public/audio/ambient/`; Nav-Label: DE Achtsamkeit / EN Mindfulness / ES Atención — DB-ID `meditation` unverändert |
 
 Migrations-Hintergrund: Rebuild aus zwei Vorgänger-Apps (`wod-tracker/` Vanilla-JS-PWA mit ServiceWorker, `mein-tag/` v1.4.0 HTML). Beide Ordner liegen noch im Repo und bleiben unberührt.
 
@@ -73,7 +73,8 @@ apps/web/src/
 │   ├── LandingPage.tsx            # Marketing-Landingpage DE/EN; inline `useLang` (localStorage + Browser-Fallback, Default DE); 8 Sektionen (LandingNav, Hero, PersonaSection, PillarSection, HowItWorks, ResultsTimeline, PricingSection, CtaSection, LandingFooter); Fade-in on scroll via IntersectionObserver; öffentliche Route `/`
 │   ├── ImpressumPage.tsx          # Impressum DE/EN; inline `useLang` (localStorage + Browser-Fallback, Default DE); nutzt LandingNav + LandingFooter; öffentliche Route `/impressum`
 │   ├── DatenschutzPage.tsx        # Datenschutzerklärung DE/EN; inline `useLang`; nutzt LandingNav + LandingFooter; Abschnitte: Verantwortlicher, Daten, Zweck, Dritte, Rechte, Speicherdauer; öffentliche Route `/datenschutz`
-│   ├── HomePage.tsx               # Dashboard: Greeting + i18n-Datum, TodayPillarTracker, MoodCheck (useDailyLog), AdaptiveSuggestion, TodaysWod, WeekStats, RecentActivity
+│   ├── HomePage.tsx               # Dashboard: Greeting + i18n-Datum, TodayPillarTracker, MoodCheck (useDailyLog), AdaptiveSuggestion, TodaysWod, WeekStrip; WeekStats + RecentActivity entfernt
+│   ├── HistoryPage.tsx            # Kombinierter Verlauf: Workout / Mobilität / Achtsamkeit; Filter nach Pillar (Alle + 3 Chips); chronologisch neueste zuerst; Eintrag: Pillar-Farbe, Name, Dauer/Score, Datum; nutzt useWodHistory + useStretchingLogs + useMeditationLogs; Route `/history`
 │   ├── LoginPage.tsx
 │   ├── RegisterPage.tsx
 │   ├── OnboardingPage.tsx     # 3 Schritte: Sprache → Ziel → Equipment; Ziel (6 Optionen, `goal`-Feld, überspringbar); Equipment (14 Optionen, Mehrfachauswahl, überspringbar); Pillar-Auswahl entfernt — alle 4 Pillars immer aktiv (`primary_pillar: 'workout'`, `active_pillars: ALL_PILLARS`); Primary Pillar wird intern als 'workout' gesetzt (kein UI-Schritt — Änderung über Settings möglich); speichert language/goal/equipment/primary_pillar/active_pillars
@@ -108,11 +109,12 @@ apps/web/src/
 │   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg-Breakpoint); Reihenfolge: Home · Routine · Workout · Stretching · Meditation; alle Items immer sichtbar — inaktive Pillars gedimmt + Alert-Modal beim Antippen; aktive Pillars aus `user_profiles.active_pillars` (CustomEvent-Sync via `hide_inactive_changed` + `active_pillars_changed`); `hide_inactive_pillars` blendet inaktive Items aus; erstes Item: Home `/home`; isActive-Fix für exakten `/home`-Match
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
 │   ├── home/
-│   │   ├── TodayPillarTracker.tsx  # 4 Chips (Done/Open) aus useTodayPillars; dreisprachig; Header-Label: "Aktueller Stand von heute · N von 4" (de/en/es); Chip-Reihenfolge: Routine · Workout · Stretching · Meditation; kurzer Tap → Pillar-Route (useNavigate); **Long-Press (500ms)** → Bottom-Sheet Context-Menu "Heute erledigt ✓" / "Already done" — schreibt in `pillar_manual_logs` via Supabase Upsert; zeigt "Bereits erledigt" wenn Pillar schon done; `longFiredRef` verhindert Navigation nach Long-Press
+│   │   ├── TodayPillarTracker.tsx  # 4 Chips (Done/Open) aus useTodayPillars; dreisprachig; Header-Label: "Aktueller Stand von heute · N von 4" (de/en/es); Chip-Reihenfolge: Routine · Workout · Mobilität · Achtsamkeit; kurzer Tap → Pillar-Route (useNavigate); **Long-Press (500ms)** → Bottom-Sheet Context-Menu "Heute erledigt ✓" / "Already done" — schreibt in `pillar_manual_logs` via Supabase Upsert; zeigt "Bereits erledigt" wenn Pillar schon done; `longFiredRef` verhindert Navigation nach Long-Press
 │   │   ├── AdaptiveSuggestion.tsx  # Empfehlungskarte nach Tageszeit; übergibt `profile.goal` an `getSuggestedPillar()`; zeigt Ziel-Hinweis-Zeile wenn Pillar zum Nutzer-Ziel passt (`GOAL_HINT` + `GOAL_PILLAR` Maps, dreisprachig); Pillar-Farbe + CTA → Navigation; rendert null wenn `profile` noch nicht geladen (Loading-Guard gegen Supabase-Delay beim ersten Render)
 │   │   ├── TodaysWod.tsx           # Deterministischer Tages-WOD aus Editor's-Pick-Pool (`pickByDate`: Index = dayOfYear % pool.length); staleTime 1 h; Fallback auf `EDITORS_PICK_IDS`-Set wenn Supabase-Pool leer
-│   │   ├── WeekStats.tsx           # Session-Counts letzte 7 Tage: Workout / Stretching / Meditation (3 parallele Count-Queries)
-│   │   └── RecentActivity.tsx      # Letzte 3 WOD-Einträge aus wod_history; relatives Datum (Heute/Gestern/vor N Tagen)
+│   │   ├── WeekStrip.tsx           # 7-Tage-Aktivitäts-Widget auf Mein Tag (unter Pillar-Kacheln); farbige Dots (4 Pillars) pro Tag; Link zu `/history`; nutzt `useWeekPillars`; dreisprachig (DE: "Letzte 7 Tage", EN: "Last 7 Days"); ersetzt WeekStats + RecentActivity
+│   │   ├── WeekStats.tsx           # **Entfernt aus HomePage** — ersetzt durch WeekStrip; Datei im Repo, nicht mehr gerendert
+│   │   └── RecentActivity.tsx      # **Entfernt aus HomePage** — ersetzt durch WeekStrip; Datei im Repo, nicht mehr gerendert
 │   ├── workout/
 │   │   ├── WodCard.tsx        # zeigt `⭐` (title "Editor's Pick") wenn `wod.is_editors_pick = true`
 │   │   ├── WodList.tsx        # sessionStorage-Persistenz für Suchbegriff (Key: wod_search) **und Filter-State** (Key: wod_filters — Typ/Kategorie/Schwierigkeit/Dauer/Equipment werden beim Verlassen der Seite erhalten); FilterBottomSheet (Typ, Kategorie, Schwierigkeit, Dauer Von-Bis, Equipment Exclude — Editor's-Pick-Filter **entfernt**); Würfel-Button für Random-WOD; empfängt `userEquipment`-Prop (→ useWods); `editorsPick`-State intern entfernt, nur noch `editorsPickProp` als externer Prop
@@ -160,6 +162,7 @@ apps/web/src/
 │   ├── useCustomWorkouts.ts   # TanStack Query + Supabase Dual-Write für Custom Workouts (Supabase primary, localStorage Fallback); **auth-gated**: `enabled: isSupabaseConfigured ? !!userId : true` (kein leerer Cache für unauthenticated State); queryKey enthält userId; Mutations: addWorkout / updateWorkout / deleteWorkout; dbToWorkout / workoutToDb Mapping; staleTime 5 min
 │   ├── useWodHistory.ts       # localStorage + Supabase Dual-Write, personalBest; **auth-gated**: `enabled: isSupabaseConfigured ? !!userId : true`; queryKey 3-teilig `['wod_history', userScope, wodName ?? '_all']` (userScope = userId oder 'anon' oder 'local'); userId aus Store (nicht mehr via `getSession()`); onSuccess: setQueryData auf _all + wod_name Keys für sofortige Cache-Aktualisierung; **_fromLocal-Pattern**: bei lokalem Fallback wird `{ _fromLocal: true }` an Entry gehängt → `invalidateQueries` wird übersprungen; Duplikat-Guard in setQueryData (`.filter(e => e.id !== data.id)` vor Prepend)
 │   ├── useHighscores.ts       # Top-10 pro WOD (Supabase oder local)
+│   ├── useWeekPillars.ts      # letzte 7 Tage: 5 Supabase-Queries (wod_history, stretching_logs, meditation_logs, routine_logs, pillar_manual_logs) → Map\<dateKey, Set\<PillarId\>\>; genutzt von WeekStrip
 │   ├── useStretching.ts       # Stretching-Übungen, Routinen, Logs; `useStretchingExercises` + `useStretchingRoutines`: userId in queryKey (verhindert stale-empty-Cache-Poisoning beim Auth-Race auf erstem Mount); staleTime 5 min (war: 30 min)
 │   ├── useStretchingLogs.ts   # localStorage + Supabase Dual-Write für Stretching-Sessions; **auth-gated**: `enabled: !!user`; **_fromLocal-Pattern** (wie useWodHistory): lokaler Fallback markiert Entry mit `_fromLocal: true` → `invalidateQueries` übersprungen; **UUID-Validierung** vor FK-Insert (`routine_id`): Custom-Session-IDs ohne gültiges UUID-Format → routine_id auf null gesetzt (verhindert FK-Fehler); `setQueryData` statt nur `invalidateQueries` bei lokalem Fallback (sofortige Cache-Aktualisierung)
 │   ├── useMeditations.ts      # Meditationen, Session-Logs; **auth-gated** in useMeditationLogs: `enabled: !!user`
@@ -219,6 +222,7 @@ apps/web/src/
   /stretching
   /meditation
   /favorites
+  /history
   /settings
   /profile                      → Navigate to="/settings" replace (kein eigener Render)
 /admin → AdminLayout (AdminRoute: role admin/moderator)
@@ -550,6 +554,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session AK** | **6 Bug-Fixes** — (1) `WarmupTimer`: Übungsliste während Timer sichtbar, aktuell laufende Übung hervorgehoben (elapsed % TOTAL_EXERCISE_CYCLE_SEC); (2) `WorkoutPage`: Tab-Sperre während Warmup, `handleAdhocStart` setzt Tab explizit auf 'timer'; (3) `useStretching`: userId in queryKey + staleTime 30min→5min (Auth-Race-Fix); (4) `useStretchingLogs`: _fromLocal-Pattern, UUID-Validierung für routine_id, setQueryData bei lokalem Fallback; (5) `useWodHistory` Duplikat-Guard verfeinert; (6) `FreeTimerWizard` Step 2: Slider 1–60 min (range input, accentColor per Modus) neben +/−-Buttons für AMRAP/ForTime |
 | **Session AL–AM** | **Well-Done-Screen + Bilateral-Fix + Long-Press + Hook-Guards** — (A1) `TodayPillarTracker`: Long-Press 500ms → Bottom-Sheet Context-Menu "Heute erledigt ✓"; schreibt in `pillar_manual_logs` via Upsert; `longFiredRef` verhindert Navigate nach Long-Press; Backdrop `onClick` entfernt → Overlay klickbar; (A2) `sessionStore` vereinfacht zu `isSessionActive: boolean` + `setSessionActive(v)`; `KraftTimerView` + `TimerView` setzen `setSessionActive(phase !== 'idle')` / `setSessionActive(!isComplete)` → Swipe auch im Done-Screen gesperrt; (A3) `WodDetail`: `setShowScore(true)` aus `onComplete` entfernt — Completion-Screen von TimerView selbst gehandelt; (A4) `FreeTimerWizard`: Tabata-Runden-Slider (1–20) + EMOM-Runden-Slider (1–30); `TimerInitConfig` Interface; (A5) Hook-Guards: `useDailyLog` `enabled: !!userId` + queryKey 3-teilig; `useWodHistory` queryKey 3-teilig + `enabled`-Guard + userId aus Store; `useMeditationLogs` + `useStretchingLogs`: `enabled: !!user`; (A6) `TimerView` + `KraftTimerView`: Completion-Screen "Gut gemacht!" DE (via `onShowHistory` + eigener isComplete-Screen); (A7) `GuidedSession` Bilateral-Fix: volle `exerciseDuration` pro Seite; `useTodayPillars`: 5. Query auf `pillar_manual_logs` + OR-Logik; Migration 027: `pillar_manual_logs`; `WorkoutPage`: `onShowHistory={() => setTab('history')}` |
 | **Session AL** | **Todo-Robustheit** — `useTodos`: staleTime 5min→0 (Window-Focus-Refetch für Cross-Device-Sync) + retry false→1 (transiente Netzwerkfehler erholen sich automatisch); `RoutinePage`: TodoList via `display:none` statt konditionellem Unmount → activeList-State bleibt beim Tab-Wechsel erhalten; `todosLoading` an TodoList weitergereicht — Loading-Spinner wenn `todosLoading && todos.length === 0` (verhindert falsches "Keine Aufgaben" während initialem Fetch) |
+| **Session AN** | **Pillar-Rename + WeekStrip + HistoryPage** — (1) Nav-Labels: Stretching→Mobilität/Mobility/Movilidad, Meditation→Achtsamkeit/Mindfulness/Atención in `BottomNav`, `Sidebar`, `TodayPillarTracker`, `SettingsPage`, `AdminDashboardPage`; DB-IDs `stretching` + `meditation` unverändert; (2) **WeekStrip** (`components/home/WeekStrip.tsx`): 7-Tage-Aktivitäts-Widget, farbige Dots pro Pillar + Tag, Link zu `/history`; **`useWeekPillars`** Hook (5 Queries: wod_history + stretching_logs + meditation_logs + routine_logs + pillar_manual_logs); auf `HomePage` eingebaut, ersetzt `WeekStats` + `RecentActivity`; (3) **HistoryPage** (`pages/HistoryPage.tsx`): kombinierter Verlauf Workout/Mobilität/Achtsamkeit, Pillar-Filter, chronologisch; Route `/history` in `App.tsx` ergänzt |
 
 ### Offen / Roadmap
 
@@ -561,9 +566,16 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Push (Server-Side)** | Admin-Broadcast an alle User |
 | **GDPR** | Cookie-Banner, Privacy Policy, Daten-Export, Konto-Löschung |
 | **WOD-Übersetzungen** | EN/ES für 798 WODs (aktuell nur DE) |
-| **Integrationen (Phase 4+)** | Garmin Connect, Apple Health, Strava |
+| **Health-Integration** | Apple Health + Google Fit: Workout-Sessions + Herzfrequenz-Daten lesen/schreiben; Capacitor-Bridge als Voraussetzung |
+| **Capacitor (Native Shell)** | App Store-fähige iOS/Android-App via Capacitor; Voraussetzung für Health-Integration, native Push, Haptics |
 | **Analytics** | PostHog EU aktiv (anonymes Event-Tracking, kein Cookie-Banner); Self-hosted Plausible/Umami offen |
 | **Error Tracking** | Sentry |
+| **Adaptive WOD** | Tages-WOD-Auswahl basierend auf Nutzer-History + Ziel + Equipment; ersetzt rein deterministischen `pickByDate`-Ansatz |
+| **Morgenbriefing** | Push-Notification oder HomePage-Widget morgens: gestriges Summary + Tages-WOD + Motivation |
+| **Wellness Score** | Aggregierter Score aus Aktivitäts-Streak, Mood, Schlaf (wenn verfügbar); auf HomePage als Zahl oder Ring |
+| **Product Tour** | Interaktiver Onboarding-Guide (Coach Marks / Spotlight) beim ersten Login nach Onboarding |
+| **Offline-Strategie** | Explizite Offline-Phase: welche Features offline laufen sollen (offen); aktuell: `isSupabaseConfigured()`-Fallbacks vorhanden, Custom-WOD Supabase-only |
+| **Block-Timer** | Pomodoro-artiger Arbeits-/Pausen-Timer im Routine-Pillar; konfigurierbar (Fokus-Zeit, Pause, Runden) |
 | **Supabase Redirect-URLs** | Konfigurieren für OAuth / Magic Link |
 | **packages/ui** | Shared Component Library befüllen |
 | **E2E-Tests** | Playwright o.ä. |
@@ -574,4 +586,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session AL–AM: Hook-Guards, isSessionActive, WodDetail-Timer, Tabata/EMOM-Slider, Well-Done-DE, Bilateral-Befund)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session AN: Pillar-Rename Mobilität/Achtsamkeit, WeekStrip, HistoryPage; Roadmap: Adaptive WOD, Morgenbriefing, Wellness Score, Product Tour, Offline-Strategie, Block-Timer, Capacitor, Health-Integration)*
