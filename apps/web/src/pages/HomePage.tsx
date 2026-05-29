@@ -4,6 +4,8 @@ import { TodayPillarTracker } from '../components/home/TodayPillarTracker'
 import { WeekStrip } from '../components/home/WeekStrip'
 import { AdaptiveSuggestion } from '../components/home/AdaptiveSuggestion'
 import { TodaysWod } from '../components/home/TodaysWod'
+import { OnboardingSlides } from '../components/home/OnboardingSlides'
+import { WhatsNewBanner } from '../components/home/WhatsNewBanner'
 
 import { MoodCheck } from '../components/routine/MoodCheck'
 import { useDailyLog } from '../hooks/useDailyLog'
@@ -24,37 +26,43 @@ export function HomePage() {
   const { log: dailyLog, setMood } = useDailyLog(todayStr())
 
   const locale    = LOCALE_MAP[profile?.language ?? 'de'] ?? 'de-DE'
+  const lang      = profile?.language ?? 'de'
   const dateLabel = new Intl.DateTimeFormat(locale, {
     weekday: 'long',
     day:     'numeric',
     month:   'long',
   }).format(new Date())
 
-  const firstName = profile?.display_name?.trim().split(' ')[0]
-  const greeting  = useMemo(() => (firstName ? `Hi ${firstName} 👋` : 'Hi 👋'), [firstName])
+  const firstName     = profile?.display_name?.trim().split(' ')[0]
+  const greeting      = useMemo(() => (firstName ? `Hi ${firstName} 👋` : 'Hi 👋'), [firstName])
+  const showMotivation = localStorage.getItem('carveout_show_motivation') !== 'false'
 
   return (
-    <div
-      className="p-4 space-y-4 max-w-md mx-auto"
-      style={{ color: 'var(--color-text)' }}
-    >
-      {/* Header */}
-      <header className="pt-2 space-y-0.5">
-        <h1 className="text-2xl font-bold">{greeting}</h1>
-        <p className="text-sm capitalize" style={{ color: 'var(--color-text-muted)' }}>
-          {dateLabel}
-        </p>
-      </header>
+    <>
+      <OnboardingSlides lang={lang} />
+      <div
+        className="p-4 space-y-4 max-w-md mx-auto"
+        style={{ color: 'var(--color-text)' }}
+      >
+        {/* Header */}
+        <header className="pt-2 space-y-0.5">
+          <h1 className="text-2xl font-bold">{greeting}</h1>
+          <p className="text-sm capitalize" style={{ color: 'var(--color-text-muted)' }}>
+            {dateLabel}
+          </p>
+        </header>
 
-      <AdaptiveSuggestion />
-      <TodayPillarTracker />
-      <WeekStrip />
-      <MoodCheck
-        mood={dailyLog?.mood ?? null}
-        moodComment={dailyLog?.mood_comment ?? null}
-        onSave={(mood, comment) => setMood({ mood, mood_comment: comment })}
-      />
-      <TodaysWod />
-    </div>
+        <WhatsNewBanner />
+        {showMotivation && <AdaptiveSuggestion />}
+        <TodayPillarTracker />
+        <WeekStrip />
+        <MoodCheck
+          mood={dailyLog?.mood ?? null}
+          moodComment={dailyLog?.mood_comment ?? null}
+          onSave={(mood, comment) => setMood({ mood, mood_comment: comment })}
+        />
+        <TodaysWod />
+      </div>
+    </>
   )
 }

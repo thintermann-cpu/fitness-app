@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1",
+    "emoji": "🏋️",
+    "title": "Willkommen bei CarveOut",
+    "subtitle": "Dein täglicher Trainings-Hub. Strukturiert. Angepasst. Messbar.",
+    "pillarColor": "#E8642A"
+  },
+  {
+    "id": "2",
+    "emoji": "💪",
+    "title": "4 Pillars, ein System",
+    "subtitle": "Workout · Routine · Mobilität · Achtsamkeit — vier Bausteine für deinen Alltag.",
+    "pillarColor": null
+  },
+  {
+    "id": "3",
+    "emoji": "⏱",
+    "title": "Timer & Workouts",
+    "subtitle": "WODs, Tabata, EMOM, Kraft — starte in Sekunden. Kein Setup, kein Overhead.",
+    "pillarColor": "#E8642A"
+  },
+  {
+    "id": "4",
+    "emoji": "📋",
+    "title": "Mein Tag — dein Hub",
+    "subtitle": "Stimmung, Wochenfortschritt und heutiges Workout — alles auf einen Blick.",
+    "pillarColor": "#4A90D9"
+  },
+  {
+    "id": "5",
+    "emoji": "🚀",
+    "title": "Bereit?",
+    "subtitle": "Starte deinen ersten Pillar und leg los. Dein Körper wird es dir danken.",
+    "pillarColor": null
+  }
+]

@@ -165,6 +165,9 @@ export function SettingsPage() {
   const [silentMode, setSilentMode] = useState(() =>
     localStorage.getItem('carveout_silent_mode') === 'true'
   )
+  const [showMotivation, setShowMotivation] = useState(() =>
+    localStorage.getItem('carveout_show_motivation') !== 'false'
+  )
 
   // Push
   const [pushEnabled,   setPushEnabled]   = useState(false)
@@ -602,6 +605,16 @@ export function SettingsPage() {
                 const next = !silentMode
                 setSilentMode(next)
                 localStorage.setItem('carveout_silent_mode', String(next))
+              },
+            },
+            {
+              label: '💡 Motivationstext anzeigen',
+              desc:  'Zeigt personalisierte Empfehlungen oben auf Mein Tag.',
+              on:    showMotivation,
+              toggle: () => {
+                const next = !showMotivation
+                setShowMotivation(next)
+                localStorage.setItem('carveout_show_motivation', String(next))
               },
             },
           ].map(item => (
