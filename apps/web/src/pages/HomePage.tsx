@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { TodayPillarTracker } from '../components/home/TodayPillarTracker'
 import { WeekStrip } from '../components/home/WeekStrip'
@@ -33,9 +33,9 @@ export function HomePage() {
     month:   'long',
   }).format(new Date())
 
-  const firstName     = profile?.display_name?.trim().split(' ')[0]
-  const greeting      = useMemo(() => (firstName ? `Hi ${firstName} 👋` : 'Hi 👋'), [firstName])
-  const showMotivation = localStorage.getItem('carveout_show_motivation') !== 'false'
+  const firstName      = profile?.display_name?.trim().split(' ')[0]
+  const greeting       = useMemo(() => (firstName ? `Hi ${firstName} 👋` : 'Hi 👋'), [firstName])
+  const [showMotivation] = useState(() => localStorage.getItem('carveout_show_motivation') !== 'false')
 
   return (
     <>
@@ -55,13 +55,13 @@ export function HomePage() {
         <WhatsNewBanner />
         {showMotivation && <AdaptiveSuggestion />}
         <TodayPillarTracker />
-        <WeekStrip />
         <MoodCheck
           mood={dailyLog?.mood ?? null}
           moodComment={dailyLog?.mood_comment ?? null}
           onSave={(mood, comment) => setMood({ mood, mood_comment: comment })}
         />
         <TodaysWod />
+        <WeekStrip />
       </div>
     </>
   )

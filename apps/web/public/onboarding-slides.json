@@ -9,22 +9,30 @@
   {
     "id": "2",
     "emoji": "💪",
-    "title": "4 Pillars, ein System",
-    "subtitle": "Workout · Routine · Mobilität · Achtsamkeit — vier Bausteine für deinen Alltag.",
-    "pillarColor": null
+    "title": "4 Pillars – Ein System",
+    "subtitle": "Die vier Säulen für deinen Alltag",
+    "pillarColor": null,
+    "pillars": [
+      { "label": "Workout",     "color": "#E8642A", "emoji": "💪" },
+      { "label": "Routine",     "color": "#4A90D9", "emoji": "📋" },
+      { "label": "Mobilität",   "color": "#7BC67E", "emoji": "🤸" },
+      { "label": "Achtsamkeit", "color": "#9B7FD4", "emoji": "🧘" }
+    ]
   },
   {
     "id": "3",
     "emoji": "⏱",
-    "title": "Timer & Workouts",
-    "subtitle": "WODs, Tabata, EMOM, Kraft — starte in Sekunden. Kein Setup, kein Overhead.",
+    "title": "Workout & Timer",
+    "subtitle": "Workout auf Zeit, Tabata, EMOM, Kraft oder eigene Workouts",
+    "subtitleExtra": "Starte in Sekunden. Kein Setup, kein Overhead.",
     "pillarColor": "#E8642A"
   },
   {
     "id": "4",
     "emoji": "📋",
-    "title": "Mein Tag — dein Hub",
-    "subtitle": "Stimmung, Wochenfortschritt und heutiges Workout — alles auf einen Blick.",
+    "title": "Mein Tag — Deine Übersicht",
+    "subtitle": "Übersicht der Aktivitäten, Stimmung, Wochenfortschritt und heutiges Workout",
+    "subtitleExtra": "Alles auf einen Blick",
     "pillarColor": "#4A90D9"
   },
   {

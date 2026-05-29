@@ -1,5 +1,5 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
-import { registerRoute } from 'workbox-routing'
+import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies'
 
 declare const self: ServiceWorkerGlobalScope & {
@@ -8,6 +8,14 @@ declare const self: ServiceWorkerGlobalScope & {
 
 self.addEventListener('install', () => void self.skipWaiting())
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()))
+
+// Navigation routes (SPA) use NetworkFirst so a cache-clear doesn't produce a blank screen.
+// Must be registered before precacheAndRoute to take precedence over its built-in handler.
+registerRoute(
+  new NavigationRoute(
+    new NetworkFirst({ cacheName: 'pages', networkTimeoutSeconds: 3 }),
+  ),
+)
 
 cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)

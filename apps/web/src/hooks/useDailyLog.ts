@@ -62,7 +62,10 @@ export function useDailyLog(date: string) {
         .upsert({ user_id: userId, date, mood, mood_comment }, { onConflict: 'user_id,date' })
       if (error) throw error
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: qk })
+      queryClient.invalidateQueries({ queryKey: ['recent_mood_wod'] })
+    },
   })
 
   return {

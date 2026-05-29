@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+interface SlidePillar {
+  label: string
+  color: string
+  emoji: string
+}
+
 interface Slide {
   id: string
   emoji: string
   title: string
   subtitle: string
+  subtitleExtra?: string
   pillarColor: string | null
+  pillars?: SlidePillar[]
 }
 
 const SKIP_LABEL: Record<string, string>  = { de: 'Überspringen', en: 'Skip', es: 'Omitir' }
@@ -68,13 +76,47 @@ export function OnboardingSlides({ lang = 'de' }: { lang?: string }) {
         >
           {slide.emoji}
         </div>
-        <div className="space-y-3">
+
+        <div className="space-y-4 w-full">
           <h1 className="text-2xl font-black" style={{ color: 'var(--color-text)' }}>
             {slide.title}
           </h1>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-            {slide.subtitle}
-          </p>
+
+          {slide.pillars ? (
+            <>
+              <div className="flex flex-wrap justify-center gap-2">
+                {slide.pillars.map(p => (
+                  <span
+                    key={p.label}
+                    className="px-3 py-1.5 rounded-full text-sm font-bold"
+                    style={{
+                      backgroundColor: `${p.color}22`,
+                      color: p.color,
+                      border: `1.5px solid ${p.color}55`,
+                    }}
+                  >
+                    {p.emoji} {p.label}
+                  </span>
+                ))}
+              </div>
+              <p className="text-base font-semibold" style={{ color: 'var(--color-text)' }}>
+                {slide.subtitle}
+              </p>
+            </>
+          ) : slide.subtitleExtra ? (
+            <>
+              <p className="text-base leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                {slide.subtitle}
+              </p>
+              <p className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+                {slide.subtitleExtra}
+              </p>
+            </>
+          ) : (
+            <p className="text-base leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+              {slide.subtitle}
+            </p>
+          )}
         </div>
       </div>
 
