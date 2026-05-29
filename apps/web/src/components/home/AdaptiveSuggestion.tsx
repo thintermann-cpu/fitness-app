@@ -86,7 +86,10 @@ export function AdaptiveSuggestion() {
 
   if (pillar === null) {
     return (
-      <div>
+      <div
+        className="rounded-2xl px-4 py-3"
+        style={{ backgroundColor: 'var(--color-bg-card)' }}
+      >
         <p className="text-sm font-semibold" style={{ color: '#4CAF50' }}>
           {ALL_DONE[lang]}
         </p>
@@ -99,7 +102,10 @@ export function AdaptiveSuggestion() {
 
   const cfg = PILLAR_CONFIG[pillar]
   return (
-    <div>
+    <div
+      className="rounded-2xl px-4 py-3"
+      style={{ backgroundColor: 'var(--color-bg-card)' }}
+    >
       <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
         {cfg.headline[lang]}
       </p>
