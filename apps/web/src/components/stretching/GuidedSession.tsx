@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { StretchingRoutine, StretchingExercise } from '../../hooks/useStretching'
 import { useStretchingLogs } from '../../hooks/useStretchingLogs'
 import { useAudio } from '../../hooks/useAudio'
@@ -88,6 +89,7 @@ interface Props {
 
 export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerciseDuration }: Props) {
   const t = T[lang]
+  const navigate = useNavigate()
   const { addLog } = useStretchingLogs()
   const { track } = useAnalytics()
   const audio = useAudio()
@@ -362,13 +364,22 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
         >
           {routine.name} · {routine.duration_min} min
         </div>
-        <button
-          onClick={onFinish}
-          className="w-full max-w-xs py-4 rounded-[var(--radius-md)] font-bold text-white"
-          style={{ backgroundColor: PILLAR_COLOR }}
-        >
-          {isYogaFlow ? t.backToYoga : t.backToRoutines}
-        </button>
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <button
+            onClick={() => navigate('/home')}
+            className="w-full py-4 rounded-[var(--radius-md)] font-bold text-white"
+            style={{ backgroundColor: PILLAR_COLOR }}
+          >
+            {lang === 'de' ? 'Zurück zu Mein Tag' : lang === 'en' ? 'Back to My Day' : 'Volver a mi día'}
+          </button>
+          <button
+            onClick={() => navigate('/history')}
+            className="w-full py-3 rounded-[var(--radius-md)] font-semibold text-sm"
+            style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)' }}
+          >
+            {lang === 'de' ? 'Verlauf anzeigen' : lang === 'en' ? 'View History' : 'Ver historial'}
+          </button>
+        </div>
       </div>
     )
   }

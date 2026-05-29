@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
@@ -125,7 +126,7 @@ function Stepper({
 }
 
 export function TimerView({
-  initialMode, initialMinutes, onComplete, onShowHistory, bilateral, adHocLog, exercises,
+  initialMode, initialMinutes, onComplete, onShowHistory: _onShowHistory, bilateral, adHocLog, exercises,
   warmupPending, workoutName,
   initialTabataWork, initialTabataRest, initialTabataRounds,
   initialEmomInterval, initialEmomRounds,
@@ -159,8 +160,10 @@ export function TimerView({
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
   const autoStartedRef = useRef(false)
 
+  const navigate          = useNavigate()
   const { addEntry }      = useWodHistory()
   const loggedRef         = useRef(false)
+  const finalElapsedRef   = useRef(0)
   const tickRef           = useRef(tick)
   tickRef.current         = tick
   const setSessionActive  = useSessionStore((s) => s.setSessionActive)
@@ -178,6 +181,7 @@ export function TimerView({
           interval:  e.data.interval  ?? 1,
         })
       } else if (type === 'complete') {
+        finalElapsedRef.current = tickRef.current.elapsed
         setIsRunning(false)
         setIsComplete(true)
         onCompleteRef.current?.()
@@ -236,9 +240,9 @@ export function TimerView({
 
   // Session active: block accidental swipe-navigation while timer is running/paused
   useEffect(() => {
-    setSessionActive(isRunning || isPaused)
+    setSessionActive(isRunning || isPaused || isComplete)
     return () => setSessionActive(false)
-  }, [isRunning, isPaused, setSessionActive])
+  }, [isRunning, isPaused, isComplete, setSessionActive])
 
   // Ad-hoc history logging: uses ref so elapsed value is always current at fire time
   useEffect(() => {
@@ -247,7 +251,7 @@ export function TimerView({
     addEntry.mutate({
       wod_name: workoutName ?? `Ad-hoc ${MODE_TO_WOD_TYPE[mode]}`,
       score_type: 'time',
-      score_value: formatMs(tickRef.current.elapsed > 0 ? tickRef.current.elapsed : 0),
+      score_value: formatMs(finalElapsedRef.current > 0 ? finalElapsedRef.current : tickRef.current.elapsed),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComplete])
@@ -362,8 +366,11 @@ export function TimerView({
   }
 
   if (isComplete) {
+    const isDe = lang === 'de'
+    const heading = isDe ? 'Gut gemacht!' : 'Well done!'
+    const finishedPrefix = isDe ? 'Abgeschlossen in' : 'Finished in'
     const scoreText = mode === 'fortime'
-      ? `Finished in ${formatMs(tick.elapsed)}`
+      ? `${finishedPrefix} ${formatMs(tick.elapsed)}`
       : mode === 'emom'
       ? `${emomRounds} Intervals · ${formatMs(tick.elapsed)}`
       : mode === 'tabata'
@@ -374,28 +381,26 @@ export function TimerView({
       <div className="flex flex-col items-center gap-6 py-8 text-center">
         <p style={{ fontSize: 64, lineHeight: 1 }}>🎉</p>
         <div>
-          <p className="text-2xl font-black" style={{ color: '#10B981' }}>Well done!</p>
+          <p className="text-2xl font-black" style={{ color: '#10B981' }}>{heading}</p>
           {workoutName && (
             <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>{workoutName}</p>
           )}
         </div>
         <p className="font-mono font-bold text-xl" style={{ color: 'var(--color-text)' }}>{scoreText}</p>
         <div className="flex flex-col gap-3 w-full mt-2">
-          {onShowHistory && (
-            <button
-              onClick={onShowHistory}
-              className="py-3.5 rounded-2xl font-bold text-base text-white"
-              style={{ backgroundColor: '#E8642A' }}
-            >
-              In History anzeigen
-            </button>
-          )}
           <button
-            onClick={handleReset}
-            className="py-3.5 rounded-2xl font-bold text-base"
+            onClick={() => navigate('/home')}
+            className="py-3.5 rounded-2xl font-bold text-base text-white"
+            style={{ backgroundColor: '#E8642A' }}
+          >
+            {isDe ? 'Zurück zu Mein Tag' : 'Back to My Day'}
+          </button>
+          <button
+            onClick={() => navigate('/history')}
+            className="py-2.5 rounded-2xl font-semibold text-sm"
             style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
           >
-            Schliessen
+            {isDe ? 'Verlauf anzeigen' : 'View History'}
           </button>
         </div>
       </div>

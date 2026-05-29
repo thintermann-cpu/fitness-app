@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { Meditation } from '../../hooks/useMeditations'
 import type { SoundKey } from '../../hooks/useAudio'
 import { useAudio } from '../../hooks/useAudio'
@@ -15,6 +16,8 @@ const T = {
     done: 'Fertig!',
     doneMsg: 'Deine Meditation ist abgeschlossen.',
     back: 'Zurück',
+    backToDay: 'Zurück zu Mein Tag',
+    viewHistory: 'Verlauf anzeigen',
     sound: 'Klang',
     instructions: 'Anleitung',
     sounds: {
@@ -33,6 +36,8 @@ const T = {
     done: 'Done!',
     doneMsg: 'Your meditation is complete.',
     back: 'Back',
+    backToDay: 'Back to My Day',
+    viewHistory: 'View History',
     sound: 'Sound',
     instructions: 'Guidance',
     sounds: {
@@ -51,6 +56,8 @@ const T = {
     done: '¡Listo!',
     doneMsg: 'Tu meditación ha concluido.',
     back: 'Volver',
+    backToDay: 'Volver a mi día',
+    viewHistory: 'Ver historial',
     sound: 'Sonido',
     instructions: 'Guía',
     sounds: {
@@ -88,8 +95,9 @@ function formatTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-export function MeditationSession({ meditation, lang, onFinish }: Props) {
+export function MeditationSession({ meditation, lang, onFinish: _onFinish }: Props) {
   const t         = T[lang]
+  const navigate  = useNavigate()
   const { addLog } = useMeditationLogs()
   const audio     = useAudio()
 
@@ -184,13 +192,22 @@ export function MeditationSession({ meditation, lang, onFinish }: Props) {
         >
           {meditation.name} · {meditation.duration_min} min
         </div>
-        <button
-          onClick={onFinish}
-          className="w-full max-w-xs py-4 rounded-[var(--radius-md)] font-bold text-white"
-          style={{ backgroundColor: PILLAR_COLOR }}
-        >
-          {t.back}
-        </button>
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <button
+            onClick={() => navigate('/home')}
+            className="w-full py-4 rounded-[var(--radius-md)] font-bold text-white"
+            style={{ backgroundColor: PILLAR_COLOR }}
+          >
+            {t.backToDay}
+          </button>
+          <button
+            onClick={() => navigate('/history')}
+            className="w-full py-3 rounded-[var(--radius-md)] font-semibold text-sm"
+            style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--color-text-muted)' }}
+          >
+            {t.viewHistory}
+          </button>
+        </div>
       </div>
     )
   }

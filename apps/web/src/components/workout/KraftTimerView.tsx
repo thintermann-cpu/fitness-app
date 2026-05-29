@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { useSessionStore } from '../../store/sessionStore'
@@ -46,7 +47,7 @@ const WEIGHT_COLORS = {
   schwer: '#EF4444',
 }
 
-export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercises, workoutName, onComplete, onShowHistory }: Props) {
+export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercises, workoutName, onComplete, onShowHistory: _onShowHistory }: Props) {
   const [phase,       setPhase]       = useState<KraftPhase>('idle')
   const [exIdx,       setExIdx]       = useState(0)
   const [setIdx,      setSetIdx]      = useState(0)
@@ -54,6 +55,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   const [showCountdown, setShowCountdown] = useState(false)
   const restTypeRef      = useRef<'set' | 'exercise'>('set')
   const wakeLockRef      = useRef<{ release: () => Promise<void> } | null>(null)
+  const navigate         = useNavigate()
   const { addEntry }     = useWodHistory()
   const setSessionActive = useSessionStore((s) => s.setSessionActive)
   const lang             = useAuthStore((s) => s.profile?.language ?? 'de')
@@ -234,21 +236,19 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
           {totalSetsAll} {lang === 'de' ? 'Sätze abgeschlossen' : 'sets completed'}
         </p>
         <div className="flex flex-col gap-3 w-full mt-2">
-          {onShowHistory && (
-            <button
-              onClick={onShowHistory}
-              className="py-3.5 rounded-2xl font-bold text-base text-white"
-              style={{ backgroundColor: '#E8642A' }}
-            >
-              {lang === 'de' ? 'In History anzeigen' : 'Show in History'}
-            </button>
-          )}
           <button
-            onClick={() => onComplete?.()}
-            className="py-3.5 rounded-2xl font-bold text-base"
+            onClick={() => navigate('/home')}
+            className="py-3.5 rounded-2xl font-bold text-base text-white"
+            style={{ backgroundColor: '#E8642A' }}
+          >
+            {lang === 'de' ? 'Zurück zu Mein Tag' : 'Back to My Day'}
+          </button>
+          <button
+            onClick={() => navigate('/history')}
+            className="py-2.5 rounded-2xl font-semibold text-sm"
             style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
           >
-            {lang === 'de' ? 'Schliessen' : 'Close'}
+            {lang === 'de' ? 'Verlauf anzeigen' : 'View History'}
           </button>
         </div>
       </div>
