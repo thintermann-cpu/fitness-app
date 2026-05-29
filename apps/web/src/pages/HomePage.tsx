@@ -35,7 +35,11 @@ export function HomePage() {
 
   const firstName      = profile?.display_name?.trim().split(' ')[0]
   const greeting       = useMemo(() => (firstName ? `Hi ${firstName} 👋` : 'Hi 👋'), [firstName])
-  const [showMotivation] = useState(() => localStorage.getItem('carveout_show_motivation') !== 'false')
+  const [showMotivation] = useState(() => {
+    const val = localStorage.getItem('carveout_show_motivation')
+    console.log('[HomePage] carveout_show_motivation =', val, '→ showMotivation =', val !== 'false')
+    return val !== 'false'
+  })
 
   return (
     <>

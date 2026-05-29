@@ -83,6 +83,7 @@ export function AdaptiveSuggestion() {
     : []
 
   const pillar = getSuggestedPillar(goal, completedPillars)
+  console.log('[AdaptiveSuggestion] mounted — pillar:', pillar, 'goal:', goal, 'completed:', completedPillars)
 
   if (pillar === null) {
     return (
