@@ -298,7 +298,7 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | `routines` | Rituale eines Nutzers (Name, Beschreibung, Pillar, Uhrzeit, Wochentage, `linked_pillar` VARCHAR NULL — Migration 012) |
 | `routine_logs` | Completion-Einträge pro Routine + Datum |
 | `todos` | To-do-Liste pro Nutzer + Datum |
-| `daily_logs` | Tageseinträge: Mood, Wasserkonsum, Notizen |
+| `daily_logs` | Tageseinträge: Mood, Wasserkonsum, Notizen; wird von `TodaysWod` für mood-adaptive Erholungs-Karte ausgelesen (Query `recent_mood_wod`); **bestätigt aktiv** (Screenshot 2026-05-30: Müde/Gestresst → "Gönn dir heute Erholung" + Mobilität/Achtsamkeit-CTA) |
 | `wods` | WOD-Stammdaten (bis zu 981 Einträge, statisch, read-only für Users); `is_editors_pick` bool (Migration 010); `wod_category` text CHECK (crossfit\|hiit\|kraft_ausdauer\|kraft_wenig_zeit\|krafttraining), Default crossfit (Migration 015); `is_visible` bool NOT NULL DEFAULT true — Soft-Delete (Migration 015); `equipment_tags` text[] NOT NULL DEFAULT '{}', GIN-Index (Migration 016); lokaler Fallback: `EDITORS_PICK_IDS` Set in `useWods`; Migration 021: 183 neue WODs (hiit 60, kraft_ausdauer 50, kraft_wenig_zeit 30, krafttraining 43); Migration 022: CrossFit-WODs außer Girls/Heroes auf is_visible=false; **Migration 023**: partieller Index auf `is_editors_pick = true` (Spalte existiert seit Migration 010, Index neu für schnelle Editor's-Pick-Queries) |
 | `wod_history` | Workout-Logs pro Nutzer (WOD, Score, Datum, Notizen) |
 | `stretching_exercises` | 65 Übungen (dreisprachig, bilateral_support, category, `subcategory` VARCHAR NULL — Migration 011; Yoga-Tagging via keyword-basiertem UPDATE — Migration 019) |
@@ -307,8 +307,8 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | `meditations` | 20 Einträge (name/description/instructions als JSONB, category, duration_min, difficulty, background_sound) |
 | `breathwork_techniques` | 8 Techniken (inhale_sec, hold_in_sec, exhale_sec, hold_out_sec, cycles) |
 | `meditation_logs` | Session-Logs pro Nutzer |
-| `push_subscriptions` | Web Push Subscription JSON pro User |
-| `push_preferences` | Reminder-Einstellungen (morning/evening/wod/inactivity + Zeiten) |
+| `push_subscriptions` | Web Push Subscription JSON pro User; Migration: `add_push_subscriptions` (kein Nummern-Präfix — inkonsistent; sollte `029_push_subscriptions.sql` folgen) |
+| `push_preferences` | Reminder-Einstellungen (morning/evening/wod/inactivity + Zeiten); **keine Migration vorhanden — manuell im Dashboard angelegt**; Migration 029 ausstehend |
 | `favorites` | Favoriten pro Nutzer: `content_type` (wod \| stretching_routine \| meditation), `content_id` (string); DDL als Kommentar in `useFavorites.ts` |
 | `feedback` | User-Feedback: `category` (bug \| idee \| lob), `message` text; RLS: User kann nur eigene Einträge einfügen + lesen (Migration 014); DB-Webhook auf INSERT → `notify-feedback` Edge Function (Migration 020) |
 | `custom_workouts` | Custom Workouts pro Nutzer: `id` UUID PK, `user_id` UUID FK, `name` text, `mode` text, `config` JSONB (minutes/rest/tabata/emom-Parameter), `exercises` JSONB, `with_warmup` bool, `created_at`/`updated_at` timestamptz; RLS: User verwaltet nur eigene Einträge; GIN-Index auf user_id (Migration 026) |
@@ -489,6 +489,13 @@ Trigger: `push` auf `main`
 
 Kein Container, kein Docker — direktes rsync des Vite-Build-Outputs.
 
+### MCP / Entwicklungs-Tools (Stand Mai 2026)
+
+| Tool | Status | Verwendung |
+|---|---|---|
+| **Supabase MCP** | ✅ Verfügbar | Tabellenliste + Schema-Queries direkt aus Claude Code (Anon-Key in `apps/web/.env` eingetragen) |
+| **Playwright / Puppeteer MCP** | ✅ Verfügbar | Screenshots via Python Playwright + System-Chrome (`C:\Program Files\Google\Chrome\Application\chrome.exe`); Chromium-Download via npm schlägt wegen SSL-Zertifikat fehl — System-Chrome als Workaround (`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`) |
+
 ---
 
 ## 11. Internationalisierung (packages/i18n)
@@ -582,6 +589,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Product Tour** | ~~Interaktiver Onboarding-Guide~~ — **abgeschlossen (Session AO)**: `OnboardingSlides.tsx`, Fullscreen 5-Slide Tour, guard `carveout_tour_done` |
 | **Offline-Strategie** | Explizite Offline-Phase: welche Features offline laufen sollen (offen); aktuell: `isSupabaseConfigured()`-Fallbacks vorhanden, Custom-WOD Supabase-only |
 | **Block-Timer** | Pomodoro-artiger Arbeits-/Pausen-Timer im Routine-Pillar; konfigurierbar (Fokus-Zeit, Pause, Runden) |
+| **Migration 029** | `push_preferences`-Tabelle formal als Migration anlegen (aktuell nur manuell im Dashboard erstellt); `add_push_subscriptions.sql` + `add_role_and_admin_rls.sql` auf Nummern-Präfix umstellen (Konsistenz mit 001–028) |
 | **Supabase Redirect-URLs** | Konfigurieren für OAuth / Magic Link |
 | **packages/ui** | Shared Component Library befüllen |
 | **E2E-Tests** | Playwright o.ä. |
@@ -592,4 +600,4 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Mai 2026 — Tim (Session AP: SW NavigationRoute, OnboardingSlides-Update, AdaptiveSuggestion-Umbau, useDailyLog Mood-Invalidierung, HomePage WeekStrip-Reihenfolge)*
+*Letzte Aktualisierung: Mai 2026 — Tim (Session AP: SW NavigationRoute, OnboardingSlides-Update, AdaptiveSuggestion-Umbau, useDailyLog Mood-Invalidierung, HomePage WeekStrip-Reihenfolge; +MCP-Tools, DB-Auffälligkeiten push_preferences/push_subscriptions, TodaysWod Mood-Adaptation bestätigt)*

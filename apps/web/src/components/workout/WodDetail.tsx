@@ -11,6 +11,7 @@ import { ScoreInput } from './ScoreInput'
 import { WodHistoryList } from './WodHistoryList'
 import { FavoriteButton } from '../ui/FavoriteButton'
 import { WarmupTimer } from './WarmupTimer'
+import { WorkoutCountdown } from '../shared/WorkoutCountdown'
 
 // ── Equipment color map ───────────────────────────────────────────────────
 const EQUIPMENT_COLORS: Record<string, string> = {
@@ -101,6 +102,8 @@ export function WodDetail({ wodName, onBack }: Props) {
   const [showHistory, setShowHistory]       = useState(false)
   const [showWarmup, setShowWarmup]         = useState(false)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
+  const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
+  const [startedViaWarmup, setStartedViaWarmup] = useState(false)
 
   if (isLoading) {
     return (
@@ -281,8 +284,21 @@ export function WodDetail({ wodName, onBack }: Props) {
       {/* CTA buttons */}
       {!showTimer ? (
         <div className="flex gap-3">
+          {(() => {
+            const musicUrl = localStorage.getItem('carveout_music_workout')
+            return musicUrl ? (
+              <button
+                onClick={() => window.open(musicUrl, '_blank')}
+                title="Musik öffnen"
+                className="px-4 py-3.5 rounded-xl font-semibold text-sm active:scale-[0.98] transition-transform"
+                style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: '1px solid #E8642A40' }}
+              >
+                🎵
+              </button>
+            ) : null
+          })()}
           <button
-            onClick={() => { setShowTimer(true); setShowWarmupTimer(false) }}
+            onClick={() => { setShowTimer(true); setShowWarmupTimer(false); setStartedViaWarmup(false) }}
             className="flex-1 py-3.5 rounded-xl bg-[#E8642A] text-white font-semibold text-base active:scale-[0.98] transition-transform"
           >
             ▶ Start Timer
@@ -304,7 +320,7 @@ export function WodDetail({ wodName, onBack }: Props) {
       ) : (
         <div className="flex gap-3">
           <button
-            onClick={() => { setShowTimer(false); setShowWarmupTimer(false) }}
+            onClick={() => { setShowTimer(false); setShowWarmupTimer(false); setStartedViaWarmup(false) }}
             className="flex-1 py-3 rounded-xl text-sm font-semibold"
             style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
           >
@@ -325,9 +341,12 @@ export function WodDetail({ wodName, onBack }: Props) {
           <TimerView
             initialMode={timerMode}
             initialMinutes={wod.estimated_minutes || 20}
+            adHocLog={startedViaWarmup}
+            workoutName={startedViaWarmup ? wod.name : undefined}
             onComplete={() => {
               track('workout_completed', { wod_id: wod.id, duration_min: wod.estimated_minutes, category: wod.category })
               window.dispatchEvent(new CustomEvent('carveout:workout-completed'))
+              setStartedViaWarmup(false)
             }}
           />
         </div>
@@ -359,7 +378,11 @@ export function WodDetail({ wodName, onBack }: Props) {
       <WarmupTimer
         isOpen={showWarmupTimer}
         onClose={() => setShowWarmupTimer(false)}
-        onStartWorkout={() => { setShowWarmupTimer(false); setShowTimer(true) }}
+        onStartWorkout={() => { setShowWarmupTimer(false); setShowWorkoutCountdown(true) }}
+      />
+      <WorkoutCountdown
+        isOpen={showWorkoutCountdown}
+        onComplete={() => { setShowWorkoutCountdown(false); setShowTimer(true); setStartedViaWarmup(true) }}
       />
     </div>
   )

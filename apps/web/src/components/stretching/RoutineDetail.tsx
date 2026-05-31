@@ -77,10 +77,21 @@ export function RoutineDetail({ routine, exercises, lang, onBack, onStart }: Pro
       </div>
 
       {/* Start button */}
-      <div className="pb-4">
+      <div className="pb-4 flex gap-3">
+        {(() => {
+          const musicUrl = localStorage.getItem('carveout_music_stretching')
+          return musicUrl ? (
+            <button
+              onClick={() => window.open(musicUrl, '_blank')}
+              title="Musik öffnen"
+              className="px-4 py-4 rounded-[var(--radius-md)] font-semibold text-sm active:scale-[0.98] transition-transform"
+              style={{ backgroundColor: '#7BC67E18', color: '#7BC67E', border: '1px solid #7BC67E40' }}
+            >🎵</button>
+          ) : null
+        })()}
         <button
           onClick={onStart}
-          className="w-full py-4 rounded-[var(--radius-md)] font-bold text-white text-base transition-opacity active:opacity-80"
+          className="flex-1 py-4 rounded-[var(--radius-md)] font-bold text-white text-base transition-opacity active:opacity-80"
           style={{ backgroundColor: PILLAR_COLOR }}
         >
           {t.start}

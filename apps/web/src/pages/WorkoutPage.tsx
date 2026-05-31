@@ -11,6 +11,7 @@ import { KraftTimerView } from '../components/workout/KraftTimerView'
 import { WodHistoryList } from '../components/workout/WodHistoryList'
 import { FreeTimerWizard, type KraftConfig, type TimerInitConfig } from '../components/workout/FreeTimerWizard'
 import { WarmupTimer } from '../components/workout/WarmupTimer'
+import { WorkoutCountdown } from '../components/shared/WorkoutCountdown'
 import { useCustomWorkouts } from '../hooks/useCustomWorkouts'
 import { type CustomWorkout, type WizardExercise } from '../lib/customWorkouts'
 import { type TimerMode } from '../lib/timerLabels'
@@ -61,6 +62,7 @@ export function WorkoutPage() {
   const [showAllEquipment, setShowAllEquipment] = useState(false)
   const [timerConfig, setTimerConfig]     = useState<TimerConfig | null>(null)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
+  const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
   const { data: savedWorkouts = [], addWorkout } = useCustomWorkouts()
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
 
@@ -100,6 +102,24 @@ export function WorkoutPage() {
     setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, ...timerCfg })
     setTab('timer')
     if (withWarmup) setShowWarmupTimer(true)
+  }
+
+  function handleWizardSaveOnly(mode: TimerMode, minutes: number, kraftConfig: KraftConfig | undefined, exercises: WizardExercise[] | undefined, workoutName: string, timerCfg?: TimerInitConfig) {
+    addWorkout.mutate({
+      id:        crypto.randomUUID(),
+      name:      workoutName,
+      mode,
+      minutes,
+      exercises: exercises ?? (kraftConfig?.exercises ?? []),
+      createdAt: new Date().toISOString(),
+      restBetweenSets:      kraftConfig?.restBetweenSets,
+      restBetweenExercises: kraftConfig?.restBetweenExercises,
+      tabataWork:   timerCfg?.tabataWork,
+      tabataRest:   timerCfg?.tabataRest,
+      tabataRounds: timerCfg?.tabataRounds,
+      emomInterval: timerCfg?.emomInterval,
+      emomRounds:   timerCfg?.emomRounds,
+    })
   }
 
   function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], _workoutName?: string, timerCfg?: TimerInitConfig) {
@@ -160,7 +180,7 @@ export function WorkoutPage() {
       {/* Tab bar */}
       <div className="px-4 flex gap-1 bg-[var(--color-bg)] sticky top-0 z-10 pt-2 pb-3 border-b border-white/5">
         {TABS.map((t) => {
-          const locked = (isSessionActive || showWarmupTimer) && t.id !== 'timer'
+          const locked = (isSessionActive || showWarmupTimer || showWorkoutCountdown) && t.id !== 'timer'
           return (
             <button
               key={t.id}
@@ -247,7 +267,6 @@ export function WorkoutPage() {
                     restBetweenSets={timerConfig.kraftConfig.restBetweenSets}
                     restBetweenExercises={timerConfig.kraftConfig.restBetweenExercises}
                     workoutName={timerConfig.workoutName}
-                    onComplete={() => setTimerConfig(null)}
                     onShowHistory={() => setTab('history')}
                   />
                 ) : (
@@ -257,7 +276,7 @@ export function WorkoutPage() {
                     initialMinutes={timerConfig.minutes}
                     exercises={timerConfig.exercises}
                     workoutName={timerConfig.workoutName}
-                    warmupPending={showWarmupTimer}
+                    warmupPending={showWarmupTimer || showWorkoutCountdown}
                     initialTabataWork={timerConfig.tabataWork}
                     initialTabataRest={timerConfig.tabataRest}
                     initialTabataRounds={timerConfig.tabataRounds}
@@ -298,6 +317,7 @@ export function WorkoutPage() {
         isOpen={wizardOpen}
         onClose={() => setWizardOpen(false)}
         onStart={handleWizardStart}
+        onSaveOnly={handleWizardSaveOnly}
         variant="save"
       />
       <FreeTimerWizard
@@ -309,7 +329,11 @@ export function WorkoutPage() {
       <WarmupTimer
         isOpen={showWarmupTimer}
         onClose={() => setShowWarmupTimer(false)}
-        onStartWorkout={() => setShowWarmupTimer(false)}
+        onStartWorkout={() => { setShowWarmupTimer(false); setShowWorkoutCountdown(true) }}
+      />
+      <WorkoutCountdown
+        isOpen={showWorkoutCountdown}
+        onComplete={() => setShowWorkoutCountdown(false)}
       />
     </div>
   )

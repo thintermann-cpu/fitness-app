@@ -291,13 +291,26 @@ export function MeditationSession({ meditation, lang, onFinish: _onFinish }: Pro
 
       {/* Controls */}
       {!started ? (
-        <button
-          onClick={handleStart}
-          className="w-full py-4 rounded-[var(--radius-md)] font-bold text-white"
-          style={{ backgroundColor: PILLAR_COLOR }}
-        >
-          ▶ Start
-        </button>
+        <div className="flex gap-3">
+          {(() => {
+            const musicUrl = localStorage.getItem('carveout_music_meditation')
+            return musicUrl ? (
+              <button
+                onClick={() => window.open(musicUrl, '_blank')}
+                title="Musik öffnen"
+                className="px-4 py-4 rounded-[var(--radius-md)] font-semibold text-sm active:scale-[0.98] transition-transform"
+                style={{ backgroundColor: '#9B7FD418', color: '#9B7FD4', border: '1px solid #9B7FD440' }}
+              >🎵</button>
+            ) : null
+          })()}
+          <button
+            onClick={handleStart}
+            className="flex-1 py-4 rounded-[var(--radius-md)] font-bold text-white"
+            style={{ backgroundColor: PILLAR_COLOR }}
+          >
+            ▶ Start
+          </button>
+        </div>
       ) : (
         <div className="flex gap-3">
           <button

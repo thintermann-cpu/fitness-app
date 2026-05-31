@@ -10,6 +10,7 @@ interface Props {
   onNext: () => void
   nextLabel?: string
   canNext?: boolean
+  secondaryAction?: { label: string; onClick: () => void; disabled?: boolean }
   children: React.ReactNode
 }
 
@@ -23,6 +24,7 @@ export function WizardShell({
   onNext,
   nextLabel = 'Weiter',
   canNext = true,
+  secondaryAction,
   children,
 }: Props) {
   useEffect(() => {
@@ -86,6 +88,20 @@ export function WizardShell({
           paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',
         }}
       >
+        {secondaryAction && (
+          <button
+            onClick={secondaryAction.onClick}
+            disabled={secondaryAction.disabled}
+            className="w-full py-3 rounded-xl font-semibold text-sm mb-2 transition-opacity active:scale-[0.98]"
+            style={{
+              backgroundColor: 'var(--color-bg-card)',
+              color: 'var(--color-text-muted)',
+              opacity: secondaryAction.disabled ? 0.35 : 1,
+            }}
+          >
+            {secondaryAction.label}
+          </button>
+        )}
         <button
           onClick={onNext}
           disabled={!canNext}

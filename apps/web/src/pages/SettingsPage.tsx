@@ -168,6 +168,9 @@ export function SettingsPage() {
   const [showMotivation, setShowMotivation] = useState(() =>
     localStorage.getItem('carveout_show_motivation') !== 'false'
   )
+  const [musicWorkout,  setMusicWorkout]  = useState(() => localStorage.getItem('carveout_music_workout')  ?? '')
+  const [musicMobility, setMusicMobility] = useState(() => localStorage.getItem('carveout_music_stretching') ?? '')
+  const [musicMeditation, setMusicMeditation] = useState(() => localStorage.getItem('carveout_music_meditation') ?? '')
 
   // Push
   const [pushEnabled,   setPushEnabled]   = useState(false)
@@ -631,6 +634,37 @@ export function SettingsPage() {
               <TogglePill on={item.on} />
             </button>
           ))}
+
+          {/* Musik-Links */}
+          <div className="rounded-2xl px-4 py-4 space-y-4 mt-2" style={{ backgroundColor: 'var(--color-bg-card)' }}>
+            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--color-text-muted)' }}>
+              🎵 Musik-Links
+            </p>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              URL oder Deep-Link (Spotify, Apple Music usw.). Erscheint als Button vor dem Session-Start.
+            </p>
+            {[
+              { label: '💪 Workout', value: musicWorkout, onChange: (v: string) => { setMusicWorkout(v); if (v) localStorage.setItem('carveout_music_workout', v); else localStorage.removeItem('carveout_music_workout') }, color: '#E8642A' },
+              { label: '🤸 Mobilität', value: musicMobility, onChange: (v: string) => { setMusicMobility(v); if (v) localStorage.setItem('carveout_music_stretching', v); else localStorage.removeItem('carveout_music_stretching') }, color: '#7BC67E' },
+              { label: '🧘 Achtsamkeit', value: musicMeditation, onChange: (v: string) => { setMusicMeditation(v); if (v) localStorage.setItem('carveout_music_meditation', v); else localStorage.removeItem('carveout_music_meditation') }, color: '#9B7FD4' },
+            ].map(({ label, value, onChange, color }) => (
+              <div key={label}>
+                <p className="text-xs font-medium mb-1.5" style={{ color }}>{label}</p>
+                <input
+                  type="url"
+                  value={value}
+                  onChange={(e) => onChange(e.target.value)}
+                  placeholder="https://open.spotify.com/playlist/…"
+                  className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                  style={{
+                    backgroundColor: 'var(--color-bg-elevated)',
+                    color: 'var(--color-text)',
+                    border: `1px solid ${value ? color + '60' : 'rgba(255,255,255,0.08)'}`,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

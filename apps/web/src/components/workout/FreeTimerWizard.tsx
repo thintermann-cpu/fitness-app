@@ -42,6 +42,7 @@ interface Props {
   variant?: 'save' | 'adhoc'
   initialValues?: WizardInitialValues
   onStart: (mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerConfig?: TimerInitConfig) => void
+  onSaveOnly?: (mode: TimerMode, minutes: number, kraftConfig: KraftConfig | undefined, exercises: WizardExercise[] | undefined, workoutName: string, timerConfig?: TimerInitConfig) => void
 }
 
 const REST_BETWEEN_SETS_OPTIONS    = [45, 60, 90, 120]
@@ -69,7 +70,7 @@ function MiniStepper({
   )
 }
 
-export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValues, onStart }: Props) {
+export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValues, onStart, onSaveOnly }: Props) {
   const isAdhoc   = variant === 'adhoc'
 
   const [step,      setStep]      = useState(0)
@@ -133,10 +134,31 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
   }
 
   const canNext = (() => {
+    if (!isAdhoc && step === 2) return name.trim().length > 0
     if (!isKraft && step === lastStep) return warmup !== null
     if (isKraft && step === 1) return exercises.length > 0
     return true
   })()
+
+  function handleSaveOnly() {
+    if (!name.trim()) return
+    const kraftCfg: KraftConfig | undefined = isKraft
+      ? { exercises, restBetweenSets, restBetweenExercises }
+      : undefined
+    const timerCfg: TimerInitConfig | undefined =
+      mode === 'tabata' ? { tabataWork, tabataRest, tabataRounds } :
+      mode === 'emom'   ? { emomInterval, emomRounds } :
+      undefined
+    const min = isKraft ? 0 :
+      mode === 'tabata' ? Math.round((tabataWork + tabataRest) * tabataRounds / 60) :
+      mode === 'emom'   ? emomInterval * emomRounds :
+      minutes
+    const exs = isKraft ? undefined : (exercises.length > 0 ? exercises : undefined)
+    const savedName = name.trim()
+    reset()
+    onClose()
+    onSaveOnly?.(mode, min, kraftCfg, exs, savedName, timerCfg)
+  }
 
   const modeInfo = TIMER_LABELS[mode]
 
@@ -163,6 +185,11 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
       onNext={handleNext}
       nextLabel={step < lastStep ? 'Weiter' : '▶ Start'}
       canNext={canNext}
+      secondaryAction={!isAdhoc && step === lastStep ? {
+        label: 'Nur speichern',
+        onClick: handleSaveOnly,
+        disabled: !name.trim(),
+      } : undefined}
     >
       {/* Step 0: Mode */}
       {step === 0 && (
@@ -462,7 +489,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
           {!isAdhoc && (
             <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--color-bg-card)' }}>
               <p className="text-xs font-semibold mb-2 tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
-                NAME <span className="font-normal">(optional, zum Speichern)</span>
+                NAME
               </p>
               <input
                 type="text"
@@ -541,7 +568,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
           {!isAdhoc && (
             <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'var(--color-bg-card)' }}>
               <p className="text-xs font-semibold mb-2 tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
-                NAME <span className="font-normal">(optional, zum Speichern)</span>
+                NAME
               </p>
               <input
                 type="text"
