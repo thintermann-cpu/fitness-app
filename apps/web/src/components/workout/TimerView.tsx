@@ -252,6 +252,7 @@ export function TimerView({
       wod_name: workoutName ?? `Ad-hoc ${MODE_TO_WOD_TYPE[mode]}`,
       score_type: 'time',
       score_value: formatMs(finalElapsedRef.current > 0 ? finalElapsedRef.current : tickRef.current.elapsed),
+      exercises: exercises && exercises.length > 0 ? exercises : undefined,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComplete])

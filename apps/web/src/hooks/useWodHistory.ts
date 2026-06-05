@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
+import type { WizardExercise } from '../lib/customWorkouts'
 
 export interface WodHistoryEntry {
   id: string
@@ -9,6 +10,7 @@ export interface WodHistoryEntry {
   score_value: string
   notes?: string
   completed_at: string
+  exercises?: WizardExercise[]
 }
 
 const STORAGE_KEY = 'carveout_wod_history'

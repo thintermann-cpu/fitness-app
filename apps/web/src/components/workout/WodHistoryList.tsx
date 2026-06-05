@@ -55,6 +55,11 @@ export function WodHistoryList({ wodName }: Props) {
               {entry.notes && (
                 <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{entry.notes}</p>
               )}
+              {entry.exercises && entry.exercises.length > 0 && (
+                <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+                  {entry.exercises.map((e) => e.name).join(' · ')}
+                </p>
+              )}
             </div>
             <div className="text-right shrink-0">
               <p className="text-[#E8642A] font-bold text-lg">
