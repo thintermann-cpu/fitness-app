@@ -61,6 +61,7 @@ export function WorkoutPage() {
   const [adhocOpen, setAdhocOpen]         = useState(false)
   const [showAllEquipment, setShowAllEquipment] = useState(false)
   const [timerConfig, setTimerConfig]     = useState<TimerConfig | null>(null)
+  const [timerKey, setTimerKey]           = useState(0)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
   const { data: savedWorkouts = [], addWorkout } = useCustomWorkouts()
@@ -100,6 +101,7 @@ export function WorkoutPage() {
       })
     }
     setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, ...timerCfg })
+    setTimerKey((k) => k + 1)
     setTab('timer')
     if (withWarmup) setShowWarmupTimer(true)
   }
@@ -124,6 +126,7 @@ export function WorkoutPage() {
 
   function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], _workoutName?: string, timerCfg?: TimerInitConfig) {
     setTimerConfig({ mode, minutes, kraftConfig, exercises, ...timerCfg })
+    setTimerKey((k) => k + 1)
     setTab('timer')
     if (withWarmup) setShowWarmupTimer(true)
   }
@@ -134,9 +137,12 @@ export function WorkoutPage() {
       : undefined
     setTimerConfig({
       mode: w.mode, minutes: w.minutes, kraftConfig, workoutName: w.name,
+      exercises: w.mode !== 'krafttraining' ? w.exercises : undefined,
       tabataWork: w.tabataWork, tabataRest: w.tabataRest, tabataRounds: w.tabataRounds,
       emomInterval: w.emomInterval, emomRounds: w.emomRounds,
     })
+    setTimerKey((k) => k + 1)
+    setShowWarmupTimer(true)
     setTab('timer')
   }
 
@@ -270,7 +276,7 @@ export function WorkoutPage() {
                     onShowHistory={() => setTab('history')}
                   />
                 ) : (
-                  <TimerView
+                  <TimerView key={timerKey}
                     adHocLog
                     initialMode={timerConfig.mode as Exclude<typeof timerConfig.mode, 'krafttraining'>}
                     initialMinutes={timerConfig.minutes}
