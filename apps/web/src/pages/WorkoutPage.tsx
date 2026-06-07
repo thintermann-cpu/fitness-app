@@ -44,6 +44,7 @@ function getSavedLocation(): WorkoutLocation | null {
 type TimerConfig = {
   mode: TimerMode; minutes: number
   kraftConfig?: KraftConfig; exercises?: WizardExercise[]; workoutName?: string
+  adHocLog?: boolean
   tabataWork?: number; tabataRest?: number; tabataRounds?: number
   emomInterval?: number; emomRounds?: number
 }
@@ -100,7 +101,7 @@ export function WorkoutPage() {
         emomRounds:   timerCfg?.emomRounds,
       })
     }
-    setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, ...timerCfg })
+    setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, adHocLog: true, ...timerCfg })
     setTimerKey((k) => k + 1)
     setTab('timer')
     if (withWarmup) setShowWarmupTimer(true)
@@ -125,7 +126,7 @@ export function WorkoutPage() {
   }
 
   function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], _workoutName?: string, timerCfg?: TimerInitConfig) {
-    setTimerConfig({ mode, minutes, kraftConfig, exercises, ...timerCfg })
+    setTimerConfig({ mode, minutes, kraftConfig, exercises, adHocLog: true, ...timerCfg })
     setTimerKey((k) => k + 1)
     setTab('timer')
     if (withWarmup) setShowWarmupTimer(true)
@@ -137,6 +138,7 @@ export function WorkoutPage() {
       : undefined
     setTimerConfig({
       mode: w.mode, minutes: w.minutes, kraftConfig, workoutName: w.name,
+      adHocLog: true,
       exercises: w.mode !== 'krafttraining' ? w.exercises : undefined,
       tabataWork: w.tabataWork, tabataRest: w.tabataRest, tabataRounds: w.tabataRounds,
       emomInterval: w.emomInterval, emomRounds: w.emomRounds,
@@ -277,7 +279,7 @@ export function WorkoutPage() {
                   />
                 ) : (
                   <TimerView key={timerKey}
-                    adHocLog
+                    adHocLog={!!timerConfig.adHocLog}
                     initialMode={timerConfig.mode as Exclude<typeof timerConfig.mode, 'krafttraining'>}
                     initialMinutes={timerConfig.minutes}
                     exercises={timerConfig.exercises}
