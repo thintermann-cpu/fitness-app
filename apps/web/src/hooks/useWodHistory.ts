@@ -107,6 +107,8 @@ export function useWodHistory(wodName?: string) {
       if (!(data as any)._fromLocal) {
         void queryClient.invalidateQueries({ queryKey: ['wod_history'] })
       }
+      void queryClient.invalidateQueries({ queryKey: ['today_pillars'] })
+      void queryClient.invalidateQueries({ queryKey: ['week_pillars'] })
     },
   })
 
