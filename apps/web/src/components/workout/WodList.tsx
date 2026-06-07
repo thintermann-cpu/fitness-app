@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
-import { useWods, pickRandomWod } from '../../hooks/useWods'
+import { useWods, pickRandomWod, type Wod } from '../../hooks/useWods'
 import { useToast } from '../../hooks/useToast'
 import { FilterBottomSheet } from '../ui/FilterBottomSheet'
 import { WodCard } from './WodCard'
@@ -39,7 +39,7 @@ const WOD_PROGRAMS = [
 const TYPES        = ['', 'AMRAP', 'ForTime', 'EMOM', 'Tabata']
 const CATEGORIES   = ['', 'Girl WOD', 'Hero WOD', 'Other Benchmark', 'CrossFit Open', 'HomeWOD', 'Core WOD']
 const DIFFICULTIES = ['', 'Beginner', 'Intermediate', 'Advanced']
-const EXCLUDE_EQUIPMENT = ['Barbell', 'Kettlebell', 'Pull-up Bar', 'Rings', 'Jump Rope', 'Box']
+const EXCLUDE_EQUIPMENT = ['Laufen', 'Barbell', 'Kettlebell', 'Pull-up Bar', 'Rings', 'Jump Rope', 'Box']
 const MIN_DUR_OPTIONS = [0, 5, 10, 15, 20]
 const MAX_DUR_OPTIONS = [0, 10, 15, 20, 30, 45]
 
@@ -58,6 +58,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
 
   const [search, setSearch]   = useState(() => sessionStorage.getItem(SEARCH_KEY) ?? '')
   const [page, setPage]       = useState(0)
+  const [accWods, setAccWods] = useState<Wod[]>([])
   const [picking, setPicking] = useState(false)
 
   // Committed filter state — persisted to sessionStorage so back-nav preserves them
@@ -132,9 +133,13 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
     wodCategory:      program && program !== 'empfohlen' ? program : undefined,
   })
 
-  const wods    = data?.data  ?? []
   const total   = data?.count ?? 0
-  const hasMore = (page + 1) * 20 < total
+  const hasMore = accWods.length < total
+
+  useEffect(() => {
+    if (!data?.data) return
+    setAccWods(prev => page === 0 ? data.data : [...prev, ...data.data])
+  }, [data, page])
 
   const handleRandomPick = async () => {
     if (picking) return
@@ -216,7 +221,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
       </p>
 
       {/* List */}
-      {isLoading ? (
+      {(isLoading && accWods.length === 0) ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-24 rounded-[var(--radius-md)] bg-[var(--color-bg-card)] animate-pulse" />
@@ -229,7 +234,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
         </div>
       ) : (
         <div className="space-y-3">
-          {wods.map((wod) => (
+          {accWods.map((wod) => (
             <WodCard key={wod.id} wod={wod} onClick={() => onSelectWod(wod.name)} />
           ))}
         </div>
@@ -254,7 +259,6 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
         onReset={resetFilter}
         pillarColor={PILLAR_COLOR}
         activeCount={activeFilterCount}
-        applyLabel={`${total > 0 ? `${total} ` : ''}Workouts anzeigen`}
         resetLabel="Zurücksetzen"
       >
         {/* Program / Category */}
