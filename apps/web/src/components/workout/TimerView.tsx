@@ -246,6 +246,7 @@ export function TimerView({
 
   // Ad-hoc history logging: uses ref so elapsed value is always current at fire time
   useEffect(() => {
+    console.log('[TimerView] log-effect fired', { adHocLog, isComplete, logged: loggedRef.current, workoutName, mode })
     if (!adHocLog || !isComplete || loggedRef.current) return
     loggedRef.current = true
     addEntry.mutate({
