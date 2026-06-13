@@ -607,4 +607,16 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 
 ---
 
-*Letzte Aktualisierung: Juni 2026 — Tim (Session AR-followup: WodDetail adHocLog immer aktiv, startedViaWarmup entfernt)*
+## 13. Bekannte Bugs & Fixes
+
+Dokumentiert behobene Bugs mit Kontext — damit Regressions erkannt werden und Fixes nicht versehentlich rückgängig gemacht werden.
+
+| Bug | Symptom | Fix | Commit |
+|---|---|---|---|
+| **adHocLog-Kette unterbrochen (Warmup-Pfad)** | `WodDetail`: `startedViaWarmup`-State führte dazu, dass `adHocLog` + `workoutName` nur dann an `TimerView` übergeben wurden, wenn der WOD direkt (nicht via Warmup) gestartet wurde → kein `wod_history`-Eintrag nach Warmup-initiiertem Timer | `startedViaWarmup`-State entfernt; `adHocLog` + `workoutName` werden bedingungslos an `TimerView` übergeben; jeder WOD-Timer-Start (direkt oder via Warmup) erzeugt einen Eintrag | `8684b74` |
+| **Pillar-Invalidierung nach Mood-Änderung verzögert** | `TodaysWod` zeigte nach MoodCheck-Eintrag weiterhin das normale WOD statt der Erholungs-Karte — `recent_mood_wod`-Query wurde nicht sofort invalidiert | `useDailyLog`: `setMood.onSuccess` invalidiert zusätzlich `['recent_mood_wod']` → TodaysWod reagiert sofort | `dfc840b` |
+| **Tab-Wechsel bricht adHocLog-Kette (WorkoutPage)** | Wenn der User während des Warmup-Timers den Tab wechselte, wurde `TimerView` unmounted — `adHocLog`-State verloren, kein History-Eintrag | `WorkoutPage`: `showWarmupTimer`-State sperrt Tab-Wechsel während Warmup; `handleAdhocStart` setzt aktiven Tab explizit auf `'timer'` (verhindert TimerView-Unmount) | `dfc840b` |
+
+---
+
+*Letzte Aktualisierung: Juni 2026 — Tim (Session AS: Abschnitt 13 Bekannte Bugs angelegt — adHocLog-Fixes + Pillar-Invalidierung dokumentiert)*
