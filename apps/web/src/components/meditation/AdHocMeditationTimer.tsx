@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAudio } from '../../hooks/useAudio'
+import type { SoundKey } from '../../hooks/useAudio'
 import { useMeditationLogs } from '../../hooks/useMeditationLogs'
 import { useToast } from '../../hooks/useToast'
 
@@ -9,6 +10,7 @@ type Status = 'running' | 'paused' | 'done'
 
 interface Props {
   duration: number
+  sound?: SoundKey
   lang: Lang
   onFinish: () => void
 }
@@ -37,7 +39,7 @@ function formatTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-export function AdHocMeditationTimer({ duration, lang, onFinish }: Props) {
+export function AdHocMeditationTimer({ duration, sound = 'silence', lang, onFinish }: Props) {
   const t          = T[lang] ?? T.de
   const { addLog } = useMeditationLogs()
   const audio      = useAudio()
@@ -51,6 +53,17 @@ export function AdHocMeditationTimer({ duration, lang, onFinish }: Props) {
   const circumference = 2 * Math.PI * 44
 
   useEffect(() => { void audio.playGong() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Background sound: start/stop with timer status
+  useEffect(() => {
+    if (status === 'running' && sound !== 'silence') {
+      void audio.startBackground(sound)
+    } else {
+      audio.stopBackground()
+    }
+    return () => { audio.stopBackground() }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, sound])
 
   useEffect(() => {
     type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
@@ -70,6 +83,7 @@ export function AdHocMeditationTimer({ duration, lang, onFinish }: Props) {
 
   const logAndFinish = () => {
     if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
+    audio.stopBackground()
     void audio.playComplete()
     void audio.playGong()
     const elapsed = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))

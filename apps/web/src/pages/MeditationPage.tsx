@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import type { SoundKey } from '../hooks/useAudio'
 import { useAuthStore } from '../store/authStore'
 import { useMeditations, useBreathworkTechniques } from '../hooks/useMeditations'
 import type { Meditation, BreathworkTechnique } from '../hooks/useMeditations'
@@ -14,6 +15,15 @@ import { AmbientPlayer }         from '../components/meditation/AmbientPlayer'
 import { UnguidedTimer }         from '../components/meditation/UnguidedTimer'
 import { GuidedPlayer }          from '../components/meditation/GuidedPlayer'
 import { FilterBottomSheet }     from '../components/ui/FilterBottomSheet'
+
+const SOUND_OPTIONS: { key: SoundKey; label: string }[] = [
+  { key: 'silence',     label: '— Kein' },
+  { key: 'bowl',        label: '🔔 Schale' },
+  { key: 'rain',        label: '🌧 Regen' },
+  { key: 'forest',      label: '🌲 Wald' },
+  { key: 'waves',       label: '🌊 Wellen' },
+  { key: 'white_noise', label: '〰 Rauschen' },
+]
 
 const PILLAR_COLOR = '#9B7FD4'
 
@@ -123,6 +133,7 @@ export function MeditationPage() {
   const [catFilter,    setCatFilter]    = useState<Category>('all')
   const [durFilter,    setDurFilter]    = useState<DurFilter>(0)
   const [freeDuration, setFreeDuration] = useState(10)
+  const [freeSound,    setFreeSound]    = useState<SoundKey>('silence')
   const [filterOpen,   setFilterOpen]   = useState(false)
   const [draftCat,     setDraftCat]     = useState<Category>('all')
   const [draftDur,     setDraftDur]     = useState<DurFilter>(0)
@@ -268,7 +279,7 @@ export function MeditationPage() {
           >
             ← {t.tabMeditate}
           </button>
-          <AdHocMeditationTimer duration={freeDuration} lang={lang} onFinish={handleFinishSession} />
+          <AdHocMeditationTimer duration={freeDuration} sound={freeSound} lang={lang} onFinish={handleFinishSession} />
         </div>
       </div>
     )
@@ -419,6 +430,22 @@ export function MeditationPage() {
                     <p className="text-sm font-semibold mb-3" style={{ color: PILLAR_COLOR }}>
                       🧘 {t.freeTitle}
                     </p>
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {SOUND_OPTIONS.map((s) => (
+                        <button
+                          key={s.key}
+                          onClick={() => setFreeSound(s.key)}
+                          className="px-2.5 py-1 rounded-xl text-xs font-semibold transition-colors"
+                          style={
+                            freeSound === s.key
+                              ? { backgroundColor: PILLAR_COLOR, color: 'white' }
+                              : { backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }
+                          }
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
                     <div className="flex gap-2 mb-3">
                       {([5, 10, 20] as const).map((min) => (
                         <button
