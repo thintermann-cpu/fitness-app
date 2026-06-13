@@ -69,12 +69,12 @@ export function AppShell() {
   const firstName   = profile?.display_name?.trim().split(' ')[0] ?? ''
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
+    <div className="flex h-svh overflow-hidden" style={{ backgroundColor: 'var(--color-bg)' }}>
       {/* Fixed sidebar – only visible on lg+ */}
       <Sidebar />
 
       {/* Content area: offset by sidebar width on desktop */}
-      <div className="flex flex-col flex-1 lg:pl-[240px]">
+      <div className="flex flex-col flex-1 min-h-0 lg:pl-[240px]">
         {/* Mobile header */}
         <div
           className="lg:hidden flex items-center px-3 border-b sticky top-0 z-20"
@@ -119,7 +119,7 @@ export function AppShell() {
           </div>
         </div>
 
-        <main className="flex-1 overflow-y-auto pb-[60px] lg:pb-0">
+        <main className="flex-1 min-h-0 overflow-y-auto pb-[60px] lg:pb-0">
           <Outlet />
         </main>
         <BottomNav />
