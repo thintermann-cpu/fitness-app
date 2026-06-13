@@ -103,7 +103,6 @@ export function WodDetail({ wodName, onBack }: Props) {
   const [showWarmup, setShowWarmup]         = useState(false)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
-  const [startedViaWarmup, setStartedViaWarmup] = useState(false)
 
   if (isLoading) {
     return (
@@ -298,7 +297,7 @@ export function WodDetail({ wodName, onBack }: Props) {
             ) : null
           })()}
           <button
-            onClick={() => { setShowTimer(true); setShowWarmupTimer(false); setStartedViaWarmup(false) }}
+            onClick={() => { setShowTimer(true); setShowWarmupTimer(false) }}
             className="flex-1 py-3.5 rounded-xl bg-[#E8642A] text-white font-semibold text-base active:scale-[0.98] transition-transform"
           >
             ▶ Start Timer
@@ -320,7 +319,7 @@ export function WodDetail({ wodName, onBack }: Props) {
       ) : (
         <div className="flex gap-3">
           <button
-            onClick={() => { setShowTimer(false); setShowWarmupTimer(false); setStartedViaWarmup(false) }}
+            onClick={() => { setShowTimer(false); setShowWarmupTimer(false) }}
             className="flex-1 py-3 rounded-xl text-sm font-semibold"
             style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
           >
@@ -341,12 +340,11 @@ export function WodDetail({ wodName, onBack }: Props) {
           <TimerView
             initialMode={timerMode}
             initialMinutes={wod.estimated_minutes || 20}
-            adHocLog={startedViaWarmup}
-            workoutName={startedViaWarmup ? wod.name : undefined}
+            adHocLog
+            workoutName={wod.name}
             onComplete={() => {
               track('workout_completed', { wod_id: wod.id, duration_min: wod.estimated_minutes, category: wod.category })
               window.dispatchEvent(new CustomEvent('carveout:workout-completed'))
-              setStartedViaWarmup(false)
             }}
           />
         </div>
@@ -382,7 +380,7 @@ export function WodDetail({ wodName, onBack }: Props) {
       />
       <WorkoutCountdown
         isOpen={showWorkoutCountdown}
-        onComplete={() => { setShowWorkoutCountdown(false); setShowTimer(true); setStartedViaWarmup(true) }}
+        onComplete={() => { setShowWorkoutCountdown(false); setShowTimer(true) }}
       />
     </div>
   )
