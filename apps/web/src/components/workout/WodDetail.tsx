@@ -6,12 +6,20 @@ import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { WOD_TYPE_TO_MODE } from '../../lib/timerLabels'
 import { useWodHistory } from '../../hooks/useWodHistory'
+import { useCustomWorkouts } from '../../hooks/useCustomWorkouts'
 import { TimerView } from './TimerView'
+import { KraftTimerView } from './KraftTimerView'
 import { ScoreInput } from './ScoreInput'
 import { WodHistoryList } from './WodHistoryList'
 import { FavoriteButton } from '../ui/FavoriteButton'
 import { WarmupTimer } from './WarmupTimer'
 import { WorkoutCountdown } from '../shared/WorkoutCountdown'
+
+// ── Custom workout mode display labels ───────────────────────────────────
+const CW_MODE_LABELS: Record<string, string> = {
+  fortime: 'ForTime', amrap: 'AMRAP', emom: 'EMOM',
+  tabata: 'Tabata', krafttraining: 'Kraft',
+}
 
 // ── Equipment color map ───────────────────────────────────────────────────
 const EQUIPMENT_COLORS: Record<string, string> = {
@@ -97,6 +105,11 @@ export function WodDetail({ wodName, onBack }: Props) {
   const { data: wod, isLoading } = useWod(wodName)
   const { personalBest, addEntry } = useWodHistory(wodName)
   const { track } = useAnalytics()
+  const { data: customWorkouts = [] } = useCustomWorkouts()
+  const customWorkout = customWorkouts.find((w) => w.name === wodName) ?? null
+  const customExercises = (customWorkout && customWorkout.mode !== 'krafttraining')
+    ? customWorkout.exercises.filter((e) => Boolean(e.name))
+    : []
   const [showTimer, setShowTimer]           = useState(false)
   const [showScore, setShowScore]           = useState(false)
   const [showHistory, setShowHistory]       = useState(false)
@@ -113,15 +126,171 @@ export function WodDetail({ wodName, onBack }: Props) {
   }
 
   if (!wod) {
+    if (!customWorkout) {
+      return (
+        <div className="py-20 text-center">
+          <p className="text-[var(--color-text-muted)]">WOD not found.</p>
+          <button onClick={onBack} className="mt-4 text-[#E8642A] underline text-sm">
+            Go back
+          </button>
+        </div>
+      )
+    }
+    const cwMode = customWorkout.mode !== 'krafttraining'
+      ? customWorkout.mode as 'fortime' | 'amrap' | 'emom' | 'tabata'
+      : 'fortime'
     return (
-      <div className="py-20 text-center">
-        <p className="text-[var(--color-text-muted)]">WOD not found.</p>
-        <button onClick={onBack} className="mt-4 text-[#E8642A] underline text-sm">
-          Go back
+      <div className="space-y-5">
+        <div className="flex items-start gap-3">
+          <button onClick={onBack} className="mt-0.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-lg leading-none">←</button>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-2xl font-black text-[var(--color-text)]">{customWorkout.name}</h2>
+            <div className="flex gap-2 mt-1 flex-wrap">
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[#E8642A]/20 text-[#E8642A]">
+                {CW_MODE_LABELS[customWorkout.mode] ?? customWorkout.mode}
+              </span>
+              {customWorkout.minutes > 0 && (
+                <span className="text-xs text-[var(--color-text-muted)]">~{customWorkout.minutes} min</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {(customExercises.length > 0 || customWorkout.tabataRounds || customWorkout.emomRounds) && (
+          <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-md)] p-4 space-y-3">
+            {customExercises.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">Übungen</p>
+                <div className="space-y-1">
+                  {customExercises.map((ex, i) => (
+                    <div key={ex.id} className="flex items-center gap-2 text-sm">
+                      <span className="text-xs text-[var(--color-text-muted)] w-5 flex-shrink-0">{i + 1}.</span>
+                      <span className="text-[var(--color-text)] flex-1">{ex.name}</span>
+                      {(ex.sets || ex.rep_count) && (
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                          {ex.sets ?? 3}×{ex.rep_count ?? 8}{ex.weight_level ? ` · ${ex.weight_level}` : ''}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {customWorkout.tabataRounds && (
+              <div>
+                <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">Tabata</p>
+                <p className="text-sm text-[var(--color-text)] font-mono">
+                  {customWorkout.tabataRounds}× {customWorkout.tabataWork}s Work / {customWorkout.tabataRest}s Pause
+                </p>
+              </div>
+            )}
+            {customWorkout.emomRounds && (
+              <div>
+                <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">EMOM</p>
+                <p className="text-sm text-[var(--color-text)] font-mono">
+                  {customWorkout.emomRounds}× {customWorkout.emomInterval}min
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {!showTimer ? (
+          <div className="flex gap-3">
+            <button
+              onClick={() => { setShowTimer(true); setShowWarmupTimer(false) }}
+              className="flex-1 py-3.5 rounded-xl bg-[#E8642A] text-white font-semibold text-base active:scale-[0.98] transition-transform"
+            >
+              ▶ Start Timer
+            </button>
+            <button
+              onClick={() => setShowWarmupTimer(true)}
+              className="px-4 py-3.5 rounded-xl font-semibold text-sm active:scale-[0.98] transition-transform"
+              style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: '1px solid #E8642A40' }}
+            >
+              🔥 Warmup
+            </button>
+            <button
+              onClick={() => setShowScore(true)}
+              className="px-4 py-3.5 rounded-xl border border-[#E8642A]/40 text-[#E8642A] font-semibold text-sm active:scale-[0.98] transition-transform"
+            >
+              Log
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowTimer(false)}
+              className="flex-1 py-3 rounded-xl text-sm font-semibold"
+              style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
+            >
+              ✕ Timer schließen
+            </button>
+            <button
+              onClick={() => setShowScore(true)}
+              className="px-4 py-3 rounded-xl border border-[#E8642A]/40 text-[#E8642A] font-semibold text-sm"
+            >
+              Log
+            </button>
+          </div>
+        )}
+
+        {showTimer && (
+          <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
+            {customWorkout.mode === 'krafttraining' ? (
+              <KraftTimerView
+                exercises={customWorkout.exercises}
+                restBetweenSets={customWorkout.restBetweenSets ?? 90}
+                restBetweenExercises={customWorkout.restBetweenExercises ?? 60}
+                workoutName={customWorkout.name}
+                onComplete={() => window.dispatchEvent(new CustomEvent('carveout:workout-completed'))}
+              />
+            ) : (
+              <TimerView
+                initialMode={cwMode}
+                initialMinutes={customWorkout.minutes}
+                adHocLog
+                workoutName={customWorkout.name}
+                exercises={customExercises.length > 0 ? customExercises : undefined}
+                initialTabataWork={customWorkout.tabataWork}
+                initialTabataRest={customWorkout.tabataRest}
+                initialTabataRounds={customWorkout.tabataRounds}
+                initialEmomInterval={customWorkout.emomInterval}
+                initialEmomRounds={customWorkout.emomRounds}
+                onComplete={() => window.dispatchEvent(new CustomEvent('carveout:workout-completed'))}
+              />
+            )}
+          </div>
+        )}
+
+        <button
+          onClick={() => setShowHistory((v) => !v)}
+          className="w-full text-left py-3 border-t border-white/8 flex items-center justify-between"
+        >
+          <span className="text-sm font-medium text-[var(--color-text-muted)]">My History</span>
+          <span className="text-[var(--color-text-muted)]">{showHistory ? '▲' : '▼'}</span>
         </button>
+        {showHistory && <WodHistoryList wodName={customWorkout.name} />}
+
+        <ScoreInput
+          wodName={customWorkout.name}
+          isOpen={showScore}
+          onClose={() => setShowScore(false)}
+          onSave={(entry) => { addEntry.mutate(entry); setShowScore(false) }}
+          isPending={addEntry.isPending}
+        />
+        <WarmupTimer
+          isOpen={showWarmupTimer}
+          onClose={() => setShowWarmupTimer(false)}
+          onStartWorkout={() => { setShowWarmupTimer(false); setShowWorkoutCountdown(true) }}
+        />
+        <WorkoutCountdown
+          isOpen={showWorkoutCountdown}
+          onComplete={() => { setShowWorkoutCountdown(false); setShowTimer(true) }}
+        />
       </div>
     )
-  }
+  } // end !wod && customWorkout
 
   const timerMode = (WOD_TYPE_TO_MODE[wod.type] ?? 'fortime') as 'fortime' | 'amrap' | 'emom' | 'tabata'
 
@@ -178,6 +347,43 @@ export function WodDetail({ wodName, onBack }: Props) {
               Weight
             </p>
             <p className="text-sm text-[var(--color-text)]">{wod.gewicht} kg</p>
+          </div>
+        )}
+
+        {customExercises.length > 0 && (
+          <div>
+            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+              Übungen
+            </p>
+            <div className="space-y-1">
+              {customExercises.map((ex, i) => (
+                <div key={ex.id} className="flex items-center gap-2 text-sm">
+                  <span className="text-xs text-[var(--color-text-muted)] w-5 flex-shrink-0">{i + 1}.</span>
+                  <span className="text-[var(--color-text)] flex-1">{ex.name}</span>
+                  {(ex.sets || ex.rep_count) && (
+                    <span className="text-xs text-[var(--color-text-muted)]">
+                      {ex.sets ?? 3}×{ex.rep_count ?? 8}{ex.weight_level ? ` · ${ex.weight_level}` : ''}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {customWorkout?.tabataRounds && (
+          <div>
+            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">Tabata</p>
+            <p className="text-sm text-[var(--color-text)] font-mono">
+              {customWorkout.tabataRounds}× {customWorkout.tabataWork}s Work / {customWorkout.tabataRest}s Pause
+            </p>
+          </div>
+        )}
+        {customWorkout?.emomRounds && (
+          <div>
+            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">EMOM</p>
+            <p className="text-sm text-[var(--color-text)] font-mono">
+              {customWorkout.emomRounds}× {customWorkout.emomInterval}min
+            </p>
           </div>
         )}
 
@@ -342,6 +548,7 @@ export function WodDetail({ wodName, onBack }: Props) {
             initialMinutes={wod.estimated_minutes || 20}
             adHocLog
             workoutName={wod.name}
+            exercises={customExercises.length > 0 ? customExercises : undefined}
             onComplete={() => {
               track('workout_completed', { wod_id: wod.id, duration_min: wod.estimated_minutes, category: wod.category })
               window.dispatchEvent(new CustomEvent('carveout:workout-completed'))
