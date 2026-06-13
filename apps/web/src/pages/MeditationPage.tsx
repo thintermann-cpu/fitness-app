@@ -421,58 +421,59 @@ export function MeditationPage() {
                   )}
                 </div>
 
-                {/* Legacy free-meditation quick-start */}
-                <div className="px-4 pb-4">
-                  <div
-                    className="rounded-[var(--radius-md)] p-4 border"
-                    style={{ backgroundColor: `${PILLAR_COLOR}10`, borderColor: `${PILLAR_COLOR}30` }}
-                  >
-                    <p className="text-sm font-semibold mb-3" style={{ color: PILLAR_COLOR }}>
-                      🧘 {t.freeTitle}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {SOUND_OPTIONS.map((s) => (
-                        <button
-                          key={s.key}
-                          onClick={() => setFreeSound(s.key)}
-                          className="px-2.5 py-1 rounded-xl text-xs font-semibold transition-colors"
-                          style={
-                            freeSound === s.key
-                              ? { backgroundColor: PILLAR_COLOR, color: 'white' }
-                              : { backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }
-                          }
-                        >
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex gap-2 mb-3">
-                      {([5, 10, 20] as const).map((min) => (
-                        <button
-                          key={min}
-                          onClick={() => setFreeDuration(min)}
-                          className="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors"
-                          style={
-                            freeDuration === min
-                              ? { backgroundColor: PILLAR_COLOR, color: 'white' }
-                              : { backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }
-                          }
-                        >
-                          {min} min
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setView('free_meditation')}
-                      className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
-                      style={{ backgroundColor: PILLAR_COLOR }}
-                    >
-                      ▶ {t.freeStart}
-                    </button>
-                  </div>
-                </div>
               </>
             )}
+
+            {/* Freie Meditation — immer sichtbar im Meditate-Tab */}
+            <div className="px-4 pb-4">
+              <div
+                className="rounded-[var(--radius-md)] p-4 border"
+                style={{ backgroundColor: `${PILLAR_COLOR}10`, borderColor: `${PILLAR_COLOR}30` }}
+              >
+                <p className="text-sm font-semibold mb-3" style={{ color: PILLAR_COLOR }}>
+                  🧘 {t.freeTitle}
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {SOUND_OPTIONS.map((s) => (
+                    <button
+                      key={s.key}
+                      onClick={() => setFreeSound(s.key)}
+                      className="px-2.5 py-1 rounded-xl text-xs font-semibold transition-colors"
+                      style={
+                        freeSound === s.key
+                          ? { backgroundColor: PILLAR_COLOR, color: 'white' }
+                          : { backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }
+                      }
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2 mb-3">
+                  {([5, 10, 20] as const).map((min) => (
+                    <button
+                      key={min}
+                      onClick={() => setFreeDuration(min)}
+                      className="flex-1 py-2 rounded-xl text-sm font-semibold transition-colors"
+                      style={
+                        freeDuration === min
+                          ? { backgroundColor: PILLAR_COLOR, color: 'white' }
+                          : { backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }
+                      }
+                    >
+                      {min} min
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setView('free_meditation')}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold text-white"
+                  style={{ backgroundColor: PILLAR_COLOR }}
+                >
+                  ▶ {t.freeStart}
+                </button>
+              </div>
+            </div>
           </>
         )}
 
