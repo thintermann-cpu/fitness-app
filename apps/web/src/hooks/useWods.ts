@@ -190,14 +190,18 @@ export function useWods(filters: WodFilters = {}) {
         filters.maxDuration != null ||
         filters.silentMode === true
 
-      if (!isSupabaseConfigured || hasComplexFilters) {
+      // Program/editors-pick filter always requires Supabase — these WODs exist only in DB, not in wods.json.
+      const forceSupabase = Boolean(filters.wodCategory) || Boolean(filters.editorsPick)
+
+      if (!isSupabaseConfigured || (hasComplexFilters && !forceSupabase)) {
         return fetchLocalWods(filters)
       }
 
       let query = supabase.from('wods').select('*', { count: 'exact' }).eq('is_visible', true)
 
       if (filters.type) query = query.eq('type', filters.type)
-      if (filters.category) query = query.eq('category', filters.category)
+      // Skip category filter when wodCategory is active — newer program WODs have no category value.
+      if (filters.category && !filters.wodCategory) query = query.eq('category', filters.category)
       if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
       if (filters.search) query = query.ilike('name', `%${filters.search}%`)
       if (filters.editorsPick) query = query.eq('is_editors_pick', true)
