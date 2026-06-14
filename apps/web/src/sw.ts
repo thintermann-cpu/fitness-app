@@ -32,6 +32,12 @@ registerRoute(
   new StaleWhileRevalidate({ cacheName: 'static-json' }),
 )
 
+// Cache-first for ambient MP3s — served offline after first load
+registerRoute(
+  ({ url }) => url.origin === self.location.origin && url.pathname.startsWith('/audio/ambient/'),
+  new StaleWhileRevalidate({ cacheName: 'ambient-audio' }),
+)
+
 // === Push Notifications (merged from public/sw.js) ===
 self.addEventListener('push', (event) => {
   const data: Record<string, string> = event.data?.json() ?? {}

@@ -32,6 +32,8 @@ const T = {
       waves:      'Wellen',
       white_noise:'Weißes Rauschen',
       bowl:       'Klangschale',
+      fire:       'Feuer',
+      night:      'Nacht',
     },
   },
   en: {
@@ -59,6 +61,8 @@ const T = {
       waves:      'Waves',
       white_noise:'White Noise',
       bowl:       'Singing Bowl',
+      fire:       'Fire',
+      night:      'Night',
     },
   },
   es: {
@@ -86,11 +90,13 @@ const T = {
       waves:      'Olas',
       white_noise:'Ruido blanco',
       bowl:       'Cuenco',
+      fire:       'Fuego',
+      night:      'Noche',
     },
   },
 }
 
-const SOUNDS: SoundKey[] = ['silence', 'rain', 'forest', 'waves', 'white_noise', 'bowl']
+const SOUNDS: SoundKey[] = ['silence', 'rain', 'forest', 'waves', 'white_noise', 'bowl', 'fire', 'night']
 const SOUND_ICONS: Record<SoundKey, string> = {
   silence:    '🔇',
   rain:       '🌧',
@@ -98,6 +104,8 @@ const SOUND_ICONS: Record<SoundKey, string> = {
   waves:      '🌊',
   white_noise:'〰',
   bowl:       '🔔',
+  fire:       '🔥',
+  night:      '🦗',
 }
 const INTERVAL_OPTIONS = [0, 5, 10, 15, 20] // 0 = off
 const PREP_OPTIONS     = [0, 5, 10, 15, 30]

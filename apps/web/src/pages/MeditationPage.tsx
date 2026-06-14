@@ -23,6 +23,8 @@ const SOUND_OPTIONS: { key: SoundKey; label: string }[] = [
   { key: 'forest',      label: '🌲 Wald' },
   { key: 'waves',       label: '🌊 Wellen' },
   { key: 'white_noise', label: '〰 Rauschen' },
+  { key: 'fire',        label: '🔥 Feuer' },
+  { key: 'night',       label: '🦗 Nacht' },
 ]
 
 const PILLAR_COLOR = '#9B7FD4'

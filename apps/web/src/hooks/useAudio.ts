@@ -1,12 +1,22 @@
 import { useRef, useCallback, useMemo } from 'react'
 import { useAudioStore } from '../store/audioStore'
 
-export type SoundKey = 'rain' | 'forest' | 'waves' | 'white_noise' | 'bowl' | 'silence'
+export type SoundKey = 'rain' | 'forest' | 'waves' | 'white_noise' | 'bowl' | 'fire' | 'night' | 'silence'
+
+const AMBIENT_FILE: Partial<Record<SoundKey, string>> = {
+  bowl:        '/audio/ambient/bowl.mp3',
+  rain:        '/audio/ambient/rain.mp3',
+  forest:      '/audio/ambient/forest.mp3',
+  waves:       '/audio/ambient/waves.mp3',
+  white_noise: '/audio/ambient/whitenoise.mp3',
+  fire:        '/audio/ambient/fire.mp3',
+  night:       '/audio/ambient/night.mp3',
+}
 
 export function useAudio() {
-  const isMuted   = useAudioStore((s) => s.isMuted)
-  const ctxRef    = useRef<AudioContext | null>(null)
-  const stopBgRef = useRef<(() => void) | null>(null)
+  const isMuted    = useAudioStore((s) => s.isMuted)
+  const ctxRef     = useRef<AudioContext | null>(null)
+  const bgAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const getCtxReady = useCallback(async (): Promise<AudioContext> => {
     if (!ctxRef.current || ctxRef.current.state === 'closed') {
@@ -34,7 +44,7 @@ export function useAudio() {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 4.5)
     } catch {}
-  }, [getCtxReady])
+  }, [getCtxReady, isMuted])
 
   const playBeep = useCallback(async () => {
     if (isMuted) return
@@ -51,7 +61,7 @@ export function useAudio() {
       osc.start(ctx.currentTime)
       osc.stop(ctx.currentTime + 0.3)
     } catch {}
-  }, [getCtxReady])
+  }, [getCtxReady, isMuted])
 
   const playComplete = useCallback(async () => {
     if (isMuted) return
@@ -73,101 +83,37 @@ export function useAudio() {
         osc.stop(t + 1.2)
       })
     } catch {}
-  }, [getCtxReady])
+  }, [getCtxReady, isMuted])
 
   const stopBackground = useCallback(() => {
-    if (stopBgRef.current) {
-      try { stopBgRef.current() } catch {}
-      stopBgRef.current = null
+    if (bgAudioRef.current) {
+      bgAudioRef.current.pause()
+      bgAudioRef.current.currentTime = 0
+      bgAudioRef.current = null
     }
   }, [])
 
-  const startBackground = useCallback(async (sound: SoundKey) => {
-    if (stopBgRef.current) {
-      try { stopBgRef.current() } catch {}
-      stopBgRef.current = null
-    }
-    if (isMuted || !sound || sound === 'silence') return
+  const startBackground = useCallback((sound: SoundKey) => {
+    stopBackground()
+    if (isMuted || sound === 'silence') return
 
-    try {
-      const ctx = await getCtxReady()
+    const src = AMBIENT_FILE[sound]
+    if (!src) return
 
-      if (sound === 'bowl') {
-        const osc = ctx.createOscillator()
-        const g   = ctx.createGain()
-        osc.type = 'sine'
-        osc.frequency.value = 432
-        g.gain.value = 0.04
-        osc.connect(g)
-        g.connect(ctx.destination)
-        osc.start()
-        stopBgRef.current = () => {
-          try {
-            g.gain.linearRampToValueAtTime(0, ctx.currentTime + 1)
-            osc.stop(ctx.currentTime + 1)
-          } catch {}
-        }
-        return
-      }
-
-      const sr         = ctx.sampleRate
-      const seconds    = 15
-      const bufferSize = sr * seconds
-      const buffer     = ctx.createBuffer(1, bufferSize, sr)
-      const data       = buffer.getChannelData(0)
-
-      if (sound === 'white_noise') {
-        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1
-      } else if (sound === 'rain' || sound === 'forest') {
-        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0
-        for (let i = 0; i < bufferSize; i++) {
-          const w = Math.random() * 2 - 1
-          b0 = 0.99886 * b0 + w * 0.0555179
-          b1 = 0.99332 * b1 + w * 0.0750759
-          b2 = 0.96900 * b2 + w * 0.1538520
-          b3 = 0.86650 * b3 + w * 0.3104856
-          b4 = 0.55000 * b4 + w * 0.5329522
-          b5 = -0.7616 * b5 - w * 0.0168980
-          data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11
-          b6 = w * 0.115926
-        }
-      } else if (sound === 'waves') {
-        for (let i = 0; i < bufferSize; i++) {
-          const wave = Math.sin(2 * Math.PI * 0.08 * i / sr)
-          data[i]    = (Math.random() * 2 - 1) * (0.4 + 0.6 * Math.max(0, wave)) * 0.25
-        }
-      }
-
-      const source = ctx.createBufferSource()
-      source.buffer = buffer
-      source.loop   = true
-
-      const g = ctx.createGain()
-      g.gain.value = sound === 'white_noise' ? 0.12 : 0.18
-
-      source.connect(g)
-      g.connect(ctx.destination)
-      source.start()
-
-      stopBgRef.current = () => {
-        try {
-          g.gain.linearRampToValueAtTime(0, ctx.currentTime + 1)
-          source.stop(ctx.currentTime + 1)
-        } catch {}
-      }
-    } catch {}
-  }, [getCtxReady])
+    const audio = new Audio(src)
+    audio.loop = true
+    audio.volume = 0.5
+    bgAudioRef.current = audio
+    audio.play().catch(() => {})
+  }, [isMuted, stopBackground])
 
   const cleanup = useCallback(() => {
-    if (stopBgRef.current) {
-      try { stopBgRef.current() } catch {}
-      stopBgRef.current = null
-    }
+    stopBackground()
     if (ctxRef.current && ctxRef.current.state !== 'closed') {
       void ctxRef.current.close()
       ctxRef.current = null
     }
-  }, [])
+  }, [stopBackground])
 
   return useMemo(
     () => ({ playGong, playBeep, playComplete, startBackground, stopBackground, cleanup, isMuted }),
