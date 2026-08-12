@@ -3,3 +3,5 @@
 ## Offen
 
 ## In Bearbeitung
+
+## Spec-Updates ausstehend
