@@ -1,6 +1,6 @@
 # CarveOut — Technische Zusammenfassung
 
-**Intern / Stand: Juni 2026**
+**Intern / Stand: August 2026**
 
 ---
 
@@ -12,7 +12,7 @@ Das Produkt basiert auf **4 Pillars** (Domänen), die einzeln freischaltbar sind
 
 | Pillar | Farbe | Funktion |
 |---|---|---|
-| **Workout** | `#E8642A` Orange | WOD-Datenbank (796 lokale / bis zu 981 Supabase-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), Krafttraining-Modus (Satz-basierter Flow mit Gewichts-/Rep-Tracking), History, Highscores |
+| **Workout** | `#E8642A` Orange | WOD-Datenbank (708 lokale / bis zu 981 Supabase-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), Krafttraining-Modus (Satz-basierter Flow mit Gewichts-/Rep-Tracking), History, Highscores |
 | **Routine** | `#4A90D9` Blau | Tagesroutinen, To-dos, Wochenübersicht; MoodCheck jetzt auf HomePage |
 | **Mobilität** (Stretching) | `#7BC67E` Grün | 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync; Nav-Label: DE Mobilität / EN Mobility / ES Movilidad — DB-ID `stretching` unverändert |
 | **Achtsamkeit** (Meditation) | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer, Screen Wake Lock, Gong am Session-Ende; Ambient-Sound-Dateien unter `public/audio/ambient/`; Nav-Label: DE Achtsamkeit / EN Mindfulness / ES Atención — DB-ID `meditation` unverändert |
@@ -39,7 +39,8 @@ carveout/
 ├── setup-server.sh   # Server-Provisioning-Skript
 ├── scripts/
 │   ├── generate_icons.mjs  # Generiert icon-192.png / icon-512.png / apple-touch-icon.png aus icon-source.svg via @resvg/resvg-js
-│   └── generate_ping.mjs   # Generiert meditation-ping.wav (528 Hz Sinus, 1,4 s Decay) via Node
+│   ├── generate_ping.mjs   # Generiert meditation-ping.wav (528 Hz Sinus, 1,4 s Decay) via Node
+│   └── cleanup-single-exercise-workouts.sql  # Manuelles Cleanup-Skript für Ein-Übungs-Einträge in custom_workouts (Vorschau-Query + geschütztes, auskommentiertes DELETE); noch nicht ausgeführt, wartet auf Freigabe (siehe BUGS.md)
 └── .github/
     └── workflows/
         └── deploy.yml
@@ -177,7 +178,7 @@ apps/web/src/
 │   └── useToast.ts            # Wrapper um toastStore: toast.success/error/info/warning/show
 ├── sw.ts                      # Service Worker (Workbox injectManifest; **NavigationRoute+NetworkFirst vor precacheAndRoute registriert** → kein Blank-Screen nach Cache-Clear; **StaleWhileRevalidate-Route für `/audio/ambient/*.mp3`** (cacheName `ambient-audio`, Offline-Cache); precaching + Push-Handler; gebaut zu dist/sw.js via vite-plugin-pwa)
 └── public/
-    ├── wods.json              # 796 WODs lokal (aus wod-tracker migriert, 7 Duplikate bereinigt)
+    ├── wods.json              # 708 WODs lokal (aus wod-tracker migriert, 7 Duplikate bereinigt, 88 einbewegungige Tabata/EMOM-Füll-WODs entfernt)
     ├── timer.worker.js        # Drift-korrigierter Web Worker
     ├── favicon.svg            # SVG C-Bogen (Pfeil entfernt seit Session P)
     ├── icon-source.svg        # Master-SVG für Icon-Generierung (C-Logo, Hintergrund #0D0D14)
@@ -509,7 +510,7 @@ Init: `initI18n(language: Language)` — konfiguriert i18next mit den passenden 
 Namespace-Schlüssel: `app`, `nav`, `pillars`, `onboarding`, `common`
 
 Stretching-Übungen sind vollständig dreisprachig (name/description/instructions als JSONB).
-WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe Roadmap).
+WODs (708 lokal / bis zu 981 Supabase; 7 Duplikate + 88 Ein-Übungs-Tabata/EMOM-Füll-WODs aus lokalem JSON bereinigt) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe Roadmap).
 
 ---
 
@@ -576,6 +577,7 @@ WODs (796 lokal / bis zu 981 Supabase; 7 Duplikate aus lokalem JSON bereinigt) a
 | **Session AR** | **exercises in wod_history** — (1) **Migration 029** (`029_wod_history_exercises.sql`): `ALTER TABLE wod_history ADD COLUMN IF NOT EXISTS exercises JSONB NOT NULL DEFAULT '[]'`; (2) **`WodHistoryEntry` Interface**: neues optionales Feld `exercises?: WizardExercise[]` (importiert aus `lib/customWorkouts`); (3) **`TimerView`**: übergibt `exercises` an `addEntry.mutate()` wenn `exercises.length > 0` — Übungsliste wird mit History-Eintrag gespeichert; (4) **`WodHistoryList`**: zeigt Exercise-Namen als kompakte Punkt-separierte Zeile unter Score/Notes im History-Card |
 | **Session AR-followup** | **WodDetail adHocLog Fix** — `startedViaWarmup`-State entfernt; `adHocLog` und `workoutName` werden bedingungslos an `TimerView` übergeben → jeder WOD-Timer-Start (direkt oder via Warmup) erzeugt einen `wod_history`-Eintrag mit dem WOD-Namen; debug `console.log` in `TimerView` entfernt |
 | **Session AS-followup** | **WodDetail Custom-Workout-Ansicht** — `WodDetail` unterstützt jetzt einen `!wod`-Zweig: wenn die Route-Param `/workout/:wodName` keinem DB-/JSON-WOD entspricht, fragt `WodDetail` via `useCustomWorkouts` nach einem passenden Custom Workout (`name === wodName`); findet sie eines → rendert Custom-Workout-Ansicht (Name, Modus-Badge, Übungsliste); Start-Button startet `TimerView` direkt mit den gespeicherten `exercises` aus dem Custom Workout; `adHocLog` + `workoutName` werden wie im Standard-Pfad bedingungslos übergeben → `wod_history`-Eintrag wird erzeugt; `exercises` werden an `addEntry.mutate()` übergeben (Augmentierung des History-Eintrags mit Übungsliste) |
+| **Session AU** | **WOD-Bibliothek-Bereinigung** — `apps/web/public/wods.json`: 88 von 796 einbewegungigen Tabata/EMOM-Füll-WODs entfernt (Freitext-Feld `uebungen` enthielt nur eine Übung, z. B. „Tabata Air Squat" / „EMOM Back Squat"); 708 WODs verbleiben lokal; benannte CrossFit-Benchmarks (Grace, Karen, Isabel, Death by Pull-ups etc.) sowie echte Mehr-Übungs-Einträge (Alt: X / Y, mehrere Übungen per „/"/„+") bewusst nicht entfernt; kein Schema-/Hook-/Komponenten-Change (Commit `16d9dc5`); **`scripts/cleanup-single-exercise-workouts.sql`** (Commit `1747168`): separates, noch nicht ausgeführtes SQL-Skript für manuellen Cleanup von Ein-Übungs-Einträgen in `custom_workouts` (Supabase, nicht die statische Bibliothek) — Vorschau-Query + geschütztes DELETE (auskommentiert, wartet auf Freigabe von Tim); Ein-Übungs-Workout-**Erstellung** bleibt für User weiterhin erlaubt (BUGS.md, kein Minimum im Creation-Flow) |
 | **Session AT** | **Ambient-Sounds MP3-Migration + Freie-Meditation-Fixes** — **AdHocMeditationTimer Sound-Auswahl**: `sound`-Prop (SoundKey, default `silence`); `MeditationPage` SOUND_OPTIONS (8 Chips: Kein/Schale/Regen/Wald/Wellen/Rauschen/Feuer/Nacht) im Free-Meditation-Widget; useEffect startet/stoppt `audio.startBackground()`/`stopBackground()` synchron zu Timer-Status (running/paused/done/unmount); **FreieMeditation-Card-Fix**: Card war fälschlich nur innerhalb `medSubTab==='guided'` gerendert (Default-Sub-Tab ist `unguided` → Card erschien nie); jetzt eigener Block direkt im `meditate`-Tab, unabhängig von Sub-Tab; **Ambient Sounds auf MP3 umgestellt**: `useAudio.startBackground/stopBackground` nutzen `<audio loop>` mit 7 CC0-MP3-Dateien (`AMBIENT_FILE`-Map → `public/audio/ambient/*.mp3`: bowl/rain/forest/waves/whitenoise/fire/night) statt generierter Web-Audio-Buffer; `playGong`/`playBeep`/`playComplete` bleiben Web Audio API; `SoundKey` erweitert um `fire` | `night`; `sw.ts` StaleWhileRevalidate-Route für `/audio/ambient/*.mp3` (Offline-Cache); **Programm-Filter-Fix (`useWods`)**: `forceSupabase`-Flag erzwingt Supabase-Query wenn `wodCategory`/`editorsPick` gesetzt ist, auch bei aktiven complex filters (vorher fiel Query dann auf lokales JSON zurück, wo `wodCategory` ignoriert wird); alter `category`-Filter wird übersprungen wenn `wodCategory` aktiv ist |
 
 ### Offen / Roadmap
@@ -635,4 +637,4 @@ Dokumentiert behobene Bugs mit Kontext — damit Regressions erkannt werden und 
 
 ---
 
-*Letzte Aktualisierung: Juni 2026 — Tim (Session AT: Ambient-Sounds MP3-Migration, AdHocMeditationTimer Sound-Auswahl, Freie-Meditation-Bugfix, Programm-Filter-Fix)*
+*Letzte Aktualisierung: August 2026 — Tim (Session AU: WOD-Bibliothek-Bereinigung — 88 Ein-Übungs-Tabata/EMOM-Füll-WODs entfernt, 708 WODs lokal)*
