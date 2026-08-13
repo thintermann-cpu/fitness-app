@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /c/Projects/fitness_app/.claude/hooks/check-spec-updates.sh",
+            "shell": "bash"
+          }
+        ]
+      }
+    ]
+  }
+}
