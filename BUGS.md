@@ -3,7 +3,6 @@
 Format je Zeile: `- [Prio] Beschreibung`. Prio ist `Hoch`, `Mittel` oder `Niedrig` (ohne Tag = `Mittel`).
 
 ## Offen
-## Offen
 - [ ] PRIORITÄT — Workout-Detail schwarz + instabile Filter-Ergebnisse gemeinsam untersuchen (vermutlich gleiche Root Cause): Öffnen von Workout-Details friert den Tab mehrere Sekunden ein (CDP "renderer unresponsive", kein Netzwerkfehler), UND Filter liefern bei identischem sichtbaren Zustand unterschiedliche Trefferzahlen (156 / 30 / 416 bei "Home" + "Kraft - Wenig Zeit"). Beides deutet auf eine teure/fehlerhafte Filter-Berechnung im Frontend hin, die synchron den Main Thread blockiert und dabei inkonsistente Ergebnisse produziert. Zuerst hier ansetzen, bevor Einzelsymptome unten gefixt werden.
 - [ ] Equipment-Filter-Toggle inkonsistent — nach Klick auf "Alle anzeigen" wechselt Text zu "Equipment-Filter aus — aktivieren", Home-Tile bleibt aber visuell ausgewählt (orange Rahmen). Vermutlich Symptom desselben Root-Cause-Punkts oben.
 - [ ] "Ohne Laufen" / Equipment-Pflichtfilter (z.B. Dumbbell) nicht zuverlässig angewendet — vermutlich ebenfalls Symptom des Root-Cause-Punkts oben.
