@@ -169,7 +169,7 @@ export async function pickRandomWod(filters: Omit<WodFilters, 'page'>): Promise<
   return filtered[Math.floor(Math.random() * filtered.length)]
 }
 
-const SUPABASE_TIMEOUT_MS = 5000
+const SUPABASE_TIMEOUT_MS = 8000
 
 function raceTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T | null> {
   return Promise.race([
@@ -215,6 +215,12 @@ export function useWods(filters: WodFilters = {}) {
 
       if (!result || result.error) {
         if (result?.error) console.error('[useWods]', result.error.message)
+        // Local JSON has no wod_category / is_editors_pick data — falling back here would
+        // silently swap the correctly filtered result for a much larger, wrongly filtered one.
+        // Surface the failure instead (WodList already renders an error state on isError).
+        if (forceSupabase) {
+          throw new Error(result?.error?.message ?? 'Supabase-Anfrage für Programm-Filter fehlgeschlagen (Timeout)')
+        }
         return fetchLocalWods(filters)
       }
 
