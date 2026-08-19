@@ -40,6 +40,12 @@ interface AuthState {
   updateProfile: (data: Partial<Omit<DbProfile, 'id' | 'created_at'>>) => Promise<void>
 }
 
+// supabase-js serializes auth calls across tabs via an exclusive navigator.locks lock
+// (lock:sb-<project-ref>-auth-token). If another tab's call never settles, that lock
+// is held forever and every other tab's getSession() queues behind it indefinitely —
+// this timeout keeps the app from being stuck on the loading gate in that case.
+const AUTH_INIT_TIMEOUT_MS = 8000
+
 async function loadProfile(userId: string): Promise<DbProfile | null> {
   const { data } = await supabase
     .from('user_profiles')
@@ -93,17 +99,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: async () => {
     try {
-      const { data } = await supabase.auth.getSession()
-      const session = data.session
-      const user    = session?.user ?? null
+      const timeout = new Promise<'timeout'>((resolve) =>
+        setTimeout(() => resolve('timeout'), AUTH_INIT_TIMEOUT_MS),
+      )
+      const result = await Promise.race([supabase.auth.getSession(), timeout])
 
-      // Unblock rendering immediately — profile loads async in background
-      set({ session, user, loading: false })
+      if (result === 'timeout') {
+        console.error('[authStore] getSession() timed out after', AUTH_INIT_TIMEOUT_MS, 'ms — auth lock likely stuck on another tab')
+        set({ loading: false })
+      } else {
+        const session = result.data.session
+        const user    = session?.user ?? null
 
-      if (user) {
-        loadProfile(user.id)
-          .then((profile) => set({ profile }))
-          .catch(() => {})
+        // Unblock rendering immediately — profile loads async in background
+        set({ session, user, loading: false })
+
+        if (user) {
+          loadProfile(user.id)
+            .then((profile) => set({ profile }))
+            .catch(() => {})
+        }
       }
 
       supabase.auth.onAuthStateChange(async (_event, newSession) => {
