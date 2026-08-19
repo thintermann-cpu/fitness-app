@@ -51,3 +51,6 @@ packages/*/.turbo/
 
 # Turbo cache
 .turbo
+
+# Claude Code worktrees (ephemeral, created/removed by the agent harness)
+.claude/worktrees/
