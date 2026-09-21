@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { path: '/routine',    icon: '📋', key: 'routine',    color: '#4A90D9', pillarId: 'routine'    },
   { path: '/workout',    icon: '💪', key: 'workout',    color: '#E8642A', pillarId: 'workout'    },
   { path: '/stretching', icon: '🧘', key: 'stretching', color: '#7BC67E', pillarId: 'stretching' },
-  { path: '/meditation', icon: '🧠', key: 'meditation', color: '#9B7FD4', pillarId: 'meditation' },
+  { path: '/meditation', icon: '🧘', key: 'meditation', color: '#9B7FD4', pillarId: 'meditation' },
 ] as const
 
 const NAV_LABELS: Record<string, Record<string, string>> = {
