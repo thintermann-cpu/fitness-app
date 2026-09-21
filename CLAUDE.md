@@ -73,14 +73,14 @@ Führe ein Spec-Update durch. Vorgehen:
 ## Architektur-Entscheidungen
 
 **Offline-First, mit Custom-WOD als Ausnahme:**
-- App soll wo möglich offline laufen. Bestehende `isSupabaseConfigured()`-Fallbacks mit localStorage bleiben (legacy, accepted).
-- Custom-WOD-CRUD ist explizite Ausnahme: Supabase-only mit RLS, kein localStorage. Begründung: User-owned Daten brauchen Geräte-Crossover.
+- App soll wo möglich offline laufen. Hook-Fallbacks existieren noch, sind aber tot: `isSupabaseConfigured` ist `true`.
+- Custom-WOD: gewünschte Richtung Supabase-only (Geräte-Crossover); der Hook hat noch localStorage-Fallback.
 - Bei neuen Features mit User-owned Daten: Frage stellen „soll das auch offline funktionieren?" — wenn ja, Fallback einbauen; wenn nein, Supabase-only.
 - Welche weiteren Features sinnvoll offline laufen sollen, ist offen — eigene Mini-Phase im Backlog.
 
 ## Gotchas
 
 - Tailwind v4: kein Config-File, alles via `@theme` in `index.css`. Wer eine `tailwind.config.js` anlegt, bricht den Build mental und faktisch.
-- Supabase-Fallback: alle Data-Hooks prüfen `isSupabaseConfigured()`. Ohne Supabase laufen sie auf localStorage / statisches JSON. Beim Refactor diesen Pfad nicht versehentlich entfernen.
-- WOD-Felder sind deutsch in der DB, intern englisch — Mapping via `useWods.ts`.
+- Supabase: `isSupabaseConfigured` ist eine Konstante `true`. Ohne `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` wirft `lib/supabase.ts` beim Import. Hook-Fallbacks auf localStorage/`wods.json` sind tot, solange die Konstante true bleibt.
+- WOD-Schemas: lokales JSON deutsch (`typ`, `uebungen`, …); live-Supabase englisch (`type`, `exercises`, …). `equipment` in der DB oft `null`, Tags in `equipment_tags`. Mapping in `useWods.mapRawToWod` — ungemappte Rows crashen `WodDetail`.
 - `wod-tracker/` und `mein-tag/` im Repo sind alte Vorgänger-PWAs. Nicht anfassen, nicht refactoren.

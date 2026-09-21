@@ -1,6 +1,6 @@
 # CarveOut — Technische Zusammenfassung
 
-**Intern / Stand: August 2026**
+**Intern / Stand: September 2026**
 
 ---
 
@@ -12,7 +12,7 @@ Das Produkt basiert auf **4 Pillars** (Domänen), die einzeln freischaltbar sind
 
 | Pillar | Farbe | Funktion |
 |---|---|---|
-| **Workout** | `#E8642A` Orange | WOD-Datenbank (708 lokale / bis zu 981 Supabase-WODs), Timer (AMRAP/ForTime/EMOM/Tabata), Krafttraining-Modus (Satz-basierter Flow mit Gewichts-/Rep-Tracking), History, Highscores |
+| **Workout** | `#E8642A` Orange | WOD-Datenbank (708 lokale JSON / live ~905 `is_visible=true`, Katalog bis ~981), Timer (AMRAP/ForTime/EMOM/Tabata), Krafttraining-Modus (Satz-basierter Flow mit Gewichts-/Rep-Tracking), History, Highscores |
 | **Routine** | `#4A90D9` Blau | Tagesroutinen, To-dos, Wochenübersicht; MoodCheck jetzt auf HomePage |
 | **Mobilität** (Stretching) | `#7BC67E` Grün | 65 dreisprachige Übungen, 18 Routinen, Guided Session mit Progress-Ring + Timer, bilateral support, History + Supabase-Sync; Nav-Label: DE Mobilität / EN Mobility / ES Movilidad — DB-ID `stretching` unverändert |
 | **Achtsamkeit** (Meditation) | `#9B7FD4` Lila | 20 geführte Meditationen (7 Kategorien), 8 Breathwork-Techniken, Custom Presets, Web Audio API (Gong, Klangschale, Regen, Wellen), Custom Timer, Screen Wake Lock, Gong am Session-Ende; Ambient-Sound-Dateien unter `public/audio/ambient/`; Nav-Label: DE Achtsamkeit / EN Mindfulness / ES Atención — DB-ID `meditation` unverändert |
@@ -60,7 +60,7 @@ apps/web/src/
 ├── index.css                  # Tailwind-Import + @theme-Block
 ├── styles/tokens.css          # CSS Custom Properties (Pillar-Farben, Spacing, Radius)
 ├── lib/
-│   ├── supabase.ts            # Supabase-Client + isSupabaseConfigured()
+│   ├── supabase.ts            # createClient; isSupabaseConfigured = true (Konstante). Fehlen VITE_SUPABASE_* → throw beim Import
 │   ├── push.ts                # Push Notification Helpers (subscribeToPush, unsubscribeFromPush)
 │   ├── adaptiveSuggestion.ts  # Pure Funktion `getSuggestedPillar(goal?: string | null): Pillar` — Empfehlung nach Uhrzeit (05–10 immer routine); Tiebreaker per goal: Mittag (10–17): `beweglichkeit`→stretching, `entspannen` ab 14h→meditation, sonst workout; Abend (17–21): `kraft`/`abnehmen`→workout, `entspannen`→meditation, sonst stretching; Nacht→meditation; **Loading-Fix**: `AdaptiveSuggestion` rendert erst wenn `profile` nicht null ist (Supabase-Delay-Guard); **TodayPillarTracker-Buttons**: Chip-Tap navigiert direkt zur Pillar-Route (nicht nur visuell)
 │   ├── customWorkouts.ts      # CustomWorkout + CustomSession Typen; localStorage-Fallback-Funktionen: `loadLocalWorkouts` / `saveLocalWorkout` / `deleteLocalWorkout` (Key: carveout_custom_workouts); CustomSession bleibt localStorage-only (loadCustomSessions / saveCustomSession / deleteCustomSession; Key: carveout_custom_sessions)
@@ -84,9 +84,7 @@ apps/web/src/
 │   ├── StretchingPage.tsx     # Stretching-Pillar (Phase 4); FilterBottomSheet (Goal/Kategorie inkl. Yoga-Subcategory + yoga_flow, Dauer); 5 Yoga Flows (YOGA_FLOWS-Array: Morgen-Flow/Hüft-Öffner/Rücken-Relief/Power-Flow/Schlaf-Flow) als clientseitige virtuelle Routinen — Exercises per Name-Hint-Match aus DB gelöst; `resolvedYogaFlows` useMemo; Flow-Cards mit Level-Badge + holdTime-Prop an GuidedSession
 │   ├── MeditationPage.tsx     # Meditation-Pillar (Phase 5); Sub-Tabs im Meditieren-Tab: Ungeführt (UnguidedTimer) / Geführt (GuidedPlayer + DB-Sessions); FilterBottomSheet (Kategorie + Dauer) nur im Geführt-Sub-Tab; **Freie Meditation** — eigene Card, immer sichtbar im Meditieren-Tab unabhängig vom Sub-Tab (Bug-Fix: war zuvor fälschlich nur im Geführt-Block gerendert); SOUND_OPTIONS (8 Chips: Kein/Schale/Regen/Wald/Wellen/Rauschen/Feuer/Nacht) + 5/10/20-min-Quick-Select; view=free_meditation startet AdHocMeditationTimer mit gewähltem `sound`-Prop
 │   ├── FavoritesPage.tsx      # Drei Sektionen (Workouts / Stretch & Yoga / Meditationen), URL-Param ?section=
-│   ├── CheckoutSuccessPage.tsx  # Bestätigungsseite nach Stripe-Checkout; liest `?session_id=`; zeigt Erfolgs-Meldung + Link zu /home; öffentliche Route `/checkout/success`
-│   ├── CheckoutCancelPage.tsx   # Abbruch-Seite; zeigt Meldung + Link zurück zu `/`; öffentliche Route `/checkout/cancel`
-│   ├── ProfilePage.tsx        # **entfernt als eigenständige Route** — Route `/profile` redirectet auf `/settings`; Passwort-Reset + E-Mail-Anzeige in SettingsPage (Allgemein-Submenu) integriert; Abo-Sektion in SettingsPage (parallel zu früherer ProfilePage)
+│   ├── ProfilePage.tsx        # Datei noch im Repo, **nicht geroutet**. `/profile` → `/settings`. Stripe `success_url` zeigt noch auf `/profile?checkout=success` — Query geht beim Redirect verloren. CheckoutSuccess/Cancel-Pages existieren nicht.
 │   ├── SettingsPage.tsx       # Submenüs: Allgemein (Sprache, Ziel, Equipment, E-Mail-Anzeige + Passwort-Reset via `supabase.auth.resetPasswordForEmail`), Pillar-Toggle (aktive Pillars + Primary Pillar Hinweis), Benachrichtigungen (Push), Training (Substitution-Toggle, Silent-Mode, **Toggle "Motivationstext anzeigen"** — localStorage Key: `carveout_show_motivation`, default on; steuert AdaptiveSuggestion auf HomePage), **Musik-Links** (3 Text-Eingaben für externe Musik-URLs; localStorage Keys: `carveout_music_workout`, `carveout_music_stretching`, `carveout_music_meditation`; kein Player — reine Link-Öffner), Weitere (Feedback); Abo-Status als zusätzliches Submenu; **Toggle "Inaktive Bereiche ausblenden"** (localStorage Key: `hide_inactive_pillars`; CustomEvent `hide_inactive_changed` → Sync zu BottomNav + Sidebar); SaveButton als Outline-Button (border accent, transparent background); liest `user` (zusätzlich zu `profile`) aus authStore; **Push-Fixes (Session AI)**: Permission-denied Check beim Mount → `pushError` sofort gesetzt wenn `Notification.permission === 'denied'`; Push-Präferenzen laden via `maybeSingle()` statt `single()` (kein 406-Fehler wenn Zeile fehlt)
 │   └── admin/
 │       ├── AdminDashboardPage.tsx
@@ -101,7 +99,7 @@ apps/web/src/
 │   │   ├── PillarSection.tsx   # 4 Pillar-Karten mit Farbe + Feature-Liste; Routine-Karte mit Label "Routine" (nicht Ritual)
 │   │   ├── HowItWorks.tsx      # 3-Schritt-Erklärung
 │   │   ├── ResultsTimeline.tsx # Timeline „Was du in 4 Wochen erreichst"
-│   │   ├── PricingSection.tsx  # Pricing-Cards mit Stripe-Checkout-Links; Plan-Auswahl → `/api/stripe/checkout` (POST); Erfolg → `/checkout/success?session_id=`; Abbruch → `/checkout/cancel`
+│   │   ├── PricingSection.tsx  # Pricing-Cards; Checkout via `useSubscription.startCheckout` (Edge Function). Keine In-App Success/Cancel-Routen.
 │   │   ├── CtaSection.tsx      # Bottom-CTA mit Start-Button
 │   │   └── LandingFooter.tsx   # Footer mit DE/EN-Toggle + Links
 │   ├── layout/
@@ -162,7 +160,7 @@ apps/web/src/
 │   ├── useRoutineLogs.ts      # Completion-Logs
 │   ├── useDailyLog.ts         # Tages-Mood, Wasser; **auth-gated**: `enabled: !!userId`; queryKey `['daily_log', userId ?? 'anon', date]`; userId aus Store; **setMood.onSuccess** invalidiert zusätzlich `['recent_mood_wod']` → TodaysWod reagiert sofort auf Mood-Änderung
 │   ├── useTodos.ts            # To-do-Liste; staleTime 0 (refetcht bei jedem Window-Focus → Cross-Device-Sync); retry: 1 (transiente Netzwerkfehler erholen sich automatisch)
-│   ├── useWods.ts             # Supabase oder /wods.json Fallback; Filter: equipmentFilter, silentMode, editorsPick, excludeEquipment, **userEquipment** (profile.equipment — zeigt nur WODs deren equipment_tags ⊆ userEquipment; Fallback auf altes `equipment`-Feld für lokales JSON; Normalisierung via `normEq()`: lowercase + Mapping dumbbells→dumbbell, resistance bands→resistance band, rowing machine→rower, assault bike→bike; bodyweight immer in allowed-Set (sowohl `equipmentFilter` als auch `userEquipment`); `mapRawToWod` splittet `equipment`-String mit `.filter(Boolean)` — leere Strings werden entfernt), minDuration, maxDuration, wodCategory (crossfit|hiit|kraft_ausdauer|kraft_wenig_zeit|krafttraining); Supabase-Query mit `.eq('is_visible', true)`; **`forceSupabase`-Flag**: wenn `wodCategory` oder `editorsPick` gesetzt ist, wird immer Supabase abgefragt — auch bei aktiven complex filters (equipmentFilter/userEquipment), die sonst auf lokales JSON zurückfallen würden (Bug-Fix: Programm-Filter hatte sonst keinen Effekt); alter `category`-Filter wird übersprungen wenn `wodCategory` aktiv ist (neuere Programm-WODs haben kein `category`-Feld); `applyLocalFilters`: `wodCategory` wird für lokales JSON weiterhin übersprungen (kein `wod_category`-Feld dort) — Filter wirkt nur auf Supabase-Daten; pickRandomWod() (gecachte lokale WODs + alle Filter); **pickByDate(wods)** (deterministisch: Index = dayOfYear % pool.length — genutzt von TodaysWod)
+│   ├── useWods.ts             # Dual-Schema via `mapRawToWod` (DE-JSON + EN-Supabase). Filter: equipmentFilter, silentMode, editorsPick, excludeEquipment, **userEquipment** (equipment_tags ⊆ userEquipment; sonst `equipment`; `normEq`: dumbbells→dumbbell, resistance bands→resistance band, rowing machine→rower, assault bike→bike; bodyweight immer allowed). minDuration, maxDuration, wodCategory (crossfit|hiit|kraft_ausdauer|kraft_wenig_zeit|krafttraining). Query `.eq('is_visible', true)`. **`forceSupabase`**: wodCategory/editorsPick immer Supabase (sonst JSON-Fallback ohne diese Felder). **Bei forceSupabase + complex filters** (Equipment/Dauer/SilentMode): voller Programm-Satz, map, `applyLocalFilters`, Pagination lokal (20) — vorher ignorierte der SQL-Pfad Equipment still. Ohne complex filters: paginierte SQL. `category`-Filter übersprungen wenn wodCategory aktiv. `pickRandomWod()` liest nur lokales `wods.json` (kein live-Pfad).
 │   ├── useCustomWorkouts.ts   # TanStack Query + Supabase Dual-Write für Custom Workouts (Supabase primary, localStorage Fallback); **auth-gated**: `enabled: isSupabaseConfigured ? !!userId : true` (kein leerer Cache für unauthenticated State); queryKey enthält userId; Mutations: addWorkout / updateWorkout / deleteWorkout; dbToWorkout / workoutToDb Mapping; staleTime 5 min
 │   ├── useWodHistory.ts       # localStorage + Supabase Dual-Write, personalBest; **auth-gated**: `enabled: isSupabaseConfigured ? !!userId : true`; queryKey 3-teilig `['wod_history', userScope, wodName ?? '_all']` (userScope = userId oder 'anon' oder 'local'); userId aus Store (nicht mehr via `getSession()`); onSuccess: setQueryData auf _all + wod_name Keys für sofortige Cache-Aktualisierung; **_fromLocal-Pattern**: bei lokalem Fallback wird `{ _fromLocal: true }` an Entry gehängt → `invalidateQueries` wird übersprungen; Duplikat-Guard in setQueryData (`.filter(e => e.id !== data.id)` vor Prepend); **WodHistoryEntry.exercises**: `exercises?: WizardExercise[]` — optional, aus `lib/customWorkouts`
 │   ├── useHighscores.ts       # Top-10 pro WOD (Supabase oder local)
@@ -190,7 +188,7 @@ apps/web/src/
     ├── onboarding-slides.json  # 5 Produkttour-Slides; Felder: id/emoji/title/subtitle/pillarColor + `pillars[]` (SlidePillar: label/color/emoji — Slide 2) + `subtitleExtra` (Slides 3+4); JSON-Datei, von OnboardingSlides.tsx geladen
     ├── whats-new.json          # What's-New-Daten (version/emoji/title/text); pro Release manuell aktualisieren
     └── audio/
-        ├── ambient/           # 7 CC0-MP3s (bowl/rain/forest/waves/whitenoise/fire/night.mp3); geladen via `useAudio.startBackground()`; SW-gecacht via StaleWhileRevalidate (Offline-Support)
+        ├── ambient/           # erwartet 7 CC0-MP3s (bowl/rain/forest/waves/whitenoise/fire/night.mp3); **Ordner leer im Repo** — `useAudio.startBackground()` findet die Dateien nicht
         └── sessions/
             ├── sessions.json  # 7 Placeholder-Sessions (body_scan/breathing/focus/sleep/morning/stress_relief); alle available=false bis MP3s vorhanden; Felder: id, title, duration, type, file, available
             └── meditation-ping.wav  # 528 Hz Sinus-Ping (1,4 s Decay), generiert via scripts/generate_ping.mjs
@@ -216,13 +214,12 @@ apps/web/src/
 /                              → LandingPublicRoute (nicht-auth: LandingPage; auth: Redirect /home)
 /impressum                     → ImpressumPage (öffentlich, kein Auth nötig)
 /datenschutz                   → DatenschutzPage (öffentlich, kein Auth nötig)
-/checkout/success              → CheckoutSuccessPage (öffentlich; liest `?session_id=`; zeigt Bestätigung + Link zu /home)
-/checkout/cancel               → CheckoutCancelPage (öffentlich; zeigt Abbruch-Meldung + Link zurück zu /)
 /login, /register              → AuthLayout (kein Auth nötig; auth: Redirect /home)
 /home → AppShell (ProtectedLayout)
   /home                        → HomePage (Dashboard)
   /onboarding
   /workout
+  /workout/custom
   /workout/:wodName
   /routine
   /stretching
@@ -241,6 +238,8 @@ apps/web/src/
   /admin/wods
 ```
 
+Stripe Checkout: keine In-App-Success/Cancel-Pages. Edge Function `create-checkout-session` default `success_url` = `https://carveout.app/profile?checkout=success` (`/profile` redirected nach `/settings`, Query verloren). Return-URL-Fix offen.
+
 ### Route Guards (App.tsx)
 
 - `LandingPublicRoute` — öffentlich; eingeloggte User werden nach `/home` redirected
@@ -249,7 +248,7 @@ apps/web/src/
 
 ### Fallback-Logik (`isSupabaseConfigured`)
 
-Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase nicht konfiguriert ist, laufen sie auf localStorage / statisches JSON zurück. Dadurch ist die App ohne Supabase-Setup lauffähig.
+`apps/web/src/lib/supabase.ts` exportiert `isSupabaseConfigured = true` (Konstante, keine Funktion). Fehlen `VITE_SUPABASE_URL` oder `VITE_SUPABASE_ANON_KEY`, wirft das Modul beim Import — die App rendert dann nicht. Die Data-Hooks haben noch `if (!isSupabaseConfigured)`-Zweige (localStorage / `wods.json`); die sind mit der Konstanten tot. Cloud-Agent-Install kann `apps/web/.env` aus `.env.example` anlegen (Platzhalter), dann startet Vite, Login/echte Daten brauchen echte Secrets.
 
 ---
 
@@ -272,16 +271,19 @@ Alle Data-Hooks prüfen `!supabaseUrl.includes('placeholder')`. Wenn Supabase ni
 | Audio | Web Audio API + `<audio>` (MP3) | nativ — Gong/Beep/Complete via Web Audio API (Oszillator); Ambient-Sounds (Schale/Regen/Wald/Wellen/Rauschen/Feuer/Nacht) via MP3-Loop |
 | Screen Wake Lock | Screen Wake Lock API | nativ (verhindert Display-Timeout während Timer läuft) |
 | Push | Web Push API + Service Worker | nativ |
-| Payments | Stripe JS + Stripe Node | Checkout Sessions, Webhooks (stripe-signature Verifikation), Portal-Link |
+| Payments | Stripe JS + Stripe Node | Checkout Sessions + Webhooks; Customer Portal / In-App Success-Route noch offen |
 | Analytics | PostHog JS | EU-Cloud (`eu.i.posthog.com`), `person_profiles: 'never'`, `persistence: 'memory'` — kein Cookie-Banner nötig |
 | Linting | ESLint + TypeScript | — |
 | Node.js | (CI/Server) | 20 LTS |
 
-**WOD-Felder (Deutsch → Intern):** `typ→type`, `kategorie→category`, `beschreibung→description`, `uebungen→exercises`, `dauer→estimated_minutes`, `schwierigkeit→difficulty`
+**WOD-Felder — zwei Schemas, Mapping in `useWods.mapRawToWod`:**
+- Lokales `wods.json`: deutsch (`typ`, `kategorie`, `beschreibung`, `uebungen`, `dauer`, `schwierigkeit`, `equipment` als Komma-String).
+- Live-Supabase: englisch (`type`, `category`, `description`, `exercises`, `estimated_minutes`, `difficulty`); `equipment` oft `null`, Tags in `equipment_tags` (text[]).
+- Mapper liest beide; `equipment` wird immer zum Array (String-Split, Array, sonst `equipment_tags`, sonst `[]`). Ungemappte Rows crashen `WodDetail` (`equipment.length` auf `null`).
 
 **Wod-Interface (useWods.ts) — zusätzliche Felder:**
 - `wod_category?: string` — Trainings-Stil (crossfit | hiit | kraft_ausdauer | kraft_wenig_zeit | krafttraining)
-- `equipment_tags?: string[]` — Auto-Tag-Array (befüllt via `scripts/tag-wod-equipment.ts`)
+- `equipment_tags?: string[]` — Tag-Array (GIN-Index, Migration 016)
 
 ---
 
@@ -510,7 +512,7 @@ Init: `initI18n(language: Language)` — konfiguriert i18next mit den passenden 
 Namespace-Schlüssel: `app`, `nav`, `pillars`, `onboarding`, `common`
 
 Stretching-Übungen sind vollständig dreisprachig (name/description/instructions als JSONB).
-WODs (708 lokal / bis zu 981 Supabase; 7 Duplikate + 88 Ein-Übungs-Tabata/EMOM-Füll-WODs aus lokalem JSON bereinigt) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe Roadmap).
+WODs (708 lokal / live ~905 sichtbar) aktuell nur Deutsch — Übersetzungen EN/ES offen (siehe Roadmap).
 
 ---
 
@@ -578,18 +580,19 @@ WODs (708 lokal / bis zu 981 Supabase; 7 Duplikate + 88 Ein-Übungs-Tabata/EMOM-
 | **Session AR-followup** | **WodDetail adHocLog Fix** — `startedViaWarmup`-State entfernt; `adHocLog` und `workoutName` werden bedingungslos an `TimerView` übergeben → jeder WOD-Timer-Start (direkt oder via Warmup) erzeugt einen `wod_history`-Eintrag mit dem WOD-Namen; debug `console.log` in `TimerView` entfernt |
 | **Session AS-followup** | **WodDetail Custom-Workout-Ansicht** — `WodDetail` unterstützt jetzt einen `!wod`-Zweig: wenn die Route-Param `/workout/:wodName` keinem DB-/JSON-WOD entspricht, fragt `WodDetail` via `useCustomWorkouts` nach einem passenden Custom Workout (`name === wodName`); findet sie eines → rendert Custom-Workout-Ansicht (Name, Modus-Badge, Übungsliste); Start-Button startet `TimerView` direkt mit den gespeicherten `exercises` aus dem Custom Workout; `adHocLog` + `workoutName` werden wie im Standard-Pfad bedingungslos übergeben → `wod_history`-Eintrag wird erzeugt; `exercises` werden an `addEntry.mutate()` übergeben (Augmentierung des History-Eintrags mit Übungsliste) |
 | **Session AU** | **WOD-Bibliothek-Bereinigung** — `apps/web/public/wods.json`: 88 von 796 einbewegungigen Tabata/EMOM-Füll-WODs entfernt (Freitext-Feld `uebungen` enthielt nur eine Übung, z. B. „Tabata Air Squat" / „EMOM Back Squat"); 708 WODs verbleiben lokal; benannte CrossFit-Benchmarks (Grace, Karen, Isabel, Death by Pull-ups etc.) sowie echte Mehr-Übungs-Einträge (Alt: X / Y, mehrere Übungen per „/"/„+") bewusst nicht entfernt; kein Schema-/Hook-/Komponenten-Change (Commit `16d9dc5`); **`scripts/cleanup-single-exercise-workouts.sql`** (Commit `1747168`): separates, noch nicht ausgeführtes SQL-Skript für manuellen Cleanup von Ein-Übungs-Einträgen in `custom_workouts` (Supabase, nicht die statische Bibliothek) — Vorschau-Query + geschütztes DELETE (auskommentiert, wartet auf Freigabe von Tim); Ein-Übungs-Workout-**Erstellung** bleibt für User weiterhin erlaubt (BUGS.md, kein Minimum im Creation-Flow) |
-| **Session AT** | **Ambient-Sounds MP3-Migration + Freie-Meditation-Fixes** — **AdHocMeditationTimer Sound-Auswahl**: `sound`-Prop (SoundKey, default `silence`); `MeditationPage` SOUND_OPTIONS (8 Chips: Kein/Schale/Regen/Wald/Wellen/Rauschen/Feuer/Nacht) im Free-Meditation-Widget; useEffect startet/stoppt `audio.startBackground()`/`stopBackground()` synchron zu Timer-Status (running/paused/done/unmount); **FreieMeditation-Card-Fix**: Card war fälschlich nur innerhalb `medSubTab==='guided'` gerendert (Default-Sub-Tab ist `unguided` → Card erschien nie); jetzt eigener Block direkt im `meditate`-Tab, unabhängig von Sub-Tab; **Ambient Sounds auf MP3 umgestellt**: `useAudio.startBackground/stopBackground` nutzen `<audio loop>` mit 7 CC0-MP3-Dateien (`AMBIENT_FILE`-Map → `public/audio/ambient/*.mp3`: bowl/rain/forest/waves/whitenoise/fire/night) statt generierter Web-Audio-Buffer; `playGong`/`playBeep`/`playComplete` bleiben Web Audio API; `SoundKey` erweitert um `fire` | `night`; `sw.ts` StaleWhileRevalidate-Route für `/audio/ambient/*.mp3` (Offline-Cache); **Programm-Filter-Fix (`useWods`)**: `forceSupabase`-Flag erzwingt Supabase-Query wenn `wodCategory`/`editorsPick` gesetzt ist, auch bei aktiven complex filters (vorher fiel Query dann auf lokales JSON zurück, wo `wodCategory` ignoriert wird); alter `category`-Filter wird übersprungen wenn `wodCategory` aktiv ist |
+| **Session AT** | **Ambient-Sounds MP3-Migration + Freie-Meditation-Fixes** — **AdHocMeditationTimer Sound-Auswahl**: `sound`-Prop (SoundKey, default `silence`); `MeditationPage` SOUND_OPTIONS (8 Chips: Kein/Schale/Regen/Wald/Wellen/Rauschen/Feuer/Nacht) im Free-Meditation-Widget; useEffect startet/stoppt `audio.startBackground()`/`stopBackground()` synchron zu Timer-Status (running/paused/done/unmount); **FreieMeditation-Card-Fix**: Card war fälschlich nur innerhalb `medSubTab==='guided'` gerendert (Default-Sub-Tab ist `unguided` → Card erschien nie); jetzt eigener Block direkt im `meditate`-Tab, unabhängig von Sub-Tab; **Ambient Sounds auf MP3 umgestellt**: `useAudio.startBackground/stopBackground` nutzen `<audio loop>` mit 7 CC0-MP3-Dateien (`AMBIENT_FILE`-Map → `public/audio/ambient/*.mp3`: bowl/rain/forest/waves/whitenoise/fire/night) statt generierter Web-Audio-Buffer; `playGong`/`playBeep`/`playComplete` bleiben Web Audio API; `SoundKey` erweitert um `fire` | `night`; `sw.ts` StaleWhileRevalidate-Route für `/audio/ambient/*.mp3` (Offline-Cache); **Programm-Filter-Fix (`useWods`)**: `forceSupabase`-Flag erzwingt Supabase-Query wenn `wodCategory`/`editorsPick` gesetzt ist, auch bei aktiven complex filters (vorher fiel Query dann auf lokales JSON zurück, wo `wodCategory` ignoriert wird); alter `category`-Filter wird übersprungen wenn `wodCategory` aktiv ist. **Stand Sep 2026:** Code-Pfad existiert, die MP3-Dateien liegen nicht im Repo (`public/audio/` enthält nur `sessions/sessions.json`, alle Guided-Sessions `available: false`). |
+| **Session AV** | **Spec-Abgleich + WOD-Mapping + Equipment-Filter auf Programm-Pfad** — Spec/CLAUDE an den Code angeglichen (`isSupabaseConfigured` Konstante, Dual-Schema WODs, Checkout-Routen, Zahlen). `mapRawToWod` mappt deutsches JSON und englische Supabase-Rows; `equipment` nie null. `useWods`: bei `forceSupabase` + Equipment/Dauer/SilentMode wird der volle Programm-Satz geholt, gemappt, dann `applyLocalFilters` (vorher ignorierte der SQL-Pfad Equipment still). `WodCard`: FavoriteButton nicht mehr in `<button>`. |
 
 ### Offen / Roadmap
 
 | Bereich | Inhalt |
 |---|---|
 | **Landingpage (Erweiterung)** | Waitlist-Integration; Pricing-CTAs live (Stripe-Checkout aktiv) |
-| **Stripe (Erweiterung)** | Customer Portal, Upgrade/Downgrade-Flow; Rechnungs-E-Mails via Stripe |
+| **Stripe (Erweiterung)** | Customer Portal, Upgrade/Downgrade-Flow; Rechnungs-E-Mails; Return-URL (`success_url` zeigt auf `/profile?checkout=success`, Query geht verloren) |
 | **Bestätigungsemail** | Via Resend — wartet auf finales Logo |
 | **Push (Server-Side)** | Admin-Broadcast an alle User |
 | **GDPR** | Cookie-Banner, Privacy Policy, Daten-Export, Konto-Löschung |
-| **WOD-Übersetzungen** | EN/ES für 798 WODs (aktuell nur DE) |
+| **WOD-Übersetzungen** | EN/ES für den Katalog (aktuell nur DE; Zahlen: 708 lokal / ~905 sichtbar) |
 | **Health-Integration** | Apple Health + Google Fit: Workout-Sessions + Herzfrequenz-Daten lesen/schreiben; Capacitor-Bridge als Voraussetzung |
 | **Capacitor (Native Shell)** | App Store-fähige iOS/Android-App via Capacitor; Voraussetzung für Health-Integration, native Push, Haptics |
 | **Analytics** | PostHog EU aktiv (anonymes Event-Tracking, kein Cookie-Banner); Self-hosted Plausible/Umami offen |
@@ -597,8 +600,8 @@ WODs (708 lokal / bis zu 981 Supabase; 7 Duplikate + 88 Ein-Übungs-Tabata/EMOM-
 | **Adaptive WOD** | Tages-WOD-Auswahl basierend auf Nutzer-History + Ziel + Equipment; ersetzt rein deterministischen `pickByDate`-Ansatz |
 | **Morgenbriefing** | Push-Notification oder HomePage-Widget morgens: gestriges Summary + Tages-WOD + Motivation |
 | **Wellness Score** | Aggregierter Score aus Aktivitäts-Streak, Mood, Schlaf (wenn verfügbar); auf HomePage als Zahl oder Ring |
-| **Product Tour** | ~~Interaktiver Onboarding-Guide~~ — **abgeschlossen (Session AO)**: `OnboardingSlides.tsx`, Fullscreen 5-Slide Tour, guard `carveout_tour_done` |
-| **Offline-Strategie** | Explizite Offline-Phase: welche Features offline laufen sollen (offen); aktuell: `isSupabaseConfigured()`-Fallbacks vorhanden, Custom-WOD Supabase-only |
+| **Product Tour** | Abgeschlossen (Session AO): `OnboardingSlides.tsx` |
+| **Offline-Strategie** | Explizite Offline-Phase: welche Features offline laufen sollen (offen); `isSupabaseConfigured` ist Konstante `true`, Hook-Fallbacks tot; Custom-WOD hat noch localStorage-Zweig im Hook |
 | **Block-Timer** | Pomodoro-artiger Arbeits-/Pausen-Timer im Routine-Pillar; konfigurierbar (Fokus-Zeit, Pause, Runden) |
 | **Migration 030** | `push_preferences`-Tabelle formal als Migration anlegen (aktuell nur manuell im Dashboard erstellt); `add_push_subscriptions.sql` + `add_role_and_admin_rls.sql` auf Nummern-Präfix umstellen (Konsistenz mit 001–029) |
 | **Supabase Redirect-URLs** | Konfigurieren für OAuth / Magic Link |
@@ -611,7 +614,7 @@ WODs (708 lokal / bis zu 981 Supabase; 7 Duplikate + 88 Ein-Übungs-Tabata/EMOM-
 
 ### Meditation Overhaul (geplant)
 
-**Ambient Sounds — abgeschlossen (Session AT):** siehe Roadmap „Abgeschlossen". 7 MP3s (bowl/rain/forest/waves/whitenoise/fire/night statt ursprünglich geplant wind/harp), Web Audio API nur noch für Gong/Beep/Complete.
+**Ambient Sounds — Code-Pfad abgeschlossen (Session AT), Dateien fehlen im Repo.** 7 MP3-Pfade in `useAudio.ts` (`bowl/rain/forest/waves/whitenoise/fire/night`); `public/audio/ambient/` ist leer. Web Audio API nur noch für Gong/Beep/Complete. Guided-Sessions in `sessions.json` alle `available: false`. `MEDITATION_SCRIPTS_DE.md` liegt nicht im Repo.
 
 **Geführte Sessions mit TTS-Narration (Schritt 2):**
 - 10 strukturierte Meditationen mit Phasentexten (`MEDITATION_SCRIPTS_DE.md` fertig)
@@ -619,7 +622,7 @@ WODs (708 lokal / bis zu 981 Supabase; 7 Duplikate + 88 Ein-Übungs-Tabata/EMOM-
 - Ablage: `apps/web/public/audio/sessions/[session-id]/[phase].mp3`
 - Guided Session Player erweitern um Audio-Playback
 
-**Reihenfolge:** Ambient MP3s erledigt — als Nächstes TTS-Script.
+**Reihenfolge:** Ambient-Dateien ins Repo legen — als Nächstes TTS-Script (Datei fehlt noch).
 
 ---
 
@@ -635,8 +638,10 @@ Dokumentiert behobene Bugs mit Kontext — damit Regressions erkannt werden und 
 | **FreieMeditation-Card unsichtbar** | `MeditationPage`: Card war innerhalb `medSubTab === 'guided'` verschachtelt; Default-Sub-Tab ist `unguided` → Card erschien nie im UI | Card aus dem `guided`-Block herausgelöst, eigener Abschnitt direkt im `meditate`-Tab, unabhängig von Sub-Tab | `b92b2c1` |
 | **Programm-Filter (wodCategory) ohne Effekt bei aktiven Equipment-Filtern** | `useWods`: wenn `equipmentFilter`/`userEquipment` gesetzt waren, fiel die Query in den lokalen JSON-Fallback — dort wird `wodCategory` ignoriert (neuere Programm-WODs existieren nur in Supabase) → Programm-Filter (HIIT/Kraft-Ausdauer/etc.) zeigte keine Wirkung | `forceSupabase`-Flag: `wodCategory`/`editorsPick` erzwingt Supabase-Query auch bei aktiven complex filters; `category`-Filter wird übersprungen wenn `wodCategory` aktiv | `571262f` |
 | **Inkonsistente Filter-Trefferzahlen bei Programm-Filtern** | `useWods`: Supabase-Query racet gegen 5s-Timeout (`raceTimeout`); verliert die Query, fiel der Code still auf den lokalen `wods.json`-Fallback zurück, der `wodCategory` nicht kennt (existiert nur in Supabase) → je nach Race-Ausgang mal korrekte, mal stark abweichende Trefferzahl (z.B. 30 vs. 416 bei identischem Filter "Kraft - Wenig Zeit") | `SUPABASE_TIMEOUT_MS` auf 8s angehoben; bei `forceSupabase`-Filtern (wodCategory/editorsPick) wirft die Query bei Timeout/Fehler jetzt einen Error statt still auf falsche lokale Daten umzuschalten — `WodList` zeigt den vorhandenen Fehlerzustand statt einer falschen Zahl | `d495fa5` |
-| **Main-Thread-Freeze bei Workout-Detail** | Schwarzer "Loading…"-Screen beim Öffnen protected Routes (nicht nur Workout-Detail) — wirkte wie CPU-Freeze. Live auf `carveout.app` reproduziert (2026-08-19): kein CPU-Block (trivialer JS-Eval lief währenddessen sofort durch). Root Cause: supabase-js' Cross-Tab Auth-Lock (`navigator.locks`, `lock:sb-<ref>-auth-token`) blieb von einem anderen Tab dauerhaft gehalten (hängender `getSession()`-Call); `authStore.initialize()` wartete ohne Timeout auf `supabase.auth.getSession()` → `loading` blieb für immer `true`, `ProtectedLayout` zeigte endlos "Loading…". Erklärt den beobachteten Workaround "PWA-Neuinstallation aufs Handy hilft" (killt alte Tab-/Lock-Kontexte). **Hinweis:** Die frühere Einschätzung in Commit `d495fa5` ("Testinfrastruktur-Artefakt, kein App-Bug") war falsch — echter Bug, nur falsch diagnostiziert | `authStore.initialize()` racet `getSession()` jetzt gegen ein 8s-Timeout (`AUTH_INIT_TIMEOUT_MS`); bei Timeout wird `loading` trotzdem auf `false` gesetzt (App zeigt Login statt endlos zu hängen). `onAuthStateChange`-Listener wird jetzt unconditional registriert (vorher nur nach erfolgreichem `getSession()` — ein Timeout hätte sonst auch künftige Auth-Events verpasst) | `c45da68` |
+| **Main-Thread-Freeze bei Workout-Detail** | Schwarzer "Loading…"-Screen beim Öffnen protected Routes — `authStore.initialize()` wartete ohne Timeout auf `supabase.auth.getSession()` während ein anderer Tab den Auth-Lock hielt | `getSession()` racet gegen 8s-Timeout; `onAuthStateChange` unconditional | `c45da68` |
+| **WOD-Detail crasht bei null-Equipment** | Leere Detailseite, `TypeError: Cannot read properties of null (reading 'length')` bei Programm-WODs (z.B. 5×5 Ganzkörper A). Live-Rows: `equipment=null`, Tags in `equipment_tags`; `useWod` gab ungemappte Rows weiter | `mapRawToWod` mappt DE-JSON + EN-Supabase; `equipment` immer Array; `WodDetail` null-sicher | Branch `cursor/fix-wod-detail-null-equipment-a5fc` |
+| **Equipment-Filter ignoriert bei Programm-Filter** | `forceSupabase` (wodCategory/editorsPick) wandte Equipment/Dauer/SilentMode nicht auf die Query an — Count blieb die volle Programm-Zahl | Voller Programm-Satz von Supabase, dann `applyLocalFilters` inkl. Equipment, Pagination lokal | Branch `cursor/fix-wod-detail-null-equipment-a5fc` |
 
 ---
 
-*Letzte Aktualisierung: August 2026 — Tim (Main-Thread-Freeze-Root-Cause korrigiert: Supabase Auth-Lock-Deadlock statt Test-Artefakt)*
+*Letzte Aktualisierung: September 2026 — Spec-Abgleich + WOD-Mapping + Equipment-Filter auf Programm-Pfad*
