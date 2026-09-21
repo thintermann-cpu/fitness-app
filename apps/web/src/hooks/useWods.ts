@@ -234,6 +234,24 @@ export function useWods(filters: WodFilters = {}) {
       if (filters.wodCategory) query = query.eq('wod_category', filters.wodCategory)
 
       const page = filters.page ?? 0
+
+      // Program filters live only in Supabase. Equipment/duration/silentMode are not
+      // all expressible as SQL (is_jumping is derived). Fetch the full program set,
+      // map rows, then apply the same local filters so the count matches the list.
+      if (hasComplexFilters && forceSupabase) {
+        const result = await raceTimeout(query.order('name'), SUPABASE_TIMEOUT_MS)
+        if (!result || result.error) {
+          if (result?.error) console.error('[useWods]', result.error.message)
+          throw new Error(result?.error?.message ?? 'Supabase-Anfrage für Programm-Filter fehlgeschlagen (Timeout)')
+        }
+        const mapped = ((result.data ?? []) as RawWod[]).map(mapRawToWod)
+        const filtered = applyLocalFilters(mapped, filters)
+        return {
+          data: filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+          count: filtered.length,
+        }
+      }
+
       const result = await raceTimeout(
         query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1).order('name'),
         SUPABASE_TIMEOUT_MS,
