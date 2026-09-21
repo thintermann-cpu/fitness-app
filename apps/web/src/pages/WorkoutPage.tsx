@@ -149,6 +149,12 @@ export function WorkoutPage() {
   }
 
   function handleLocationSelect(loc: WorkoutLocation) {
+    if (showAllEquipment) {
+      setShowAllEquipment(false)
+      setLocation(loc)
+      try { localStorage.setItem(LOCATION_STORAGE_KEY, loc) } catch {}
+      return
+    }
     const next = location === loc ? null : loc
     setLocation(next)
     try {
@@ -157,8 +163,10 @@ export function WorkoutPage() {
     } catch {}
   }
 
-  const equipmentForLocation = location
-    ? (profile?.equipment_by_location?.[location] ?? DEFAULT_EQUIPMENT_BY_LOCATION[location])
+  // "Alle anzeigen" turns off every equipment restriction, including location tiles.
+  const effectiveLocation = showAllEquipment ? null : location
+  const equipmentForLocation = effectiveLocation
+    ? (profile?.equipment_by_location?.[effectiveLocation] ?? DEFAULT_EQUIPMENT_BY_LOCATION[effectiveLocation])
     : undefined
 
   const hasProfileEquipment = (profile?.equipment?.length ?? 0) > 0
@@ -238,9 +246,9 @@ export function WorkoutPage() {
                   onClick={() => handleLocationSelect(loc.id)}
                   className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-xs font-medium transition-colors"
                   style={{
-                    backgroundColor: location === loc.id ? '#E8642A20' : 'var(--color-bg-card)',
-                    border:          `1.5px solid ${location === loc.id ? '#E8642A' : 'transparent'}`,
-                    color:           location === loc.id ? '#E8642A' : 'var(--color-text-muted)',
+                    backgroundColor: effectiveLocation === loc.id ? '#E8642A20' : 'var(--color-bg-card)',
+                    border:          `1.5px solid ${effectiveLocation === loc.id ? '#E8642A' : 'transparent'}`,
+                    color:           effectiveLocation === loc.id ? '#E8642A' : 'var(--color-text-muted)',
                   }}
                 >
                   <span className="text-base">{loc.emoji}</span>
