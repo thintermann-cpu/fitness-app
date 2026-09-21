@@ -24,8 +24,13 @@ export function useSubscription() {
     if (!session) return
     setLoading(true)
     try {
+      const origin = window.location.origin
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { price_id: PRICE_IDS[plan] },
+        body: {
+          price_id: PRICE_IDS[plan],
+          success_url: `${origin}/settings?checkout=success`,
+          cancel_url: `${origin}/#pricing`,
+        },
       })
       if (error) throw error
       if (data?.url) window.location.href = data.url

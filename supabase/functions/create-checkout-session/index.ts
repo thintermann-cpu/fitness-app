@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
       payment_method_types: ['card'],
       line_items: [{ price: price_id, quantity: 1 }],
       mode: 'subscription',
-      success_url: success_url ?? 'https://carveout.app/profile?checkout=success',
+      success_url: success_url ?? 'https://carveout.app/settings?checkout=success',
       cancel_url: cancel_url ?? 'https://carveout.app/#pricing',
       metadata: { supabase_user_id: user.id },
     })

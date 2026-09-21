@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import type { WorkoutLocation } from '../store/authStore'
 import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase'
 import { subscribeToPush, unsubscribeFromPush, getPushSubscriptionStatus } from '../lib/push'
 import { FeedbackModal } from '../components/ui/FeedbackModal'
 import { useSubscription } from '../hooks/useSubscription'
+import { useToast } from '../hooks/useToast'
 
 type View = 'main' | 'profile' | 'equipment' | 'pillars' | 'training' | 'notifications' | 'abo'
 
@@ -125,7 +126,9 @@ function SubHeader({ title, onBack }: { title: string; onBack: () => void }) {
 
 export function SettingsPage() {
   const navigate = useNavigate()
-  const { profile, user, updateProfile, signOut } = useAuthStore()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { profile, user, updateProfile, signOut, fetchProfile } = useAuthStore()
+  const toast = useToast()
   const [view, setView] = useState<View>('main')
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
@@ -184,6 +187,15 @@ export function SettingsPage() {
   // Abo
   const { status: subStatus, isActive: subActive, endDate, loading: subLoading, startCheckout } = useSubscription()
   const [currency, setCurrency] = useState<'chf' | 'eur'>('chf')
+
+  useEffect(() => {
+    if (searchParams.get('checkout') !== 'success') return
+    setView('abo')
+    void fetchProfile().then(() => {
+      toast.success('Zahlung erfolgreich — CarveOut Premium ist aktiv!')
+    })
+    setSearchParams({}, { replace: true })
+  }, [])
 
   // Sync from profile
   useEffect(() => {

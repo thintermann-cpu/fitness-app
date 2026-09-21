@@ -32,6 +32,11 @@ const queryClient = new QueryClient({
   },
 })
 
+function ProfileRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={`/settings${search}`} replace />
+}
+
 function ProtectedLayout() {
   const { user, loading, profile } = useAuthStore()
   const location = useLocation()
@@ -106,7 +111,7 @@ function AppContent() {
           <Route path="/favorites"        element={<FavoritesPage />} />
           <Route path="/history"          element={<HistoryPage />} />
           <Route path="/settings"         element={<SettingsPage />} />
-          <Route path="/profile"          element={<Navigate to="/settings" replace />} />
+          <Route path="/profile"          element={<ProfileRedirect />} />
         </Route>
       </Route>
 
