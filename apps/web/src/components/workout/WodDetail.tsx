@@ -85,13 +85,14 @@ const WARMUP_ROUTINES: Record<string, WarmupExercise[]> = {
 const RUNNING_KEYWORDS = ['run', 'meter', '400m', '800m', 'mile', '1 km', 'lauf', 'laufen']
 
 function getWarmupRoutine(wod: Wod): WarmupExercise[] {
-  const text = [wod.exercises, wod.description, wod.equipment.join(' ')].join(' ').toLowerCase()
-  const hasLaufen = wod.equipment.some(e => e.toLowerCase() === 'laufen')
+  const equipment = wod.equipment ?? []
+  const text = [wod.exercises, wod.description, equipment.join(' ')].join(' ').toLowerCase()
+  const hasLaufen = equipment.some(e => e.toLowerCase() === 'laufen')
     || RUNNING_KEYWORDS.some(kw => text.includes(kw))
   if (hasLaufen) return WARMUP_ROUTINES.Laufen
-  if (wod.equipment.some(e => /barbell/i.test(e))) return WARMUP_ROUTINES.Barbell
-  if (wod.equipment.some(e => /kettlebell/i.test(e))) return WARMUP_ROUTINES.Kettlebell
-  if (wod.equipment.some(e => /rower|row/i.test(e))) return WARMUP_ROUTINES.Rower
+  if (equipment.some(e => /barbell/i.test(e))) return WARMUP_ROUTINES.Barbell
+  if (equipment.some(e => /kettlebell/i.test(e))) return WARMUP_ROUTINES.Kettlebell
+  if (equipment.some(e => /rower|row/i.test(e))) return WARMUP_ROUTINES.Rower
   return WARMUP_ROUTINES.Default
 }
 
@@ -388,13 +389,13 @@ export function WodDetail({ wodName, onBack }: Props) {
         )}
 
         {/* Equipment */}
-        {wod.equipment.length > 0 && (
+        {(wod.equipment ?? []).length > 0 && (
           <div>
             <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
               Equipment
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {wod.equipment.map((eq) => {
+              {(wod.equipment ?? []).map((eq) => {
                 const eqColor = EQUIPMENT_COLORS[eq]
                 return (
                   <span

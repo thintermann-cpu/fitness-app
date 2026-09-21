@@ -48,17 +48,26 @@ export const EDITORS_PICK_IDS = new Set<string>([
 
 const PAGE_SIZE = 20
 
+/** Local JSON uses German keys; live Supabase rows use English keys. */
 interface RawWod {
   id: string
   name: string
-  typ: string
-  kategorie: string
-  beschreibung: string
-  uebungen: string
-  equipment: string
-  dauer: string
-  schwierigkeit: string
+  typ?: string
+  type?: string
+  kategorie?: string
+  category?: string | null
+  beschreibung?: string
+  description?: string | null
+  uebungen?: string
+  exercises?: string | null
+  equipment?: string | string[] | null
+  equipment_tags?: string[] | null
+  dauer?: string | number
+  estimated_minutes?: number | null
+  schwierigkeit?: string
+  difficulty?: string | null
   is_editors_pick?: boolean | null
+  wod_category?: string | null
   runden?: string
   reps?: string
   gewicht?: string
@@ -67,21 +76,38 @@ interface RawWod {
   quelle?: string
 }
 
+function parseEquipment(value: unknown, tags?: string[] | null): string[] {
+  if (Array.isArray(value) && value.length > 0) {
+    return value.filter((v): v is string => typeof v === 'string' && v.length > 0)
+  }
+  if (typeof value === 'string' && value.trim()) {
+    return value.split(',').map((s) => s.trim()).filter(Boolean)
+  }
+  if (Array.isArray(tags) && tags.length > 0) {
+    return tags.filter(Boolean)
+  }
+  return []
+}
+
 function mapRawToWod(raw: RawWod): Wod {
+  const exercises = raw.exercises ?? raw.uebungen ?? ''
+  const tags = raw.equipment_tags ?? []
   return {
-    id: raw.id,
+    id: String(raw.id),
     name: raw.name,
-    type: raw.typ,
-    category: raw.kategorie,
-    description: raw.beschreibung,
-    exercises: raw.uebungen,
-    equipment: raw.equipment ? raw.equipment.split(',').map((s) => s.trim()).filter(Boolean) : [],
-    difficulty: raw.schwierigkeit,
-    estimated_minutes: parseInt(raw.dauer) || 0,
-    is_editors_pick: raw.is_editors_pick ?? EDITORS_PICK_IDS.has(raw.id),
+    type: raw.type ?? raw.typ ?? '',
+    category: raw.category ?? raw.kategorie ?? '',
+    description: raw.description ?? raw.beschreibung ?? '',
+    exercises,
+    equipment: parseEquipment(raw.equipment, tags),
+    difficulty: raw.difficulty ?? raw.schwierigkeit ?? '',
+    estimated_minutes: Number(raw.estimated_minutes) || parseInt(String(raw.dauer ?? ''), 10) || 0,
+    is_editors_pick: raw.is_editors_pick ?? EDITORS_PICK_IDS.has(String(raw.id)),
+    wod_category: raw.wod_category ?? undefined,
+    equipment_tags: tags.length ? tags : undefined,
     is_jumping: (() => {
       const JUMP_KEYWORDS = ['jump', 'jumping', 'burpee', 'hop', 'double under', 'double-under', 'box jump', 'skip']
-      const text = (raw.uebungen ?? '').toLowerCase()
+      const text = exercises.toLowerCase()
       return JUMP_KEYWORDS.some((kw) => text.includes(kw))
     })(),
     runden: raw.runden,
@@ -224,7 +250,7 @@ export function useWods(filters: WodFilters = {}) {
         return fetchLocalWods(filters)
       }
 
-      return { data: (result.data ?? []) as Wod[], count: result.count ?? 0 }
+      return { data: ((result.data ?? []) as RawWod[]).map(mapRawToWod), count: result.count ?? 0 }
     },
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -251,7 +277,7 @@ export function useWod(name: string) {
         return wods.find((w) => w.name === name) ?? null
       }
 
-      return result.data as Wod
+      return mapRawToWod(result.data as RawWod)
     },
     enabled: Boolean(name),
     retry: false,
