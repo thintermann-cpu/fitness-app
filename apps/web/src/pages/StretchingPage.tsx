@@ -180,7 +180,7 @@ export function StretchingPage() {
   // Detail / Session views (full-screen, no tab bar)
   if (view !== 'list' && selectedRoutine) {
     return (
-      <div className="min-h-svh bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
+      <div className="min-h-full bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
         <div className="flex-1 px-4 py-6 pb-24 max-w-lg mx-auto w-full overflow-y-auto">
           {view === 'detail' && (
             <RoutineDetail
@@ -210,7 +210,7 @@ export function StretchingPage() {
   }
 
   return (
-    <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
+    <div className="min-h-full bg-[var(--color-bg)] flex flex-col">
       {/* Header */}
       <div className="px-4 pt-4 lg:pt-10 pb-2 flex items-end justify-between">
         <h1 className="text-2xl font-black" style={{ color: PILLAR_COLOR }}>
