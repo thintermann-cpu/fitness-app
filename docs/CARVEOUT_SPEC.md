@@ -590,7 +590,9 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 
 | Bereich | Inhalt |
 |---|---|
-| **Übungs-Grafiken** | Vor Ambient-MP3s. Training und Mobilität: mehrere realistische Illustrationen pro Übung, Crossfade über `ExerciseKeyframes`. Keine Strichmännchen. Mobilität hat den Slot (`frames` aktuell leer, Fallback `ExerciseIllustration`). Training zeigt bisher nur den Namen. Umfang, Stil und Produktion offen. |
+| **Übungs-Grafiken** | Vor Ambient-MP3s. **Mobilität zuerst**, gezeichnet realistisch, in der Regel 3 Posen (Start/Mitte/Ende) als Einzelbilder über `ExerciseKeyframes`. Eine 4. Pose nur wenn die Bewegung sie braucht. Kein GIF, kein Video, keine Strichmännchen als Zielbild (Strichfigur nur Fallback, solange Frames fehlen). Training später, UI schlank: Info-Zeichen mit Kurztext, optional dieselben Frames, plus YouTube. Einbettung im Sheet vs. externer Link offen (GDPR). |
+| **Übungs-Katalog** | Kanonische Übung (Name, Aliase, Equipment, optionale Frames, optionale YouTube-Id), nicht Freitext. Mobilität hat `stretching_exercises` schon. Training-WODs sind noch ein Textblob. Nötig, damit Grafiken, Info und Suche dieselbe Übung meinen. |
+| **Training-Suche Equipment** | Hauptsuche: Workouts, die ein genanntes Equipment nutzen (z. B. Dumbbells), plus Anzahl 1 / 2 / 3 / mehr. Heute sucht das Feld Name (live) bzw. Name+Übungen+Beschreibung (lokales JSON). Der Equipment-Filter ist „darf nur das nutzen, was ich habe“, nicht „muss das enthalten“. Anzahl-Filter fehlt. |
 | **Landingpage (Erweiterung)** | Waitlist-Integration; Pricing-CTAs live (Stripe-Checkout aktiv) |
 | **Stripe (Erweiterung)** | Customer Portal, Upgrade/Downgrade-Flow; Rechnungs-E-Mails |
 | **Bestätigungsemail** | Via Resend — wartet auf finales Logo |
