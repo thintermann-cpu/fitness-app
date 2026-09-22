@@ -10,7 +10,7 @@ import { TimerView } from '../components/workout/TimerView'
 import { KraftTimerView } from '../components/workout/KraftTimerView'
 import { WodHistoryList } from '../components/workout/WodHistoryList'
 import { FreeTimerWizard, type KraftConfig, type TimerInitConfig, type WizardInitialValues } from '../components/workout/FreeTimerWizard'
-import { WarmupTimer } from '../components/workout/WarmupTimer'
+import { WarmupTimer, type WarmupRoutineId } from '../components/workout/WarmupTimer'
 import { WorkoutCountdown } from '../components/shared/WorkoutCountdown'
 import { useCustomWorkouts } from '../hooks/useCustomWorkouts'
 import { type CustomWorkout, type WizardExercise } from '../lib/customWorkouts'
@@ -69,6 +69,7 @@ export function WorkoutPage() {
   const [timerConfig, setTimerConfig]     = useState<TimerConfig | null>(null)
   const [timerKey, setTimerKey]           = useState(0)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
+  const [warmupRoutine, setWarmupRoutine] = useState<WarmupRoutineId>('standard')
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
   const { data: savedWorkouts = [], addWorkout } = useCustomWorkouts()
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
@@ -88,7 +89,7 @@ export function WorkoutPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  function handleWizardStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
+  function handleWizardStart(mode: TimerMode, minutes: number, withWarmup?: WarmupRoutineId | false, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
     if (workoutName) {
       addWorkout.mutate({
         id:        crypto.randomUUID(),
@@ -110,7 +111,10 @@ export function WorkoutPage() {
     setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, adHocLog: true, ...timerCfg })
     setTimerKey((k) => k + 1)
     setTab('timer')
-    if (withWarmup) setShowWarmupTimer(true)
+    if (withWarmup) {
+      setWarmupRoutine(withWarmup)
+      setShowWarmupTimer(true)
+    }
   }
 
   function handleWizardSaveOnly(mode: TimerMode, minutes: number, kraftConfig: KraftConfig | undefined, exercises: WizardExercise[] | undefined, workoutName: string, timerCfg?: TimerInitConfig) {
@@ -132,11 +136,14 @@ export function WorkoutPage() {
     })
   }
 
-  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
+  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: WarmupRoutineId | false, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
     setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, adHocLog: true, ...timerCfg })
     setTimerKey((k) => k + 1)
     setTab('timer')
-    if (withWarmup) setShowWarmupTimer(true)
+    if (withWarmup) {
+      setWarmupRoutine(withWarmup)
+      setShowWarmupTimer(true)
+    }
   }
 
   function handleStartSaved(w: CustomWorkout) {
@@ -368,6 +375,7 @@ export function WorkoutPage() {
       />
       <WarmupTimer
         isOpen={showWarmupTimer}
+        routine={warmupRoutine}
         onClose={() => setShowWarmupTimer(false)}
         onStartWorkout={() => { setShowWarmupTimer(false); setShowWorkoutCountdown(true) }}
       />

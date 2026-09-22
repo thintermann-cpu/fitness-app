@@ -18,7 +18,7 @@ import { KraftTimerView } from './KraftTimerView'
 import { ScoreInput } from './ScoreInput'
 import { WodHistoryList } from './WodHistoryList'
 import { FavoriteButton } from '../ui/FavoriteButton'
-import { WarmupTimer } from './WarmupTimer'
+import { WarmupTimer, type WarmupRoutineId } from './WarmupTimer'
 import { WorkoutCountdown } from '../shared/WorkoutCountdown'
 
 // ── Custom workout mode display labels ───────────────────────────────────
@@ -156,7 +156,7 @@ export function WodDetail({ wodName, onBack }: Props) {
   function beginFromWizard(
     mode: TimerMode,
     minutes: number,
-    withWarmup: boolean | undefined,
+    withWarmup: WarmupRoutineId | false | undefined,
     kraftConfig: KraftConfig | undefined,
     exercises: WizardExercise[] | undefined,
     timerCfg: TimerInitConfig | undefined,
@@ -176,13 +176,16 @@ export function WodDetail({ wodName, onBack }: Props) {
     if (exercises) setSessionItems(exercises)
     setSessionScheme(timerCfg?.scheme ?? '')
     setSessionMinutes(minutes > 0 ? minutes : sessionMinutes)
-    if (withWarmup) setShowWarmupTimer(true)
-    else setShowTimer(true)
+    if (withWarmup) {
+      setWarmupRoutine(withWarmup)
+      setShowWarmupTimer(true)
+    } else setShowTimer(true)
   }
   const [showScore, setShowScore]           = useState(false)
   const [showHistory, setShowHistory]       = useState(false)
   const [showWarmup, setShowWarmup]         = useState(false)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
+  const [warmupRoutine, setWarmupRoutine] = useState<WarmupRoutineId>('standard')
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
   const [adjustOpen, setAdjustOpen]         = useState(false)
   const [sessionMinutes, setSessionMinutes] = useState(20)
@@ -296,7 +299,7 @@ export function WodDetail({ wodName, onBack }: Props) {
               ▶ Start Timer
             </button>
             <button
-              onClick={() => setShowWarmupTimer(true)}
+              onClick={() => { setWarmupRoutine('standard'); setShowWarmupTimer(true) }}
               className="px-4 py-3.5 rounded-xl font-semibold text-sm active:scale-[0.98] transition-transform"
               style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: '1px solid #E8642A40' }}
             >
@@ -374,6 +377,7 @@ export function WodDetail({ wodName, onBack }: Props) {
         />
         <WarmupTimer
           isOpen={showWarmupTimer}
+          routine={warmupRoutine}
           onClose={() => setShowWarmupTimer(false)}
           onStartWorkout={() => { setShowWarmupTimer(false); setShowWorkoutCountdown(true) }}
         />
@@ -680,7 +684,7 @@ export function WodDetail({ wodName, onBack }: Props) {
               </div>
             ))}
             <button
-              onClick={() => setShowWarmupTimer(true)}
+              onClick={() => { setWarmupRoutine('standard'); setShowWarmupTimer(true) }}
               className="mt-1 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl transition-colors"
               style={{ backgroundColor: '#E8642A18', color: '#E8642A' }}
             >
@@ -752,7 +756,7 @@ export function WodDetail({ wodName, onBack }: Props) {
             ▶ Start Timer
           </button>
           <button
-            onClick={() => setShowWarmupTimer(true)}
+            onClick={() => { setWarmupRoutine('standard'); setShowWarmupTimer(true) }}
             className="px-4 py-3.5 rounded-xl font-semibold text-sm active:scale-[0.98] transition-transform"
             style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: '1px solid #E8642A40' }}
           >
@@ -853,6 +857,7 @@ export function WodDetail({ wodName, onBack }: Props) {
 
       <WarmupTimer
         isOpen={showWarmupTimer}
+        routine={warmupRoutine}
         onClose={() => setShowWarmupTimer(false)}
         onStartWorkout={() => { setShowWarmupTimer(false); setShowWorkoutCountdown(true) }}
       />

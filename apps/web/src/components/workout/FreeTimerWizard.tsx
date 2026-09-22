@@ -4,6 +4,7 @@ import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { TIMER_LABELS, TIMER_MODE_LIST } from '../../lib/timerLabels'
 import type { TimerMode } from '../../lib/timerLabels'
+import { WARMUP_SESSIONS, type WarmupRoutineId } from './WarmupTimer'
 
 export type { TimerMode }
 
@@ -46,7 +47,7 @@ interface Props {
   /** Open on this step. 1 skips mode when the workout is already known. */
   initialStep?: number
   initialValues?: WizardInitialValues
-  onStart: (mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerConfig?: TimerInitConfig) => void
+  onStart: (mode: TimerMode, minutes: number, withWarmup?: WarmupRoutineId | false, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerConfig?: TimerInitConfig) => void
   onSaveOnly?: (mode: TimerMode, minutes: number, kraftConfig: KraftConfig | undefined, exercises: WizardExercise[] | undefined, workoutName: string, timerConfig?: TimerInitConfig) => void
 }
 
@@ -84,7 +85,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
   const [scheme, setScheme] = useState(() => initialValues?.scheme ?? '')
   const [minutes,   setMinutes]   = useState(() => initialValues?.minutes ?? 20)
   const [name,      setName]      = useState(() => initialValues?.name ?? '')
-  const [warmup,    setWarmup]    = useState<boolean | null>(null)
+  const [warmup,    setWarmup]    = useState<'none' | WarmupRoutineId | null>(null)
 
   // Krafttraining config
   const [restBetweenSets,      setRestBetweenSets]      = useState(() => initialValues?.restBetweenSets      ?? 90)
@@ -143,7 +144,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
       mode === 'tabata' ? Math.round((tabataWork + tabataRest) * tabataRounds / 60) :
       mode === 'emom'   ? emomInterval * emomRounds :
       minutes
-    const w          = warmup ?? false
+    const w: WarmupRoutineId | false = warmup === 'short' || warmup === 'standard' ? warmup : false
     const exs        = isKraft ? undefined : (exercises.length > 0 ? exercises : undefined)
     const savedName  = !isAdhoc && name.trim()
       ? name.trim()
@@ -617,32 +618,33 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
       {!isKraft && step === 3 && (
         <div>
           <p className="text-lg font-black mb-2" style={{ color: 'var(--color-text)' }}>🔥 Warmup zuerst?</p>
-          <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
-            Ein kurzes Warmup senkt das Verletzungsrisiko und verbessert die Performance.
+          <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
+            Kurz ist die leichte Runde. Standard ist die bisherige.
           </p>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setWarmup(true)}
-              className="flex-1 py-4 rounded-xl font-semibold text-base transition-all"
-              style={{
-                backgroundColor: warmup === true ? '#E8642A' : 'var(--color-bg-card)',
-                color: warmup === true ? 'white' : 'var(--color-text)',
-                border: `1.5px solid ${warmup === true ? '#E8642A' : 'transparent'}`,
-              }}
-            >
-              🔥 Ja, Warmup
-            </button>
-            <button
-              onClick={() => setWarmup(false)}
-              className="flex-1 py-4 rounded-xl font-semibold text-base transition-all"
-              style={{
-                backgroundColor: warmup === false ? 'var(--color-bg-elevated)' : 'var(--color-bg-card)',
-                color: warmup === false ? 'var(--color-text)' : 'var(--color-text-muted)',
-                border: `1.5px solid ${warmup === false ? 'rgba(255,255,255,0.2)' : 'transparent'}`,
-              }}
-            >
-              Nein, direkt starten
-            </button>
+          <div className="space-y-2">
+            {([
+              { id: 'none' as const, label: 'Keins', hint: 'Direkt ins Workout' },
+              { id: 'short' as const, label: `${WARMUP_SESSIONS.short.label} · ${WARMUP_SESSIONS.short.minutes}`, hint: 'Armkreisen, Inchworms, Ausfallschritte, Jumping Jacks, Liegestütze' },
+              { id: 'standard' as const, label: `${WARMUP_SESSIONS.standard.label} · ${WARMUP_SESSIONS.standard.minutes}`, hint: 'Jumping Jacks bis Air Squats' },
+            ]).map((opt) => {
+              const active = warmup === opt.id
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setWarmup(opt.id)}
+                  className="w-full text-left rounded-xl px-3 py-3"
+                  style={{
+                    backgroundColor: active ? '#E8642A' : 'var(--color-bg-card)',
+                    color: active ? 'white' : 'var(--color-text)',
+                    border: `1.5px solid ${active ? '#E8642A' : 'transparent'}`,
+                  }}
+                >
+                  <span className="block text-sm font-semibold">{opt.label}</span>
+                  <span className="block text-xs mt-0.5" style={{ color: active ? 'rgba(255,255,255,0.8)' : 'var(--color-text-muted)' }}>{opt.hint}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
       )}

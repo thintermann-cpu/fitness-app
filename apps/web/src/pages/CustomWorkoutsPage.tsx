@@ -28,7 +28,7 @@ export function CustomWorkoutsPage() {
   function handleEditSave(
     mode: TimerMode,
     minutes: number,
-    _withWarmup?: boolean,
+    _withWarmup?: 'short' | 'standard' | false,
     kraftConfig?: KraftConfig,
     exercises?: WizardExercise[],
     workoutName?: string,
