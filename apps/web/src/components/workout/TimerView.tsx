@@ -19,6 +19,7 @@ interface Props {
   bilateral?: boolean
   adHocLog?: boolean
   exercises?: WizardExercise[]
+  scheme?: string
   warmupPending?: boolean
   workoutName?: string
   initialTabataWork?: number
@@ -126,7 +127,7 @@ function Stepper({
 }
 
 export function TimerView({
-  initialMode, initialMinutes, onComplete, onShowHistory: _onShowHistory, bilateral, adHocLog, exercises,
+  initialMode, initialMinutes, onComplete, onShowHistory: _onShowHistory, bilateral, adHocLog, exercises, scheme,
   warmupPending, workoutName,
   initialTabataWork, initialTabataRest, initialTabataRounds,
   initialEmomInterval, initialEmomRounds,
@@ -672,6 +673,9 @@ if (!adHocLog || !isComplete || loggedRef.current) return
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
             Übungen
           </p>
+          {scheme && (
+            <p className="text-sm font-semibold text-[var(--color-text)] mb-1">{scheme}</p>
+          )}
           {exercises.map((ex, i) => (
             <div key={ex.id} className="flex items-center gap-2">
               <span className="text-xs text-[var(--color-text-muted)] w-4 flex-shrink-0">{i + 1}.</span>

@@ -59,6 +59,13 @@ const COUNT_OPTIONS: { id: EquipmentCount; label: string }[] = [
   { id: 'more', label: 'Mehr' },
 ]
 
+function equipmentHint(count: EquipmentCount, gear: string): string {
+  if (count === 'any') return gear ? `${gear} · weitere Geräte offen` : ''
+  if (count === '1') return gear ? `nur ${gear}` : 'genau 1 Gerät'
+  if (count === 'more') return gear ? `${gear} · 4 oder mehr Geräte` : '4 oder mehr Geräte'
+  return gear ? `${gear} · genau ${count} Geräte` : `genau ${count} Geräte`
+}
+
 function readCount(): EquipmentCount {
   const v = sessionStorage.getItem(COUNT_KEY)
   if (v === '1' || v === '2' || v === '3' || v === 'more' || v === 'any') return v
@@ -289,10 +296,12 @@ export function WodList({
           )
         })}
       </div>
-      {equipmentSpecified && (
+      {(equipmentSpecified || equipmentCount !== 'any') && (
         <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-          Equipment: {parsedSearch.requiredEquipment.map((id) => equipmentById(id)?.name ?? id).join(', ')}
-          {equipmentCount === '1' ? ' · genau 1' : equipmentCount === 'more' ? ' · 4 oder mehr' : equipmentCount !== 'any' ? ` · genau ${equipmentCount}` : ''}
+          {equipmentHint(
+            equipmentCount,
+            parsedSearch.requiredEquipment.map((id) => equipmentById(id)?.name ?? id).join(', '),
+          )}
         </p>
       )}
 

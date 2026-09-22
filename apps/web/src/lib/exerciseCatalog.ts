@@ -542,26 +542,38 @@ export function acceptExerciseQuery(query: string): CatalogExercise | null {
   return null
 }
 
-function stripPrefix(segment: string): string {
+const SCHEME_PATTERNS: RegExp[] = [
+  /^(min\s+\d+(?:\s*-\s*\d+)?\s*:)\s*/i,
+  /^(\d+\s*min(?:utes)?(?:\s+amrap)?\s*:)\s*/i,
+  /^(\d+\s*x\s*:)\s*/i,
+  /^(\d+\s*sets?\s+of(?:\s+\d+)?)\s*/i,
+  /^(\d+\s*(?:rounds?|sets?)\b[^:]*:)\s*/i,
+  /^((?:\d+\s*-\s*)+\d+\s*:)\s*/,
+  /^((?:alt|tabata|emom|ladder|pyramid)\b[^:]*:)\s*/i,
+  /^(\d+\s*exercises?\b[^:]*:)\s*/i,
+  /^(\d+\s*reps?\b[^:]*:)\s*/i,
+  /^(\d+\s*min(?:utes)?)\s+/i,
+  /^(.*\b(?:amrap|rounds?|sets?|reps?|ladder|emom)\b[^:]*:)\s*/i,
+]
+
+/** Pull "5 Rounds:" / "Min 1:" off the front and keep the label. */
+function takeScheme(segment: string): { scheme: string; rest: string } {
+  const labels: string[] = []
   let text = segment.trim()
   for (let i = 0; i < 4; i += 1) {
-    const next = text
-      .replace(/^min\s+\d+(?:\s*-\s*\d+)?\s*:\s*/i, '')
-      .replace(/^\d+\s*min(?:utes)?(?:\s+amrap)?\s*:\s*/i, '')
-      .replace(/^\d+\s*min(?:utes)?\s+/i, '')
-      .replace(/^\d+\s*x\s*:\s*/i, '')
-      .replace(/^\d+\s*sets?\s+of\s+(?:\d+\s+)?/i, '')
-      .replace(/^\d+\s*(?:rounds?|sets?)\b[^:]*:\s*/i, '')
-      .replace(/^(?:\d+\s*-\s*)+\d+\s*:\s*/, '')
-      .replace(/^(?:alt|tabata|emom|ladder|pyramid)\b[^:]*:\s*/i, '')
-      .replace(/^\d+\s*exercises?\b[^:]*:\s*/i, '')
-      .replace(/^\d+\s*reps?\b[^:]*:\s*/i, '')
-      .replace(/^.*\b(?:amrap|rounds?|sets?|reps?|ladder|emom)\b[^:]*:\s*/i, '')
-      .trim()
-    if (next === text) break
-    text = next
+    let hit = false
+    for (const pattern of SCHEME_PATTERNS) {
+      const match = text.match(pattern)
+      const label = match?.[1]?.replace(/:\s*$/, '').trim()
+      if (!match || !label) continue
+      labels.push(label)
+      text = text.slice(match[0].length).trim()
+      hit = true
+      break
+    }
+    if (!hit) break
   }
-  return text
+  return { scheme: labels.join(' · '), rest: text }
 }
 
 function peel(input: string): { name: string; detail?: string } {
@@ -654,16 +666,16 @@ function parseSegment(segment: string, out: ParsedExercise[]) {
     for (const piece of pieces) parseSegment(piece, out)
     if (out.length > before) return
   }
-  const stripped = stripPrefix(segment)
-  if (!stripped) return
-  const peeled = peel(stripped)
+  const { rest } = takeScheme(segment)
+  if (!rest) return
+  const peeled = peel(rest)
   const hit = lookupExerciseName(peeled.name)
   if (hit) {
     pushParsed(out, peeled.name, peeled.detail, hit)
     return
   }
-  if (/[,/+&]|\bor\b|\band\b|\bwith\b/i.test(stripped)) {
-    const parts = stripped.split(/\s*(?:,|\/|\+|&|\bor\b|\band\b|\bwith\b)\s*/i).map((part) => part.trim()).filter(Boolean)
+  if (/[,/+&]|\bor\b|\band\b|\bwith\b/i.test(rest)) {
+    const parts = rest.split(/\s*(?:,|\/|\+|&|\bor\b|\band\b|\bwith\b)\s*/i).map((part) => part.trim()).filter(Boolean)
     if (parts.length > 1) {
       const before = out.length
       for (const part of parts) parseSegment(part, out)
@@ -675,18 +687,121 @@ function parseSegment(segment: string, out: ParsedExercise[]) {
     pushParsed(out, peeled.name, peeled.detail, tail)
     return
   }
-  pushParsed(out, stripped, peeled.detail, null)
+  pushParsed(out, rest, peeled.detail, null)
+}
+
+interface ParsedChunk {
+  scheme: string
+  items: ParsedExercise[]
+}
+
+function parseChunk(segment: string): ParsedChunk {
+  const { scheme, rest } = takeScheme(segment)
+  const items: ParsedExercise[] = []
+  if (rest) parseSegment(rest, items)
+  const schemeOnly = !items.length && /runde|round|amrap|for time|emom/i.test(segment)
+    ? segment.trim()
+    : ''
+  return { scheme: scheme || schemeOnly, items }
+}
+
+export interface ParsedWodSession {
+  items: ParsedExercise[]
+  /** Shared prescription such as "5 Rounds", kept off the exercise names. */
+  scheme: string
+}
+
+export function parseWodSession(text: string): ParsedWodSession {
+  if (!text?.trim()) return { items: [], scheme: '' }
+  const chunks = text
+    .replace(/\r/g, '')
+    .split(/\s*(?:·|;|\||\n)+\s*/)
+    .map((chunk) => chunk.trim())
+    .filter(Boolean)
+    .map(parseChunk)
+    .filter((chunk) => chunk.items.length > 0 || chunk.scheme)
+  const schemes = [...new Set(chunks.map((chunk) => chunk.scheme).filter(Boolean))]
+  const shared = schemes.length === 1 && chunks.every((chunk) => !chunk.scheme || chunk.scheme === schemes[0])
+    ? schemes[0]
+    : ''
+  const items = chunks.flatMap((chunk) => {
+    const extra = shared ? '' : chunk.scheme
+    if (!extra) return chunk.items
+    return chunk.items.map((item) => ({
+      ...item,
+      detail: [extra, item.detail].filter(Boolean).join(' · '),
+    }))
+  })
+  return { items, scheme: shared }
 }
 
 export function parseWodExercises(text: string): ParsedExercise[] {
-  if (!text?.trim()) return []
-  const chunks = text.replace(/\r/g, '').split(/\s*(?:·|;|\||\n)+\s*/)
-  const out: ParsedExercise[] = []
-  for (const chunk of chunks) {
-    const trimmed = chunk.trim()
-    if (trimmed) parseSegment(trimmed, out)
+  return parseWodSession(text).items
+}
+
+function germanScheme(label: string): string {
+  return label
+    .replace(/\brounds\b/gi, 'Runden')
+    .replace(/\bround\b/gi, 'Runde')
+    .replace(/\bfor time\b/gi, 'für Zeit')
+}
+
+function repsBelong(reps: string, exercises: string): boolean {
+  const value = reps.trim()
+  if (!value) return false
+  if (exercises.toLowerCase().includes(value.toLowerCase())) return true
+  if (/^\d+(?:[/-]\d+)+$/.test(value) && /\d+\s*rounds?:/i.test(exercises) && !exercises.toLowerCase().includes(value.toLowerCase())) {
+    return false
   }
-  return out
+  return true
+}
+
+/** Rounds, rep scheme and labels parsed out of the exercise blob. */
+export function composeWorkoutScheme(input: {
+  runden?: string
+  reps?: string
+  exercises?: string
+  description?: string
+}): string {
+  const parsed = parseWodSession(input.exercises ?? '').scheme
+  const parts: string[] = []
+  let rounds = (input.runden ?? '').trim()
+  if (!rounds) {
+    const fromDescription = (input.description ?? '').match(/(\d+)\s*runden/i)
+    if (fromDescription?.[1]) rounds = fromDescription[1]
+  }
+  const roundLabel = rounds
+    ? (/runde|round/i.test(rounds) ? germanScheme(rounds) : `${rounds} Runden`)
+    : ''
+  const embedded = germanScheme(parsed)
+  const embeddedRound = embedded.match(/(\d+)\s*runden?\b/i)?.[1]
+  const fieldRound = rounds.match(/\d+/)?.[0]
+  // Hero rows often store a stale round count. The "N Rounds:" line in the
+  // exercise text is the prescription the athlete actually does.
+  const roundsDisagree = Boolean(embeddedRound && fieldRound && embeddedRound !== fieldRound)
+  if (roundsDisagree) {
+    parts.push(embedded)
+  } else {
+    if (roundLabel) parts.push(roundLabel)
+    const sameRound = Boolean(
+      roundLabel &&
+      fieldRound &&
+      /runden|runde/i.test(embedded) &&
+      new RegExp(`\\b${fieldRound}\\b`).test(embedded),
+    )
+    if (embedded && !sameRound) parts.push(embedded)
+  }
+  const reps = (input.reps ?? '').trim()
+  if (reps && repsBelong(reps, input.exercises ?? '')) {
+    const blob = parts.join(' ')
+    if (roundLabel && reps.toLowerCase().startsWith(roundLabel.toLowerCase())) {
+      const idx = parts.indexOf(roundLabel)
+      if (idx >= 0) parts[idx] = reps
+    } else if (!blob.toLowerCase().includes(reps.toLowerCase())) {
+      parts.push(reps)
+    }
+  }
+  return parts.join(' · ')
 }
 
 export function formatParsedExercise(item: ParsedExercise): string {

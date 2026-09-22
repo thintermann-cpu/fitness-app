@@ -19,6 +19,7 @@ export interface TimerInitConfig {
   tabataRounds?: number
   emomInterval?: number
   emomRounds?: number
+  scheme?: string
 }
 
 export interface WizardInitialValues {
@@ -33,6 +34,7 @@ export interface WizardInitialValues {
   tabataRounds?: number
   emomInterval?: number
   emomRounds?: number
+  scheme?: string
 }
 
 interface Props {
@@ -76,6 +78,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
   const [step,      setStep]      = useState(0)
   const [mode,      setMode]      = useState<TimerMode>(() => initialValues?.mode ?? 'fortime')
   const [exercises, setExercises] = useState<WizardExercise[]>(() => initialValues?.exercises ?? [])
+  const [scheme, setScheme] = useState(() => initialValues?.scheme ?? '')
   const [minutes,   setMinutes]   = useState(() => initialValues?.minutes ?? 20)
   const [name,      setName]      = useState(() => initialValues?.name ?? '')
   const [warmup,    setWarmup]    = useState<boolean | null>(null)
@@ -97,7 +100,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
   const stepCount = isKraft ? 3 : 4
 
   const reset = () => {
-    setStep(0); setMode('fortime'); setExercises([])
+    setStep(0); setMode('fortime'); setExercises([]); setScheme('')
     setMinutes(20); setName(''); setWarmup(null)
     setRestBetweenSets(90); setRestBetweenExercises(60)
     setTabataWork(20); setTabataRest(10); setTabataRounds(8)
@@ -108,6 +111,21 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
 
   const lastStep = stepCount - 1
 
+  const buildTimerCfg = (): TimerInitConfig | undefined => {
+    const cfg: TimerInitConfig = {}
+    if (mode === 'tabata') {
+      cfg.tabataWork = tabataWork
+      cfg.tabataRest = tabataRest
+      cfg.tabataRounds = tabataRounds
+    }
+    if (mode === 'emom') {
+      cfg.emomInterval = emomInterval
+      cfg.emomRounds = emomRounds
+    }
+    if (scheme.trim()) cfg.scheme = scheme.trim()
+    return Object.keys(cfg).length > 0 ? cfg : undefined
+  }
+
   const handleNext = () => {
     if (step < lastStep) { setStep((s) => s + 1); return }
 
@@ -115,10 +133,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
       ? { exercises, restBetweenSets, restBetweenExercises }
       : undefined
 
-    const timerCfg: TimerInitConfig | undefined =
-      mode === 'tabata' ? { tabataWork, tabataRest, tabataRounds } :
-      mode === 'emom'   ? { emomInterval, emomRounds } :
-      undefined
+    const timerCfg = buildTimerCfg()
 
     const m = mode
     const min = isKraft ? 0 :
@@ -145,10 +160,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
     const kraftCfg: KraftConfig | undefined = isKraft
       ? { exercises, restBetweenSets, restBetweenExercises }
       : undefined
-    const timerCfg: TimerInitConfig | undefined =
-      mode === 'tabata' ? { tabataWork, tabataRest, tabataRounds } :
-      mode === 'emom'   ? { emomInterval, emomRounds } :
-      undefined
+    const timerCfg = buildTimerCfg()
     const min = isKraft ? 0 :
       mode === 'tabata' ? Math.round((tabataWork + tabataRest) * tabataRounds / 60) :
       mode === 'emom'   ? emomInterval * emomRounds :
@@ -231,9 +243,22 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
       {step === 1 && !isKraft && (
         <div>
           <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Übungen</p>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
-            Optional — nur Übungen aus dem Katalog
+          <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
+            Optional — nur Übungen aus dem Katalog. Reps und Runden bleiben daneben stehen.
           </p>
+          <input
+            type="text"
+            value={scheme}
+            onChange={(e) => setScheme(e.target.value)}
+            placeholder="Ablauf, z. B. 3 Runden · 21-15-9"
+            aria-label="Ablauf"
+            className="w-full rounded-xl px-3 py-2 text-sm outline-none mb-3"
+            style={{
+              backgroundColor: 'var(--color-bg-card)',
+              color: 'var(--color-text)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          />
           <ExerciseListEditor
             items={exercises}
             onChange={setExercises}

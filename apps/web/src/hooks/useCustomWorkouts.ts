@@ -13,14 +13,14 @@ interface DbRow {
   user_id: string
   name: string
   mode: string
-  config: Record<string, number | string[] | undefined>
+  config: Record<string, number | string | string[] | undefined>
   exercises: CustomWorkout['exercises']
   with_warmup: boolean
   created_at: string
   updated_at: string
 }
 
-function num(v: number | string[] | undefined): number | undefined {
+function num(v: number | string | string[] | undefined): number | undefined {
   return typeof v === 'number' ? v : undefined
 }
 
@@ -44,6 +44,7 @@ function dbToWorkout(row: DbRow): CustomWorkout {
     emomInterval:         num(cfg.emomInterval),
     emomRounds:           num(cfg.emomRounds),
     equipment,
+    scheme: typeof cfg.scheme === 'string' ? cfg.scheme : undefined,
   }
 }
 
@@ -63,6 +64,7 @@ function workoutToDb(w: CustomWorkout, userId: string) {
       emomInterval:         w.emomInterval,
       emomRounds:           w.emomRounds,
       equipment:            w.equipment,
+      scheme:               w.scheme,
     },
     exercises:   w.exercises,
     with_warmup: false,

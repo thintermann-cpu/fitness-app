@@ -47,6 +47,7 @@ type TimerConfig = {
   adHocLog?: boolean
   tabataWork?: number; tabataRest?: number; tabataRounds?: number
   emomInterval?: number; emomRounds?: number
+  scheme?: string
 }
 
 export function WorkoutPage() {
@@ -101,6 +102,7 @@ export function WorkoutPage() {
         tabataRounds: timerCfg?.tabataRounds,
         emomInterval: timerCfg?.emomInterval,
         emomRounds:   timerCfg?.emomRounds,
+        scheme:       timerCfg?.scheme,
       })
     }
     setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, adHocLog: true, ...timerCfg })
@@ -124,6 +126,7 @@ export function WorkoutPage() {
       tabataRounds: timerCfg?.tabataRounds,
       emomInterval: timerCfg?.emomInterval,
       emomRounds:   timerCfg?.emomRounds,
+      scheme:       timerCfg?.scheme,
     })
   }
 
@@ -144,6 +147,7 @@ export function WorkoutPage() {
       exercises: w.mode !== 'krafttraining' ? w.exercises : undefined,
       tabataWork: w.tabataWork, tabataRest: w.tabataRest, tabataRounds: w.tabataRounds,
       emomInterval: w.emomInterval, emomRounds: w.emomRounds,
+      scheme: w.scheme,
     })
     setTimerKey((k) => k + 1)
     setShowWarmupTimer(true)
@@ -308,6 +312,7 @@ export function WorkoutPage() {
                     initialTabataRounds={timerConfig.tabataRounds}
                     initialEmomInterval={timerConfig.emomInterval}
                     initialEmomRounds={timerConfig.emomRounds}
+                    scheme={timerConfig.scheme}
                     onShowHistory={() => setTab('history')}
                   />
                 )}

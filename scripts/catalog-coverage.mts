@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import {
+  composeWorkoutScheme,
   countableEquipment,
   matchesEquipmentCount,
   parseWodExercises,
@@ -45,6 +46,37 @@ check('workouts mit', parseWorkoutSearch('workouts mit Kurzhanteln').requiredEqu
 check('klimmzug', parseWorkoutSearch('Klimmzug').exerciseIds.includes('pull-up'))
 check('box jumps stay exercise', parseWorkoutSearch('box jumps').requiredEquipment.length === 0)
 check('strip keeps helen', parseWorkoutSearch('Helen Kurzhantel').remainder.toLowerCase().includes('helen'))
+
+const fran = wods.find((w) => w.name === 'Fran')
+const brad = wods.find((w) => w.name === 'Brad')
+check('fran scheme', Boolean(fran) && composeWorkoutScheme({
+  runden: fran?.runden, reps: fran?.reps, exercises: fran?.uebungen, description: fran?.beschreibung,
+}).includes('3 Runden') && composeWorkoutScheme({
+  runden: fran?.runden, reps: fran?.reps, exercises: fran?.uebungen, description: fran?.beschreibung,
+}).includes('21-15-9'))
+if (brad) {
+  const bradScheme = composeWorkoutScheme({
+    runden: brad.runden, reps: brad.reps, exercises: brad.uebungen, description: brad.beschreibung,
+  })
+  const bradItems = parseWodExercises(brad.uebungen ?? '')
+  check('brad keeps 5 rounds', /5 Runden/.test(bradScheme))
+  check('brad skips template reps', !bradScheme.includes('21-15-9'))
+  check('brad keeps front squat reps', bradItems.some((item) => item.name === 'Front Squats' && item.detail === '12'))
+}
+const openDumbbell = matchesEquipmentCount(['Dumbbell', 'Barbell', 'Box'], ['dumbbell'], 'any')
+check('beliebig keeps other gear', openDumbbell)
+check('count 1 closes other gear', !matchesEquipmentCount(['Dumbbell', 'Barbell'], ['dumbbell'], '1'))
+check('unknown gear stays open', matchesEquipmentCount(['Dumbbell', 'SkiErg'], ['dumbbell'], 'any'))
+check('unknown gear counts as second', matchesEquipmentCount(['Dumbbell', 'SkiErg'], ['dumbbell'], '2'))
+check('unknown gear blocks count 1', !matchesEquipmentCount(['Dumbbell', 'SkiErg'], ['dumbbell'], '1'))
+
+const bradshaw = wods.find((w) => w.name === 'Bradshaw')
+if (bradshaw) {
+  const bradshawScheme = composeWorkoutScheme({
+    runden: bradshaw.runden, reps: bradshaw.reps, exercises: bradshaw.uebungen, description: bradshaw.beschreibung,
+  })
+  check('bradshaw uses blob rounds', bradshawScheme === '3 Runden')
+}
 
 const helen = wods.find((w) => w.name === 'Helen')
 check('helen exists', Boolean(helen))

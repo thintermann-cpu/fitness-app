@@ -50,6 +50,7 @@ export function CustomWorkoutsPage() {
       tabataRounds: timerCfg?.tabataRounds,
       emomInterval: timerCfg?.emomInterval,
       emomRounds:   timerCfg?.emomRounds,
+      scheme:       timerCfg?.scheme ?? editWorkout.scheme,
     })
     setEditWorkout(null)
   }
@@ -200,6 +201,7 @@ export function CustomWorkoutsPage() {
           tabataRounds: editWorkout.tabataRounds,
           emomInterval: editWorkout.emomInterval,
           emomRounds:   editWorkout.emomRounds,
+          scheme:       editWorkout.scheme,
         } satisfies WizardInitialValues) : undefined}
         onStart={handleEditSave}
       />

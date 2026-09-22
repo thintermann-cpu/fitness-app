@@ -38,6 +38,10 @@ export function ExerciseListEditor({
     addName(input)
   }
 
+  const updateDetail = (id: string, detail: string) => {
+    onChange(items.map((item) => (item.id === id ? { ...item, detail: detail || undefined } : item)))
+  }
+
   const remove = (id: string) => onChange(items.filter((e) => e.id !== id))
 
   const moveUp = (i: number) => {
@@ -68,10 +72,24 @@ export function ExerciseListEditor({
           >
             {i + 1}
           </span>
-          <span className="flex-1 text-sm truncate" style={{ color: 'var(--color-text)' }}>
-            {ex.name}
-            {ex.detail ? <span style={{ color: 'var(--color-text-muted)' }}> · {ex.detail}</span> : null}
-          </span>
+          <div className="flex-1 min-w-0">
+            <span className="block text-sm truncate" style={{ color: 'var(--color-text)' }}>
+              {ex.name}
+            </span>
+            {fromCatalog ? (
+              <input
+                type="text"
+                value={ex.detail ?? ''}
+                onChange={(e) => updateDetail(ex.id, e.target.value)}
+                placeholder="Reps, Distanz…"
+                aria-label={`Angabe zu ${ex.name}`}
+                className="w-full bg-transparent text-xs outline-none mt-0.5"
+                style={{ color: 'var(--color-text-muted)' }}
+              />
+            ) : ex.detail ? (
+              <span className="block text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{ex.detail}</span>
+            ) : null}
+          </div>
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <button
               onClick={() => moveUp(i)}
