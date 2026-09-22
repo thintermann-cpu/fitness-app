@@ -1,5 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import {
+  parseWorkoutSearch,
+  workoutMatchesQuery,
+  type EquipmentCount,
+} from '../lib/exerciseCatalog'
 
 export interface Wod {
   id: string
@@ -37,6 +42,8 @@ export interface WodFilters {
   silentMode?: boolean
   editorsPick?: boolean
   wodCategory?: string
+  /** Beliebig / 1 / 2 / 3 / mehr — counts gear types, bodyweight excluded. */
+  equipmentCount?: EquipmentCount
 }
 
 export const EDITORS_PICK_IDS = new Set<string>([
@@ -145,14 +152,11 @@ function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[
   if (filters.type) wods = wods.filter((w) => w.type === filters.type)
   if (filters.category) wods = wods.filter((w) => w.category === filters.category)
   if (filters.difficulty) wods = wods.filter((w) => w.difficulty === filters.difficulty)
-  if (filters.search) {
-    const q = filters.search.toLowerCase()
-    wods = wods.filter(
-      (w) =>
-        w.name.toLowerCase().includes(q) ||
-        w.exercises.toLowerCase().includes(q) ||
-        w.description.toLowerCase().includes(q),
-    )
+  const count = filters.equipmentCount ?? 'any'
+  const parsedSearch = parseWorkoutSearch(filters.search ?? '')
+  const searchActive = Boolean(filters.search?.trim()) || count !== 'any'
+  if (searchActive) {
+    wods = wods.filter((w) => workoutMatchesQuery(w, parsedSearch, count))
   }
   if (filters.equipmentFilter?.length) {
     const allowed = new Set(filters.equipmentFilter.map(normEq))
@@ -197,6 +201,10 @@ function raceTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T | null> 
   ])
 }
 
+function searchNeedsClient(filters: WodFilters): boolean {
+  return Boolean(filters.search?.trim()) || Boolean(filters.equipmentCount && filters.equipmentCount !== 'any')
+}
+
 async function fetchMatchingWods(filters: Omit<WodFilters, 'page'>): Promise<Wod[]> {
   const hasComplexFilters =
     Boolean(filters.equipmentFilter?.length) ||
@@ -206,8 +214,9 @@ async function fetchMatchingWods(filters: Omit<WodFilters, 'page'>): Promise<Wod
     filters.maxDuration != null ||
     filters.silentMode === true
   const forceSupabase = Boolean(filters.wodCategory) || Boolean(filters.editorsPick)
+  const searchActive = searchNeedsClient(filters)
 
-  if (!isSupabaseConfigured || (hasComplexFilters && !forceSupabase)) {
+  if (!isSupabaseConfigured || (hasComplexFilters && !forceSupabase && !searchActive)) {
     return applyLocalFilters(await loadLocalWods(), filters)
   }
 
@@ -215,7 +224,6 @@ async function fetchMatchingWods(filters: Omit<WodFilters, 'page'>): Promise<Wod
   if (filters.type) query = query.eq('type', filters.type)
   if (filters.category && !filters.wodCategory) query = query.eq('category', filters.category)
   if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
-  if (filters.search) query = query.ilike('name', `%${filters.search}%`)
   if (filters.editorsPick) query = query.eq('is_editors_pick', true)
   if (filters.wodCategory) query = query.eq('wod_category', filters.wodCategory)
 
@@ -249,8 +257,9 @@ export function useWods(filters: WodFilters = {}) {
 
       // Program/editors-pick filter always requires Supabase — these WODs exist only in DB, not in wods.json.
       const forceSupabase = Boolean(filters.wodCategory) || Boolean(filters.editorsPick)
+      const searchActive = searchNeedsClient(filters)
 
-      if (!isSupabaseConfigured || (hasComplexFilters && !forceSupabase)) {
+      if (!isSupabaseConfigured || (hasComplexFilters && !forceSupabase && !searchActive)) {
         return fetchLocalWods(filters)
       }
 
@@ -260,16 +269,14 @@ export function useWods(filters: WodFilters = {}) {
       // Skip category filter when wodCategory is active — newer program WODs have no category value.
       if (filters.category && !filters.wodCategory) query = query.eq('category', filters.category)
       if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
-      if (filters.search) query = query.ilike('name', `%${filters.search}%`)
       if (filters.editorsPick) query = query.eq('is_editors_pick', true)
       if (filters.wodCategory) query = query.eq('wod_category', filters.wodCategory)
 
       const page = filters.page ?? 0
 
-      // Program filters live only in Supabase. Equipment/duration/silentMode are not
-      // all expressible as SQL (is_jumping is derived). Fetch the full program set,
-      // map rows, then apply the same local filters so the count matches the list.
-      if (hasComplexFilters && forceSupabase) {
+      // Search, gear count, and program filters are applied in memory so aliases
+      // (Kurzhantel, Klimmzug) are not limited to a SQL name match or one page.
+      if (searchActive || (hasComplexFilters && forceSupabase)) {
         const result = await raceTimeout(query.order('name'), SUPABASE_TIMEOUT_MS)
         if (!result || result.error) {
           if (result?.error) console.error('[useWods]', result.error.message)

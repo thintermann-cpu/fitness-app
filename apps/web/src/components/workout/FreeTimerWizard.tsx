@@ -232,12 +232,12 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
         <div>
           <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Übungen</p>
           <p className="text-xs mb-4" style={{ color: 'var(--color-text-muted)' }}>
-            Optional — füge hinzu, was du vorhast
+            Optional — nur Übungen aus dem Katalog
           </p>
           <ExerciseListEditor
             items={exercises}
             onChange={setExercises}
-            placeholder="z. B. 10 Pull-ups, 20 Burpees…"
+            fromCatalog
           />
         </div>
       )}
@@ -327,7 +327,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
                 ])
               }
             }}
-            placeholder="Übung hinzufügen…"
+            fromCatalog
           />
         </div>
       )}

@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import type { WizardExercise } from '../../lib/customWorkouts'
+import { acceptExerciseQuery, searchExercises } from '../../lib/exerciseCatalog'
 
 interface Props {
   items: WizardExercise[]
   onChange: (items: WizardExercise[]) => void
   placeholder?: string
   showAddInput?: boolean
+  /** Only catalog exercises can be added. Free text is rejected. */
+  fromCatalog?: boolean
 }
 
 export function ExerciseListEditor({
@@ -13,14 +16,26 @@ export function ExerciseListEditor({
   onChange,
   placeholder = 'Übung hinzufügen…',
   showAddInput = true,
+  fromCatalog = false,
 }: Props) {
   const [input, setInput] = useState('')
+  const suggestions = fromCatalog ? searchExercises(input, 6) : []
+  const accepted = fromCatalog ? acceptExerciseQuery(input) : null
+
+  const addName = (name: string) => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    onChange([...items, { id: crypto.randomUUID(), name: trimmed }])
+    setInput('')
+  }
 
   const add = () => {
-    const name = input.trim()
-    if (!name) return
-    onChange([...items, { id: crypto.randomUUID(), name }])
-    setInput('')
+    if (fromCatalog) {
+      if (!accepted) return
+      addName(accepted.name)
+      return
+    }
+    addName(input)
   }
 
   const remove = (id: string) => onChange(items.filter((e) => e.id !== id))
@@ -55,6 +70,7 @@ export function ExerciseListEditor({
           </span>
           <span className="flex-1 text-sm truncate" style={{ color: 'var(--color-text)' }}>
             {ex.name}
+            {ex.detail ? <span style={{ color: 'var(--color-text-muted)' }}> · {ex.detail}</span> : null}
           </span>
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <button
@@ -102,19 +118,41 @@ export function ExerciseListEditor({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && add()}
-            placeholder={placeholder}
+            placeholder={fromCatalog ? 'Übung aus dem Katalog…' : placeholder}
             className="flex-1 bg-transparent text-sm outline-none"
             style={{ color: 'var(--color-text)' }}
+            aria-autocomplete={fromCatalog ? 'list' : undefined}
           />
           <button
             onClick={add}
-            disabled={!input.trim()}
+            disabled={fromCatalog ? !accepted : !input.trim()}
             className="text-sm font-bold px-2 py-0.5 rounded-lg transition-opacity"
-            style={{ color: '#E8642A', opacity: input.trim() ? 1 : 0.35 }}
+            style={{ color: '#E8642A', opacity: (fromCatalog ? accepted : input.trim()) ? 1 : 0.35 }}
             aria-label="Hinzufügen"
           >
             +
           </button>
+        </div>
+      )}
+      {fromCatalog && input.trim() && (
+        <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+          {suggestions.length === 0 ? (
+            <p className="px-3 py-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              Keine Übung im Katalog
+            </p>
+          ) : (
+            suggestions.map((ex) => (
+              <button
+                key={ex.id}
+                type="button"
+                onClick={() => addName(ex.name)}
+                className="w-full text-left px-3 py-2 text-sm"
+                style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
+              >
+                {ex.name}
+              </button>
+            ))
+          )}
         </div>
       )}
     </div>

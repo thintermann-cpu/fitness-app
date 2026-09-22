@@ -5,7 +5,9 @@ import { useAnalytics } from '../../hooks/useAnalytics'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { WOD_TYPE_TO_MODE } from '../../lib/timerLabels'
-import { splitWodExercises } from '../../lib/wodExercises'
+import { parseWodExercises } from '../../lib/exerciseCatalog'
+import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
+import type { WizardExercise } from '../../lib/customWorkouts'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { useCustomWorkouts } from '../../hooks/useCustomWorkouts'
 import { useToast } from '../../hooks/useToast'
@@ -98,6 +100,18 @@ function getWarmupRoutine(wod: Wod): WarmupExercise[] {
   return WARMUP_ROUTINES.Default
 }
 
+function exercisesFromBlob(text: string): WizardExercise[] {
+  return parseWodExercises(text).map((item, i) => ({
+    id: `parsed-${i}-${item.id ?? 'raw'}`,
+    name: item.name,
+    detail: item.detail,
+  }))
+}
+
+function exerciseSig(items: WizardExercise[]): string {
+  return items.map((item) => `${item.name}|${item.detail ?? ''}`).join('\n')
+}
+
 interface Props {
   wodName: string
   onBack: () => void
@@ -122,12 +136,12 @@ export function WodDetail({ wodName, onBack }: Props) {
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
   const [adjustOpen, setAdjustOpen]         = useState(false)
   const [sessionMinutes, setSessionMinutes] = useState(20)
-  const [sessionLines, setSessionLines]     = useState('')
+  const [sessionItems, setSessionItems]     = useState<WizardExercise[]>([])
 
   useEffect(() => {
     if (!wod) return
     setSessionMinutes(wod.estimated_minutes > 0 ? wod.estimated_minutes : 20)
-    setSessionLines(splitWodExercises(wod.exercises).join('\n'))
+    setSessionItems(exercisesFromBlob(wod.exercises))
     setAdjustOpen(false)
   }, [wod?.id, wod?.exercises, wod?.estimated_minutes])
 
@@ -308,12 +322,11 @@ export function WodDetail({ wodName, onBack }: Props) {
 
   const catalogWod = wod
   const timerMode = (WOD_TYPE_TO_MODE[catalogWod.type] ?? 'fortime') as 'fortime' | 'amrap' | 'emom' | 'tabata'
-  const catalogLines = splitWodExercises(catalogWod.exercises)
+  const catalogItems = exercisesFromBlob(catalogWod.exercises)
   const catalogMinutes = catalogWod.estimated_minutes > 0 ? catalogWod.estimated_minutes : 20
-  const sessionExerciseList = sessionLines.split('\n').map((s) => s.trim()).filter(Boolean)
-  const sessionExercises = sessionExerciseList.map((name, i) => ({ id: `session-${i}`, name }))
+  const sessionExercises = sessionItems
   const isAdjusted =
-    sessionMinutes !== catalogMinutes || sessionLines !== catalogLines.join('\n')
+    sessionMinutes !== catalogMinutes || exerciseSig(sessionItems) !== exerciseSig(catalogItems)
 
   function saveAsCustom() {
     const name = `${catalogWod.name} (angepasst)`
@@ -336,7 +349,7 @@ export function WodDetail({ wodName, onBack }: Props) {
 
   function resetAdjust() {
     setSessionMinutes(catalogMinutes)
-    setSessionLines(catalogLines.join('\n'))
+    setSessionItems(catalogItems)
   }
 
   return (
@@ -373,25 +386,16 @@ export function WodDetail({ wodName, onBack }: Props) {
             Übungen
           </p>
           {adjustOpen ? (
-            <textarea
-              value={sessionLines}
-              onChange={(e) => setSessionLines(e.target.value)}
-              rows={Math.min(10, Math.max(4, sessionExerciseList.length + 1))}
-              placeholder="Eine Übung pro Zeile"
-              className="w-full rounded-xl px-3 py-2 text-sm outline-none"
-              style={{
-                backgroundColor: 'var(--color-bg)',
-                color: 'var(--color-text)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                resize: 'vertical',
-              }}
-            />
-          ) : sessionExerciseList.length > 0 ? (
+            <ExerciseListEditor items={sessionItems} onChange={setSessionItems} fromCatalog />
+          ) : sessionItems.length > 0 ? (
             <ol className="space-y-1">
-              {sessionExerciseList.map((line, i) => (
-                <li key={`${i}-${line}`} className="flex items-start gap-2 text-sm">
+              {sessionItems.map((item, i) => (
+                <li key={item.id} className="flex items-start gap-2 text-sm">
                   <span className="text-xs text-[var(--color-text-muted)] w-5 shrink-0 mt-0.5">{i + 1}.</span>
-                  <span className="text-[var(--color-text)]">{line}</span>
+                  <span className="text-[var(--color-text)]">
+                    {item.name}
+                    {item.detail ? <span className="text-[var(--color-text-muted)]"> · {item.detail}</span> : null}
+                  </span>
                 </li>
               ))}
             </ol>
@@ -659,7 +663,7 @@ export function WodDetail({ wodName, onBack }: Props) {
       {showTimer && (
         <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
           <TimerView
-            key={`${sessionMinutes}-${sessionExerciseList.join('|')}`}
+            key={`${sessionMinutes}-${exerciseSig(sessionItems)}`}
             initialMode={timerMode}
             initialMinutes={sessionMinutes}
             {...(timerMode === 'emom'

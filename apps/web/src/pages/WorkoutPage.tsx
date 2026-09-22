@@ -61,6 +61,8 @@ export function WorkoutPage() {
   const [wizardOpen, setWizardOpen]       = useState(false)
   const [adhocOpen, setAdhocOpen]         = useState(false)
   const [showAllEquipment, setShowAllEquipment] = useState(false)
+  const [equipmentSpecified, setEquipmentSpecified] = useState(false)
+  const [clearEquipmentTick, setClearEquipmentTick] = useState(0)
   const [timerConfig, setTimerConfig]     = useState<TimerConfig | null>(null)
   const [timerKey, setTimerKey]           = useState(0)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
@@ -149,6 +151,7 @@ export function WorkoutPage() {
   }
 
   function handleLocationSelect(loc: WorkoutLocation) {
+    if (equipmentSpecified) setClearEquipmentTick((tick) => tick + 1)
     if (showAllEquipment) {
       setShowAllEquipment(false)
       setLocation(loc)
@@ -164,13 +167,13 @@ export function WorkoutPage() {
   }
 
   // "Alle anzeigen" turns off every equipment restriction, including location tiles.
-  const effectiveLocation = showAllEquipment ? null : location
+  const effectiveLocation = showAllEquipment || equipmentSpecified ? null : location
   const equipmentForLocation = effectiveLocation
     ? (profile?.equipment_by_location?.[effectiveLocation] ?? DEFAULT_EQUIPMENT_BY_LOCATION[effectiveLocation])
     : undefined
 
   const hasProfileEquipment = (profile?.equipment?.length ?? 0) > 0
-  const userEquipment = hasProfileEquipment && !showAllEquipment ? profile!.equipment : undefined
+  const userEquipment = hasProfileEquipment && !showAllEquipment && !equipmentSpecified ? profile!.equipment : undefined
 
   // If a WOD name is in the URL, show WodDetail instead of the list
   if (wodName) {
@@ -265,11 +268,18 @@ export function WorkoutPage() {
                 {showAllEquipment ? '⚡ Equipment-Filter aus — aktivieren' : '⚡ Equipment-Filter aktiv — Alle anzeigen'}
               </button>
             )}
+            {equipmentSpecified && (
+              <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
+                Ort-Filter aus, solange Equipment gesucht wird.
+              </p>
+            )}
             <WodList
               onSelectWod={(name) => navigate(`/workout/${encodeURIComponent(name)}`)}
               equipmentFilter={equipmentForLocation}
               userEquipment={userEquipment}
               silentMode={silentMode}
+              clearEquipmentTick={clearEquipmentTick}
+              onEquipmentSpecifiedChange={setEquipmentSpecified}
             />
           </>
         )}

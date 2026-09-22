@@ -4,6 +4,7 @@ import { useCustomWorkouts } from '../hooks/useCustomWorkouts'
 import { FreeTimerWizard, type KraftConfig, type TimerInitConfig, type WizardInitialValues } from '../components/workout/FreeTimerWizard'
 import type { TimerMode } from '../lib/timerLabels'
 import type { WizardExercise, CustomWorkout } from '../lib/customWorkouts'
+import { parseWorkoutSearch, workoutMatchesQuery } from '../lib/exerciseCatalog'
 
 const MODE_LABELS: Record<string, string> = {
   fortime: 'ForTime', amrap: 'AMRAP', emom: 'EMOM',
@@ -54,8 +55,20 @@ export function CustomWorkoutsPage() {
   }
 
   const query = search.trim().toLowerCase()
+  const parsedQuery = parseWorkoutSearch(search)
   const visible = query
     ? workouts.filter((w) => {
+        if (parsedQuery.requiredEquipment.length > 0 || parsedQuery.exerciseIds.length > 0) {
+          return workoutMatchesQuery(
+            {
+              name: w.name,
+              exercises: w.exercises.map((e) => e.name).join('\n'),
+              equipment: w.equipment,
+            },
+            parsedQuery,
+            'any',
+          )
+        }
         const hay = [
           w.name,
           ...(w.equipment ?? []),
