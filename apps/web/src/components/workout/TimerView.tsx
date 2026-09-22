@@ -144,7 +144,9 @@ export function TimerView({
   const [tabataRest,   setTabataRest]   = useState(initialTabataRest   ?? 10)
   const [tabataRounds, setTabataRounds] = useState(initialTabataRounds ?? 8)
   // ForTime cap (null = no cap, just count up)
-  const [forTimeCap,   setForTimeCap]   = useState<number | null>(null)
+  const [forTimeCap,   setForTimeCap]   = useState<number | null>(
+    initialMode === 'fortime' && (initialMinutes ?? 0) > 0 ? (initialMinutes as number) : null,
+  )
 
   const [isRunning, setIsRunning] = useState(false)
   const [isPaused,  setIsPaused]  = useState(false)

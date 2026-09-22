@@ -324,11 +324,12 @@ export function WodDetail({ wodName, onBack }: Props) {
       mode: timerMode,
       minutes: sessionMinutes,
       exercises: sessionExercises,
+      equipment: catalogWod.equipment ?? [],
       createdAt: existing?.createdAt ?? new Date().toISOString(),
     }
     const mut = existing ? updateWorkout : addWorkout
     mut.mutate(payload, {
-      onSuccess: () => toast.success(`Gespeichert als „${name}“`),
+        onSuccess: () => toast.success(`Bei eigenen Workouts gespeichert: „${name}“`),
       onError: () => toast.error('Speichern fehlgeschlagen'),
     })
   }
@@ -368,19 +369,9 @@ export function WodDetail({ wodName, onBack }: Props) {
         <p className="text-[var(--color-text)] text-sm leading-relaxed">{wod.description}</p>
 
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
-              Übungen
-            </p>
-            <button
-              type="button"
-              onClick={() => setAdjustOpen((v) => !v)}
-              className="text-xs font-semibold"
-              style={{ color: '#E8642A', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-            >
-              {adjustOpen ? 'Fertig' : 'Anpassen'}
-            </button>
-          </div>
+          <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+            Übungen
+          </p>
           {adjustOpen ? (
             <textarea
               value={sessionLines}
@@ -413,54 +404,66 @@ export function WodDetail({ wodName, onBack }: Props) {
           <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
             Dauer
           </p>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setSessionMinutes((m) => Math.max(1, m - 1))}
-              className="w-9 h-9 rounded-xl text-lg font-semibold"
-              style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid rgba(255,255,255,0.08)' }}
-              aria-label="Dauer minus"
-            >
-              −
-            </button>
-            <span className="text-sm font-semibold text-[var(--color-text)] tabular-nums w-16 text-center">
-              {sessionMinutes} min
-            </span>
-            <button
-              type="button"
-              onClick={() => setSessionMinutes((m) => Math.min(180, m + 1))}
-              className="w-9 h-9 rounded-xl text-lg font-semibold"
-              style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid rgba(255,255,255,0.08)' }}
-              aria-label="Dauer plus"
-            >
-              +
-            </button>
-            {isAdjusted && (
+          {adjustOpen ? (
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={resetAdjust}
-                className="text-xs font-semibold ml-auto"
-                style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                onClick={() => setSessionMinutes((m) => Math.max(1, m - 1))}
+                className="w-9 h-9 rounded-xl text-lg font-semibold"
+                style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid rgba(255,255,255,0.08)' }}
+                aria-label="Dauer minus"
               >
-                Zurücksetzen
+                −
               </button>
-            )}
-          </div>
-          {isAdjusted && (
-            <div className="mt-3 space-y-2">
-              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                Nur für diese Session — Katalog bleibt unverändert.
-              </p>
+              <span className="text-sm font-semibold text-[var(--color-text)] tabular-nums w-16 text-center">
+                {sessionMinutes} min
+              </span>
               <button
                 type="button"
-                onClick={saveAsCustom}
-                disabled={addWorkout.isPending || updateWorkout.isPending}
-                className="text-xs font-semibold px-3 py-2 rounded-xl"
-                style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: 'none', cursor: 'pointer' }}
+                onClick={() => setSessionMinutes((m) => Math.min(180, m + 1))}
+                className="w-9 h-9 rounded-xl text-lg font-semibold"
+                style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid rgba(255,255,255,0.08)' }}
+                aria-label="Dauer plus"
               >
-                {addWorkout.isPending || updateWorkout.isPending ? 'Speichert…' : 'Als eigenes Workout speichern'}
+                +
               </button>
+              {isAdjusted && (
+                <button
+                  type="button"
+                  onClick={resetAdjust}
+                  className="text-xs font-semibold ml-auto"
+                  style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  Zurücksetzen
+                </button>
+              )}
             </div>
+          ) : (
+            <p className="text-sm font-semibold text-[var(--color-text)] tabular-nums">{sessionMinutes} min</p>
+          )}
+          <div className="flex gap-2 mt-3">
+            <button
+              type="button"
+              onClick={() => setAdjustOpen((v) => !v)}
+              className="flex-1 text-xs font-semibold px-3 py-2 rounded-xl"
+              style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid rgba(255,255,255,0.08)' }}
+            >
+              {adjustOpen ? 'Fertig' : 'Temporär anpassen'}
+            </button>
+            <button
+              type="button"
+              onClick={saveAsCustom}
+              disabled={addWorkout.isPending || updateWorkout.isPending}
+              className="flex-1 text-xs font-semibold px-3 py-2 rounded-xl"
+              style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: 'none', cursor: 'pointer' }}
+            >
+              {addWorkout.isPending || updateWorkout.isPending ? 'Speichert…' : 'Bei eigenen speichern'}
+            </button>
+          </div>
+          {adjustOpen && (
+            <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+              Timer nutzt {sessionMinutes} min — nur diese Session, Katalog bleibt unverändert.
+            </p>
           )}
         </div>
 
@@ -659,6 +662,16 @@ export function WodDetail({ wodName, onBack }: Props) {
             key={`${sessionMinutes}-${sessionExerciseList.join('|')}`}
             initialMode={timerMode}
             initialMinutes={sessionMinutes}
+            {...(timerMode === 'emom'
+              ? { initialEmomInterval: 1, initialEmomRounds: Math.max(1, sessionMinutes) }
+              : {})}
+            {...(timerMode === 'tabata'
+              ? {
+                  initialTabataWork: 20,
+                  initialTabataRest: 10,
+                  initialTabataRounds: Math.max(1, Math.round((sessionMinutes * 60) / 30)),
+                }
+              : {})}
             adHocLog
             workoutName={catalogWod.name}
             exercises={sessionExercises.length > 0 ? sessionExercises : (customExercises.length > 0 ? customExercises : undefined)}

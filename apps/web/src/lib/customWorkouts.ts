@@ -21,6 +21,7 @@ export interface CustomWorkout {
   tabataRounds?: number
   emomInterval?: number
   emomRounds?: number
+  equipment?: string[]
 }
 
 export interface CustomSession {
