@@ -14,8 +14,7 @@ export function CustomWorkoutsPage() {
   const navigate = useNavigate()
   const { data: workouts = [], isLoading, updateWorkout, deleteWorkout } = useCustomWorkouts()
   const [editWorkout, setEditWorkout] = useState<CustomWorkout | null>(null)
-  const [renamingId, setRenamingId]   = useState<string | null>(null)
-  const [renameVal,  setRenameVal]    = useState('')
+  const [search, setSearch] = useState('')
 
   function handleDelete(id: string) {
     deleteWorkout.mutate(id)
@@ -41,6 +40,7 @@ export function CustomWorkoutsPage() {
       name:      workoutName ?? editWorkout.name,
       mode,
       minutes,
+      equipment: editWorkout.equipment,
       exercises: exercises ?? kraftConfig?.exercises ?? [],
       restBetweenSets:      kraftConfig?.restBetweenSets,
       restBetweenExercises: kraftConfig?.restBetweenExercises,
@@ -53,14 +53,17 @@ export function CustomWorkoutsPage() {
     setEditWorkout(null)
   }
 
-  function commitRename(id: string) {
-    const val = renameVal.trim()
-    if (val) {
-      const w = workouts.find((x) => x.id === id)
-      if (w) updateWorkout.mutate({ ...w, name: val })
-    }
-    setRenamingId(null)
-  }
+  const query = search.trim().toLowerCase()
+  const visible = query
+    ? workouts.filter((w) => {
+        const hay = [
+          w.name,
+          ...(w.equipment ?? []),
+          ...w.exercises.map((e) => e.name),
+        ].join(' ').toLowerCase()
+        return hay.includes(query)
+      })
+    : workouts
 
   return (
     <div className="min-h-svh bg-[var(--color-bg)] px-4 pt-4 pb-24 max-w-lg mx-auto">
@@ -82,6 +85,21 @@ export function CustomWorkoutsPage() {
         </span>
       </div>
 
+      {workouts.length > 0 && (
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Name oder Equipment"
+          className="w-full mb-3 rounded-xl px-3 py-2.5 text-sm outline-none"
+          style={{
+            backgroundColor: 'var(--color-bg-card)',
+            color: 'var(--color-text)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        />
+      )}
+
       {isLoading ? (
         <div className="flex justify-center py-16">
           <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Lädt…</span>
@@ -93,81 +111,61 @@ export function CustomWorkoutsPage() {
             Noch keine eigenen Workouts. Erstelle eines über "+ Neu" auf der Workout-Seite.
           </p>
         </div>
+      ) : visible.length === 0 ? (
+        <p className="text-sm py-10 text-center" style={{ color: 'var(--color-text-muted)' }}>
+          Kein Treffer für „{search.trim()}“
+        </p>
       ) : (
-        <div className="space-y-2.5">
-          {workouts.map((w) => (
-            <div
-              key={w.id}
-              className="rounded-xl px-3 py-3"
-              style={{ backgroundColor: 'var(--color-bg-card)' }}
-            >
-              {/* Name row */}
-              <div className="flex items-center gap-2 mb-2">
-                {renamingId === w.id ? (
-                  <input
-                    autoFocus
-                    value={renameVal}
-                    onChange={(e) => setRenameVal(e.target.value)}
-                    onBlur={() => commitRename(w.id)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') commitRename(w.id); if (e.key === 'Escape') setRenamingId(null) }}
-                    className="flex-1 bg-transparent text-sm font-medium outline-none border-b"
-                    style={{ color: 'var(--color-text)', borderColor: '#E8642A' }}
-                  />
-                ) : (
-                  <p className="flex-1 text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>
+        <div className="space-y-1.5">
+          {visible.map((w) => {
+            const meta = [
+              MODE_LABELS[w.mode] ?? w.mode,
+              w.minutes > 0 ? `${w.minutes} min` : '',
+              w.exercises.length > 0 ? `${w.exercises.length} Übungen` : '',
+            ].filter(Boolean).join(' · ')
+            return (
+              <div
+                key={w.id}
+                className="flex items-center gap-2 rounded-xl px-3 py-2"
+                style={{ backgroundColor: 'var(--color-bg-card)' }}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>
                     {w.name}
                   </p>
-                )}
-                <span
-                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: '#E8642A20', color: '#E8642A' }}
-                >
-                  {MODE_LABELS[w.mode] ?? w.mode.toUpperCase()}
-                </span>
+                  <p className="text-[11px] truncate" style={{ color: 'var(--color-text-muted)' }}>
+                    {meta}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => handleStart(w)}
+                    className="w-8 h-8 rounded-lg text-xs font-bold text-white"
+                    style={{ backgroundColor: '#E8642A' }}
+                    aria-label="Start"
+                  >
+                    ▶
+                  </button>
+                  <button
+                    onClick={() => setEditWorkout(w)}
+                    className="w-8 h-8 rounded-lg text-xs font-semibold"
+                    style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
+                    aria-label="Bearbeiten"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    onClick={() => handleDelete(w.id)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg text-xs"
+                    style={{ color: '#ef4444' }}
+                    aria-label="Löschen"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
-
-              {/* Subtitle */}
-              <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
-                {w.minutes > 0 ? `${w.minutes} min` : ''}
-                {w.exercises.length > 0 ? ` · ${w.exercises.length} Übungen` : ''}
-                {w.tabataWork ? ` · ${w.tabataWork}s/${w.tabataRest}s×${w.tabataRounds}` : ''}
-                {w.emomInterval ? ` · ${w.emomInterval}min×${w.emomRounds}` : ''}
-              </p>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleStart(w)}
-                  className="flex-1 py-2 rounded-lg text-xs font-bold text-white"
-                  style={{ backgroundColor: '#E8642A' }}
-                >
-                  ▶ Start
-                </button>
-                <button
-                  onClick={() => setEditWorkout(w)}
-                  className="px-3 py-2 rounded-lg text-xs font-semibold"
-                  style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
-                >
-                  ✎ Bearbeiten
-                </button>
-                <button
-                  onClick={() => { setRenamingId(w.id); setRenameVal(w.name) }}
-                  className="px-3 py-2 rounded-lg text-xs font-semibold"
-                  style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
-                >
-                  ✏ Name
-                </button>
-                <button
-                  onClick={() => handleDelete(w.id)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg text-xs flex-shrink-0"
-                  style={{ color: '#ef4444' }}
-                  aria-label="Löschen"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

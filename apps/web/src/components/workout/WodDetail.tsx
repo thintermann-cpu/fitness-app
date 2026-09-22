@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useWod } from '../../hooks/useWods'
 import type { Wod } from '../../hooks/useWods'
 import { useAnalytics } from '../../hooks/useAnalytics'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { WOD_TYPE_TO_MODE } from '../../lib/timerLabels'
+import { splitWodExercises } from '../../lib/wodExercises'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { useCustomWorkouts } from '../../hooks/useCustomWorkouts'
+import { useToast } from '../../hooks/useToast'
 import { TimerView } from './TimerView'
 import { KraftTimerView } from './KraftTimerView'
 import { ScoreInput } from './ScoreInput'
@@ -85,13 +87,14 @@ const WARMUP_ROUTINES: Record<string, WarmupExercise[]> = {
 const RUNNING_KEYWORDS = ['run', 'meter', '400m', '800m', 'mile', '1 km', 'lauf', 'laufen']
 
 function getWarmupRoutine(wod: Wod): WarmupExercise[] {
-  const text = [wod.exercises, wod.description, wod.equipment.join(' ')].join(' ').toLowerCase()
-  const hasLaufen = wod.equipment.some(e => e.toLowerCase() === 'laufen')
+  const equipment = wod.equipment ?? []
+  const text = [wod.exercises, wod.description, equipment.join(' ')].join(' ').toLowerCase()
+  const hasLaufen = equipment.some(e => e.toLowerCase() === 'laufen')
     || RUNNING_KEYWORDS.some(kw => text.includes(kw))
   if (hasLaufen) return WARMUP_ROUTINES.Laufen
-  if (wod.equipment.some(e => /barbell/i.test(e))) return WARMUP_ROUTINES.Barbell
-  if (wod.equipment.some(e => /kettlebell/i.test(e))) return WARMUP_ROUTINES.Kettlebell
-  if (wod.equipment.some(e => /rower|row/i.test(e))) return WARMUP_ROUTINES.Rower
+  if (equipment.some(e => /barbell/i.test(e))) return WARMUP_ROUTINES.Barbell
+  if (equipment.some(e => /kettlebell/i.test(e))) return WARMUP_ROUTINES.Kettlebell
+  if (equipment.some(e => /rower|row/i.test(e))) return WARMUP_ROUTINES.Rower
   return WARMUP_ROUTINES.Default
 }
 
@@ -105,7 +108,8 @@ export function WodDetail({ wodName, onBack }: Props) {
   const { data: wod, isLoading } = useWod(wodName)
   const { personalBest, addEntry } = useWodHistory(wodName)
   const { track } = useAnalytics()
-  const { data: customWorkouts = [] } = useCustomWorkouts()
+  const { data: customWorkouts = [], addWorkout, updateWorkout } = useCustomWorkouts()
+  const toast = useToast()
   const customWorkout = customWorkouts.find((w) => w.name === wodName) ?? null
   const customExercises = (customWorkout && customWorkout.mode !== 'krafttraining')
     ? customWorkout.exercises.filter((e) => Boolean(e.name))
@@ -116,6 +120,16 @@ export function WodDetail({ wodName, onBack }: Props) {
   const [showWarmup, setShowWarmup]         = useState(false)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
+  const [adjustOpen, setAdjustOpen]         = useState(false)
+  const [sessionMinutes, setSessionMinutes] = useState(20)
+  const [sessionLines, setSessionLines]     = useState('')
+
+  useEffect(() => {
+    if (!wod) return
+    setSessionMinutes(wod.estimated_minutes > 0 ? wod.estimated_minutes : 20)
+    setSessionLines(splitWodExercises(wod.exercises).join('\n'))
+    setAdjustOpen(false)
+  }, [wod?.id, wod?.exercises, wod?.estimated_minutes])
 
   if (isLoading) {
     return (
@@ -292,7 +306,38 @@ export function WodDetail({ wodName, onBack }: Props) {
     )
   } // end !wod && customWorkout
 
-  const timerMode = (WOD_TYPE_TO_MODE[wod.type] ?? 'fortime') as 'fortime' | 'amrap' | 'emom' | 'tabata'
+  const catalogWod = wod
+  const timerMode = (WOD_TYPE_TO_MODE[catalogWod.type] ?? 'fortime') as 'fortime' | 'amrap' | 'emom' | 'tabata'
+  const catalogLines = splitWodExercises(catalogWod.exercises)
+  const catalogMinutes = catalogWod.estimated_minutes > 0 ? catalogWod.estimated_minutes : 20
+  const sessionExerciseList = sessionLines.split('\n').map((s) => s.trim()).filter(Boolean)
+  const sessionExercises = sessionExerciseList.map((name, i) => ({ id: `session-${i}`, name }))
+  const isAdjusted =
+    sessionMinutes !== catalogMinutes || sessionLines !== catalogLines.join('\n')
+
+  function saveAsCustom() {
+    const name = `${catalogWod.name} (angepasst)`
+    const existing = customWorkouts.find((w) => w.name === name)
+    const payload = {
+      id: existing?.id ?? crypto.randomUUID(),
+      name,
+      mode: timerMode,
+      minutes: sessionMinutes,
+      exercises: sessionExercises,
+      equipment: catalogWod.equipment ?? [],
+      createdAt: existing?.createdAt ?? new Date().toISOString(),
+    }
+    const mut = existing ? updateWorkout : addWorkout
+    mut.mutate(payload, {
+        onSuccess: () => toast.success(`Bei eigenen Workouts gespeichert: „${name}“`),
+      onError: () => toast.error('Speichern fehlgeschlagen'),
+    })
+  }
+
+  function resetAdjust() {
+    setSessionMinutes(catalogMinutes)
+    setSessionLines(catalogLines.join('\n'))
+  }
 
   return (
     <div className="space-y-5">
@@ -311,8 +356,8 @@ export function WodDetail({ wodName, onBack }: Props) {
               {getWodTypeLabel(wod.type, lang)}
             </span>
             <span className="text-xs text-[var(--color-text-muted)]">{wod.category}</span>
-            {wod.estimated_minutes > 0 && (
-              <span className="text-xs text-[var(--color-text-muted)]">~{wod.estimated_minutes} min</span>
+            {sessionMinutes > 0 && (
+              <span className="text-xs text-[var(--color-text-muted)]">~{sessionMinutes} min</span>
             )}
           </div>
         </div>
@@ -323,14 +368,104 @@ export function WodDetail({ wodName, onBack }: Props) {
       <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-md)] p-4 space-y-3">
         <p className="text-[var(--color-text)] text-sm leading-relaxed">{wod.description}</p>
 
-        {wod.exercises && (
-          <div>
-            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
-              Exercises
-            </p>
-            <p className="text-sm text-[var(--color-text)]">{wod.exercises}</p>
+        <div>
+          <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+            Übungen
+          </p>
+          {adjustOpen ? (
+            <textarea
+              value={sessionLines}
+              onChange={(e) => setSessionLines(e.target.value)}
+              rows={Math.min(10, Math.max(4, sessionExerciseList.length + 1))}
+              placeholder="Eine Übung pro Zeile"
+              className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+              style={{
+                backgroundColor: 'var(--color-bg)',
+                color: 'var(--color-text)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                resize: 'vertical',
+              }}
+            />
+          ) : sessionExerciseList.length > 0 ? (
+            <ol className="space-y-1">
+              {sessionExerciseList.map((line, i) => (
+                <li key={`${i}-${line}`} className="flex items-start gap-2 text-sm">
+                  <span className="text-xs text-[var(--color-text-muted)] w-5 shrink-0 mt-0.5">{i + 1}.</span>
+                  <span className="text-[var(--color-text)]">{line}</span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Keine Übungen hinterlegt</p>
+          )}
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
+            Dauer
+          </p>
+          {adjustOpen ? (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSessionMinutes((m) => Math.max(1, m - 1))}
+                className="w-9 h-9 rounded-xl text-lg font-semibold"
+                style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid rgba(255,255,255,0.08)' }}
+                aria-label="Dauer minus"
+              >
+                −
+              </button>
+              <span className="text-sm font-semibold text-[var(--color-text)] tabular-nums w-16 text-center">
+                {sessionMinutes} min
+              </span>
+              <button
+                type="button"
+                onClick={() => setSessionMinutes((m) => Math.min(180, m + 1))}
+                className="w-9 h-9 rounded-xl text-lg font-semibold"
+                style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid rgba(255,255,255,0.08)' }}
+                aria-label="Dauer plus"
+              >
+                +
+              </button>
+              {isAdjusted && (
+                <button
+                  type="button"
+                  onClick={resetAdjust}
+                  className="text-xs font-semibold ml-auto"
+                  style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  Zurücksetzen
+                </button>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm font-semibold text-[var(--color-text)] tabular-nums">{sessionMinutes} min</p>
+          )}
+          <div className="flex gap-2 mt-3">
+            <button
+              type="button"
+              onClick={() => setAdjustOpen((v) => !v)}
+              className="flex-1 text-xs font-semibold px-3 py-2 rounded-xl"
+              style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid rgba(255,255,255,0.08)' }}
+            >
+              {adjustOpen ? 'Fertig' : 'Temporär anpassen'}
+            </button>
+            <button
+              type="button"
+              onClick={saveAsCustom}
+              disabled={addWorkout.isPending || updateWorkout.isPending}
+              className="flex-1 text-xs font-semibold px-3 py-2 rounded-xl"
+              style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: 'none', cursor: 'pointer' }}
+            >
+              {addWorkout.isPending || updateWorkout.isPending ? 'Speichert…' : 'Bei eigenen speichern'}
+            </button>
           </div>
-        )}
+          {adjustOpen && (
+            <p className="text-xs mt-2" style={{ color: 'var(--color-text-muted)' }}>
+              Timer nutzt {sessionMinutes} min — nur diese Session, Katalog bleibt unverändert.
+            </p>
+          )}
+        </div>
 
         {wod.reps && (
           <div>
@@ -350,26 +485,6 @@ export function WodDetail({ wodName, onBack }: Props) {
           </div>
         )}
 
-        {customExercises.length > 0 && (
-          <div>
-            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
-              Übungen
-            </p>
-            <div className="space-y-1">
-              {customExercises.map((ex, i) => (
-                <div key={ex.id} className="flex items-center gap-2 text-sm">
-                  <span className="text-xs text-[var(--color-text-muted)] w-5 flex-shrink-0">{i + 1}.</span>
-                  <span className="text-[var(--color-text)] flex-1">{ex.name}</span>
-                  {(ex.sets || ex.rep_count) && (
-                    <span className="text-xs text-[var(--color-text-muted)]">
-                      {ex.sets ?? 3}×{ex.rep_count ?? 8}{ex.weight_level ? ` · ${ex.weight_level}` : ''}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
         {customWorkout?.tabataRounds && (
           <div>
             <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">Tabata</p>
@@ -388,13 +503,13 @@ export function WodDetail({ wodName, onBack }: Props) {
         )}
 
         {/* Equipment */}
-        {wod.equipment.length > 0 && (
+        {(wod.equipment ?? []).length > 0 && (
           <div>
             <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
               Equipment
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {wod.equipment.map((eq) => {
+              {(wod.equipment ?? []).map((eq) => {
                 const eqColor = EQUIPMENT_COLORS[eq]
                 return (
                   <span
@@ -544,13 +659,24 @@ export function WodDetail({ wodName, onBack }: Props) {
       {showTimer && (
         <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
           <TimerView
+            key={`${sessionMinutes}-${sessionExerciseList.join('|')}`}
             initialMode={timerMode}
-            initialMinutes={wod.estimated_minutes || 20}
+            initialMinutes={sessionMinutes}
+            {...(timerMode === 'emom'
+              ? { initialEmomInterval: 1, initialEmomRounds: Math.max(1, sessionMinutes) }
+              : {})}
+            {...(timerMode === 'tabata'
+              ? {
+                  initialTabataWork: 20,
+                  initialTabataRest: 10,
+                  initialTabataRounds: Math.max(1, Math.round((sessionMinutes * 60) / 30)),
+                }
+              : {})}
             adHocLog
-            workoutName={wod.name}
-            exercises={customExercises.length > 0 ? customExercises : undefined}
+            workoutName={catalogWod.name}
+            exercises={sessionExercises.length > 0 ? sessionExercises : (customExercises.length > 0 ? customExercises : undefined)}
             onComplete={() => {
-              track('workout_completed', { wod_id: wod.id, duration_min: wod.estimated_minutes, category: wod.category })
+              track('workout_completed', { wod_id: catalogWod.id, duration_min: sessionMinutes, category: catalogWod.category })
               window.dispatchEvent(new CustomEvent('carveout:workout-completed'))
             }}
           />

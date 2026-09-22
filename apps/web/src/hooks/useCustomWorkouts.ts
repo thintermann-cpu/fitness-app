@@ -13,29 +13,37 @@ interface DbRow {
   user_id: string
   name: string
   mode: string
-  config: Record<string, number>
+  config: Record<string, number | string[] | undefined>
   exercises: CustomWorkout['exercises']
   with_warmup: boolean
   created_at: string
   updated_at: string
 }
 
+function num(v: number | string[] | undefined): number | undefined {
+  return typeof v === 'number' ? v : undefined
+}
+
 function dbToWorkout(row: DbRow): CustomWorkout {
   const cfg = row.config ?? {}
+  const equipment = Array.isArray(cfg.equipment)
+    ? cfg.equipment.filter((x): x is string => typeof x === 'string')
+    : undefined
   return {
     id:                   row.id,
     name:                 row.name,
     mode:                 row.mode as CustomWorkout['mode'],
-    minutes:              cfg.minutes ?? 0,
+    minutes:              num(cfg.minutes) ?? 0,
     exercises:            row.exercises ?? [],
     createdAt:            row.created_at,
-    restBetweenSets:      cfg.restBetweenSets,
-    restBetweenExercises: cfg.restBetweenExercises,
-    tabataWork:           cfg.tabataWork,
-    tabataRest:           cfg.tabataRest,
-    tabataRounds:         cfg.tabataRounds,
-    emomInterval:         cfg.emomInterval,
-    emomRounds:           cfg.emomRounds,
+    restBetweenSets:      num(cfg.restBetweenSets),
+    restBetweenExercises: num(cfg.restBetweenExercises),
+    tabataWork:           num(cfg.tabataWork),
+    tabataRest:           num(cfg.tabataRest),
+    tabataRounds:         num(cfg.tabataRounds),
+    emomInterval:         num(cfg.emomInterval),
+    emomRounds:           num(cfg.emomRounds),
+    equipment,
   }
 }
 
@@ -54,6 +62,7 @@ function workoutToDb(w: CustomWorkout, userId: string) {
       tabataRounds:         w.tabataRounds,
       emomInterval:         w.emomInterval,
       emomRounds:           w.emomRounds,
+      equipment:            w.equipment,
     },
     exercises:   w.exercises,
     with_warmup: false,

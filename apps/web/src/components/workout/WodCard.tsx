@@ -29,14 +29,16 @@ export function WodCard({ wod, onClick }: Props) {
   const label   = getWodTypeLabel(wod.type, lang)
 
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left rounded-[var(--radius-md)] bg-[var(--color-bg-card)] border border-white/5 p-4 active:scale-[0.98] transition-transform"
-    >
+    <div className="w-full rounded-[var(--radius-md)] bg-[var(--color-bg-card)] border border-white/5 p-4">
       <div className="flex items-start gap-2">
-        <span className="font-semibold text-[var(--color-text)] text-base leading-tight flex-1 min-w-0">
-          {wod.name}
-        </span>
+        <button
+          onClick={onClick}
+          className="flex-1 min-w-0 text-left active:scale-[0.98] transition-transform"
+        >
+          <span className="font-semibold text-[var(--color-text)] text-base leading-tight">
+            {wod.name}
+          </span>
+        </button>
         <div className="flex items-center gap-0.5 shrink-0">
           {wod.is_editors_pick && (
             <span className="text-[11px] leading-none" title="Editor's Pick">⭐</span>
@@ -51,30 +53,32 @@ export function WodCard({ wod, onClick }: Props) {
         </div>
       </div>
 
-      <p className="mt-1 text-sm text-[var(--color-text-muted)] line-clamp-1">
-        {wod.exercises}
-      </p>
+      <button onClick={onClick} className="w-full text-left">
+        <p className="mt-1 text-sm text-[var(--color-text-muted)] line-clamp-1">
+          {wod.exercises}
+        </p>
 
-      <div className="mt-3 flex items-center gap-3">
-        <div className="flex gap-1">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <span
-              key={i}
-              className={`w-2 h-2 rounded-full ${i < dots ? 'bg-[#E8642A]' : 'bg-white/15'}`}
-            />
-          ))}
+        <div className="mt-3 flex items-center gap-3">
+          <div className="flex gap-1">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <span
+                key={i}
+                className={`w-2 h-2 rounded-full ${i < dots ? 'bg-[#E8642A]' : 'bg-white/15'}`}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-[var(--color-text-subtle)]">{wod.difficulty}</span>
+          {wod.estimated_minutes > 0 && (
+            <>
+              <span className="text-[var(--color-text-subtle)] text-xs">·</span>
+              <span className="text-xs text-[var(--color-text-subtle)]">~{wod.estimated_minutes} min</span>
+            </>
+          )}
+          <span className="ml-auto text-xs text-[var(--color-text-subtle)] truncate max-w-[100px]">
+            {wod.category}
+          </span>
         </div>
-        <span className="text-xs text-[var(--color-text-subtle)]">{wod.difficulty}</span>
-        {wod.estimated_minutes > 0 && (
-          <>
-            <span className="text-[var(--color-text-subtle)] text-xs">·</span>
-            <span className="text-xs text-[var(--color-text-subtle)]">~{wod.estimated_minutes} min</span>
-          </>
-        )}
-        <span className="ml-auto text-xs text-[var(--color-text-subtle)] truncate max-w-[100px]">
-          {wod.category}
-        </span>
-      </div>
-    </button>
+      </button>
+    </div>
   )
 }

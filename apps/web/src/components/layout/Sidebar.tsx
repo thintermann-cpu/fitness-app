@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { path: '/routine',    icon: '📋', key: 'routine',    color: '#4A90D9', pillarId: 'routine'  },
   { path: '/workout',    icon: '💪', key: 'workout',    color: '#E8642A', pillarId: 'workout'  },
   { path: '/stretching', icon: '🧘', key: 'stretching', color: '#7BC67E', pillarId: 'stretching' },
-  { path: '/meditation', icon: '🧠', key: 'meditation', color: '#9B7FD4', pillarId: 'meditation' },
+  { path: '/meditation', icon: '🧘', key: 'meditation', color: '#9B7FD4', pillarId: 'meditation' },
 ] as const
 
 const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
@@ -121,9 +121,13 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* Footer: user info + settings */}
+      {/* Footer: user info + settings — one link, no nested <a> */}
       <div className="px-3 py-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-        <Link to="/profile" className="flex items-center gap-3 px-3 py-2 rounded-xl flex-1 min-w-0" style={{ textDecoration: 'none' }}>
+        <Link
+          to="/settings"
+          className="flex items-center gap-3 px-3 py-2 rounded-xl"
+          style={{ textDecoration: 'none' }}
+        >
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
             style={{ backgroundColor: '#E8642A20', color: '#E8642A' }}
@@ -136,17 +140,13 @@ export function Sidebar() {
           >
             {profile?.display_name ?? 'Profil'}
           </span>
-          <Link
-            to="/settings"
-            className="flex-shrink-0 transition-colors"
-            style={{
-              color: pathname === '/settings' ? '#E8642A' : 'var(--color-text-muted)',
-            }}
-            title="Settings"
-            onClick={e => e.stopPropagation()}
+          <span
+            className="flex-shrink-0 text-base leading-none"
+            style={{ color: pathname === '/settings' ? '#E8642A' : 'var(--color-text-muted)' }}
+            aria-hidden
           >
-            <span className="text-base leading-none">⚙️</span>
-          </Link>
+            ⚙️
+          </span>
         </Link>
       </div>
     </aside>
