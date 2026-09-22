@@ -42,6 +42,9 @@ interface Props {
   onClose: () => void
   /** 'save' = incl. name field + localStorage save; 'adhoc' = no save, adds warmup step */
   variant?: 'save' | 'adhoc'
+  title?: string
+  /** Open on this step. 1 skips mode when the workout is already known. */
+  initialStep?: number
   initialValues?: WizardInitialValues
   onStart: (mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerConfig?: TimerInitConfig) => void
   onSaveOnly?: (mode: TimerMode, minutes: number, kraftConfig: KraftConfig | undefined, exercises: WizardExercise[] | undefined, workoutName: string, timerConfig?: TimerInitConfig) => void
@@ -72,10 +75,10 @@ function MiniStepper({
   )
 }
 
-export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValues, onStart, onSaveOnly }: Props) {
+export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, initialStep = 0, initialValues, onStart, onSaveOnly }: Props) {
   const isAdhoc   = variant === 'adhoc'
 
-  const [step,      setStep]      = useState(0)
+  const [step,      setStep]      = useState(initialStep)
   const [mode,      setMode]      = useState<TimerMode>(() => initialValues?.mode ?? 'fortime')
   const [exercises, setExercises] = useState<WizardExercise[]>(() => initialValues?.exercises ?? [])
   const [scheme, setScheme] = useState(() => initialValues?.scheme ?? '')
@@ -100,7 +103,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
   const stepCount = isKraft ? 3 : 4
 
   const reset = () => {
-    setStep(0); setMode('fortime'); setExercises([]); setScheme('')
+    setStep(initialStep); setMode(initialValues?.mode ?? 'fortime'); setExercises(initialValues?.exercises ?? []); setScheme(initialValues?.scheme ?? '')
     setMinutes(20); setName(''); setWarmup(null)
     setRestBetweenSets(90); setRestBetweenExercises(60)
     setTabataWork(20); setTabataRest(10); setTabataRounds(8)
@@ -122,8 +125,8 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
       cfg.emomInterval = emomInterval
       cfg.emomRounds = emomRounds
     }
-    if (scheme.trim()) cfg.scheme = scheme.trim()
-    return Object.keys(cfg).length > 0 ? cfg : undefined
+    cfg.scheme = scheme.trim() || undefined
+    return cfg
   }
 
   const handleNext = () => {
@@ -142,7 +145,9 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
       minutes
     const w          = warmup ?? false
     const exs        = isKraft ? undefined : (exercises.length > 0 ? exercises : undefined)
-    const savedName  = !isAdhoc && name.trim() ? name.trim() : undefined
+    const savedName  = !isAdhoc && name.trim()
+      ? name.trim()
+      : (initialValues?.name?.trim() || undefined)
     reset()
     onClose()
     onStart(m, min, w, kraftCfg, exs, savedName, timerCfg)
@@ -190,7 +195,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
     <WizardShell
       isOpen={isOpen}
       onClose={handleClose}
-      title={isAdhoc ? 'Ad-hoc Timer' : 'Eigenes Workout'}
+      title={title ?? (isAdhoc ? 'Ad-hoc Timer' : 'Eigenes Workout')}
       stepCount={stepCount}
       currentStep={step}
       onBack={() => setStep((s) => s - 1)}

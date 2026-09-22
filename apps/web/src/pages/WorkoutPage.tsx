@@ -9,7 +9,7 @@ import { WodDetail } from '../components/workout/WodDetail'
 import { TimerView } from '../components/workout/TimerView'
 import { KraftTimerView } from '../components/workout/KraftTimerView'
 import { WodHistoryList } from '../components/workout/WodHistoryList'
-import { FreeTimerWizard, type KraftConfig, type TimerInitConfig } from '../components/workout/FreeTimerWizard'
+import { FreeTimerWizard, type KraftConfig, type TimerInitConfig, type WizardInitialValues } from '../components/workout/FreeTimerWizard'
 import { WarmupTimer } from '../components/workout/WarmupTimer'
 import { WorkoutCountdown } from '../components/shared/WorkoutCountdown'
 import { useCustomWorkouts } from '../hooks/useCustomWorkouts'
@@ -60,6 +60,8 @@ export function WorkoutPage() {
   const [tab, setTab]                     = useState<Tab>('wods')
   const [location, setLocation]           = useState<WorkoutLocation | null>(getSavedLocation())
   const [wizardOpen, setWizardOpen]       = useState(false)
+  const [adhocPreset, setAdhocPreset]     = useState<WizardInitialValues | null>(null)
+  const [adhocKey, setAdhocKey]           = useState(0)
   const [adhocOpen, setAdhocOpen]         = useState(false)
   const [showAllEquipment, setShowAllEquipment] = useState(false)
   const [equipmentSpecified, setEquipmentSpecified] = useState(false)
@@ -130,27 +132,30 @@ export function WorkoutPage() {
     })
   }
 
-  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], _workoutName?: string, timerCfg?: TimerInitConfig) {
-    setTimerConfig({ mode, minutes, kraftConfig, exercises, adHocLog: true, ...timerCfg })
+  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
+    setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, adHocLog: true, ...timerCfg })
     setTimerKey((k) => k + 1)
     setTab('timer')
     if (withWarmup) setShowWarmupTimer(true)
   }
 
   function handleStartSaved(w: CustomWorkout) {
-    const kraftConfig: KraftConfig | undefined = w.mode === 'krafttraining'
-      ? { exercises: w.exercises, restBetweenSets: w.restBetweenSets ?? 90, restBetweenExercises: w.restBetweenExercises ?? 60 }
-      : undefined
-    setTimerConfig({
-      mode: w.mode, minutes: w.minutes, kraftConfig, workoutName: w.name,
-      adHocLog: true,
-      exercises: w.mode !== 'krafttraining' ? w.exercises : undefined,
-      tabataWork: w.tabataWork, tabataRest: w.tabataRest, tabataRounds: w.tabataRounds,
-      emomInterval: w.emomInterval, emomRounds: w.emomRounds,
+    setAdhocPreset({
+      name: w.name,
+      mode: w.mode,
+      minutes: w.minutes,
+      exercises: w.exercises,
       scheme: w.scheme,
+      restBetweenSets: w.restBetweenSets,
+      restBetweenExercises: w.restBetweenExercises,
+      tabataWork: w.tabataWork,
+      tabataRest: w.tabataRest,
+      tabataRounds: w.tabataRounds,
+      emomInterval: w.emomInterval,
+      emomRounds: w.emomRounds,
     })
-    setTimerKey((k) => k + 1)
-    setShowWarmupTimer(true)
+    setAdhocKey((key) => key + 1)
+    setAdhocOpen(true)
     setTab('timer')
   }
 
@@ -331,7 +336,7 @@ export function WorkoutPage() {
                   Wähle Modus, Dauer und optionale Übungen für deinen Timer.
                 </p>
                 <button
-                  onClick={() => setAdhocOpen(true)}
+                  onClick={() => { setAdhocPreset(null); setAdhocKey((key) => key + 1); setAdhocOpen(true) }}
                   className="px-8 py-3.5 rounded-2xl font-bold text-base"
                   style={{ backgroundColor: '#E8642A', color: 'white' }}
                 >
@@ -352,10 +357,14 @@ export function WorkoutPage() {
         variant="save"
       />
       <FreeTimerWizard
+        key={adhocKey}
         isOpen={adhocOpen}
-        onClose={() => setAdhocOpen(false)}
+        onClose={() => { setAdhocOpen(false); setAdhocPreset(null) }}
         onStart={handleAdhocStart}
         variant="adhoc"
+        title={adhocPreset?.name}
+        initialStep={adhocPreset ? 1 : 0}
+        initialValues={adhocPreset ?? undefined}
       />
       <WarmupTimer
         isOpen={showWarmupTimer}
