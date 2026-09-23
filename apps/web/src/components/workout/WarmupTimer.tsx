@@ -7,14 +7,35 @@ const REST_SEC = 4
 const RING_RADIUS = 70
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 
-const DEFAULT_EXERCISES = [
-  { name: 'Jumping Jacks', desc: 'Arme und Beine gleichzeitig spreizen',       sek: 40 },
-  { name: 'High Knees',    desc: 'Knie hoch ziehen, schnelles Tempo',           sek: 40 },
-  { name: 'Burpees',       desc: 'Langsam und kontrolliert – Körper aufwärmen', sek: 40 },
-  { name: 'Leg Swings',    desc: 'Bein vor und zurück schwingen, je Seite',     sek: 30 },
-  { name: 'Arm Circles',   desc: 'Große Kreise mit beiden Armen',               sek: 30 },
-  { name: 'Air Squats',    desc: 'Tief in die Knie, Brust hoch',                sek: 40 },
-]
+export type WarmupRoutineId = 'short' | 'standard'
+
+interface WarmupExercise { name: string; desc: string; sek: number }
+
+export const WARMUP_SESSIONS: Record<WarmupRoutineId, { label: string; minutes: string; exercises: WarmupExercise[] }> = {
+  short: {
+    label: 'Kurz',
+    minutes: '3 min',
+    exercises: [
+      { name: 'Armkreisen',     desc: 'Große Kreise mit beiden Armen',              sek: 30 },
+      { name: 'Inchworms',      desc: 'Hände zum Boden, in die Plank laufen und zurück', sek: 30 },
+      { name: 'Ausfallschritte', desc: 'Im Wechsel, locker',                          sek: 30 },
+      { name: 'Jumping Jacks',  desc: 'Arme und Beine gleichzeitig spreizen',        sek: 30 },
+      { name: 'Liegestütze',    desc: 'Locker, Knie sind erlaubt',                   sek: 30 },
+    ],
+  },
+  standard: {
+    label: 'Standard',
+    minutes: '4 min',
+    exercises: [
+      { name: 'Jumping Jacks', desc: 'Arme und Beine gleichzeitig spreizen',       sek: 40 },
+      { name: 'High Knees',    desc: 'Knie hoch ziehen, schnelles Tempo',           sek: 40 },
+      { name: 'Burpees',       desc: 'Langsam und kontrolliert – Körper aufwärmen', sek: 40 },
+      { name: 'Leg Swings',    desc: 'Bein vor und zurück schwingen, je Seite',     sek: 30 },
+      { name: 'Arm Circles',   desc: 'Große Kreise mit beiden Armen',               sek: 30 },
+      { name: 'Air Squats',    desc: 'Tief in die Knie, Brust hoch',                sek: 40 },
+    ],
+  },
+}
 
 type Phase = 'idle' | 'exercise' | 'rest' | 'done'
 
@@ -22,15 +43,29 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   onStartWorkout?: () => void
+  routine?: WarmupRoutineId
 }
 
-export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
+export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standard' }: Props) {
+  const [routineId, setRoutineId] = useState<WarmupRoutineId>(routine)
+  const exercises = WARMUP_SESSIONS[routineId].exercises
   const [phase, setPhase]           = useState<Phase>('idle')
   const [showCountdown, setShowCountdown] = useState(false)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [timeLeft, setTimeLeft]     = useState(0)
   const [paused, setPaused]         = useState(false)
-  const [done, setDone]             = useState<boolean[]>(() => new Array(DEFAULT_EXERCISES.length).fill(false))
+  const [done, setDone]             = useState<boolean[]>(() => new Array(WARMUP_SESSIONS[routine].exercises.length).fill(false))
+
+  useEffect(() => {
+    if (!isOpen) return
+    setRoutineId(routine)
+    setPhase('idle')
+    setCurrentIdx(0)
+    setTimeLeft(0)
+    setPaused(false)
+    setShowCountdown(false)
+    setDone(new Array(WARMUP_SESSIONS[routine].exercises.length).fill(false))
+  }, [isOpen, routine])
 
   const audio    = useAudio()
   const addToast = useToastStore((s) => s.addToast)
@@ -51,7 +86,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
     return () => { wakeLockRef.current?.release().catch(() => {}); wakeLockRef.current = null }
   }, [isTimerActive])
 
-  const current      = DEFAULT_EXERCISES[currentIdx]
+  const current      = exercises[currentIdx]
   const phaseTotal   = phase === 'rest' ? REST_SEC : (current?.sek ?? 0)
   const progress     = phaseTotal > 0 ? timeLeft / phaseTotal : 1
   const dashOffset   = CIRCUMFERENCE * (1 - progress)
@@ -59,9 +94,9 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
 
   function startFirst() {
     setCurrentIdx(0)
-    setDone(new Array(DEFAULT_EXERCISES.length).fill(false))
+    setDone(new Array(exercises.length).fill(false))
     setPhase('exercise')
-    setTimeLeft(DEFAULT_EXERCISES[0].sek)
+    setTimeLeft(exercises[0].sek)
     setPaused(false)
     void audio.playGong()
   }
@@ -71,12 +106,18 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
     setCurrentIdx(0)
     setTimeLeft(0)
     setPaused(false)
-    setDone(new Array(DEFAULT_EXERCISES.length).fill(false))
+    setDone(new Array(exercises.length).fill(false))
   }
 
   function handleClose() {
     resetToIdle()
     onClose()
+  }
+
+  function selectRoutine(id: WarmupRoutineId) {
+    setRoutineId(id)
+    setCurrentIdx(0)
+    setDone(new Array(WARMUP_SESSIONS[id].exercises.length).fill(false))
   }
 
   // Countdown beep last 3 seconds of exercise
@@ -94,7 +135,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
 
       if (phase === 'exercise') {
         setDone((d) => { const n = [...d]; n[currentIdx] = true; return n })
-        if (currentIdx < DEFAULT_EXERCISES.length - 1) {
+        if (currentIdx < exercises.length - 1) {
           void audio.playBeep()
           setPhase('rest')
           setTimeLeft(REST_SEC)
@@ -109,7 +150,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
         const next = currentIdx + 1
         setCurrentIdx(next)
         setPhase('exercise')
-        setTimeLeft(DEFAULT_EXERCISES[next].sek)
+        setTimeLeft(exercises[next].sek)
       }
       return
     }
@@ -167,6 +208,26 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
         {/* ── Idle / start screen ── */}
         {phase === 'idle' && (
           <div className="flex flex-col gap-4 flex-1">
+            <div className="flex gap-2">
+              {(Object.keys(WARMUP_SESSIONS) as WarmupRoutineId[]).map((id) => {
+                const active = routineId === id
+                const session = WARMUP_SESSIONS[id]
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => selectRoutine(id)}
+                    className="flex-1 py-2 rounded-xl text-sm font-semibold"
+                    style={{
+                      backgroundColor: active ? '#E8642A' : 'var(--color-bg-card)',
+                      color: active ? 'white' : 'var(--color-text-muted)',
+                    }}
+                  >
+                    {session.label} · {session.minutes}
+                  </button>
+                )
+              })}
+            </div>
             <div className="rounded-xl px-3 py-2.5" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
               <p
                 className="text-[10px] font-semibold uppercase tracking-wider mb-2"
@@ -175,7 +236,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
                 Übungen
               </p>
               <div className="space-y-1.5">
-                {DEFAULT_EXERCISES.map((ex) => (
+                {exercises.map((ex) => (
                   <div key={ex.name} className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <span className="text-xs font-medium" style={{ color: 'var(--color-text)' }}>{ex.name}</span>
@@ -201,7 +262,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
           <div className="flex flex-col items-center gap-4 flex-1">
             {/* Progress dots */}
             <div className="flex gap-1.5">
-              {DEFAULT_EXERCISES.map((_, i) => (
+              {exercises.map((_, i) => (
                 <div
                   key={i}
                   className="w-1.5 h-1.5 rounded-full transition-colors"
@@ -250,7 +311,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
               <div className="text-center">
                 <p className="text-sm font-semibold" style={{ color: '#60A5FA' }}>Kurze Pause</p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                  Nächste: {DEFAULT_EXERCISES[currentIdx + 1]?.name}
+                  Nächste: {exercises[currentIdx + 1]?.name}
                 </p>
               </div>
             ) : (
@@ -261,20 +322,20 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout }: Props) {
             )}
 
             {/* Next preview — last 10s */}
-            {phase === 'exercise' && timeLeft <= 10 && currentIdx < DEFAULT_EXERCISES.length - 1 && (
+            {phase === 'exercise' && timeLeft <= 10 && currentIdx < exercises.length - 1 && (
               <div
                 className="rounded-lg px-3 py-2 w-full text-center"
                 style={{ backgroundColor: 'rgba(232,100,42,0.1)', border: '1px solid rgba(232,100,42,0.2)' }}
               >
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'rgba(232,100,42,0.6)' }}>Nächste</p>
-                <p className="text-xs font-medium" style={{ color: '#E8642A' }}>{DEFAULT_EXERCISES[currentIdx + 1].name}</p>
+                <p className="text-xs font-medium" style={{ color: '#E8642A' }}>{exercises[currentIdx + 1].name}</p>
               </div>
             )}
 
             {/* Exercise list with checkmarks */}
             <div className="w-full rounded-xl px-3 py-2" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
               <div className="space-y-0.5">
-                {DEFAULT_EXERCISES.map((ex, i) => (
+                {exercises.map((ex, i) => (
                   <div
                     key={ex.name}
                     className="flex items-center gap-2 px-1 py-1 rounded-lg transition-colors"

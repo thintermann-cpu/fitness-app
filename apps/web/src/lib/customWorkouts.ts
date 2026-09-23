@@ -22,6 +22,8 @@ export interface CustomWorkout {
   emomInterval?: number
   emomRounds?: number
   equipment?: string[]
+  /** Shared prescription, e.g. "3 Runden · 21-15-9". */
+  scheme?: string
 }
 
 export interface CustomSession {

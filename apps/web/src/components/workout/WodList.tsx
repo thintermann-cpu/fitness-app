@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { useWods, pickRandomWod, type Wod } from '../../hooks/useWods'
+import {
+  equipmentById,
+  parseWorkoutSearch,
+  stripEquipmentTokens,
+  type EquipmentCount,
+} from '../../lib/exerciseCatalog'
 import { useToast } from '../../hooks/useToast'
 import { FilterBottomSheet } from '../ui/FilterBottomSheet'
 import { WodCard } from './WodCard'
@@ -44,19 +50,58 @@ const MIN_DUR_OPTIONS = [0, 5, 10, 15, 20]
 const MAX_DUR_OPTIONS = [0, 10, 15, 20, 30, 45]
 
 const SEARCH_KEY = 'wod_search'
+const COUNT_KEY = 'wod_equipment_count'
+const COUNT_OPTIONS: { id: EquipmentCount; label: string }[] = [
+  { id: 'any', label: 'Beliebig' },
+  { id: '1', label: '1' },
+  { id: '2', label: '2' },
+  { id: '3', label: '3' },
+  { id: 'more', label: 'Mehr' },
+]
+
+function equipmentHint(count: EquipmentCount, gear: string): string {
+  if (count === 'any') return gear ? `${gear} · weitere Geräte offen` : ''
+  if (count === '1') return gear ? `nur ${gear}` : 'genau 1 Gerät'
+  if (count === 'more') return gear ? `${gear} · 4 oder mehr Geräte` : '4 oder mehr Geräte'
+  return gear ? `${gear} · genau ${count} Geräte` : `genau ${count} Geräte`
+}
+
+function readCount(): EquipmentCount {
+  const v = sessionStorage.getItem(COUNT_KEY)
+  if (v === '1' || v === '2' || v === '3' || v === 'more' || v === 'any') return v
+  return 'any'
+}
 
 interface Props {
   onSelectWod: (wodName: string) => void
   equipmentFilter?: string[]
   userEquipment?: string[]
   silentMode?: boolean
+  /** Bumped when a location tile should clear the equipment search. */
+  clearEquipmentTick?: number
+  onEquipmentSpecifiedChange?: (active: boolean) => void
 }
 
-export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMode }: Props) {
+export function WodList({
+  onSelectWod,
+  equipmentFilter,
+  userEquipment,
+  silentMode,
+  clearEquipmentTick = 0,
+  onEquipmentSpecifiedChange,
+}: Props) {
   const lang  = useAuthStore((s) => s.profile?.language ?? 'de')
   const toast = useToast()
 
   const [search, setSearch]   = useState(() => sessionStorage.getItem(SEARCH_KEY) ?? '')
+  const [equipmentCount, setEquipmentCount] = useState<EquipmentCount>(readCount)
+  const parsedSearch = parseWorkoutSearch(search)
+  const equipmentSpecified = parsedSearch.requiredEquipment.length > 0
+
+  useEffect(() => {
+    onEquipmentSpecifiedChange?.(equipmentSpecified)
+  }, [equipmentSpecified, onEquipmentSpecifiedChange])
+
   const [page, setPage]       = useState(0)
   const [accWods, setAccWods] = useState<Wod[]>([])
   const [picking, setPicking] = useState(false)
@@ -69,6 +114,17 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
   const [maxDur,     setMaxDur]     = useState(() => readFilterSession().maxDur)
   const [excludeEq,  setExcludeEq]  = useState<string[]>(() => readFilterSession().excludeEq)
   const [program,    setProgram]    = useState(() => localStorage.getItem(PROGRAM_STORAGE_KEY) ?? '')
+
+  const [appliedTick, setAppliedTick] = useState(clearEquipmentTick)
+  if (appliedTick !== clearEquipmentTick) {
+    const next = stripEquipmentTokens(search)
+    sessionStorage.setItem(SEARCH_KEY, next)
+    sessionStorage.setItem(COUNT_KEY, 'any')
+    setAppliedTick(clearEquipmentTick)
+    setSearch(next)
+    setEquipmentCount('any')
+    setPage(0)
+  }
 
   // Draft state (while sheet is open)
   const [filterOpen,    setFilterOpen]    = useState(false)
@@ -122,6 +178,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
     category:         category || undefined,
     difficulty:       difficulty || undefined,
     search:           search || undefined,
+    equipmentCount,
     page,
     equipmentFilter:  equipmentFilter?.length ? equipmentFilter : undefined,
     excludeEquipment: excludeEq.length ? excludeEq : undefined,
@@ -149,6 +206,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
       category:         category || undefined,
       difficulty:       difficulty || undefined,
       search:           search || undefined,
+      equipmentCount,
       equipmentFilter:  equipmentFilter?.length ? equipmentFilter : undefined,
       excludeEquipment: excludeEq.length ? excludeEq : undefined,
       userEquipment:    userEquipment?.length ? userEquipment : undefined,
@@ -181,7 +239,7 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
               sessionStorage.setItem(SEARCH_KEY, v)
               setPage(0)
             }}
-            placeholder="Workouts suchen…"
+            placeholder="Name, Übung, Equipment…"
             className="w-full bg-[var(--color-bg-card)] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[#E8642A] text-sm"
           />
         </div>
@@ -214,6 +272,38 @@ export function WodList({ onSelectWod, equipmentFilter, userEquipment, silentMod
           {activeFilterCount > 0 ? `Filter · ${activeFilterCount}` : 'Filter'}
         </button>
       </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {COUNT_OPTIONS.map((opt) => {
+          const active = equipmentCount === opt.id
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => {
+                setEquipmentCount(opt.id)
+                sessionStorage.setItem(COUNT_KEY, opt.id)
+                setPage(0)
+              }}
+              className="px-2.5 py-1 rounded-full text-xs font-semibold"
+              style={{
+                backgroundColor: active ? '#E8642A' : 'var(--color-bg-card)',
+                color: active ? 'white' : 'var(--color-text-muted)',
+              }}
+            >
+              {opt.label}
+            </button>
+          )
+        })}
+      </div>
+      {(equipmentSpecified || equipmentCount !== 'any') && (
+        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+          {equipmentHint(
+            equipmentCount,
+            parsedSearch.requiredEquipment.map((id) => equipmentById(id)?.name ?? id).join(', '),
+          )}
+        </p>
+      )}
 
       {/* Count */}
       <p className="text-xs text-[var(--color-text-subtle)]">
