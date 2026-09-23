@@ -10,8 +10,8 @@ type Section = 'workout' | 'stretching' | 'meditation'
 
 const SECTIONS: { id: Section; label: string; color: string; emoji: string }[] = [
   { id: 'workout',    label: 'Workouts',       color: '#E8642A', emoji: '💪' },
-  { id: 'stretching', label: 'Stretch & Yoga', color: '#7BC67E', emoji: '🧘' },
-  { id: 'meditation', label: 'Meditationen',   color: '#9B7FD4', emoji: '🧠' },
+  { id: 'stretching', label: 'Stretch & Yoga', color: '#7BC67E', emoji: '🤸' },
+  { id: 'meditation', label: 'Meditationen',   color: '#9B7FD4', emoji: '🧘' },
 ]
 
 export function FavoritesPage() {
