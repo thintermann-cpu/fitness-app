@@ -4,18 +4,21 @@ const WOD_TYPE_LABELS: Record<string, Record<string, string>> = {
     ForTime: 'Auf Zeit (For Time)',
     EMOM:    'Intervall (EMOM)',
     Tabata:  'Tabata-Intervall (Tabata)',
+    krafttraining: 'Krafttraining (Sätze)',
   },
   en: {
     AMRAP:   'Time Challenge (AMRAP)',
     ForTime: 'For Time',
     EMOM:    'Interval (EMOM)',
     Tabata:  'Tabata Interval (Tabata)',
+    krafttraining: 'Strength (sets)',
   },
   es: {
     AMRAP:   'Reto de Tiempo (AMRAP)',
     ForTime: 'Contra el Reloj',
     EMOM:    'Intervalo (EMOM)',
     Tabata:  'Intervalo Tabata (Tabata)',
+    krafttraining: 'Fuerza (series)',
   },
 }
 

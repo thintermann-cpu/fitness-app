@@ -123,8 +123,20 @@ function exercisesFromBlob(text: string): WizardExercise[] {
   }))
 }
 
+function prescriptionItems(wod: Wod): WizardExercise[] {
+  const lines = wod.prescription?.lines ?? []
+  if (!lines.length) return exercisesFromBlob(wod.exercises)
+  return lines.map((line, i) => ({
+    id: `rx-${i}-${line.name}`,
+    name: line.name,
+    detail: line.detail,
+    sets: line.sets,
+    rep_count: line.repCount,
+  }))
+}
+
 function exerciseSig(items: WizardExercise[]): string {
-  return items.map((item) => `${item.name}|${item.detail ?? ''}`).join('\n')
+  return items.map((item) => `${item.name}|${item.detail ?? ''}|${item.sets ?? ''}|${item.rep_count ?? ''}`).join('\n')
 }
 
 interface Props {
@@ -195,8 +207,8 @@ export function WodDetail({ wodName, onBack }: Props) {
   useEffect(() => {
     if (!wod) return
     setSessionMinutes(wod.estimated_minutes > 0 ? wod.estimated_minutes : 20)
-    setSessionItems(exercisesFromBlob(wod.exercises))
-    setSessionScheme(composeWorkoutScheme({
+    setSessionItems(prescriptionItems(wod))
+    setSessionScheme(wod.prescription?.scheme || composeWorkoutScheme({
       runden: wod.runden,
       reps: wod.reps,
       exercises: wod.exercises,
@@ -415,10 +427,12 @@ export function WodDetail({ wodName, onBack }: Props) {
   } // end !wod && customWorkout
 
   const catalogWod = wod
-  const timerMode = (WOD_TYPE_TO_MODE[catalogWod.type] ?? 'fortime') as 'fortime' | 'amrap' | 'emom' | 'tabata'
-  const catalogItems = exercisesFromBlob(catalogWod.exercises)
+  const timerMode: TimerMode = catalogWod.prescription?.kind === 'strength'
+    ? 'krafttraining'
+    : (WOD_TYPE_TO_MODE[catalogWod.type] ?? 'fortime')
+  const catalogItems = prescriptionItems(catalogWod)
   const catalogMinutes = catalogWod.estimated_minutes > 0 ? catalogWod.estimated_minutes : 20
-  const catalogScheme = composeWorkoutScheme({
+  const catalogScheme = catalogWod.prescription?.scheme || composeWorkoutScheme({
     runden: catalogWod.runden,
     reps: catalogWod.reps,
     exercises: catalogWod.exercises,
@@ -522,7 +536,11 @@ export function WodDetail({ wodName, onBack }: Props) {
                   <span className="text-xs text-[var(--color-text-muted)] w-5 shrink-0 mt-0.5">{i + 1}.</span>
                   <span className="text-[var(--color-text)]">
                     {item.name}
-                    {item.detail ? <span className="text-[var(--color-text-muted)]"> · {item.detail}</span> : null}
+                    {item.detail ? (
+                      <span className="text-[var(--color-text-muted)]"> · {item.detail}</span>
+                    ) : item.sets && item.rep_count ? (
+                      <span className="text-[var(--color-text-muted)]"> · {item.sets}×{item.rep_count}</span>
+                    ) : null}
                   </span>
                 </li>
               ))}
@@ -805,7 +823,7 @@ export function WodDetail({ wodName, onBack }: Props) {
         <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
           <TimerView
             key={`${launch?.mode ?? timerMode}-${launch?.minutes ?? sessionMinutes}-${launch?.scheme ?? sessionScheme}-${exerciseSig(launch?.exercises ?? sessionItems)}`}
-            initialMode={(launch?.mode && launch.mode !== 'krafttraining' ? launch.mode : timerMode)}
+            initialMode={(launch?.mode && launch.mode !== 'krafttraining' ? launch.mode : timerMode === 'krafttraining' ? 'fortime' : timerMode)}
             initialMinutes={launch?.minutes ?? sessionMinutes}
             scheme={(launch ? launch.scheme : sessionScheme) || undefined}
             {...((launch?.mode ?? timerMode) === 'emom'
@@ -878,6 +896,7 @@ export function WodDetail({ wodName, onBack }: Props) {
           minutes: sessionMinutes,
           exercises: sessionItems,
           scheme: sessionScheme,
+          restBetweenSets: catalogWod.prescription?.restBetweenSets,
         }}
         onStart={(mode, minutes, withWarmup, kraftConfig, exercises, _name, timerCfg) => {
           beginFromWizard(mode, minutes, withWarmup, kraftConfig, exercises, timerCfg)

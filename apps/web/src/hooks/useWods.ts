@@ -4,7 +4,9 @@ import {
   decomposeProgramText,
   fitsLocationEquipment,
   parseWorkoutSearch,
+  presentCatalogWorkout,
   workoutMatchesQuery,
+  type CatalogPrescription,
   type EquipmentCount,
 } from '../lib/exerciseCatalog'
 
@@ -28,6 +30,8 @@ export interface Wod {
   skal_leicht?: string
   skal_schwer?: string
   quelle?: string
+  /** Rounds, per-exercise reps, or sets. One-movement rows stay out of the list. */
+  prescription?: CatalogPrescription
 }
 
 export interface WodFilters {
@@ -108,10 +112,22 @@ function mapRawToWod(raw: RawWod): Wod {
     exercises = decomposed.exercises
     if (decomposed.equipment.length) equipment = decomposed.equipment
   }
+  const prescription = presentCatalogWorkout({
+    exercises,
+    description,
+    runden: raw.runden,
+    reps: raw.reps,
+    gewicht: raw.gewicht,
+    type: raw.type ?? raw.typ,
+    category: raw.category ?? raw.kategorie ?? '',
+    wodCategory: raw.wod_category ?? undefined,
+    estimatedMinutes: Number(raw.estimated_minutes) || parseInt(String(raw.dauer ?? ''), 10) || 0,
+    equipment,
+  })
   return {
     id: String(raw.id),
     name: raw.name,
-    type: raw.type ?? raw.typ ?? '',
+    type: prescription.type || (raw.type ?? raw.typ ?? ''),
     category: raw.category ?? raw.kategorie ?? '',
     description,
     exercises,
@@ -119,13 +135,14 @@ function mapRawToWod(raw: RawWod): Wod {
     difficulty: raw.difficulty ?? raw.schwierigkeit ?? '',
     estimated_minutes: Number(raw.estimated_minutes) || parseInt(String(raw.dauer ?? ''), 10) || 0,
     is_editors_pick: raw.is_editors_pick ?? EDITORS_PICK_IDS.has(String(raw.id)),
-    wod_category: raw.wod_category ?? undefined,
+    wod_category: prescription.wodCategory ?? raw.wod_category ?? undefined,
     equipment_tags: tags.length ? tags : undefined,
     is_jumping: (() => {
       const JUMP_KEYWORDS = ['jump', 'jumping', 'burpee', 'hop', 'double under', 'double-under', 'box jump', 'skip']
       const text = exercises.toLowerCase()
       return JUMP_KEYWORDS.some((kw) => text.includes(kw))
     })(),
+    prescription,
     runden: raw.runden,
     reps: raw.reps,
     gewicht: raw.gewicht,
@@ -158,6 +175,8 @@ function normEq(e: string): string {
 }
 
 function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[] {
+  wods = wods.filter((w) => w.prescription?.kind !== 'single')
+  if (filters.wodCategory) wods = wods.filter((w) => w.wod_category === filters.wodCategory)
   if (filters.type) wods = wods.filter((w) => w.type === filters.type)
   if (filters.category) wods = wods.filter((w) => w.category === filters.category)
   if (filters.difficulty) wods = wods.filter((w) => w.difficulty === filters.difficulty)
@@ -188,7 +207,6 @@ function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[
   if (filters.maxDuration != null) wods = wods.filter((w) => w.estimated_minutes > 0 && w.estimated_minutes <= filters.maxDuration!)
   if (filters.silentMode) wods = wods.filter((w) => !w.is_jumping)
   if (filters.editorsPick) wods = wods.filter((w) => w.is_editors_pick ?? EDITORS_PICK_IDS.has(w.id))
-  // wodCategory is not in wods.json — skip on local fallback, only Supabase applies it
   return wods
 }
 
@@ -208,32 +226,25 @@ function raceTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T | null> 
   ])
 }
 
-function searchNeedsClient(filters: WodFilters): boolean {
-  return Boolean(filters.search?.trim()) || Boolean(filters.equipmentCount && filters.equipmentCount !== 'any')
+async function loadSupabaseWods(): Promise<Wod[] | null> {
+  const result = await raceTimeout(
+    supabase.from('wods').select('*').order('name').limit(2000),
+    SUPABASE_TIMEOUT_MS,
+  )
+  if (!result || result.error) {
+    if (result?.error) console.error('[useWods]', result.error.message)
+    return null
+  }
+  return ((result.data ?? []) as RawWod[]).map(mapRawToWod)
 }
 
 async function fetchMatchingWods(filters: Omit<WodFilters, 'page'>): Promise<Wod[]> {
-  const forceSupabase = Boolean(filters.wodCategory) || Boolean(filters.editorsPick)
-
   if (!isSupabaseConfigured) {
     return applyLocalFilters(await loadLocalWods(), filters)
   }
-
-  let query = supabase.from('wods').select('*').eq('is_visible', true)
-  if (filters.type) query = query.eq('type', filters.type)
-  if (filters.category && !filters.wodCategory) query = query.eq('category', filters.category)
-  if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
-  if (filters.editorsPick) query = query.eq('is_editors_pick', true)
-  if (filters.wodCategory) query = query.eq('wod_category', filters.wodCategory)
-
-  const result = await raceTimeout(query.order('name').limit(2000), SUPABASE_TIMEOUT_MS)
-  if (!result || result.error) {
-    if (result?.error) console.error('[pickRandomWod]', result.error.message)
-    if (forceSupabase) return []
-    return applyLocalFilters(await loadLocalWods(), filters)
-  }
-
-  return applyLocalFilters(((result.data ?? []) as RawWod[]).map(mapRawToWod), filters)
+  const rows = await loadSupabaseWods()
+  if (!rows) return applyLocalFilters(await loadLocalWods(), filters)
+  return applyLocalFilters(rows, filters)
 }
 
 export async function pickRandomWod(filters: Omit<WodFilters, 'page'>): Promise<Wod | null> {
@@ -246,66 +257,20 @@ export function useWods(filters: WodFilters = {}) {
   return useQuery({
     queryKey: ['wods', filters],
     queryFn: async () => {
-      const hasComplexFilters =
-        Boolean(filters.equipmentFilter?.length) ||
-        Boolean(filters.excludeEquipment?.length) ||
-        Boolean(filters.userEquipment?.length) ||
-        filters.minDuration != null ||
-        filters.maxDuration != null ||
-        filters.silentMode === true
-
-      // Program/editors-pick filter always requires Supabase — these WODs exist only in DB, not in wods.json.
-      const forceSupabase = Boolean(filters.wodCategory) || Boolean(filters.editorsPick)
-      const searchActive = searchNeedsClient(filters)
-
-      if (!isSupabaseConfigured) {
-        return fetchLocalWods(filters)
-      }
-
-      let query = supabase.from('wods').select('*', { count: 'exact' }).eq('is_visible', true)
-
-      if (filters.type) query = query.eq('type', filters.type)
-      // Skip category filter when wodCategory is active — newer program WODs have no category value.
-      if (filters.category && !filters.wodCategory) query = query.eq('category', filters.category)
-      if (filters.difficulty) query = query.eq('difficulty', filters.difficulty)
-      if (filters.editorsPick) query = query.eq('is_editors_pick', true)
-      if (filters.wodCategory) query = query.eq('wod_category', filters.wodCategory)
-
       const page = filters.page ?? 0
-
-      // Search, gear count, and program filters are applied in memory so aliases
-      // (Kurzhantel, Klimmzug) are not limited to a SQL name match or one page.
-      if (searchActive || hasComplexFilters) {
-        const result = await raceTimeout(query.order('name').limit(2000), SUPABASE_TIMEOUT_MS)
-        if (!result || result.error) {
-          if (result?.error) console.error('[useWods]', result.error.message)
-          throw new Error(result?.error?.message ?? 'Supabase-Anfrage für Programm-Filter fehlgeschlagen (Timeout)')
-        }
-        const mapped = ((result.data ?? []) as RawWod[]).map(mapRawToWod)
-        const filtered = applyLocalFilters(mapped, filters)
-        return {
-          data: filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-          count: filtered.length,
-        }
-      }
-
-      const result = await raceTimeout(
-        query.range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1).order('name'),
-        SUPABASE_TIMEOUT_MS,
-      )
-
-      if (!result || result.error) {
-        if (result?.error) console.error('[useWods]', result.error.message)
-        // Local JSON has no wod_category / is_editors_pick data — falling back here would
-        // silently swap the correctly filtered result for a much larger, wrongly filtered one.
-        // Surface the failure instead (WodList already renders an error state on isError).
-        if (forceSupabase) {
-          throw new Error(result?.error?.message ?? 'Supabase-Anfrage für Programm-Filter fehlgeschlagen (Timeout)')
+      if (!isSupabaseConfigured) return fetchLocalWods(filters)
+      const rows = await loadSupabaseWods()
+      if (!rows) {
+        if (filters.wodCategory || filters.editorsPick) {
+          throw new Error('Supabase-Anfrage für Programm-Filter fehlgeschlagen (Timeout)')
         }
         return fetchLocalWods(filters)
       }
-
-      return { data: ((result.data ?? []) as RawWod[]).map(mapRawToWod), count: result.count ?? 0 }
+      const filtered = applyLocalFilters(rows, filters)
+      return {
+        data: filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+        count: filtered.length,
+      }
     },
     staleTime: 5 * 60 * 1000,
     retry: false,
