@@ -5,6 +5,7 @@ import { useFavorites } from '../../hooks/useFavorites'
 import { useAudioStore } from '../../store/audioStore'
 import { useAuthStore } from '../../store/authStore'
 import { ToastContainer } from '../ui/ToastContainer'
+import { useSessionStore } from '../../store/sessionStore'
 
 function FavoritesHeaderBtn() {
   const { favorites } = useFavorites()
@@ -67,6 +68,7 @@ export function AppShell() {
   const location    = useLocation()
   const { profile } = useAuthStore()
   const firstName   = profile?.display_name?.trim().split(' ')[0] ?? ''
+  const sessionActive = useSessionStore((s) => s.isSessionActive)
 
   return (
     <div className="flex h-svh overflow-hidden" style={{ backgroundColor: 'var(--color-bg)' }}>
@@ -75,8 +77,8 @@ export function AppShell() {
 
       {/* Content area: offset by sidebar width on desktop */}
       <div className="flex flex-col flex-1 min-h-0 lg:pl-[240px]">
-        {/* Mobile header */}
-        <div
+        {/* Mobile header — hidden while a workout timer is running */}
+        {!sessionActive && <div
           className="lg:hidden flex items-center px-3 border-b sticky top-0 z-20"
           style={{ height: 52, backgroundColor: 'var(--color-bg-card)', borderColor: 'rgba(255,255,255,0.08)' }}
         >
@@ -117,12 +119,12 @@ export function AppShell() {
               <span className="text-xl leading-none">⚙️</span>
             </Link>
           </div>
-        </div>
+        </div>}
 
-        <main className="flex-1 min-h-0 overflow-y-auto pb-[60px] lg:pb-0">
+        <main className={`flex-1 min-h-0 overflow-y-auto ${sessionActive ? 'pb-0' : 'pb-[60px] lg:pb-0'}`}>
           <Outlet />
         </main>
-        <BottomNav />
+        {!sessionActive && <BottomNav />}
       </div>
       <ToastContainer />
     </div>

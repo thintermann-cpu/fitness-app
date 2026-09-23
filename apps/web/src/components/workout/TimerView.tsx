@@ -7,6 +7,7 @@ import { useWodHistory } from '../../hooks/useWodHistory'
 import { useSessionStore } from '../../store/sessionStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { NextExercisePreview } from '../shared/NextExercisePreview'
+import { ExerciseInfoButton } from './ExerciseInfoButton'
 import type { WizardExercise } from '../../lib/customWorkouts'
 
 type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
@@ -163,6 +164,7 @@ export function TimerView({
   const [isComplete, setIsComplete] = useState(false)
   const [doneRounds, setDoneRounds] = useState(0)
   const [partialReps, setPartialReps] = useState(0)
+  const [focusIndex, setFocusIndex] = useState(0)
   const [showSideSwitch, setShowSideSwitch] = useState(false)
   const plannedRounds = plannedRoundsFromScheme(scheme)
   const tallyRef = useRef({ rounds: 0, reps: 0 })
@@ -255,9 +257,9 @@ export function TimerView({
 
   // Session active: block accidental swipe-navigation while timer is running/paused
   useEffect(() => {
-    setSessionActive(isRunning || isPaused || isComplete)
+    setSessionActive(showCountdown || isRunning || isPaused || isComplete)
     return () => setSessionActive(false)
-  }, [isRunning, isPaused, isComplete, setSessionActive])
+  }, [showCountdown, isRunning, isPaused, isComplete, setSessionActive])
 
   // Ad-hoc history logging: uses ref so elapsed value is always current at fire time
   useEffect(() => {
@@ -347,12 +349,14 @@ if (!adHocLog || !isComplete || loggedRef.current) return
     setIsComplete(false)
     setDoneRounds(0)
     setPartialReps(0)
+    setFocusIndex(0)
     loggedRef.current = false
   }, [])
 
   const finishRound = useCallback(() => {
     setDoneRounds((current) => (plannedRounds != null && current >= plannedRounds ? current : current + 1))
     setPartialReps(0)
+    setFocusIndex(0)
     if ('vibrate' in navigator) navigator.vibrate(30)
   }, [plannedRounds])
 
@@ -381,8 +385,15 @@ if (!adHocLog || !isComplete || loggedRef.current) return
   const hasExercises = (exercises?.length ?? 0) > 0
   const currentExIdx = hasExercises ? (tick.interval - 1) % exercises!.length : 0
   const nextExIdx    = hasExercises ? tick.interval % exercises!.length : 0
-  const currentExName = hasExercises ? exercises![currentExIdx]?.name : undefined
   const nextExName    = hasExercises ? exercises![nextExIdx]?.name : undefined
+  const intervalDriven = mode === 'emom' || isTabata
+  const activeExIdx = !hasExercises
+    ? 0
+    : intervalDriven
+      ? currentExIdx
+      : Math.min(focusIndex, exercises!.length - 1)
+  const activeExercise = hasExercises ? exercises![activeExIdx] : undefined
+  const live = isRunning || isPaused
 
   let showNextExercise = false
   if ((isRunning || isPaused) && hasExercises) {
@@ -450,7 +461,7 @@ if (!adHocLog || !isComplete || loggedRef.current) return
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 py-4">
+    <div className={`flex flex-col items-center w-full ${live ? 'gap-3 py-1' : 'gap-6 py-4'}`}>
       <CountdownOverlay
         isOpen={showCountdown}
         onComplete={() => { setShowCountdown(false); startTimer() }}
@@ -581,17 +592,24 @@ if (!adHocLog || !isComplete || loggedRef.current) return
         </div>
       )}
 
-      {/* Current exercise name (EMOM / Tabata with exercises) */}
-      {(isRunning || isPaused) && hasExercises && (mode === 'emom' || isTabata) && currentExName && (
-        <div className="flex flex-col items-center gap-2 w-full">
-          <p className="text-2xl font-bold text-center" style={{ color: 'var(--color-text)' }}>
-            {currentExName}
+      {live && activeExercise && (
+        <div className="flex flex-col items-center gap-1 w-full">
+          <p
+            className="text-center font-black leading-tight px-1"
+            style={{ fontSize: 'clamp(28px, 8vw, 40px)', color: 'var(--color-text)' }}
+          >
+            {activeExercise.name}
           </p>
-          <NextExercisePreview
-            name={nextExName}
-            visible={showNextExercise}
-            color={modeColor}
-          />
+          {activeExercise.detail && (
+            <p className="text-sm font-semibold" style={{ color: modeColor }}>{activeExercise.detail}</p>
+          )}
+          {intervalDriven && (
+            <NextExercisePreview
+              name={nextExName}
+              visible={showNextExercise}
+              color={modeColor}
+            />
+          )}
         </div>
       )}
 
@@ -614,7 +632,7 @@ if (!adHocLog || !isComplete || loggedRef.current) return
         <p
           className="font-mono font-black leading-none"
           style={{
-            fontSize: 'clamp(64px, 20vw, 96px)',
+            fontSize: live && hasExercises ? 'clamp(48px, 14vw, 68px)' : 'clamp(64px, 20vw, 96px)',
             color: isComplete ? '#4CAF50' : (isRunning ? phaseColor : 'var(--color-text)'),
           }}
         >
@@ -629,15 +647,15 @@ if (!adHocLog || !isComplete || loggedRef.current) return
       </div>
 
       {(isRunning || isPaused) && (mode === 'fortime' || mode === 'amrap') && (
-        <div className="w-full flex flex-col items-center gap-3">
-          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+        <div className="w-full flex flex-col items-center gap-2">
+          <p className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>
             {plannedRounds != null
               ? `${doneRounds} / ${plannedRounds} Runden`
               : `${doneRounds} ${doneRounds === 1 ? 'Runde' : 'Runden'}`}
             {partialReps > 0 ? ` · ${partialReps} Reps` : ''}
           </p>
           {plannedRounds != null && plannedRounds <= 12 && (
-            <div className="flex flex-wrap justify-center gap-2" role="group" aria-label="Runden">
+            <div className="flex flex-wrap justify-center gap-1" role="group" aria-label="Runden">
               {Array.from({ length: plannedRounds }, (_, index) => {
                 const filled = index < doneRounds
                 const next = index === doneRounds
@@ -651,7 +669,7 @@ if (!adHocLog || !isComplete || loggedRef.current) return
                       if (filled && index === doneRounds - 1) undoRound()
                       else if (next) finishRound()
                     }}
-                    className="w-11 h-11 rounded-full text-sm font-bold"
+                    className="w-7 h-7 rounded-full text-[11px] font-bold"
                     style={{
                       backgroundColor: filled ? modeColor : 'transparent',
                       color: filled ? 'white' : 'var(--color-text)',
@@ -669,31 +687,31 @@ if (!adHocLog || !isComplete || loggedRef.current) return
             type="button"
             onClick={finishRound}
             disabled={plannedRounds != null && doneRounds >= plannedRounds}
-            className="w-full py-4 rounded-2xl font-bold text-lg text-white active:scale-[0.98] disabled:opacity-40"
+            className="w-full py-2.5 rounded-2xl font-bold text-base text-white active:scale-[0.98] disabled:opacity-40"
             style={{ backgroundColor: modeColor }}
           >
             {plannedRounds != null && doneRounds >= plannedRounds ? 'Alle Runden' : 'Runde fertig'}
           </button>
           {(plannedRounds == null || doneRounds < plannedRounds) && (
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-3">
               <button
                 type="button"
                 aria-label="Rep weniger"
                 onClick={() => setPartialReps((reps) => Math.max(0, reps - 1))}
-                className="w-14 h-14 rounded-2xl text-2xl font-bold"
+                className="w-11 h-11 rounded-2xl text-xl font-bold"
                 style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: 'var(--color-text)' }}
               >
                 −
               </button>
-              <div className="text-center min-w-[4.5rem]">
-                <p className="text-3xl font-black tabular-nums" style={{ color: 'var(--color-text)' }}>{partialReps}</p>
-                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Reps</p>
+              <div className="text-center min-w-[3.5rem]">
+                <p className="text-2xl font-black tabular-nums" style={{ color: 'var(--color-text)' }}>{partialReps}</p>
+                <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>Reps</p>
               </div>
               <button
                 type="button"
                 aria-label="Rep mehr"
                 onClick={() => setPartialReps((reps) => reps + 1)}
-                className="w-14 h-14 rounded-2xl text-2xl font-bold text-white"
+                className="w-11 h-11 rounded-2xl text-xl font-bold text-white"
                 style={{ backgroundColor: modeColor }}
               >
                 +
@@ -714,11 +732,11 @@ if (!adHocLog || !isComplete || loggedRef.current) return
       )}
 
       {/* Controls */}
-      <div className="flex items-center gap-4 mt-2">
+      <div className="flex items-center gap-3">
         {!isRunning && !isPaused && (
           <button
             onClick={handleStart}
-            className="px-10 py-4 rounded-2xl font-bold text-lg text-white active:scale-95 transition-transform"
+            className="px-8 py-2.5 rounded-2xl font-bold text-base text-white active:scale-95 transition-transform"
             style={{ backgroundColor: modeColor }}
           >
             Start
@@ -730,21 +748,21 @@ if (!adHocLog || !isComplete || loggedRef.current) return
             {mode === 'fortime' ? (
               <button
                 onClick={handleStop}
-                className="px-8 py-4 rounded-2xl font-bold text-lg bg-[var(--color-success)] text-white active:scale-95 transition-transform"
+                className="px-6 py-2.5 rounded-2xl font-bold text-base bg-[var(--color-success)] text-white active:scale-95 transition-transform"
               >
                 Done
               </button>
             ) : (
               <button
                 onClick={handlePause}
-                className="px-8 py-4 rounded-2xl font-bold text-lg bg-white/15 text-[var(--color-text)] active:scale-95 transition-transform"
+                className="px-6 py-2.5 rounded-2xl font-bold text-base bg-white/15 text-[var(--color-text)] active:scale-95 transition-transform"
               >
                 Pause
               </button>
             )}
             <button
               onClick={handleReset}
-              className="px-6 py-4 rounded-2xl font-bold text-lg bg-white/8 text-[var(--color-text-muted)] active:scale-95 transition-transform"
+              className="px-5 py-2.5 rounded-2xl font-bold text-base bg-white/8 text-[var(--color-text-muted)] active:scale-95 transition-transform"
             >
               Reset
             </button>
@@ -755,14 +773,14 @@ if (!adHocLog || !isComplete || loggedRef.current) return
           <>
             <button
               onClick={handleResume}
-              className="px-8 py-4 rounded-2xl font-bold text-lg text-white active:scale-95 transition-transform"
+              className="px-6 py-2.5 rounded-2xl font-bold text-base text-white active:scale-95 transition-transform"
               style={{ backgroundColor: modeColor }}
             >
               Resume
             </button>
             <button
               onClick={handleReset}
-              className="px-6 py-4 rounded-2xl font-bold text-lg bg-white/8 text-[var(--color-text-muted)] active:scale-95 transition-transform"
+              className="px-5 py-2.5 rounded-2xl font-bold text-base bg-white/8 text-[var(--color-text-muted)] active:scale-95 transition-transform"
             >
               Reset
             </button>
@@ -792,22 +810,42 @@ if (!adHocLog || !isComplete || loggedRef.current) return
 
       {/* Exercise list */}
       {exercises && exercises.length > 0 && (
-        <div className="w-full mt-2 rounded-xl bg-white/5 px-4 py-3 space-y-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-2">
+        <div className={`w-full rounded-xl bg-white/5 ${live ? 'px-2 py-1.5 space-y-0.5' : 'mt-2 px-4 py-3 space-y-1.5'}`}>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1">
             Übungen
           </p>
           {scheme && (
-            <p className="text-sm font-semibold text-[var(--color-text)] mb-1">{scheme}</p>
+            <p className={`${live ? 'text-[11px]' : 'text-sm'} font-semibold text-[var(--color-text)] mb-0.5`}>{scheme}</p>
           )}
-          {exercises.map((ex, i) => (
-            <div key={ex.id} className="flex items-center gap-2">
-              <span className="text-xs text-[var(--color-text-muted)] w-4 flex-shrink-0">{i + 1}.</span>
-              <span className="text-sm text-[var(--color-text)] flex-1">{ex.name}</span>
-              {ex.detail && (
-                <span className="text-xs text-[var(--color-text-muted)]">{ex.detail}</span>
-              )}
-            </div>
-          ))}
+          {exercises.map((ex, i) => {
+            const current = live && i === activeExIdx
+            return (
+              <div
+                key={`${ex.id}-${i}`}
+                className="flex items-center gap-1.5 rounded-lg"
+                style={{
+                  backgroundColor: current ? `${modeColor}22` : 'transparent',
+                  padding: live ? '1px 4px' : '2px 0',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => { if (live && !intervalDriven) setFocusIndex(i) }}
+                  className="flex items-center gap-1.5 flex-1 min-w-0 text-left"
+                  style={{ background: 'none', border: 'none', padding: 0 }}
+                >
+                  <span className="text-[10px] text-[var(--color-text-muted)] w-3 flex-shrink-0">{i + 1}</span>
+                  <span className={`${live ? 'text-[11px]' : 'text-sm'} truncate ${current ? 'font-semibold' : ''}`} style={{ color: 'var(--color-text)' }}>
+                    {ex.name}
+                  </span>
+                  {ex.detail && (
+                    <span className="text-[10px] text-[var(--color-text-muted)] shrink-0">{ex.detail}</span>
+                  )}
+                </button>
+                <ExerciseInfoButton name={ex.name} detail={ex.detail} />
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

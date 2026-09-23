@@ -183,7 +183,7 @@ export function WorkoutPage() {
   // If a WOD name is in the URL, show WodDetail instead of the list
   if (wodName) {
     return (
-      <div className="min-h-full bg-[var(--color-bg)] px-4 pt-10 pb-24 max-w-lg mx-auto">
+      <div className={`min-h-full bg-[var(--color-bg)] px-4 max-w-lg mx-auto ${isSessionActive ? 'pt-2 pb-2' : 'pt-10 pb-24'}`}>
         <WodDetail
           wodName={decodeURIComponent(wodName)}
           onBack={() => navigate('/workout')}
@@ -194,15 +194,15 @@ export function WorkoutPage() {
 
   return (
     <div className="min-h-full bg-[var(--color-bg)] flex flex-col">
-      {/* Header */}
-      <div className="px-4 pt-4 lg:pt-10 pb-2 flex items-end justify-between">
+      {/* Header — hidden while the timer tab is running */}
+      {!(isSessionActive && tab === 'timer') && <div className="px-4 pt-4 lg:pt-10 pb-2 flex items-end justify-between">
         <h1 className="text-2xl font-black text-[var(--color-text)]">
           <span style={{ color: '#E8642A' }}>Workout</span>
         </h1>
-      </div>
+      </div>}
 
       {/* Tab bar */}
-      <div className="px-4 flex gap-1 bg-[var(--color-bg)] sticky top-0 z-10 pt-2 pb-3 border-b border-white/5">
+      {!(isSessionActive && tab === 'timer') && <div className="px-4 flex gap-1 bg-[var(--color-bg)] sticky top-0 z-10 pt-2 pb-3 border-b border-white/5">
         {TABS.map((t) => {
           const locked = (isSessionActive || showWarmupTimer || showWorkoutCountdown) && t.id !== 'timer'
           return (
@@ -222,10 +222,10 @@ export function WorkoutPage() {
             </button>
           )
         })}
-      </div>
+      </div>}
 
       {/* Content */}
-      <div className="flex-1 px-4 py-4 pb-24 max-w-lg mx-auto w-full">
+      <div className={`flex-1 px-4 max-w-lg mx-auto w-full ${isSessionActive && tab === 'timer' ? 'py-2 pb-2' : 'py-4 pb-24'}`}>
         {tab === 'wods' && (
           <>
             {/* Custom workouts section — link to /workout/custom */}

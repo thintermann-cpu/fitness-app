@@ -241,7 +241,22 @@ export function WodDetail({ wodName, onBack }: Props) {
       ? customWorkout.mode as 'fortime' | 'amrap' | 'emom' | 'tabata'
       : 'fortime'
     return (
-      <div className="space-y-5">
+      <div className={showTimer ? 'space-y-2' : 'space-y-5'}>
+        {showTimer ? (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setShowTimer(false)}
+              aria-label="Timer schliessen"
+              className="text-lg leading-none"
+              style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', minWidth: 36, minHeight: 36 }}
+            >
+              ←
+            </button>
+            <p className="text-sm font-bold truncate" style={{ color: 'var(--color-text)' }}>{customWorkout.name}</p>
+          </div>
+        ) : (
+        <>
         <div className="flex items-start gap-3">
           <button onClick={onBack} className="mt-0.5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-lg leading-none">←</button>
           <div className="flex-1 min-w-0">
@@ -337,13 +352,15 @@ export function WodDetail({ wodName, onBack }: Props) {
               onClick={() => setShowScore(true)}
               className="px-4 py-3 rounded-xl border border-[#E8642A]/40 text-[#E8642A] font-semibold text-sm"
             >
-              Log
-            </button>
-          </div>
+            Log
+          </button>
+        </div>
+        )}
+        </>
         )}
 
         {showTimer && (
-          <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
+          <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2">
             {(launch?.mode ?? customWorkout.mode) === 'krafttraining' ? (
               <KraftTimerView
                 exercises={launch?.kraft?.exercises ?? launch?.exercises ?? customWorkout.exercises}
@@ -371,14 +388,16 @@ export function WodDetail({ wodName, onBack }: Props) {
           </div>
         )}
 
-        <button
-          onClick={() => setShowHistory((v) => !v)}
-          className="w-full text-left py-3 border-t border-white/8 flex items-center justify-between"
-        >
-          <span className="text-sm font-medium text-[var(--color-text-muted)]">My History</span>
-          <span className="text-[var(--color-text-muted)]">{showHistory ? '▲' : '▼'}</span>
-        </button>
-        {showHistory && <WodHistoryList wodName={customWorkout.name} />}
+        {!showTimer && (
+          <button
+            onClick={() => setShowHistory((v) => !v)}
+            className="w-full text-left py-3 border-t border-white/8 flex items-center justify-between"
+          >
+            <span className="text-sm font-medium text-[var(--color-text-muted)]">My History</span>
+            <span className="text-[var(--color-text-muted)]">{showHistory ? '▲' : '▼'}</span>
+          </button>
+        )}
+        {showHistory && !showTimer && <WodHistoryList wodName={customWorkout.name} />}
 
         <ScoreInput
           wodName={customWorkout.name}
@@ -471,7 +490,22 @@ export function WodDetail({ wodName, onBack }: Props) {
   }
 
   return (
-    <div className="space-y-5">
+    <div className={showTimer ? 'space-y-2' : 'space-y-5'}>
+      {showTimer ? (
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => { setShowTimer(false); setShowWarmupTimer(false) }}
+            aria-label="Timer schliessen"
+            className="text-lg leading-none"
+            style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none', minWidth: 36, minHeight: 36 }}
+          >
+            ←
+          </button>
+          <p className="text-sm font-bold truncate" style={{ color: 'var(--color-text)' }}>{wod.name}</p>
+        </div>
+      ) : (
+      <>
       {/* Header */}
       <div className="flex items-start gap-3">
         <button
@@ -800,14 +834,16 @@ export function WodDetail({ wodName, onBack }: Props) {
             onClick={() => setShowScore(true)}
             className="px-4 py-3 rounded-xl border border-[#E8642A]/40 text-[#E8642A] font-semibold text-sm"
           >
-            Log
-          </button>
-        </div>
+          Log
+        </button>
+      </div>
+      )}
+      </>
       )}
 
       {/* Embedded timer */}
       {showTimer && launch?.mode === 'krafttraining' && launch.kraft ? (
-        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
+        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2">
           <KraftTimerView
             exercises={launch.kraft.exercises}
             restBetweenSets={launch.kraft.restBetweenSets}
@@ -820,7 +856,7 @@ export function WodDetail({ wodName, onBack }: Props) {
           />
         </div>
       ) : showTimer ? (
-        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
+        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2">
           <TimerView
             key={`${launch?.mode ?? timerMode}-${launch?.minutes ?? sessionMinutes}-${launch?.scheme ?? sessionScheme}-${exerciseSig(launch?.exercises ?? sessionItems)}`}
             initialMode={(launch?.mode && launch.mode !== 'krafttraining' ? launch.mode : timerMode === 'krafttraining' ? 'fortime' : timerMode)}
@@ -850,16 +886,17 @@ export function WodDetail({ wodName, onBack }: Props) {
         </div>
       ) : null}
 
-      {/* History toggle */}
-      <button
-        onClick={() => setShowHistory((v) => !v)}
-        className="w-full text-left py-3 border-t border-white/8 flex items-center justify-between"
-      >
-        <span className="text-sm font-medium text-[var(--color-text-muted)]">My History</span>
-        <span className="text-[var(--color-text-muted)]">{showHistory ? '▲' : '▼'}</span>
-      </button>
+      {!showTimer && (
+        <button
+          onClick={() => setShowHistory((v) => !v)}
+          className="w-full text-left py-3 border-t border-white/8 flex items-center justify-between"
+        >
+          <span className="text-sm font-medium text-[var(--color-text-muted)]">My History</span>
+          <span className="text-[var(--color-text-muted)]">{showHistory ? '▲' : '▼'}</span>
+        </button>
+      )}
 
-      {showHistory && <WodHistoryList wodName={wodName} />}
+      {showHistory && !showTimer && <WodHistoryList wodName={wodName} />}
 
       {/* Score input modal */}
       <ScoreInput
