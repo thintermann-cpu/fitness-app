@@ -55,66 +55,6 @@ const EQUIPMENT_COLORS: Record<string, string> = {
   Box:              '#8b5cf6',
 }
 
-// ── Warmup routines ───────────────────────────────────────────────────────
-interface WarmupExercise { name: string; desc: string; sek: number }
-
-const WARMUP_ROUTINES: Record<string, WarmupExercise[]> = {
-  Laufen: [
-    { name: 'Leg Swings',      desc: 'Bein vor und zurück schwingen, je Seite',       sek: 30 },
-    { name: 'High Knees',      desc: 'Knie hoch ziehen, schnelles Tempo',              sek: 40 },
-    { name: 'Butt Kicks',      desc: 'Fersen zu den Gesäßbacken ziehen',               sek: 40 },
-    { name: 'Walking Lunges',  desc: 'Große Schritte vorwärts, Knie fast am Boden',   sek: 40 },
-    { name: 'Calf Raises',     desc: 'Auf Zehenspitzen heben und senken',              sek: 30 },
-    { name: 'Easy Jog',        desc: 'Leichtes Einlaufen, lockeres Tempo',             sek: 60 },
-  ],
-  Barbell: [
-    { name: 'Jumping Jacks',            desc: 'Arme und Beine gleichzeitig spreizen',         sek: 40 },
-    { name: 'Hip Hinge',                desc: 'Langsam vorwärts beugen, Rücken gerade',       sek: 30 },
-    { name: 'Shoulder Circles',         desc: 'Große Kreise mit beiden Armen',                sek: 30 },
-    { name: 'Air Squats',               desc: 'Tief in die Knie, Brust hoch',                 sek: 40 },
-    { name: 'Inchworms',                desc: 'Hände zum Boden, langsam vorwärts laufen',     sek: 40 },
-    { name: 'Barbell PVC Pass-Through', desc: 'Leichte Stange über den Kopf, Hüfte öffnen',  sek: 40 },
-  ],
-  Kettlebell: [
-    { name: 'Jumping Jacks',    desc: 'Arme und Beine gleichzeitig spreizen',           sek: 40 },
-    { name: 'Hip Circles',      desc: 'Hüfte in großen Kreisen drehen',                 sek: 30 },
-    { name: 'Arm Circles',      desc: 'Große Kreise mit beiden Armen',                  sek: 30 },
-    { name: 'Goblet Squat Hold', desc: 'Knie halten, Hüfte öffnen – 3 Sek halten',    sek: 40 },
-    { name: 'Good Mornings',    desc: 'Hände am Hinterkopf, Rücken gerade vorwärts',   sek: 40 },
-    { name: 'KB Halos',         desc: 'Kettlebell langsam um den Kopf kreisen',         sek: 40 },
-  ],
-  Rower: [
-    { name: 'Jumping Jacks',  desc: 'Arme und Beine gleichzeitig spreizen',             sek: 40 },
-    { name: 'Hip Hinge',      desc: 'Vorwärts beugen, Rücken gerade',                   sek: 30 },
-    { name: 'Torso Rotation', desc: 'Oberkörper links und rechts drehen',               sek: 30 },
-    { name: 'Leg Swings',     desc: 'Bein vor und zurück schwingen',                    sek: 30 },
-    { name: 'Easy Row',       desc: 'Sehr leichtes Rudern – Technik einüben',           sek: 60 },
-    { name: 'Burpees',        desc: 'Körper aufwärmen, Puls erhöhen',                   sek: 40 },
-  ],
-  Default: [
-    { name: 'Jumping Jacks', desc: 'Arme und Beine gleichzeitig spreizen',              sek: 40 },
-    { name: 'High Knees',    desc: 'Knie hoch ziehen, schnelles Tempo',                 sek: 40 },
-    { name: 'Burpees',       desc: 'Langsam und kontrolliert – Körper aufwärmen',       sek: 40 },
-    { name: 'Leg Swings',    desc: 'Bein vor und zurück schwingen, je Seite',           sek: 30 },
-    { name: 'Arm Circles',   desc: 'Große Kreise mit beiden Armen',                     sek: 30 },
-    { name: 'Air Squats',    desc: 'Tief in die Knie, Brust hoch',                      sek: 40 },
-  ],
-}
-
-const RUNNING_KEYWORDS = ['run', 'meter', '400m', '800m', 'mile', '1 km', 'lauf', 'laufen']
-
-function getWarmupRoutine(wod: Wod): WarmupExercise[] {
-  const equipment = wod.equipment ?? []
-  const text = [wod.exercises, wod.description, equipment.join(' ')].join(' ').toLowerCase()
-  const hasLaufen = equipment.some(e => e.toLowerCase() === 'laufen')
-    || RUNNING_KEYWORDS.some(kw => text.includes(kw))
-  if (hasLaufen) return WARMUP_ROUTINES.Laufen
-  if (equipment.some(e => /barbell/i.test(e))) return WARMUP_ROUTINES.Barbell
-  if (equipment.some(e => /kettlebell/i.test(e))) return WARMUP_ROUTINES.Kettlebell
-  if (equipment.some(e => /rower|row/i.test(e))) return WARMUP_ROUTINES.Rower
-  return WARMUP_ROUTINES.Default
-}
-
 function exercisesFromBlob(text: string): WizardExercise[] {
   return parseWodExercises(text).map((item, i) => ({
     id: `parsed-${i}-${item.id ?? 'raw'}`,
@@ -195,7 +135,6 @@ export function WodDetail({ wodName, onBack }: Props) {
   }
   const [showScore, setShowScore]           = useState(false)
   const [showHistory, setShowHistory]       = useState(false)
-  const [showWarmup, setShowWarmup]         = useState(false)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [warmupRoutine, setWarmupRoutine] = useState<WarmupRoutineId>('standard')
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
@@ -324,13 +263,6 @@ export function WodDetail({ wodName, onBack }: Props) {
               className="flex-1 py-3.5 rounded-xl bg-[#E8642A] text-white font-semibold text-base active:scale-[0.98] transition-transform"
             >
               ▶ Start Timer
-            </button>
-            <button
-              onClick={() => { setWarmupRoutine('standard'); setShowWarmupTimer(true) }}
-              className="px-4 py-3.5 rounded-xl font-semibold text-sm active:scale-[0.98] transition-transform"
-              style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: '1px solid #E8642A40' }}
-            >
-              🔥 Warmup
             </button>
             <button
               onClick={() => setShowScore(true)}
@@ -713,62 +645,6 @@ export function WodDetail({ wodName, onBack }: Props) {
         )}
       </div>
 
-      {/* Warmup accordion */}
-      <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-md)] overflow-hidden">
-        <button
-          onClick={() => setShowWarmup((v) => !v)}
-          className="w-full flex items-center justify-between px-4 py-3"
-        >
-          <span className="text-sm font-semibold text-[var(--color-text)]">🔥 Warmup</span>
-          <span className="text-[var(--color-text-muted)]">{showWarmup ? '▲' : '▼'}</span>
-        </button>
-        {showWarmup && (
-          <div className="px-4 pb-4 space-y-3">
-            {getWarmupRoutine(wod).map((ex, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <span className="text-xs font-bold text-[var(--color-text-muted)] mt-0.5 w-4 shrink-0">
-                  {i + 1}
-                </span>
-                <div>
-                  <p className="text-sm font-medium text-[var(--color-text)]">{ex.name}</p>
-                  <p className="text-xs text-[var(--color-text-muted)]">{ex.desc} · {ex.sek}s</p>
-                </div>
-              </div>
-            ))}
-            <button
-              onClick={() => { setWarmupRoutine('standard'); setShowWarmupTimer(true) }}
-              className="mt-1 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl transition-colors"
-              style={{ backgroundColor: '#E8642A18', color: '#E8642A' }}
-            >
-              <span>⏱</span>
-              <span>Warmup-Timer starten</span>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Scaling — only when substitution_enabled */}
-      {(wod.skal_leicht || wod.skal_schwer) &&
-        localStorage.getItem('carveout_substitution_enabled') !== 'false' && (
-        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-md)] p-4 space-y-3">
-          <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
-            Scaling
-          </p>
-          {wod.skal_leicht && (
-            <div>
-              <p className="text-xs text-green-400 mb-0.5">Easier</p>
-              <p className="text-sm text-[var(--color-text)]">{wod.skal_leicht}</p>
-            </div>
-          )}
-          {wod.skal_schwer && (
-            <div>
-              <p className="text-xs text-orange-400 mb-0.5">Harder</p>
-              <p className="text-sm text-[var(--color-text)]">{wod.skal_schwer}</p>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Personal best */}
       {personalBest && (
         <div className="bg-[#E8642A]/10 border border-[#E8642A]/20 rounded-[var(--radius-md)] p-4 flex items-center gap-3">
@@ -806,13 +682,6 @@ export function WodDetail({ wodName, onBack }: Props) {
             className="flex-1 py-3.5 rounded-xl bg-[#E8642A] text-white font-semibold text-base active:scale-[0.98] transition-transform"
           >
             ▶ Start Timer
-          </button>
-          <button
-            onClick={() => { setWarmupRoutine('standard'); setShowWarmupTimer(true) }}
-            className="px-4 py-3.5 rounded-xl font-semibold text-sm active:scale-[0.98] transition-transform"
-            style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: '1px solid #E8642A40' }}
-          >
-            🔥 Warmup
           </button>
           <button
             onClick={() => setShowScore(true)}
