@@ -596,7 +596,7 @@ if (!adHocLog || !isComplete || loggedRef.current) return
         <div className="flex flex-col items-center gap-1 w-full">
           <p
             className="text-center font-black leading-tight px-1"
-            style={{ fontSize: 'clamp(28px, 8vw, 40px)', color: 'var(--color-text)' }}
+            style={{ fontSize: 'clamp(36px, 10vw, 44px)', color: 'var(--color-text)' }}
           >
             {activeExercise.name}
           </p>
