@@ -807,3 +807,93 @@ export function composeWorkoutScheme(input: {
 export function formatParsedExercise(item: ParsedExercise): string {
   return item.detail ? `${item.name} · ${item.detail}` : item.name
 }
+
+function collectGearIds(text: string): string[] {
+  const key = ` ${normKey(text)} `
+  const ids: string[] = []
+  const seen = new Set<string>()
+  for (const phrase of PHRASES) {
+    if (phrase.kind !== 'equipment' || !phrase.alias) continue
+    if (key.includes(` ${phrase.alias} `) && !seen.has(phrase.id)) {
+      seen.add(phrase.id)
+      ids.push(phrase.id)
+    }
+  }
+  if (/\b(laufen|running|run)\b/.test(normKey(text)) && !seen.has('laufen')) ids.push('laufen')
+  return ids
+}
+
+/** Gear that is always required, plus groups where any one option is enough ("oder"). */
+export function gearNeeds(source: string, listed: string[] = []): { required: string[]; anyOf: string[][] } {
+  const required = new Set<string>()
+  const anyOf: string[][] = []
+  const chunks = source.split(/\s*(?:·|\n)+\s*/).map((part) => part.trim()).filter(Boolean)
+  let sawGear = false
+  for (const chunk of chunks.length ? chunks : [source]) {
+    if (/\boder\b/i.test(chunk)) {
+      const options = [...new Set(chunk.split(/\s+oder\s+/i).flatMap(collectGearIds))]
+      if (options.length >= 2) {
+        anyOf.push(options)
+        sawGear = true
+        continue
+      }
+    }
+    const ids = collectGearIds(chunk)
+    if (ids.length) sawGear = true
+    for (const id of ids) required.add(id)
+  }
+  if (!sawGear) {
+    for (const id of countableEquipment(listed)) {
+      if (id !== 'bodyweight') required.add(id)
+    }
+  }
+  for (const group of anyOf) for (const id of group) required.delete(id)
+  return { required: [...required], anyOf }
+}
+
+/** A tile shows the workout when its place can cover the gear. "oder" needs only one option. */
+export function fitsLocationEquipment(source: string, listed: string[], allowedLabels: string[]): boolean {
+  const allowed = new Set(
+    allowedLabels.map((label) => collectGearIds(label)[0] ?? (isBodyweightLabel(label) ? '' : normKey(label))).filter(Boolean),
+  )
+  const { required, anyOf } = gearNeeds(source, listed)
+  if (required.some((id) => !allowed.has(id))) return false
+  return anyOf.every((group) => group.some((id) => allowed.has(id)))
+}
+
+function gearLabel(id: string): string {
+  return equipmentById(id)?.name ?? (id === 'laufen' ? 'Laufen' : id)
+}
+
+/** Turn a program-workout description into exercise lines and the gear those lines name. */
+export function decomposeProgramText(description: string): { exercises: string; equipment: string[] } {
+  const [main, scheme] = description.split(/\s+—\s+/)
+  const lines: string[] = []
+  for (const chunk of (main ?? '').split(/\s*·\s*/).map((part) => part.trim()).filter(Boolean)) {
+    if (/^pause\b/i.test(chunk)) continue
+    const text = chunk
+      .replace(/(\d+\s*s)\s*\/\s*(\d+\s*s)/gi, '$1-$2')
+      .replace(/^(odd|even|jede minute|core)\s*:\s*/i, '')
+      .replace(/^\d+\.\s*/, '')
+      .trim()
+    if (!text || /^pause\b/i.test(text)) continue
+    const colon = text.match(/^(.*?):\s*(.+)$/)
+    if (colon?.[2]?.includes('/')) {
+      const head = colon[1].trim()
+      if (head && !/^\d+\s*s\s*\/\s*\d+\s*s$/i.test(head)) lines.push(head)
+      for (const part of colon[2].split(/\s*\/\s*/)) {
+        const name = part.trim()
+        if (name) lines.push(name)
+      }
+      continue
+    }
+    lines.push(text)
+  }
+  const needs = gearNeeds(description)
+  const equipment = [...new Set([...needs.required, ...needs.anyOf.flat()])].map(gearLabel)
+  const note = scheme?.trim()
+  return {
+    exercises: [lines.join('\n'), note ? `Vorgabe: ${note}` : ''].filter(Boolean).join('\n'),
+    equipment,
+  }
+}

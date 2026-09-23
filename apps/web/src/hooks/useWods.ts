@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import {
+  decomposeProgramText,
+  fitsLocationEquipment,
   parseWorkoutSearch,
   workoutMatchesQuery,
   type EquipmentCount,
@@ -97,16 +99,23 @@ function parseEquipment(value: unknown, tags?: string[] | null): string[] {
 }
 
 function mapRawToWod(raw: RawWod): Wod {
-  const exercises = raw.exercises ?? raw.uebungen ?? ''
+  const description = raw.description ?? raw.beschreibung ?? ''
+  let exercises = raw.exercises ?? raw.uebungen ?? ''
   const tags = raw.equipment_tags ?? []
+  let equipment = parseEquipment(raw.equipment, tags)
+  if (!exercises.trim() && description.trim()) {
+    const decomposed = decomposeProgramText(description)
+    exercises = decomposed.exercises
+    if (decomposed.equipment.length) equipment = decomposed.equipment
+  }
   return {
     id: String(raw.id),
     name: raw.name,
     type: raw.type ?? raw.typ ?? '',
     category: raw.category ?? raw.kategorie ?? '',
-    description: raw.description ?? raw.beschreibung ?? '',
+    description,
     exercises,
-    equipment: parseEquipment(raw.equipment, tags),
+    equipment,
     difficulty: raw.difficulty ?? raw.schwierigkeit ?? '',
     estimated_minutes: Number(raw.estimated_minutes) || parseInt(String(raw.dauer ?? ''), 10) || 0,
     is_editors_pick: raw.is_editors_pick ?? EDITORS_PICK_IDS.has(String(raw.id)),
@@ -159,10 +168,8 @@ function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[
     wods = wods.filter((w) => workoutMatchesQuery(w, parsedSearch, count))
   }
   if (filters.equipmentFilter?.length) {
-    const allowed = new Set(filters.equipmentFilter.map(normEq))
-    allowed.add('bodyweight')
-    wods = wods.filter(
-      (w) => w.equipment.length === 0 || w.equipment.every((eq) => allowed.has(normEq(eq))),
+    wods = wods.filter((w) =>
+      fitsLocationEquipment(`${w.description}\n${w.exercises}`, w.equipment, filters.equipmentFilter ?? []),
     )
   }
   if (filters.excludeEquipment?.length) {
@@ -206,17 +213,9 @@ function searchNeedsClient(filters: WodFilters): boolean {
 }
 
 async function fetchMatchingWods(filters: Omit<WodFilters, 'page'>): Promise<Wod[]> {
-  const hasComplexFilters =
-    Boolean(filters.equipmentFilter?.length) ||
-    Boolean(filters.excludeEquipment?.length) ||
-    Boolean(filters.userEquipment?.length) ||
-    filters.minDuration != null ||
-    filters.maxDuration != null ||
-    filters.silentMode === true
   const forceSupabase = Boolean(filters.wodCategory) || Boolean(filters.editorsPick)
-  const searchActive = searchNeedsClient(filters)
 
-  if (!isSupabaseConfigured || (hasComplexFilters && !forceSupabase && !searchActive)) {
+  if (!isSupabaseConfigured) {
     return applyLocalFilters(await loadLocalWods(), filters)
   }
 
@@ -259,7 +258,7 @@ export function useWods(filters: WodFilters = {}) {
       const forceSupabase = Boolean(filters.wodCategory) || Boolean(filters.editorsPick)
       const searchActive = searchNeedsClient(filters)
 
-      if (!isSupabaseConfigured || (hasComplexFilters && !forceSupabase && !searchActive)) {
+      if (!isSupabaseConfigured) {
         return fetchLocalWods(filters)
       }
 
@@ -276,8 +275,8 @@ export function useWods(filters: WodFilters = {}) {
 
       // Search, gear count, and program filters are applied in memory so aliases
       // (Kurzhantel, Klimmzug) are not limited to a SQL name match or one page.
-      if (searchActive || (hasComplexFilters && forceSupabase)) {
-        const result = await raceTimeout(query.order('name'), SUPABASE_TIMEOUT_MS)
+      if (searchActive || hasComplexFilters) {
+        const result = await raceTimeout(query.order('name').limit(2000), SUPABASE_TIMEOUT_MS)
         if (!result || result.error) {
           if (result?.error) console.error('[useWods]', result.error.message)
           throw new Error(result?.error?.message ?? 'Supabase-Anfrage für Programm-Filter fehlgeschlagen (Timeout)')

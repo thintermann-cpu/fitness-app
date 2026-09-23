@@ -51,7 +51,6 @@ const MAX_DUR_OPTIONS = [0, 10, 15, 20, 30, 45]
 
 const SEARCH_KEY = 'wod_search'
 const COUNT_KEY = 'wod_equipment_count'
-const GEAR_KEY = 'wod_equipment_query'
 const COUNT_OPTIONS: { id: EquipmentCount; label: string }[] = [
   { id: 'any', label: 'Beliebig' },
   { id: '1', label: '1' },
@@ -71,10 +70,6 @@ function readCount(): EquipmentCount {
   const v = sessionStorage.getItem(COUNT_KEY)
   if (v === '1' || v === '2' || v === '3' || v === 'more' || v === 'any') return v
   return 'any'
-}
-
-function readGear(): string {
-  return sessionStorage.getItem(GEAR_KEY) ?? ''
 }
 
 interface Props {
@@ -99,10 +94,8 @@ export function WodList({
   const toast = useToast()
 
   const [search, setSearch]   = useState(() => sessionStorage.getItem(SEARCH_KEY) ?? '')
-  const [gear, setGear]       = useState(readGear)
   const [equipmentCount, setEquipmentCount] = useState<EquipmentCount>(readCount)
-  const queryText = [search, gear].filter(Boolean).join(' ')
-  const parsedSearch = parseWorkoutSearch(queryText)
+  const parsedSearch = parseWorkoutSearch(search)
   const equipmentSpecified = parsedSearch.requiredEquipment.length > 0
 
   useEffect(() => {
@@ -127,10 +120,8 @@ export function WodList({
     const next = stripEquipmentTokens(search)
     sessionStorage.setItem(SEARCH_KEY, next)
     sessionStorage.setItem(COUNT_KEY, 'any')
-    sessionStorage.setItem(GEAR_KEY, '')
     setAppliedTick(clearEquipmentTick)
     setSearch(next)
-    setGear('')
     setEquipmentCount('any')
     setPage(0)
   }
@@ -144,19 +135,18 @@ export function WodList({
   const [draftMaxDur,   setDraftMaxDur]   = useState(0)
   const [draftExclude,  setDraftExclude]  = useState<string[]>([])
   const [draftProgram,  setDraftProgram]  = useState('')
-  const [draftGear,     setDraftGear]     = useState('')
   const [draftCount,    setDraftCount]    = useState<EquipmentCount>('any')
 
   const activeFilterCount =
     (type ? 1 : 0) + (category ? 1 : 0) + (difficulty ? 1 : 0) +
     ((minDur > 0 || maxDur > 0) ? 1 : 0) + (excludeEq.length > 0 ? 1 : 0) +
-    (program ? 1 : 0) + (gear.trim() ? 1 : 0) + (equipmentCount !== 'any' ? 1 : 0)
+    (program ? 1 : 0) + (equipmentCount !== 'any' ? 1 : 0)
 
   const openFilter = () => {
     setDraftType(type); setDraftCat(category); setDraftDiff(difficulty)
     setDraftMinDur(minDur); setDraftMaxDur(maxDur)
     setDraftExclude(excludeEq); setDraftProgram(program)
-    setDraftGear(gear); setDraftCount(equipmentCount)
+    setDraftCount(equipmentCount)
     setFilterOpen(true)
   }
 
@@ -165,11 +155,9 @@ export function WodList({
     setMinDur(draftMinDur); setMaxDur(draftMaxDur)
     setExcludeEq(draftExclude)
     setProgram(draftProgram)
-    setGear(draftGear.trim())
     setEquipmentCount(draftCount)
     if (draftProgram) localStorage.setItem(PROGRAM_STORAGE_KEY, draftProgram)
     else localStorage.removeItem(PROGRAM_STORAGE_KEY)
-    sessionStorage.setItem(GEAR_KEY, draftGear.trim())
     sessionStorage.setItem(COUNT_KEY, draftCount)
     writeFilterSession({ type: draftType, category: draftCat, difficulty: draftDiff,
       minDur: draftMinDur, maxDur: draftMaxDur, excludeEq: draftExclude })
@@ -181,8 +169,7 @@ export function WodList({
     setType(''); setCategory(''); setDifficulty('')
     setMinDur(0); setMaxDur(0); setExcludeEq([])
     setProgram(''); localStorage.removeItem(PROGRAM_STORAGE_KEY)
-    setGear(''); setEquipmentCount('any')
-    sessionStorage.setItem(GEAR_KEY, '')
+    setEquipmentCount('any')
     sessionStorage.setItem(COUNT_KEY, 'any')
     try { sessionStorage.removeItem(SESSION_FILTERS_KEY) } catch {}
     setPage(0)
@@ -196,7 +183,7 @@ export function WodList({
     type:             type || undefined,
     category:         category || undefined,
     difficulty:       difficulty || undefined,
-    search:           queryText || undefined,
+    search:           search || undefined,
     equipmentCount,
     page,
     equipmentFilter:  equipmentFilter?.length ? equipmentFilter : undefined,
@@ -224,7 +211,7 @@ export function WodList({
       type:             type || undefined,
       category:         category || undefined,
       difficulty:       difficulty || undefined,
-      search:           queryText || undefined,
+      search:           search || undefined,
       equipmentCount,
       equipmentFilter:  equipmentFilter?.length ? equipmentFilter : undefined,
       excludeEquipment: excludeEq.length ? excludeEq : undefined,
@@ -258,7 +245,7 @@ export function WodList({
               sessionStorage.setItem(SEARCH_KEY, v)
               setPage(0)
             }}
-            placeholder="Name oder Übung…"
+            placeholder="Workout suchen…"
             className="w-full bg-[var(--color-bg-card)] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[#E8642A] text-sm"
           />
         </div>
@@ -432,26 +419,7 @@ export function WodList({
           </div>
         </SheetSection>
 
-        <SheetSection label="Equipment">
-          <input
-            type="search"
-            value={draftGear}
-            onChange={(e) => setDraftGear(e.target.value)}
-            placeholder="z.B. Kurzhantel, Kettlebell"
-            aria-label="Equipment"
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 12,
-              color: '#f0e8d8',
-              fontSize: 13,
-              padding: '10px 12px',
-              marginBottom: 10,
-              fontFamily: 'var(--font-sans)',
-            }}
-          />
+        <SheetSection label="Anzahl Geräte">
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {COUNT_OPTIONS.map((opt) => {
               const active = draftCount === opt.id
