@@ -9,8 +9,8 @@ import { WodDetail } from '../components/workout/WodDetail'
 import { TimerView } from '../components/workout/TimerView'
 import { KraftTimerView } from '../components/workout/KraftTimerView'
 import { WodHistoryList } from '../components/workout/WodHistoryList'
-import { FreeTimerWizard, type KraftConfig, type TimerInitConfig } from '../components/workout/FreeTimerWizard'
-import { WarmupTimer } from '../components/workout/WarmupTimer'
+import { FreeTimerWizard, type KraftConfig, type TimerInitConfig, type WizardInitialValues } from '../components/workout/FreeTimerWizard'
+import { WarmupTimer, type WarmupRoutineId } from '../components/workout/WarmupTimer'
 import { WorkoutCountdown } from '../components/shared/WorkoutCountdown'
 import { useCustomWorkouts } from '../hooks/useCustomWorkouts'
 import { type CustomWorkout, type WizardExercise } from '../lib/customWorkouts'
@@ -47,6 +47,7 @@ type TimerConfig = {
   adHocLog?: boolean
   tabataWork?: number; tabataRest?: number; tabataRounds?: number
   emomInterval?: number; emomRounds?: number
+  scheme?: string
 }
 
 export function WorkoutPage() {
@@ -59,11 +60,16 @@ export function WorkoutPage() {
   const [tab, setTab]                     = useState<Tab>('wods')
   const [location, setLocation]           = useState<WorkoutLocation | null>(getSavedLocation())
   const [wizardOpen, setWizardOpen]       = useState(false)
+  const [adhocPreset, setAdhocPreset]     = useState<WizardInitialValues | null>(null)
+  const [adhocKey, setAdhocKey]           = useState(0)
   const [adhocOpen, setAdhocOpen]         = useState(false)
   const [showAllEquipment, setShowAllEquipment] = useState(false)
+  const [equipmentSpecified, setEquipmentSpecified] = useState(false)
+  const [clearEquipmentTick, setClearEquipmentTick] = useState(0)
   const [timerConfig, setTimerConfig]     = useState<TimerConfig | null>(null)
   const [timerKey, setTimerKey]           = useState(0)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
+  const [warmupRoutine, setWarmupRoutine] = useState<WarmupRoutineId>('standard')
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
   const { data: savedWorkouts = [], addWorkout } = useCustomWorkouts()
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
@@ -83,7 +89,7 @@ export function WorkoutPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  function handleWizardStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
+  function handleWizardStart(mode: TimerMode, minutes: number, withWarmup?: WarmupRoutineId | false, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
     if (workoutName) {
       addWorkout.mutate({
         id:        crypto.randomUUID(),
@@ -99,12 +105,16 @@ export function WorkoutPage() {
         tabataRounds: timerCfg?.tabataRounds,
         emomInterval: timerCfg?.emomInterval,
         emomRounds:   timerCfg?.emomRounds,
+        scheme:       timerCfg?.scheme,
       })
     }
     setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, adHocLog: true, ...timerCfg })
     setTimerKey((k) => k + 1)
     setTab('timer')
-    if (withWarmup) setShowWarmupTimer(true)
+    if (withWarmup) {
+      setWarmupRoutine(withWarmup)
+      setShowWarmupTimer(true)
+    }
   }
 
   function handleWizardSaveOnly(mode: TimerMode, minutes: number, kraftConfig: KraftConfig | undefined, exercises: WizardExercise[] | undefined, workoutName: string, timerCfg?: TimerInitConfig) {
@@ -122,33 +132,42 @@ export function WorkoutPage() {
       tabataRounds: timerCfg?.tabataRounds,
       emomInterval: timerCfg?.emomInterval,
       emomRounds:   timerCfg?.emomRounds,
+      scheme:       timerCfg?.scheme,
     })
   }
 
-  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: boolean, kraftConfig?: KraftConfig, exercises?: WizardExercise[], _workoutName?: string, timerCfg?: TimerInitConfig) {
-    setTimerConfig({ mode, minutes, kraftConfig, exercises, adHocLog: true, ...timerCfg })
+  function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: WarmupRoutineId | false, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
+    setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, adHocLog: true, ...timerCfg })
     setTimerKey((k) => k + 1)
     setTab('timer')
-    if (withWarmup) setShowWarmupTimer(true)
+    if (withWarmup) {
+      setWarmupRoutine(withWarmup)
+      setShowWarmupTimer(true)
+    }
   }
 
   function handleStartSaved(w: CustomWorkout) {
-    const kraftConfig: KraftConfig | undefined = w.mode === 'krafttraining'
-      ? { exercises: w.exercises, restBetweenSets: w.restBetweenSets ?? 90, restBetweenExercises: w.restBetweenExercises ?? 60 }
-      : undefined
-    setTimerConfig({
-      mode: w.mode, minutes: w.minutes, kraftConfig, workoutName: w.name,
-      adHocLog: true,
-      exercises: w.mode !== 'krafttraining' ? w.exercises : undefined,
-      tabataWork: w.tabataWork, tabataRest: w.tabataRest, tabataRounds: w.tabataRounds,
-      emomInterval: w.emomInterval, emomRounds: w.emomRounds,
+    setAdhocPreset({
+      name: w.name,
+      mode: w.mode,
+      minutes: w.minutes,
+      exercises: w.exercises,
+      scheme: w.scheme,
+      restBetweenSets: w.restBetweenSets,
+      restBetweenExercises: w.restBetweenExercises,
+      tabataWork: w.tabataWork,
+      tabataRest: w.tabataRest,
+      tabataRounds: w.tabataRounds,
+      emomInterval: w.emomInterval,
+      emomRounds: w.emomRounds,
     })
-    setTimerKey((k) => k + 1)
-    setShowWarmupTimer(true)
+    setAdhocKey((key) => key + 1)
+    setAdhocOpen(true)
     setTab('timer')
   }
 
   function handleLocationSelect(loc: WorkoutLocation) {
+    if (equipmentSpecified) setClearEquipmentTick((tick) => tick + 1)
     if (showAllEquipment) {
       setShowAllEquipment(false)
       setLocation(loc)
@@ -164,13 +183,13 @@ export function WorkoutPage() {
   }
 
   // "Alle anzeigen" turns off every equipment restriction, including location tiles.
-  const effectiveLocation = showAllEquipment ? null : location
+  const effectiveLocation = showAllEquipment || equipmentSpecified ? null : location
   const equipmentForLocation = effectiveLocation
     ? (profile?.equipment_by_location?.[effectiveLocation] ?? DEFAULT_EQUIPMENT_BY_LOCATION[effectiveLocation])
     : undefined
 
   const hasProfileEquipment = (profile?.equipment?.length ?? 0) > 0
-  const userEquipment = hasProfileEquipment && !showAllEquipment ? profile!.equipment : undefined
+  const userEquipment = hasProfileEquipment && !showAllEquipment && !equipmentSpecified ? profile!.equipment : undefined
 
   // If a WOD name is in the URL, show WodDetail instead of the list
   if (wodName) {
@@ -265,11 +284,18 @@ export function WorkoutPage() {
                 {showAllEquipment ? '⚡ Equipment-Filter aus — aktivieren' : '⚡ Equipment-Filter aktiv — Alle anzeigen'}
               </button>
             )}
+            {equipmentSpecified && (
+              <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
+                Ort-Filter aus, solange Equipment gesucht wird.
+              </p>
+            )}
             <WodList
               onSelectWod={(name) => navigate(`/workout/${encodeURIComponent(name)}`)}
               equipmentFilter={equipmentForLocation}
               userEquipment={userEquipment}
               silentMode={silentMode}
+              clearEquipmentTick={clearEquipmentTick}
+              onEquipmentSpecifiedChange={setEquipmentSpecified}
             />
           </>
         )}
@@ -298,6 +324,7 @@ export function WorkoutPage() {
                     initialTabataRounds={timerConfig.tabataRounds}
                     initialEmomInterval={timerConfig.emomInterval}
                     initialEmomRounds={timerConfig.emomRounds}
+                    scheme={timerConfig.scheme}
                     onShowHistory={() => setTab('history')}
                   />
                 )}
@@ -316,7 +343,7 @@ export function WorkoutPage() {
                   Wähle Modus, Dauer und optionale Übungen für deinen Timer.
                 </p>
                 <button
-                  onClick={() => setAdhocOpen(true)}
+                  onClick={() => { setAdhocPreset(null); setAdhocKey((key) => key + 1); setAdhocOpen(true) }}
                   className="px-8 py-3.5 rounded-2xl font-bold text-base"
                   style={{ backgroundColor: '#E8642A', color: 'white' }}
                 >
@@ -337,13 +364,18 @@ export function WorkoutPage() {
         variant="save"
       />
       <FreeTimerWizard
+        key={adhocKey}
         isOpen={adhocOpen}
-        onClose={() => setAdhocOpen(false)}
+        onClose={() => { setAdhocOpen(false); setAdhocPreset(null) }}
         onStart={handleAdhocStart}
         variant="adhoc"
+        title={adhocPreset?.name}
+        initialStep={adhocPreset ? 1 : 0}
+        initialValues={adhocPreset ?? undefined}
       />
       <WarmupTimer
         isOpen={showWarmupTimer}
+        routine={warmupRoutine}
         onClose={() => setShowWarmupTimer(false)}
         onStartWorkout={() => { setShowWarmupTimer(false); setShowWorkoutCountdown(true) }}
       />

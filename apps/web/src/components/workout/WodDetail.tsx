@@ -5,19 +5,36 @@ import { useAnalytics } from '../../hooks/useAnalytics'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { WOD_TYPE_TO_MODE } from '../../lib/timerLabels'
-import { splitWodExercises } from '../../lib/wodExercises'
+import { composeWorkoutScheme, parseWodExercises } from '../../lib/exerciseCatalog'
+import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
+import type { WizardExercise } from '../../lib/customWorkouts'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { useCustomWorkouts } from '../../hooks/useCustomWorkouts'
 import { useToast } from '../../hooks/useToast'
+import { FreeTimerWizard, type KraftConfig, type TimerInitConfig } from './FreeTimerWizard'
+import type { TimerMode } from '../../lib/timerLabels'
 import { TimerView } from './TimerView'
 import { KraftTimerView } from './KraftTimerView'
 import { ScoreInput } from './ScoreInput'
 import { WodHistoryList } from './WodHistoryList'
 import { FavoriteButton } from '../ui/FavoriteButton'
-import { WarmupTimer } from './WarmupTimer'
+import { WarmupTimer, type WarmupRoutineId } from './WarmupTimer'
 import { WorkoutCountdown } from '../shared/WorkoutCountdown'
 
 // ── Custom workout mode display labels ───────────────────────────────────
+interface LaunchConfig {
+  mode: TimerMode
+  minutes: number
+  exercises?: WizardExercise[]
+  scheme?: string
+  kraft?: KraftConfig
+  tabataWork?: number
+  tabataRest?: number
+  tabataRounds?: number
+  emomInterval?: number
+  emomRounds?: number
+}
+
 const CW_MODE_LABELS: Record<string, string> = {
   fortime: 'ForTime', amrap: 'AMRAP', emom: 'EMOM',
   tabata: 'Tabata', krafttraining: 'Kraft',
@@ -98,6 +115,18 @@ function getWarmupRoutine(wod: Wod): WarmupExercise[] {
   return WARMUP_ROUTINES.Default
 }
 
+function exercisesFromBlob(text: string): WizardExercise[] {
+  return parseWodExercises(text).map((item, i) => ({
+    id: `parsed-${i}-${item.id ?? 'raw'}`,
+    name: item.name,
+    detail: item.detail,
+  }))
+}
+
+function exerciseSig(items: WizardExercise[]): string {
+  return items.map((item) => `${item.name}|${item.detail ?? ''}`).join('\n')
+}
+
 interface Props {
   wodName: string
   onBack: () => void
@@ -115,21 +144,67 @@ export function WodDetail({ wodName, onBack }: Props) {
     ? customWorkout.exercises.filter((e) => Boolean(e.name))
     : []
   const [showTimer, setShowTimer]           = useState(false)
+  const [startOpen, setStartOpen]           = useState(false)
+  const [startKey, setStartKey]             = useState(0)
+  const [launch, setLaunch]                 = useState<LaunchConfig | null>(null)
+
+  function openStartWizard() {
+    setStartKey((key) => key + 1)
+    setStartOpen(true)
+  }
+
+  function beginFromWizard(
+    mode: TimerMode,
+    minutes: number,
+    withWarmup: WarmupRoutineId | false | undefined,
+    kraftConfig: KraftConfig | undefined,
+    exercises: WizardExercise[] | undefined,
+    timerCfg: TimerInitConfig | undefined,
+  ) {
+    setLaunch({
+      mode,
+      minutes,
+      exercises,
+      scheme: timerCfg?.scheme,
+      kraft: kraftConfig,
+      tabataWork: timerCfg?.tabataWork,
+      tabataRest: timerCfg?.tabataRest,
+      tabataRounds: timerCfg?.tabataRounds,
+      emomInterval: timerCfg?.emomInterval,
+      emomRounds: timerCfg?.emomRounds,
+    })
+    if (exercises) setSessionItems(exercises)
+    setSessionScheme(timerCfg?.scheme ?? '')
+    setSessionMinutes(minutes > 0 ? minutes : sessionMinutes)
+    if (withWarmup) {
+      setWarmupRoutine(withWarmup)
+      setShowWarmupTimer(true)
+    } else setShowTimer(true)
+  }
   const [showScore, setShowScore]           = useState(false)
   const [showHistory, setShowHistory]       = useState(false)
   const [showWarmup, setShowWarmup]         = useState(false)
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
+  const [warmupRoutine, setWarmupRoutine] = useState<WarmupRoutineId>('standard')
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
   const [adjustOpen, setAdjustOpen]         = useState(false)
   const [sessionMinutes, setSessionMinutes] = useState(20)
-  const [sessionLines, setSessionLines]     = useState('')
+  const [sessionItems, setSessionItems]     = useState<WizardExercise[]>([])
+  const [sessionScheme, setSessionScheme]   = useState('')
 
   useEffect(() => {
     if (!wod) return
     setSessionMinutes(wod.estimated_minutes > 0 ? wod.estimated_minutes : 20)
-    setSessionLines(splitWodExercises(wod.exercises).join('\n'))
+    setSessionItems(exercisesFromBlob(wod.exercises))
+    setSessionScheme(composeWorkoutScheme({
+      runden: wod.runden,
+      reps: wod.reps,
+      exercises: wod.exercises,
+      description: wod.description,
+    }))
     setAdjustOpen(false)
-  }, [wod?.id, wod?.exercises, wod?.estimated_minutes])
+    setLaunch(null)
+  }, [wod?.id, wod?.exercises, wod?.estimated_minutes, wod?.runden, wod?.reps, wod?.description])
 
   if (isLoading) {
     return (
@@ -172,6 +247,9 @@ export function WodDetail({ wodName, onBack }: Props) {
 
         {(customExercises.length > 0 || customWorkout.tabataRounds || customWorkout.emomRounds) && (
           <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-md)] p-4 space-y-3">
+            {customWorkout.scheme && (
+              <p className="text-sm font-semibold text-[var(--color-text)]">{customWorkout.scheme}</p>
+            )}
             {customExercises.length > 0 && (
               <div>
                 <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">Übungen</p>
@@ -179,7 +257,10 @@ export function WodDetail({ wodName, onBack }: Props) {
                   {customExercises.map((ex, i) => (
                     <div key={ex.id} className="flex items-center gap-2 text-sm">
                       <span className="text-xs text-[var(--color-text-muted)] w-5 flex-shrink-0">{i + 1}.</span>
-                      <span className="text-[var(--color-text)] flex-1">{ex.name}</span>
+                      <span className="text-[var(--color-text)] flex-1">
+                        {ex.name}
+                        {ex.detail ? <span className="text-[var(--color-text-muted)]"> · {ex.detail}</span> : null}
+                      </span>
                       {(ex.sets || ex.rep_count) && (
                         <span className="text-xs text-[var(--color-text-muted)]">
                           {ex.sets ?? 3}×{ex.rep_count ?? 8}{ex.weight_level ? ` · ${ex.weight_level}` : ''}
@@ -212,13 +293,13 @@ export function WodDetail({ wodName, onBack }: Props) {
         {!showTimer ? (
           <div className="flex gap-3">
             <button
-              onClick={() => { setShowTimer(true); setShowWarmupTimer(false) }}
+              onClick={openStartWizard}
               className="flex-1 py-3.5 rounded-xl bg-[#E8642A] text-white font-semibold text-base active:scale-[0.98] transition-transform"
             >
               ▶ Start Timer
             </button>
             <button
-              onClick={() => setShowWarmupTimer(true)}
+              onClick={() => { setWarmupRoutine('standard'); setShowWarmupTimer(true) }}
               className="px-4 py-3.5 rounded-xl font-semibold text-sm active:scale-[0.98] transition-transform"
               style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: '1px solid #E8642A40' }}
             >
@@ -251,26 +332,27 @@ export function WodDetail({ wodName, onBack }: Props) {
 
         {showTimer && (
           <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
-            {customWorkout.mode === 'krafttraining' ? (
+            {(launch?.mode ?? customWorkout.mode) === 'krafttraining' ? (
               <KraftTimerView
-                exercises={customWorkout.exercises}
-                restBetweenSets={customWorkout.restBetweenSets ?? 90}
-                restBetweenExercises={customWorkout.restBetweenExercises ?? 60}
+                exercises={launch?.kraft?.exercises ?? launch?.exercises ?? customWorkout.exercises}
+                restBetweenSets={launch?.kraft?.restBetweenSets ?? customWorkout.restBetweenSets ?? 90}
+                restBetweenExercises={launch?.kraft?.restBetweenExercises ?? customWorkout.restBetweenExercises ?? 60}
                 workoutName={customWorkout.name}
                 onComplete={() => window.dispatchEvent(new CustomEvent('carveout:workout-completed'))}
               />
             ) : (
               <TimerView
-                initialMode={cwMode}
-                initialMinutes={customWorkout.minutes}
+                initialMode={(launch?.mode ?? cwMode) as 'fortime' | 'amrap' | 'emom' | 'tabata'}
+                initialMinutes={launch?.minutes ?? customWorkout.minutes}
+                scheme={launch ? launch.scheme : customWorkout.scheme}
                 adHocLog
                 workoutName={customWorkout.name}
-                exercises={customExercises.length > 0 ? customExercises : undefined}
-                initialTabataWork={customWorkout.tabataWork}
-                initialTabataRest={customWorkout.tabataRest}
-                initialTabataRounds={customWorkout.tabataRounds}
-                initialEmomInterval={customWorkout.emomInterval}
-                initialEmomRounds={customWorkout.emomRounds}
+                exercises={(launch?.exercises ?? customExercises).length > 0 ? (launch?.exercises ?? customExercises) : undefined}
+                initialTabataWork={launch?.tabataWork ?? customWorkout.tabataWork}
+                initialTabataRest={launch?.tabataRest ?? customWorkout.tabataRest}
+                initialTabataRounds={launch?.tabataRounds ?? customWorkout.tabataRounds}
+                initialEmomInterval={launch?.emomInterval ?? customWorkout.emomInterval}
+                initialEmomRounds={launch?.emomRounds ?? customWorkout.emomRounds}
                 onComplete={() => window.dispatchEvent(new CustomEvent('carveout:workout-completed'))}
               />
             )}
@@ -295,6 +377,7 @@ export function WodDetail({ wodName, onBack }: Props) {
         />
         <WarmupTimer
           isOpen={showWarmupTimer}
+          routine={warmupRoutine}
           onClose={() => setShowWarmupTimer(false)}
           onStartWorkout={() => { setShowWarmupTimer(false); setShowWorkoutCountdown(true) }}
         />
@@ -302,18 +385,50 @@ export function WodDetail({ wodName, onBack }: Props) {
           isOpen={showWorkoutCountdown}
           onComplete={() => { setShowWorkoutCountdown(false); setShowTimer(true) }}
         />
+        <FreeTimerWizard
+          key={startKey}
+          isOpen={startOpen}
+          onClose={() => setStartOpen(false)}
+          variant="adhoc"
+          title={customWorkout.name}
+          initialStep={1}
+          initialValues={{
+            name: customWorkout.name,
+            mode: customWorkout.mode,
+            minutes: customWorkout.minutes,
+            exercises: customWorkout.exercises,
+            scheme: customWorkout.scheme,
+            restBetweenSets: customWorkout.restBetweenSets,
+            restBetweenExercises: customWorkout.restBetweenExercises,
+            tabataWork: customWorkout.tabataWork,
+            tabataRest: customWorkout.tabataRest,
+            tabataRounds: customWorkout.tabataRounds,
+            emomInterval: customWorkout.emomInterval,
+            emomRounds: customWorkout.emomRounds,
+          }}
+          onStart={(mode, minutes, withWarmup, kraftConfig, exercises, _name, timerCfg) => {
+            beginFromWizard(mode, minutes, withWarmup, kraftConfig, exercises, timerCfg)
+          }}
+        />
       </div>
     )
   } // end !wod && customWorkout
 
   const catalogWod = wod
   const timerMode = (WOD_TYPE_TO_MODE[catalogWod.type] ?? 'fortime') as 'fortime' | 'amrap' | 'emom' | 'tabata'
-  const catalogLines = splitWodExercises(catalogWod.exercises)
+  const catalogItems = exercisesFromBlob(catalogWod.exercises)
   const catalogMinutes = catalogWod.estimated_minutes > 0 ? catalogWod.estimated_minutes : 20
-  const sessionExerciseList = sessionLines.split('\n').map((s) => s.trim()).filter(Boolean)
-  const sessionExercises = sessionExerciseList.map((name, i) => ({ id: `session-${i}`, name }))
+  const catalogScheme = composeWorkoutScheme({
+    runden: catalogWod.runden,
+    reps: catalogWod.reps,
+    exercises: catalogWod.exercises,
+    description: catalogWod.description,
+  })
+  const sessionExercises = sessionItems
   const isAdjusted =
-    sessionMinutes !== catalogMinutes || sessionLines !== catalogLines.join('\n')
+    sessionMinutes !== catalogMinutes
+    || exerciseSig(sessionItems) !== exerciseSig(catalogItems)
+    || sessionScheme !== catalogScheme
 
   function saveAsCustom() {
     const name = `${catalogWod.name} (angepasst)`
@@ -325,6 +440,7 @@ export function WodDetail({ wodName, onBack }: Props) {
       minutes: sessionMinutes,
       exercises: sessionExercises,
       equipment: catalogWod.equipment ?? [],
+      scheme: sessionScheme || undefined,
       createdAt: existing?.createdAt ?? new Date().toISOString(),
     }
     const mut = existing ? updateWorkout : addWorkout
@@ -336,7 +452,8 @@ export function WodDetail({ wodName, onBack }: Props) {
 
   function resetAdjust() {
     setSessionMinutes(catalogMinutes)
-    setSessionLines(catalogLines.join('\n'))
+    setSessionItems(catalogItems)
+    setSessionScheme(catalogScheme)
   }
 
   return (
@@ -369,29 +486,44 @@ export function WodDetail({ wodName, onBack }: Props) {
         <p className="text-[var(--color-text)] text-sm leading-relaxed">{wod.description}</p>
 
         <div>
+          {(sessionScheme || adjustOpen) && (
+            <div className="mb-3">
+              <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
+                Ablauf
+              </p>
+              {adjustOpen ? (
+                <input
+                  type="text"
+                  value={sessionScheme}
+                  onChange={(e) => setSessionScheme(e.target.value)}
+                  placeholder="z. B. 3 Runden · 21-15-9"
+                  aria-label="Ablauf"
+                  className="w-full rounded-xl px-3 py-2 text-sm outline-none"
+                  style={{
+                    backgroundColor: 'var(--color-bg)',
+                    color: 'var(--color-text)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                  }}
+                />
+              ) : (
+                <p className="text-sm font-semibold text-[var(--color-text)]">{sessionScheme}</p>
+              )}
+            </div>
+          )}
           <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-2">
             Übungen
           </p>
           {adjustOpen ? (
-            <textarea
-              value={sessionLines}
-              onChange={(e) => setSessionLines(e.target.value)}
-              rows={Math.min(10, Math.max(4, sessionExerciseList.length + 1))}
-              placeholder="Eine Übung pro Zeile"
-              className="w-full rounded-xl px-3 py-2 text-sm outline-none"
-              style={{
-                backgroundColor: 'var(--color-bg)',
-                color: 'var(--color-text)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                resize: 'vertical',
-              }}
-            />
-          ) : sessionExerciseList.length > 0 ? (
+            <ExerciseListEditor items={sessionItems} onChange={setSessionItems} fromCatalog />
+          ) : sessionItems.length > 0 ? (
             <ol className="space-y-1">
-              {sessionExerciseList.map((line, i) => (
-                <li key={`${i}-${line}`} className="flex items-start gap-2 text-sm">
+              {sessionItems.map((item, i) => (
+                <li key={item.id} className="flex items-start gap-2 text-sm">
                   <span className="text-xs text-[var(--color-text-muted)] w-5 shrink-0 mt-0.5">{i + 1}.</span>
-                  <span className="text-[var(--color-text)]">{line}</span>
+                  <span className="text-[var(--color-text)]">
+                    {item.name}
+                    {item.detail ? <span className="text-[var(--color-text-muted)]"> · {item.detail}</span> : null}
+                  </span>
                 </li>
               ))}
             </ol>
@@ -467,7 +599,7 @@ export function WodDetail({ wodName, onBack }: Props) {
           )}
         </div>
 
-        {wod.reps && (
+        {wod.reps && !sessionScheme && (
           <div>
             <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide mb-1">
               Reps / Scheme
@@ -552,7 +684,7 @@ export function WodDetail({ wodName, onBack }: Props) {
               </div>
             ))}
             <button
-              onClick={() => setShowWarmupTimer(true)}
+              onClick={() => { setWarmupRoutine('standard'); setShowWarmupTimer(true) }}
               className="mt-1 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl transition-colors"
               style={{ backgroundColor: '#E8642A18', color: '#E8642A' }}
             >
@@ -618,13 +750,13 @@ export function WodDetail({ wodName, onBack }: Props) {
             ) : null
           })()}
           <button
-            onClick={() => { setShowTimer(true); setShowWarmupTimer(false) }}
+            onClick={openStartWizard}
             className="flex-1 py-3.5 rounded-xl bg-[#E8642A] text-white font-semibold text-base active:scale-[0.98] transition-transform"
           >
             ▶ Start Timer
           </button>
           <button
-            onClick={() => setShowWarmupTimer(true)}
+            onClick={() => { setWarmupRoutine('standard'); setShowWarmupTimer(true) }}
             className="px-4 py-3.5 rounded-xl font-semibold text-sm active:scale-[0.98] transition-transform"
             style={{ backgroundColor: '#E8642A18', color: '#E8642A', border: '1px solid #E8642A40' }}
           >
@@ -656,32 +788,49 @@ export function WodDetail({ wodName, onBack }: Props) {
       )}
 
       {/* Embedded timer */}
-      {showTimer && (
+      {showTimer && launch?.mode === 'krafttraining' && launch.kraft ? (
         <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
-          <TimerView
-            key={`${sessionMinutes}-${sessionExerciseList.join('|')}`}
-            initialMode={timerMode}
-            initialMinutes={sessionMinutes}
-            {...(timerMode === 'emom'
-              ? { initialEmomInterval: 1, initialEmomRounds: Math.max(1, sessionMinutes) }
-              : {})}
-            {...(timerMode === 'tabata'
-              ? {
-                  initialTabataWork: 20,
-                  initialTabataRest: 10,
-                  initialTabataRounds: Math.max(1, Math.round((sessionMinutes * 60) / 30)),
-                }
-              : {})}
-            adHocLog
+          <KraftTimerView
+            exercises={launch.kraft.exercises}
+            restBetweenSets={launch.kraft.restBetweenSets}
+            restBetweenExercises={launch.kraft.restBetweenExercises}
             workoutName={catalogWod.name}
-            exercises={sessionExercises.length > 0 ? sessionExercises : (customExercises.length > 0 ? customExercises : undefined)}
             onComplete={() => {
               track('workout_completed', { wod_id: catalogWod.id, duration_min: sessionMinutes, category: catalogWod.category })
               window.dispatchEvent(new CustomEvent('carveout:workout-completed'))
             }}
           />
         </div>
-      )}
+      ) : showTimer ? (
+        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-4">
+          <TimerView
+            key={`${launch?.mode ?? timerMode}-${launch?.minutes ?? sessionMinutes}-${launch?.scheme ?? sessionScheme}-${exerciseSig(launch?.exercises ?? sessionItems)}`}
+            initialMode={(launch?.mode && launch.mode !== 'krafttraining' ? launch.mode : timerMode)}
+            initialMinutes={launch?.minutes ?? sessionMinutes}
+            scheme={(launch ? launch.scheme : sessionScheme) || undefined}
+            {...((launch?.mode ?? timerMode) === 'emom'
+              ? {
+                  initialEmomInterval: launch?.emomInterval ?? 1,
+                  initialEmomRounds: launch?.emomRounds ?? Math.max(1, launch?.minutes ?? sessionMinutes),
+                }
+              : {})}
+            {...((launch?.mode ?? timerMode) === 'tabata'
+              ? {
+                  initialTabataWork: launch?.tabataWork ?? 20,
+                  initialTabataRest: launch?.tabataRest ?? 10,
+                  initialTabataRounds: launch?.tabataRounds ?? Math.max(1, Math.round(((launch?.minutes ?? sessionMinutes) * 60) / 30)),
+                }
+              : {})}
+            adHocLog
+            workoutName={catalogWod.name}
+            exercises={(launch?.exercises ?? sessionExercises).length > 0 ? (launch?.exercises ?? sessionExercises) : (customExercises.length > 0 ? customExercises : undefined)}
+            onComplete={() => {
+              track('workout_completed', { wod_id: catalogWod.id, duration_min: sessionMinutes, category: catalogWod.category })
+              window.dispatchEvent(new CustomEvent('carveout:workout-completed'))
+            }}
+          />
+        </div>
+      ) : null}
 
       {/* History toggle */}
       <button
@@ -708,12 +857,31 @@ export function WodDetail({ wodName, onBack }: Props) {
 
       <WarmupTimer
         isOpen={showWarmupTimer}
+        routine={warmupRoutine}
         onClose={() => setShowWarmupTimer(false)}
         onStartWorkout={() => { setShowWarmupTimer(false); setShowWorkoutCountdown(true) }}
       />
       <WorkoutCountdown
         isOpen={showWorkoutCountdown}
         onComplete={() => { setShowWorkoutCountdown(false); setShowTimer(true) }}
+      />
+      <FreeTimerWizard
+        key={startKey}
+        isOpen={startOpen}
+        onClose={() => setStartOpen(false)}
+        variant="adhoc"
+        title={catalogWod.name}
+        initialStep={1}
+        initialValues={{
+          name: catalogWod.name,
+          mode: timerMode,
+          minutes: sessionMinutes,
+          exercises: sessionItems,
+          scheme: sessionScheme,
+        }}
+        onStart={(mode, minutes, withWarmup, kraftConfig, exercises, _name, timerCfg) => {
+          beginFromWizard(mode, minutes, withWarmup, kraftConfig, exercises, timerCfg)
+        }}
       />
     </div>
   )
