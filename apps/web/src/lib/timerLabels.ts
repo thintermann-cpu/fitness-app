@@ -45,7 +45,12 @@ export const TIMER_MODE_LIST: TimerMode[] = ['fortime', 'amrap', 'emom', 'tabata
 /** Maps WOD type strings (from DB) to TimerMode */
 export const WOD_TYPE_TO_MODE: Record<string, TimerMode> = {
   ForTime: 'fortime',
+  fortime: 'fortime',
   AMRAP:   'amrap',
+  amrap:   'amrap',
   EMOM:    'emom',
+  emom:    'emom',
   Tabata:  'tabata',
+  tabata:  'tabata',
+  krafttraining: 'krafttraining',
 }
