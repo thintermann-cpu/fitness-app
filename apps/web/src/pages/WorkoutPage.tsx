@@ -175,7 +175,7 @@ export function WorkoutPage() {
   // If a WOD name is in the URL, show WodDetail instead of the list
   if (wodName) {
     return (
-      <div className="min-h-svh bg-[var(--color-bg)] px-4 pt-10 pb-24 max-w-lg mx-auto">
+      <div className="min-h-full bg-[var(--color-bg)] px-4 pt-10 pb-24 max-w-lg mx-auto">
         <WodDetail
           wodName={decodeURIComponent(wodName)}
           onBack={() => navigate('/workout')}
@@ -185,7 +185,7 @@ export function WorkoutPage() {
   }
 
   return (
-    <div className="min-h-svh bg-[var(--color-bg)] flex flex-col">
+    <div className="min-h-full bg-[var(--color-bg)] flex flex-col">
       {/* Header */}
       <div className="px-4 pt-4 lg:pt-10 pb-2 flex items-end justify-between">
         <h1 className="text-2xl font-black text-[var(--color-text)]">

@@ -37,7 +37,10 @@ export function WizardShell({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: 'var(--color-bg)' }}>
+    <div
+      className="fixed inset-0 z-50 flex h-dvh max-h-dvh flex-col overflow-hidden"
+      style={{ backgroundColor: 'var(--color-bg)' }}
+    >
       {/* Header */}
       <div
         className="flex items-center gap-3 px-4 py-3 border-b flex-shrink-0"
@@ -75,14 +78,14 @@ export function WizardShell({
         </span>
       </div>
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-4 py-5">
+      {/* Scrollable content. min-h-0 keeps the footer inside the phone viewport. */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
         {children}
       </div>
 
       {/* Footer */}
       <div
-        className="px-4 py-4 border-t flex-shrink-0"
+        className="px-4 py-3 border-t flex-shrink-0"
         style={{
           borderColor: 'rgba(255,255,255,0.08)',
           paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',

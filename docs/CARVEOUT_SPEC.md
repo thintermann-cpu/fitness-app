@@ -140,7 +140,7 @@ apps/web/src/
 │   │   ├── GuidedSession.tsx   # (bestehend) + `defaultExerciseDuration`-Prop (überschreibt config-Default, genutzt von Yoga Flows mit flow.holdTime); Yoga-Atemhinweis (subcategory=yoga_flow); ExerciseKeyframes integriert (Bild-Crossfade pro Übung); per-exercise `duration_sec` überschreibt globales `exerciseDuration` (Fallback wenn 0); Duration-Default wenn kein `defaultExerciseDuration`: Median der `duration_sec`-Werte der Übungen (Fallback 30s); Übungsname in `text-2xl`; Next-Up-Banner via `NextExercisePreview`: letzte 10s der Exercise-Phase + gesamte Rest-Phase (wenn `pauseDuration >= 5`); **Bilateral-Fix**: jede Seite nutzt volle `exerciseDuration` (nicht mehr `Math.floor(total/2)`); Phasenlogik (switch: left→right→pause) bleibt intakt; **Musik-Button**: öffnet `carveout_music_stretching`-Link (localStorage) in neuem Tab — nur sichtbar wenn Link gesetzt
 │   │   └── SessionCreator.tsx  # 3-Step Wizard (Auswählen nach muscle_group → Reihenfolge → Name); erstellt virtuelle StretchingRoutine; speichert benannte Sessions via customWorkouts.ts
 │   ├── wizard/
-│   │   ├── WizardShell.tsx    # Generischer 3-Step Full-Screen Modal-Wrapper; Progress-Bars, Back/Next/Close, canNext-Guard, body-overflow-lock; `secondaryAction?: { label: string; onClick: () => void }` — optionaler zweiter Button neben "Weiter" (genutzt von FreeTimerWizard für "Nur speichern")
+│   │   ├── WizardShell.tsx    # Full-Screen-Wizard, `h-dvh max-h-dvh overflow-hidden`, Inhalt `min-h-0` scrollbar, Footer bleibt auf dem Phone-Viewport; Progress-Bars, Back/Next/Close, canNext-Guard; `secondaryAction` für "Nur speichern"
 │   │   └── ExerciseListEditor.tsx  # Reorderable Liste (↑/↓/✕) + optionales Add-Input-Feld; Props: items, onChange, placeholder, showAddInput
 │   ├── meditation/            # Alle Meditation-Komponenten (inkl. AdHocMeditationTimer.tsx — circular progress, gong, vibrate, wake lock, session-log, **sound-Prop** [SoundKey, default `silence`] — startet/stoppt Ambient-Sound via `useAudio().startBackground/stopBackground` synchron zu Timer-Status running/paused/done/unmount); **UnguidedTimer.tsx** (Phasen-Timer: 5 Typen breathing/box_breathing/body_scan/focus/open_awareness, 5–20 min, dreisprachig TYPE_LABELS, PHASES-Map); **GuidedPlayer.tsx** (lädt `public/audio/sessions/sessions.json`, MP3-Player mit Progress, `available`-Flag — Placeholder bis Audiodateien vorhanden); **AmbientPlayer.tsx** (10 Ambient-Sounds, Lautstärke-Slider, localStorage-Persist `meditation_ambient_sound`, trackt `ambient_sound_selected` via useAnalytics; kein `unavailable`-State — Buttons immer klickbar, Fehler stoppt nur Playback); **MeditationSession**: Musik-Button öffnet `carveout_music_meditation`-Link (localStorage) in neuem Tab — nur sichtbar wenn Link gesetzt
 │   ├── shared/
@@ -590,6 +590,9 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 
 | Bereich | Inhalt |
 |---|---|
+| **Übungs-Grafiken** | Vor Ambient-MP3s. **Mobilität zuerst**, gezeichnet realistisch, in der Regel 3 Posen (Start/Mitte/Ende) als Einzelbilder über `ExerciseKeyframes`. Eine 4. Pose nur wenn die Bewegung sie braucht. Kein GIF, kein Video, keine Strichmännchen als Zielbild (Strichfigur nur Fallback, solange Frames fehlen). Training später, UI schlank: Info-Zeichen mit Kurztext, optional dieselben Frames, plus YouTube. Einbettung im Sheet vs. externer Link offen (GDPR). |
+| **Übungs-Katalog** | Kanonische Übung (Name, Aliase, Equipment, optionale Frames, optionale YouTube-Id), nicht Freitext. Mobilität hat `stretching_exercises` schon. Training-WODs sind noch ein Textblob. Nötig, damit Grafiken, Info und Suche dieselbe Übung meinen. |
+| **Training-Suche Equipment** | Hauptsuche: Workouts, die ein genanntes Equipment nutzen (z. B. Dumbbells), plus Anzahl 1 / 2 / 3 / mehr. Heute sucht das Feld Name (live) bzw. Name+Übungen+Beschreibung (lokales JSON). Der Equipment-Filter ist „darf nur das nutzen, was ich habe“, nicht „muss das enthalten“. Anzahl-Filter fehlt. |
 | **Landingpage (Erweiterung)** | Waitlist-Integration; Pricing-CTAs live (Stripe-Checkout aktiv) |
 | **Stripe (Erweiterung)** | Customer Portal, Upgrade/Downgrade-Flow; Rechnungs-E-Mails |
 | **Bestätigungsemail** | Via Resend — wartet auf finales Logo |
@@ -625,7 +628,7 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 - Ablage: `apps/web/public/audio/sessions/[session-id]/[phase].mp3`
 - Guided Session Player erweitern um Audio-Playback
 
-**Reihenfolge:** Ambient-Dateien ins Repo legen — als Nächstes TTS-Script (Datei fehlt noch).
+**Reihenfolge:** Übungs-Grafiken (Training + Mobilität) — danach Ambient-Dateien ins Repo — danach TTS-Script (Datei fehlt noch).
 
 ---
 

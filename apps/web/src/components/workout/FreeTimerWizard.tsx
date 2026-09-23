@@ -193,8 +193,8 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
     >
       {/* Step 0: Mode */}
       {step === 0 && (
-        <div className="space-y-3">
-          <p className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text-muted)' }}>
+        <div className="space-y-2">
+          <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
             Timer-Modus wählen
           </p>
           {TIMER_MODE_LIST.map((id) => {
@@ -203,7 +203,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', initialValu
               <button
                 key={id}
                 onClick={() => setMode(id)}
-                className="w-full flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all text-left"
+                className="w-full flex items-center gap-3 rounded-xl px-3 py-2 transition-all text-left"
                 style={{
                   backgroundColor: mode === id ? `${m.color}18` : 'var(--color-bg-card)',
                   border: `1.5px solid ${mode === id ? m.color : 'transparent'}`,

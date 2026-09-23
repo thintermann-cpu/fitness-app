@@ -66,7 +66,7 @@ export function CustomWorkoutsPage() {
     : workouts
 
   return (
-    <div className="min-h-svh bg-[var(--color-bg)] px-4 pt-4 pb-24 max-w-lg mx-auto">
+    <div className="min-h-full bg-[var(--color-bg)] px-4 pt-4 pb-4 max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button

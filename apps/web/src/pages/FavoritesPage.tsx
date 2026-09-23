@@ -54,7 +54,7 @@ export function FavoritesPage() {
     })
 
   return (
-    <div className="min-h-svh bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
+    <div className="min-h-full bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
       {/* Header */}
       <div className="px-4 pt-4 pb-4 flex items-center gap-3">
         <button
