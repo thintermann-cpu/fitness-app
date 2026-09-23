@@ -50,6 +50,13 @@ const MODE_TO_WOD_TYPE: Record<TimerMode, string> = {
   tabata:  'Tabata',
 }
 
+function plannedRoundsFromScheme(scheme?: string): number | null {
+  const match = scheme?.match(/(\d+)\s*runden/i)
+  if (!match) return null
+  const count = Number(match[1])
+  return count > 0 && count <= 40 ? count : null
+}
+
 function formatMs(ms: number): string {
   const totalSec = Math.floor(Math.abs(ms) / 1000)
   const m = Math.floor(totalSec / 60)
@@ -154,7 +161,12 @@ export function TimerView({
   const [showCountdown, setShowCountdown] = useState(false)
   const [tick, setTick]           = useState<TickData>({ elapsed: 0, remaining: 0, phase: 'work', interval: 1 })
   const [isComplete, setIsComplete] = useState(false)
+  const [doneRounds, setDoneRounds] = useState(0)
+  const [partialReps, setPartialReps] = useState(0)
   const [showSideSwitch, setShowSideSwitch] = useState(false)
+  const plannedRounds = plannedRoundsFromScheme(scheme)
+  const tallyRef = useRef({ rounds: 0, reps: 0 })
+  tallyRef.current = { rounds: doneRounds, reps: partialReps }
   const sideSwitchShownRef = useRef(false)
 
   const workerRef = useRef<Worker | null>(null)
@@ -251,10 +263,18 @@ export function TimerView({
   useEffect(() => {
 if (!adHocLog || !isComplete || loggedRef.current) return
     loggedRef.current = true
+    const tally = tallyRef.current
+    const tallyNote = tally.rounds || tally.reps
+      ? `${tally.rounds} Runden${tally.reps ? ` + ${tally.reps} Reps` : ''}`
+      : undefined
+    const counted = mode === 'amrap' && (tally.rounds > 0 || tally.reps > 0)
     addEntry.mutate({
       wod_name: workoutName ?? `Ad-hoc ${MODE_TO_WOD_TYPE[mode]}`,
-      score_type: 'time',
-      score_value: formatMs(finalElapsedRef.current > 0 ? finalElapsedRef.current : tickRef.current.elapsed),
+      score_type: counted ? 'rounds' : 'time',
+      score_value: counted
+        ? (tally.reps ? `${tally.rounds}+${tally.reps}` : String(tally.rounds))
+        : formatMs(finalElapsedRef.current > 0 ? finalElapsedRef.current : tickRef.current.elapsed),
+      notes: tallyNote,
       exercises: exercises && exercises.length > 0 ? exercises : undefined,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -325,7 +345,20 @@ if (!adHocLog || !isComplete || loggedRef.current) return
     setIsRunning(false)
     setIsPaused(false)
     setIsComplete(false)
+    setDoneRounds(0)
+    setPartialReps(0)
     loggedRef.current = false
+  }, [])
+
+  const finishRound = useCallback(() => {
+    setDoneRounds((current) => (plannedRounds != null && current >= plannedRounds ? current : current + 1))
+    setPartialReps(0)
+    if ('vibrate' in navigator) navigator.vibrate(30)
+  }, [plannedRounds])
+
+  const undoRound = useCallback(() => {
+    setDoneRounds((current) => Math.max(0, current - 1))
+    setPartialReps(0)
   }, [])
 
   const handleStop = useCallback(() => {
@@ -391,6 +424,11 @@ if (!adHocLog || !isComplete || loggedRef.current) return
           )}
         </div>
         <p className="font-mono font-bold text-xl" style={{ color: 'var(--color-text)' }}>{scoreText}</p>
+        {(doneRounds > 0 || partialReps > 0) && (
+          <p className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+            {doneRounds} Runden{partialReps > 0 ? ` + ${partialReps} Reps` : ''}
+          </p>
+        )}
         <div className="flex flex-col gap-3 w-full mt-2">
           <button
             onClick={() => navigate('/home')}
@@ -589,6 +627,91 @@ if (!adHocLog || !isComplete || loggedRef.current) return
           </p>
         )}
       </div>
+
+      {(isRunning || isPaused) && (mode === 'fortime' || mode === 'amrap') && (
+        <div className="w-full flex flex-col items-center gap-3">
+          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+            {plannedRounds != null
+              ? `${doneRounds} / ${plannedRounds} Runden`
+              : `${doneRounds} ${doneRounds === 1 ? 'Runde' : 'Runden'}`}
+            {partialReps > 0 ? ` · ${partialReps} Reps` : ''}
+          </p>
+          {plannedRounds != null && plannedRounds <= 12 && (
+            <div className="flex flex-wrap justify-center gap-2" role="group" aria-label="Runden">
+              {Array.from({ length: plannedRounds }, (_, index) => {
+                const filled = index < doneRounds
+                const next = index === doneRounds
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    aria-label={filled ? `Runde ${index + 1} zurücknehmen` : `Runde ${index + 1} abhaken`}
+                    disabled={!filled && !next}
+                    onClick={() => {
+                      if (filled && index === doneRounds - 1) undoRound()
+                      else if (next) finishRound()
+                    }}
+                    className="w-11 h-11 rounded-full text-sm font-bold"
+                    style={{
+                      backgroundColor: filled ? modeColor : 'transparent',
+                      color: filled ? 'white' : 'var(--color-text)',
+                      border: `2px solid ${filled || next ? modeColor : 'rgba(255,255,255,0.16)'}`,
+                      opacity: !filled && !next ? 0.4 : 1,
+                    }}
+                  >
+                    {filled ? '✓' : index + 1}
+                  </button>
+                )
+              })}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={finishRound}
+            disabled={plannedRounds != null && doneRounds >= plannedRounds}
+            className="w-full py-4 rounded-2xl font-bold text-lg text-white active:scale-[0.98] disabled:opacity-40"
+            style={{ backgroundColor: modeColor }}
+          >
+            {plannedRounds != null && doneRounds >= plannedRounds ? 'Alle Runden' : 'Runde fertig'}
+          </button>
+          {(plannedRounds == null || doneRounds < plannedRounds) && (
+            <div className="flex items-center justify-center gap-4">
+              <button
+                type="button"
+                aria-label="Rep weniger"
+                onClick={() => setPartialReps((reps) => Math.max(0, reps - 1))}
+                className="w-14 h-14 rounded-2xl text-2xl font-bold"
+                style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: 'var(--color-text)' }}
+              >
+                −
+              </button>
+              <div className="text-center min-w-[4.5rem]">
+                <p className="text-3xl font-black tabular-nums" style={{ color: 'var(--color-text)' }}>{partialReps}</p>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Reps</p>
+              </div>
+              <button
+                type="button"
+                aria-label="Rep mehr"
+                onClick={() => setPartialReps((reps) => reps + 1)}
+                className="w-14 h-14 rounded-2xl text-2xl font-bold text-white"
+                style={{ backgroundColor: modeColor }}
+              >
+                +
+              </button>
+            </div>
+          )}
+          {doneRounds > 0 && (
+            <button
+              type="button"
+              onClick={undoRound}
+              className="text-xs font-semibold"
+              style={{ color: 'var(--color-text-muted)', background: 'none', border: 'none' }}
+            >
+              Letzte Runde zurück
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Controls */}
       <div className="flex items-center gap-4 mt-2">
