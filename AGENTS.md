@@ -12,3 +12,4 @@ Produkt- und Architektur-Kontext: `CLAUDE.md` und `docs/CARVEOUT_SPEC.md`. Spec 
 - Fallback: Ist beim Boot keine `VITE_SUPABASE_URL` gesetzt (Secrets-Tab leer) und keine `apps/web/.env` vorhanden, legt der `install`-Schritt automatisch eine `apps/web/.env` aus `.env.example` an (Platzhalter). Damit rendert die App out-of-the-box im Offline-/Frontend-Modus. Sind echte Supabase-Secrets gesetzt, haben sie Vorrang (Vite liest `VITE_*` aus den Prozess-Env-Variablen) und es wird keine `.env` geschrieben.
 - Stripe Secret Key gehört in Supabase Edge Function Secrets, nicht in Cursor und nicht ins Repo.
 - Tailwind v4: kein `tailwind.config.js`. Farben über CSS-Variablen `--color-pillar-*`.
+- Wenn Tim „push“ sagt, heißt das committen, pushen und nach `main` mergen. Nur der Push auf `main` deployt.

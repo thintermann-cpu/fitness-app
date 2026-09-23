@@ -38,7 +38,7 @@ CSS-Variablen liegen in `apps/web/src/styles/tokens.css` als `--color-pillar-*`.
 1. Vor Code-Änderungen: relevante Spec-Abschnitte lesen, kurzen Plan formulieren. Bei Implementation grösserer Features (>30 Zeilen, Worker/Schema-Touch): Plan-Skizze zuerst (5–10 Zeilen, Datenmodell + Komponenten-Signaturen), Freigabe abwarten.
 2. Implementieren — kleine Schritte, klar benannt.
 3. Lokal verifizieren (`npm run build`, ggf. `npm run lint`).
-4. Commit + Push auf `main`. CI/CD deployt automatisch.
+4. Commit + Push auf `main`. Sagt Tim „push“, ist der Merge nach `main` mit gemeint. CI/CD deployt automatisch.
 5. Deploy-Verifikation: kurzer Check auf `carveout.app` (Build geladen, Routen erreichbar).
 6. Nach signifikanten Änderungen: Doc-Keeper-Subagent aufrufen (Pflicht — nicht optional). Gilt auch wenn Cowork den Code geschrieben hat.
 
