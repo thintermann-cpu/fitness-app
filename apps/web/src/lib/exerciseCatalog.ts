@@ -1062,7 +1062,14 @@ export function presentCatalogWorkout(input: {
     lines = lines.map((line, index) => ({ ...line, detail: `${repParts[index]} Wdh.` }))
   }
 
-  const kind: CatalogPrescription['kind'] = lines.length < 2 ? 'single' : strength ? 'strength' : 'metcon'
+  // Named CrossFit rows that are one movement on purpose (Karen, KB Grace, Grace Home)
+  // stay in the list. Program rows that collapsed to a single exercise do not.
+  const crossfitCatalog = (input.wodCategory ?? '') === 'crossfit'
+    || /girl|hero|home gym|homewod|benchmark|open|eigenes|core wod/i.test(input.category ?? '')
+    || /^(emom|tabata)$/i.test((input.category ?? '').trim())
+  const kind: CatalogPrescription['kind'] = lines.length < 2 && !crossfitCatalog
+    ? 'single'
+    : strength ? 'strength' : 'metcon'
   const rounds = (input.runden ?? '').trim()
   const roundFromText = description.match(/(\d+)\s*(?:runden|rounds)\b/i)?.[1]
   const roundLabel = rounds
