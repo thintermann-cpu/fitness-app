@@ -1,5 +1,5 @@
 {
-  "install": "npm install",
+  "install": "npm install && { [ -n \"$VITE_SUPABASE_URL\" ] || [ -f apps/web/.env ] || cp apps/web/.env.example apps/web/.env; }",
   "terminals": [
     {
       "name": "web",
