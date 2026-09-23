@@ -135,16 +135,18 @@ export function WodList({
   const [draftMaxDur,   setDraftMaxDur]   = useState(0)
   const [draftExclude,  setDraftExclude]  = useState<string[]>([])
   const [draftProgram,  setDraftProgram]  = useState('')
+  const [draftCount,    setDraftCount]    = useState<EquipmentCount>('any')
 
   const activeFilterCount =
     (type ? 1 : 0) + (category ? 1 : 0) + (difficulty ? 1 : 0) +
     ((minDur > 0 || maxDur > 0) ? 1 : 0) + (excludeEq.length > 0 ? 1 : 0) +
-    (program ? 1 : 0)
+    (program ? 1 : 0) + (equipmentCount !== 'any' ? 1 : 0)
 
   const openFilter = () => {
     setDraftType(type); setDraftCat(category); setDraftDiff(difficulty)
     setDraftMinDur(minDur); setDraftMaxDur(maxDur)
     setDraftExclude(excludeEq); setDraftProgram(program)
+    setDraftCount(equipmentCount)
     setFilterOpen(true)
   }
 
@@ -153,8 +155,10 @@ export function WodList({
     setMinDur(draftMinDur); setMaxDur(draftMaxDur)
     setExcludeEq(draftExclude)
     setProgram(draftProgram)
+    setEquipmentCount(draftCount)
     if (draftProgram) localStorage.setItem(PROGRAM_STORAGE_KEY, draftProgram)
     else localStorage.removeItem(PROGRAM_STORAGE_KEY)
+    sessionStorage.setItem(COUNT_KEY, draftCount)
     writeFilterSession({ type: draftType, category: draftCat, difficulty: draftDiff,
       minDur: draftMinDur, maxDur: draftMaxDur, excludeEq: draftExclude })
     setPage(0)
@@ -165,6 +169,8 @@ export function WodList({
     setType(''); setCategory(''); setDifficulty('')
     setMinDur(0); setMaxDur(0); setExcludeEq([])
     setProgram(''); localStorage.removeItem(PROGRAM_STORAGE_KEY)
+    setEquipmentCount('any')
+    sessionStorage.setItem(COUNT_KEY, 'any')
     try { sessionStorage.removeItem(SESSION_FILTERS_KEY) } catch {}
     setPage(0)
     setFilterOpen(false)
@@ -239,7 +245,7 @@ export function WodList({
               sessionStorage.setItem(SEARCH_KEY, v)
               setPage(0)
             }}
-            placeholder="Name, Übung, Equipment…"
+            placeholder="Workout suchen…"
             className="w-full bg-[var(--color-bg-card)] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[#E8642A] text-sm"
           />
         </div>
@@ -273,29 +279,6 @@ export function WodList({
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
-        {COUNT_OPTIONS.map((opt) => {
-          const active = equipmentCount === opt.id
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => {
-                setEquipmentCount(opt.id)
-                sessionStorage.setItem(COUNT_KEY, opt.id)
-                setPage(0)
-              }}
-              className="px-2.5 py-1 rounded-full text-xs font-semibold"
-              style={{
-                backgroundColor: active ? '#E8642A' : 'var(--color-bg-card)',
-                color: active ? 'white' : 'var(--color-text-muted)',
-              }}
-            >
-              {opt.label}
-            </button>
-          )
-        })}
-      </div>
       {(equipmentSpecified || equipmentCount !== 'any') && (
         <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
           {equipmentHint(
@@ -433,6 +416,30 @@ export function WodList({
                 {d === 0 ? 'Kein Max.' : `≤${d} min`}
               </button>
             ))}
+          </div>
+        </SheetSection>
+
+        <SheetSection label="Anzahl Geräte">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {COUNT_OPTIONS.map((opt) => {
+              const active = draftCount === opt.id
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setDraftCount(opt.id)}
+                  style={{
+                    padding: '7px 14px', borderRadius: 20, border: 'none',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    fontFamily: 'var(--font-sans)',
+                    backgroundColor: active ? PILLAR_COLOR : 'rgba(255,255,255,0.07)',
+                    color: active ? 'white' : 'rgba(255,255,255,0.5)',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              )
+            })}
           </div>
         </SheetSection>
 

@@ -8,6 +8,7 @@ const TYPE_COLORS: Record<string, string> = {
   ForTime: 'bg-red-500/20 text-red-400',
   EMOM:    'bg-blue-500/20 text-blue-400',
   Tabata:  'bg-purple-500/20 text-purple-400',
+  krafttraining: 'bg-emerald-500/20 text-emerald-400',
 }
 
 const DIFFICULTY_DOTS: Record<string, number> = {
@@ -25,6 +26,12 @@ interface Props {
 export function WodCard({ wod, onClick }: Props) {
   const lang    = useAuthStore((s) => s.profile?.language ?? 'de')
   const typeCls = TYPE_COLORS[wod.type] ?? 'bg-white/10 text-white/60'
+  const rx = wod.prescription
+  const preview = !rx || rx.kind === 'single'
+    ? wod.exercises
+    : rx.kind === 'strength'
+      ? rx.lines.map((line) => `${line.name} ${line.detail ?? `${line.sets}×${line.repCount}`}`).join(' · ')
+      : [rx.scheme, rx.lines.map((line) => line.detail ? `${line.name} ${line.detail}` : line.name).join(', ')].filter(Boolean).join(' — ')
   const dots    = DIFFICULTY_DOTS[wod.difficulty] ?? 2
   const label   = getWodTypeLabel(wod.type, lang)
 
@@ -55,7 +62,7 @@ export function WodCard({ wod, onClick }: Props) {
 
       <button onClick={onClick} className="w-full text-left">
         <p className="mt-1 text-sm text-[var(--color-text-muted)] line-clamp-1">
-          {wod.exercises}
+          {preview}
         </p>
 
         <div className="mt-3 flex items-center gap-3">

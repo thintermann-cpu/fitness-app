@@ -375,10 +375,10 @@ type WorkoutLocation = 'home' | 'gym' | 'bodyweight' | 'outdoor'
 |---|---|
 | **Home** | Dumbbells, Kettlebell, Pull-up Bar, Resistance Bands |
 | **Gym** | Barbell, Dumbbells, Pull-up Bar, Rings, Rower, Bike, Kettlebell |
-| **Bodyweight** | _(leer — nur Körpergewicht)_ |
+| **Bodyweight** | nur Körpergewicht |
 | **Outdoor** | Bodyweight, Pull-up Bar, Laufen |
 
-Nutzer können ihr Equipment pro Location in den Settings anpassen (`equipment_by_location` in `user_profiles`). `WorkoutPage` filtert die WOD-Liste anhand des aktiven Location-Presets.
+Ohne gewählte Kachel zeigt die Liste alle sichtbaren Workouts. Eine Kachel filtert auf Workouts, die an diesem Ort machbar sind; dasselbe Workout kann auf mehreren Kacheln liegen (Körpergewicht liegt auf allen, die es erlauben). „oder“ im Ablauf braucht nur eine der Optionen. Das Profil-Equipment aus den Einstellungen filtert die Liste nicht mehr. `equipment_by_location` bleibt in den Settings gespeichert, steuert die Kacheln aber nicht.
 
 ---
 
@@ -586,6 +586,8 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 | **Session AW** | **Stripe-Return, Würfel live, Sidebar, Equipment-Toggle** — Checkout `success_url` → `/settings?checkout=success` (Client + Edge-Default); `/profile` leitet Query mit; Settings zeigt Toast + Abo-View. `pickRandomWod` über live Supabase. Sidebar/BottomNav Achtsamkeit 🧘; Sidebar-Footer ohne nested `<a>`. `showAllEquipment` blendet Location-Selektion visuell und filterseitig aus. |
 | **Session AX** | **WOD Detail: Übungen lesbar + Session-Anpassung** — `splitWodExercises` macht Katalog-Blobs zur nummerierten Liste. „Temporär anpassen“ ändert Dauer und Übungen nur für die Session; die Dauer ist der Timer (ForTime-Cap, AMRAP-Minuten, EMOM-Runden, Tabata-Runden). „Bei eigenen speichern“ → `custom_workouts` als `{name} (angepasst)`, Equipment im `config`. `CustomWorkoutsPage`: schlanke Zeile, Aktionen rechts, Name nur im Bearbeiten-Wizard, Suche über Name/Equipment/Übungen. Katalog-DB/`wods.json` unverändert. Sichtbarkeit: 287 `is_visible=true`. |
 | **Session AY** | **Übungs-Katalog + Equipment-Suche** — `exerciseCatalog.ts` kanonisiert die 708 WODs (Aliase inkl. Kurzhantel/Klimmzug). `ExerciseListEditor fromCatalog` in `FreeTimerWizard` und `WodDetail`: Hinzufügen nur bei Katalog-Treffer. Suche in `WodList`: Equipment-Pflicht plus Anzahl Beliebig/1/2/3/Mehr. Körpergewicht zählt nicht, ein Paar ist ein Typ. Ort-Kacheln aus, sobald Equipment in der Suche steht. Client-Filter auf dem sichtbaren Supabase-Satz, damit Aliase nicht an `ilike(name)` hängen. |
+| **Session AZ** | **Equipment im Filter-Sheet** — Anzahl (Beliebig/1/2/3/Mehr) liegt im `FilterBottomSheet`. Die Suche ist ein Feld für das ganze Workout (Name, Übung, Equipment). Ort-Kacheln bleiben über der Liste, überlappen sich und lesen den sichtbaren Supabase-Satz. Programm-Beschreibungen ohne `exercises` werden beim Lesen in Übungszeilen und Equipment zerlegt. |
+| **Session BA** | **Formate, Sätze, Ein-Übungs-Workouts** — `presentCatalogWorkout` liest den ganzen Katalog (auch `is_visible=false`). Reps wie `3/1/3/1` hängen an der passenden Übung. `4×8 / 4×10` und „je Übung“ werden Kraft mit Sätzen und starten im Kraft-Timer. CrossFit ausser Girl/Hero wandert in HIIT (ohne Last), Kraft - Wenig Zeit (Last, bis 15 Min) oder Kraft-Ausdauer (Last, länger). Programm-Workouts mit nur einer Übung fallen aus der Liste. Benannte CrossFit-Workouts mit einer Übung (Karen, KB Grace, Grace Home) bleiben. Home Gym bleibt als Kategorie-Label. |
 
 ### Offen / Roadmap
 

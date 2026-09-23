@@ -807,3 +807,306 @@ export function composeWorkoutScheme(input: {
 export function formatParsedExercise(item: ParsedExercise): string {
   return item.detail ? `${item.name} · ${item.detail}` : item.name
 }
+
+function collectGearIds(text: string): string[] {
+  const key = ` ${normKey(text)} `
+  const ids: string[] = []
+  const seen = new Set<string>()
+  for (const phrase of PHRASES) {
+    if (phrase.kind !== 'equipment' || !phrase.alias) continue
+    if (key.includes(` ${phrase.alias} `) && !seen.has(phrase.id)) {
+      seen.add(phrase.id)
+      ids.push(phrase.id)
+    }
+  }
+  if (/\b(laufen|running|run)\b/.test(normKey(text)) && !seen.has('laufen')) ids.push('laufen')
+  return ids
+}
+
+/** Gear that is always required, plus groups where any one option is enough ("oder"). */
+export function gearNeeds(source: string, listed: string[] = []): { required: string[]; anyOf: string[][] } {
+  const required = new Set<string>()
+  const anyOf: string[][] = []
+  const chunks = source.split(/\s*(?:·|\n)+\s*/).map((part) => part.trim()).filter(Boolean)
+  let sawGear = false
+  for (const chunk of chunks.length ? chunks : [source]) {
+    if (/\boder\b/i.test(chunk)) {
+      const options = [...new Set(chunk.split(/\s+oder\s+/i).flatMap(collectGearIds))]
+      if (options.length >= 2) {
+        anyOf.push(options)
+        sawGear = true
+        continue
+      }
+    }
+    const ids = collectGearIds(chunk)
+    if (ids.length) sawGear = true
+    for (const id of ids) required.add(id)
+  }
+  if (!sawGear) {
+    for (const id of countableEquipment(listed)) {
+      if (id !== 'bodyweight') required.add(id)
+    }
+  }
+  for (const group of anyOf) for (const id of group) required.delete(id)
+  return { required: [...required], anyOf }
+}
+
+/** A tile shows the workout when its place can cover the gear. "oder" needs only one option. */
+export function fitsLocationEquipment(source: string, listed: string[], allowedLabels: string[]): boolean {
+  const allowed = new Set(
+    allowedLabels.map((label) => collectGearIds(label)[0] ?? (isBodyweightLabel(label) ? '' : normKey(label))).filter(Boolean),
+  )
+  const { required, anyOf } = gearNeeds(source, listed)
+  if (required.some((id) => !allowed.has(id))) return false
+  return anyOf.every((group) => group.some((id) => allowed.has(id)))
+}
+
+function gearLabel(id: string): string {
+  return equipmentById(id)?.name ?? (id === 'laufen' ? 'Laufen' : id)
+}
+
+/** Turn a program-workout description into exercise lines and the gear those lines name. */
+export function decomposeProgramText(description: string): { exercises: string; equipment: string[] } {
+  const [main, scheme] = description.split(/\s+—\s+/)
+  const lines: string[] = []
+  for (const chunk of (main ?? '').split(/\s*·\s*/).map((part) => part.trim()).filter(Boolean)) {
+    if (/^pause\b/i.test(chunk)) continue
+    const text = chunk
+      .replace(/(\d+\s*s)\s*\/\s*(\d+\s*s)/gi, '$1-$2')
+      .replace(/^(odd|even|jede minute|core)\s*:\s*/i, '')
+      .replace(/^\d+\.\s*/, '')
+      .trim()
+    if (!text || /^pause\b/i.test(text)) continue
+    const colon = text.match(/^(.*?):\s*(.+)$/)
+    if (colon?.[2]?.includes('/')) {
+      const head = colon[1].trim()
+      if (head && !/^\d+\s*s\s*\/\s*\d+\s*s$/i.test(head)) lines.push(head)
+      for (const part of colon[2].split(/\s*\/\s*/)) {
+        const name = part.trim()
+        if (name) lines.push(name)
+      }
+      continue
+    }
+    lines.push(text)
+  }
+  const needs = gearNeeds(description)
+  const equipment = [...new Set([...needs.required, ...needs.anyOf.flat()])].map(gearLabel)
+  const note = scheme?.trim()
+  return {
+    exercises: [lines.join('\n'), note ? `Vorgabe: ${note}` : ''].filter(Boolean).join('\n'),
+    equipment,
+  }
+}
+
+export interface PrescriptionLine {
+  name: string
+  detail?: string
+  sets?: number
+  repCount?: number
+}
+
+export interface CatalogPrescription {
+  /** single = one movement, dropped from the catalog. strength = sets per exercise. */
+  kind: 'single' | 'metcon' | 'strength'
+  scheme: string
+  lines: PrescriptionLine[]
+  /** Only set when a CrossFit row moves into HIIT or a Kraft format. Girls and Heroes stay. */
+  wodCategory?: string
+  type: string
+  restBetweenSets?: number
+}
+
+const LOADED_GEAR = /dumbbell|kettlebell|barbell|sandbag|gewichtsweste|weight vest|kurzhantel|langhantel|kb\b|db\b/i
+
+function canonTimerType(type: string): string {
+  const key = type.trim().toLowerCase()
+  if (key === 'fortime' || key === 'for time' || key === 'timer') return 'ForTime'
+  if (key === 'amrap') return 'AMRAP'
+  if (key === 'emom') return 'EMOM'
+  if (key === 'tabata') return 'Tabata'
+  if (key === 'krafttraining') return 'krafttraining'
+  return type.trim()
+}
+
+function splitMovementText(text: string): string[] {
+  const parts: string[] = []
+  let current = ''
+  let depth = 0
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (ch === '(') depth += 1
+    if (ch === ')' && depth) depth -= 1
+    const plus = depth === 0 && ch === '+' && /\s/.test(text[i - 1] ?? '') && /\s/.test(text[i + 1] ?? '')
+    if (depth === 0 && (ch === ',' || ch === '·' || ch === '\n' || ch === ';' || plus)) {
+      parts.push(current)
+      current = ''
+      continue
+    }
+    current += ch
+  }
+  parts.push(current)
+  return parts
+}
+
+function movementParts(text: string): string[] {
+  return splitMovementText(text)
+    .map((part) => part.trim()
+      .replace(/^[a-zäöü][^:]{0,24}:\s*(?=\d+\.\s)/i, '')
+      .replace(/^(odd|even|jede minute|min\s*\d+|core)\s*:\s*/i, '')
+      .replace(/^\d+\.\s*/, '')
+      .replace(/^\d+\s*(?:runden|rounds)\s*:\s*/i, '')
+      .trim())
+    .filter((part) => {
+      if (!part) return false
+      if (/^(pause|vorgabe)\b/i.test(part)) return false
+      if (/^\d+\s*s\s*pause/i.test(part)) return false
+      return /[a-zäöü]/i.test(part)
+    })
+}
+
+function inlineSet(name: string): { name: string; sets?: number; repCount?: number; detail?: string } {
+  const match = name.match(/(\d+)\s*[x×]\s*(\d+)\s*(s)?/i)
+  if (!match) return { name }
+  const cleaned = name.replace(match[0], '').replace(/[·,]\s*$/, '').replace(/\s{2,}/g, ' ').trim()
+  const sets = Number(match[1])
+  const repCount = Number(match[2])
+  return {
+    name: cleaned || name,
+    sets,
+    repCount,
+    detail: match[3] ? `${sets}×${repCount}s` : undefined,
+  }
+}
+
+function slashSetPairs(text: string): { sets: number; repCount: number }[] {
+  const pairs: { sets: number; repCount: number }[] = []
+  for (const chunk of text.split(/\s*\/\s*/)) {
+    const match = chunk.match(/(\d+)\s*[x×]\s*(\d+)/)
+    if (match) pairs.push({ sets: Number(match[1]), repCount: Number(match[2]) })
+  }
+  return pairs
+}
+
+function plainRepParts(reps: string): string[] | null {
+  const parts = reps.split(/\s*\/\s*/).map((part) => part.trim())
+  if (parts.length < 2 || parts.some((part) => !/^\d+$/.test(part))) return null
+  return parts
+}
+
+function restSeconds(text: string): number | undefined {
+  const seconds = text.match(/pause:\s*(\d+)\s*s/i)
+  if (seconds) return Number(seconds[1])
+  const minutes = text.match(/pause:\s*(\d+)\s*(?:[–-]\s*\d+\s*)?min/i)
+  if (minutes) return Number(minutes[1]) * 60
+  return undefined
+}
+
+/**
+ * Pair stored reps with exercises, and tell a metcon (shared rounds) from
+ * strength work (several sets of each exercise). One-movement rows are marked
+ * so the catalog can drop them.
+ */
+export function presentCatalogWorkout(input: {
+  exercises?: string
+  description?: string
+  runden?: string
+  reps?: string
+  gewicht?: string
+  type?: string
+  category?: string
+  wodCategory?: string
+  estimatedMinutes?: number
+  equipment?: string[]
+}): CatalogPrescription {
+  const description = (input.description ?? '').trim()
+  const storedExercises = (input.exercises ?? '').trim()
+  const [body, ...tailParts] = description.split(/\s+—\s+/)
+  const tail = tailParts.join(' — ')
+  const source = storedExercises || body
+  const rawLines = movementParts(source).map(inlineSet)
+  const reps = (input.reps ?? '').trim()
+  const repParts = plainRepParts(reps)
+  const eachSet = `${tail} ${reps} ${description}`.match(/(\d+)\s*[x×]\s*(\d+)\s*je\s+übung/i)
+  const setPairs = slashSetPairs(`${tail} ${reps}`)
+  const typeKey = (input.type ?? '').trim().toLowerCase()
+  const markedStrength = typeKey === 'krafttraining' || input.wodCategory === 'krafttraining'
+  const roundish = /amrap|emom|tabata|for\s*time|rounds|runden/i.test(`${input.type ?? ''} ${description}`)
+  const strength = markedStrength
+    || Boolean(eachSet)
+    || setPairs.length >= 2
+    || (setPairs.length === 1 && /sätze|sets/i.test(`${tail} ${description}`) && !roundish)
+
+  let lines: PrescriptionLine[] = rawLines.map((line) => ({
+    name: line.name,
+    detail: line.detail,
+    sets: line.sets,
+    repCount: line.repCount,
+  }))
+
+  if (strength) {
+    const shared = eachSet
+      ? lines.map(() => ({ sets: Number(eachSet[1]), repCount: Number(eachSet[2]) }))
+      : setPairs
+    let cursor = 0
+    lines = lines.map((line) => {
+      if (line.sets && line.repCount) return line
+      const pair = shared[cursor]
+      if (pair) cursor += 1
+      return {
+        ...line,
+        sets: pair?.sets ?? line.sets ?? 3,
+        repCount: pair?.repCount ?? line.repCount ?? 8,
+      }
+    })
+  } else if (repParts && repParts.length === lines.length) {
+    lines = lines.map((line, index) => ({ ...line, detail: `${repParts[index]} Wdh.` }))
+  }
+
+  // Named CrossFit rows that are one movement on purpose (Karen, KB Grace, Grace Home)
+  // stay in the list. Program rows that collapsed to a single exercise do not.
+  const crossfitCatalog = (input.wodCategory ?? '') === 'crossfit'
+    || /girl|hero|home gym|homewod|benchmark|open|eigenes|core wod/i.test(input.category ?? '')
+    || /^(emom|tabata)$/i.test((input.category ?? '').trim())
+  const kind: CatalogPrescription['kind'] = lines.length < 2 && !crossfitCatalog
+    ? 'single'
+    : strength ? 'strength' : 'metcon'
+  const rounds = (input.runden ?? '').trim()
+  const roundFromText = description.match(/(\d+)\s*(?:runden|rounds)\b/i)?.[1]
+  const roundLabel = rounds
+    ? (/runde|round/i.test(rounds) ? germanScheme(rounds) : `${rounds} Runden`)
+    : roundFromText ? `${roundFromText} Runden` : ''
+  const minutes = input.estimatedMinutes ?? 0
+  const canonType = canonTimerType(input.type ?? '')
+  const clockLabel = !roundLabel && (canonType === 'AMRAP' || canonType === 'EMOM' || canonType === 'Tabata')
+    ? [minutes ? `${minutes} Min` : '', canonType].filter(Boolean).join(' ')
+    : ''
+  const repsLeft = !strength && !(repParts && repParts.length === rawLines.length) ? reps : ''
+  const weight = (input.gewicht ?? '').trim()
+  const weightLabel = weight && /^\d+(?:[.,]\d+)?$/.test(weight) ? `${weight} kg` : ''
+  const pause = strength ? (tail.match(/pause:\s*[^·]+/i)?.[0]?.replace(/pause:\s*/i, 'Pause ') ?? '') : ''
+  const scheme = (strength
+    ? [pause, weightLabel]
+    : [roundLabel, clockLabel, repsLeft, weightLabel]
+  ).filter(Boolean).join(' · ')
+
+  const gearText = `${(input.equipment ?? []).join(' ')} ${source} ${description}`
+  const loaded = LOADED_GEAR.test(gearText)
+  let wodCategory: string | undefined
+  const namedBenchmark = /girl|hero/i.test(input.category ?? '')
+  const alreadyProgram = Boolean(input.wodCategory && input.wodCategory !== 'crossfit')
+  if (!namedBenchmark && !alreadyProgram) {
+    if (kind === 'strength') wodCategory = 'krafttraining'
+    else if (loaded && (minutes === 0 || minutes > 15) && !/tabata/i.test(input.type ?? '')) wodCategory = 'kraft_ausdauer'
+    else if (loaded) wodCategory = 'kraft_wenig_zeit'
+    else wodCategory = 'hiit'
+  }
+
+  return {
+    kind,
+    scheme,
+    lines,
+    wodCategory,
+    type: kind === 'strength' ? 'krafttraining' : canonTimerType(input.type ?? ''),
+    restBetweenSets: strength ? restSeconds(`${tail} ${description}`) : undefined,
+  }
+}

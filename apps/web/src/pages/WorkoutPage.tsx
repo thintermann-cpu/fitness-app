@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore'
 import type { WorkoutLocation } from '../store/authStore'
 import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
 import { useSessionStore } from '../store/sessionStore'
@@ -54,7 +53,6 @@ export function WorkoutPage() {
   const { wodName }    = useParams<{ wodName: string }>()
   const navigate       = useNavigate()
   const routerLocation = useLocation()
-  const { profile }    = useAuthStore()
   const isSessionActive = useSessionStore((s) => s.isSessionActive)
 
   const [tab, setTab]                     = useState<Tab>('wods')
@@ -63,7 +61,6 @@ export function WorkoutPage() {
   const [adhocPreset, setAdhocPreset]     = useState<WizardInitialValues | null>(null)
   const [adhocKey, setAdhocKey]           = useState(0)
   const [adhocOpen, setAdhocOpen]         = useState(false)
-  const [showAllEquipment, setShowAllEquipment] = useState(false)
   const [equipmentSpecified, setEquipmentSpecified] = useState(false)
   const [clearEquipmentTick, setClearEquipmentTick] = useState(0)
   const [timerConfig, setTimerConfig]     = useState<TimerConfig | null>(null)
@@ -168,12 +165,6 @@ export function WorkoutPage() {
 
   function handleLocationSelect(loc: WorkoutLocation) {
     if (equipmentSpecified) setClearEquipmentTick((tick) => tick + 1)
-    if (showAllEquipment) {
-      setShowAllEquipment(false)
-      setLocation(loc)
-      try { localStorage.setItem(LOCATION_STORAGE_KEY, loc) } catch {}
-      return
-    }
     const next = location === loc ? null : loc
     setLocation(next)
     try {
@@ -182,14 +173,12 @@ export function WorkoutPage() {
     } catch {}
   }
 
-  // "Alle anzeigen" turns off every equipment restriction, including location tiles.
-  const effectiveLocation = showAllEquipment || equipmentSpecified ? null : location
+  // No tile and no equipment search: the full visible catalog.
+  // A tile keeps workouts that can be done there. The same workout can match several tiles.
+  const effectiveLocation = equipmentSpecified ? null : location
   const equipmentForLocation = effectiveLocation
-    ? (profile?.equipment_by_location?.[effectiveLocation] ?? DEFAULT_EQUIPMENT_BY_LOCATION[effectiveLocation])
+    ? DEFAULT_EQUIPMENT_BY_LOCATION[effectiveLocation]
     : undefined
-
-  const hasProfileEquipment = (profile?.equipment?.length ?? 0) > 0
-  const userEquipment = hasProfileEquipment && !showAllEquipment && !equipmentSpecified ? profile!.equipment : undefined
 
   // If a WOD name is in the URL, show WodDetail instead of the list
   if (wodName) {
@@ -275,15 +264,6 @@ export function WorkoutPage() {
                 </button>
               ))}
             </div>
-            {hasProfileEquipment && (
-              <button
-                onClick={() => setShowAllEquipment((v) => !v)}
-                className="text-xs mb-3 flex items-center gap-1"
-                style={{ color: showAllEquipment ? 'var(--color-text-muted)' : '#E8642A', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              >
-                {showAllEquipment ? '⚡ Equipment-Filter aus — aktivieren' : '⚡ Equipment-Filter aktiv — Alle anzeigen'}
-              </button>
-            )}
             {equipmentSpecified && (
               <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
                 Ort-Filter aus, solange Equipment gesucht wird.
@@ -292,7 +272,6 @@ export function WorkoutPage() {
             <WodList
               onSelectWod={(name) => navigate(`/workout/${encodeURIComponent(name)}`)}
               equipmentFilter={equipmentForLocation}
-              userEquipment={userEquipment}
               silentMode={silentMode}
               clearEquipmentTick={clearEquipmentTick}
               onEquipmentSpecifiedChange={setEquipmentSpecified}

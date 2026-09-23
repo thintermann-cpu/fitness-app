@@ -7,7 +7,7 @@ export type WorkoutLocation = 'home' | 'gym' | 'bodyweight' | 'outdoor'
 export const DEFAULT_EQUIPMENT_BY_LOCATION: Record<WorkoutLocation, string[]> = {
   home:       ['Dumbbells', 'Kettlebell', 'Pull-up Bar', 'Resistance Bands'],
   gym:        ['Barbell', 'Dumbbells', 'Pull-up Bar', 'Rings', 'Rower', 'Bike', 'Kettlebell'],
-  bodyweight: [],
+  bodyweight: ['Bodyweight'],
   outdoor:    ['Bodyweight', 'Pull-up Bar', 'Laufen'],
 }
 
