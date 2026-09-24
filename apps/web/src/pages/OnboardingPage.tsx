@@ -86,7 +86,7 @@ export function OnboardingPage() {
     }
 
     await fetchProfile()
-    navigate('/home', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (

@@ -4,17 +4,16 @@ import { useAuthStore } from '../../store/authStore'
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 const NAV_ITEMS = [
-  { path: '/home',       icon: '🏠', key: 'home',       color: null,      pillarId: null         },
-  { path: '/routine',    icon: '📋', key: 'routine',    color: '#4A90D9', pillarId: 'routine'    },
-  { path: '/workout',    icon: '💪', key: 'workout',    color: '#E8642A', pillarId: 'workout'    },
-  { path: '/stretching', icon: '🤸', key: 'stretching', color: '#7BC67E', pillarId: 'stretching' },
-  { path: '/meditation', icon: '🧘', key: 'meditation', color: '#9B7FD4', pillarId: 'meditation' },
+  { path: '/',           icon: '☀️', key: 'home',       color: 'var(--color-pillar-routine)',    pillarId: null         },
+  { path: '/workout',    icon: '💪', key: 'workout',    color: 'var(--color-pillar-workout)',    pillarId: 'workout'    },
+  { path: '/stretching', icon: '🤸', key: 'stretching', color: 'var(--color-pillar-stretching)', pillarId: 'stretching' },
+  { path: '/meditation', icon: '🧘', key: 'meditation', color: 'var(--color-pillar-meditation)', pillarId: 'meditation' },
 ] as const
 
 const NAV_LABELS: Record<string, Record<string, string>> = {
-  de: { home: 'Mein Tag', workout: 'Training', routine: 'Routine',  stretching: 'Mobilität',  meditation: 'Achtsamkeit' },
-  en: { home: 'My Day',   workout: 'Workout',  routine: 'Routines', stretching: 'Mobility',   meditation: 'Mindfulness' },
-  es: { home: 'Mi Día',   workout: 'Entreno',  routine: 'Rutinas',  stretching: 'Movilidad',  meditation: 'Atención'    },
+  de: { home: 'Mein Tag', workout: 'Training', stretching: 'Mobilität',  meditation: 'Achtsamkeit' },
+  en: { home: 'My Day',   workout: 'Workout',  stretching: 'Mobility',   meditation: 'Mindfulness' },
+  es: { home: 'Mi Día',   workout: 'Entreno',  stretching: 'Movilidad',  meditation: 'Atención'    },
 }
 
 export function BottomNav() {
@@ -40,8 +39,8 @@ export function BottomNav() {
       }}
     >
       {visibleItems.map(({ path, icon, key, color }) => {
-        const isCurrentPage = pathname === path
-        const activeColor   = color ?? 'var(--color-text)'
+        const isCurrentPage = path === '/' ? pathname === '/' : pathname === path
+        const activeColor   = color
         const label         = labels[key] ?? key
 
         return (

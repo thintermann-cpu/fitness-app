@@ -49,7 +49,7 @@ export function OnboardingSlides({ lang = 'de' }: { lang?: string }) {
   const finish = () => {
     localStorage.setItem('carveout_tour_done', 'true')
     setVisible(false)
-    navigate('/home', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (
