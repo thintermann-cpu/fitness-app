@@ -360,6 +360,12 @@ if (!adHocLog || !isComplete || loggedRef.current) return
     if ('vibrate' in navigator) navigator.vibrate(30)
   }, [plannedRounds])
 
+  const stepExercise = useCallback((delta: number) => {
+    const count = exercises?.length ?? 0
+    if (count < 2) return
+    setFocusIndex((current) => (current + delta + count) % count)
+  }, [exercises])
+
   const undoRound = useCallback(() => {
     setDoneRounds((current) => Math.max(0, current - 1))
     setPartialReps(0)
@@ -594,12 +600,36 @@ if (!adHocLog || !isComplete || loggedRef.current) return
 
       {live && activeExercise && (
         <div className="flex flex-col items-center gap-1 w-full">
-          <p
-            className="text-center font-black leading-tight px-1"
-            style={{ fontSize: 'clamp(36px, 10vw, 44px)', color: 'var(--color-text)' }}
-          >
-            {activeExercise.name}
-          </p>
+          <div className="flex items-center w-full gap-1">
+            {hasExercises && exercises!.length > 1 && !intervalDriven && (
+              <button
+                type="button"
+                aria-label="Vorherige Übung"
+                onClick={() => stepExercise(-1)}
+                className="w-11 h-11 shrink-0 rounded-full text-2xl font-bold"
+                style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: 'var(--color-text)', border: 'none' }}
+              >
+                ‹
+              </button>
+            )}
+            <p
+              className="flex-1 text-center font-black leading-tight px-1"
+              style={{ fontSize: 'clamp(34px, 9vw, 42px)', color: 'var(--color-text)' }}
+            >
+              {activeExercise.name}
+            </p>
+            {hasExercises && exercises!.length > 1 && !intervalDriven && (
+              <button
+                type="button"
+                aria-label="Nächste Übung"
+                onClick={() => stepExercise(1)}
+                className="w-11 h-11 shrink-0 rounded-full text-2xl font-bold"
+                style={{ backgroundColor: modeColor, color: 'white', border: 'none' }}
+              >
+                ›
+              </button>
+            )}
+          </div>
           {activeExercise.detail && (
             <p className="text-sm font-semibold" style={{ color: modeColor }}>{activeExercise.detail}</p>
           )}
@@ -815,7 +845,7 @@ if (!adHocLog || !isComplete || loggedRef.current) return
             Übungen
           </p>
           {scheme && (
-            <p className={`${live ? 'text-[11px]' : 'text-sm'} font-semibold text-[var(--color-text)] mb-0.5`}>{scheme}</p>
+            <p className={`${live ? 'text-xs' : 'text-sm'} font-semibold text-[var(--color-text)] mb-0.5`}>{scheme}</p>
           )}
           {exercises.map((ex, i) => {
             const current = live && i === activeExIdx
@@ -825,7 +855,7 @@ if (!adHocLog || !isComplete || loggedRef.current) return
                 className="flex items-center gap-1.5 rounded-lg"
                 style={{
                   backgroundColor: current ? `${modeColor}22` : 'transparent',
-                  padding: live ? '1px 4px' : '2px 0',
+                  padding: live ? '3px 4px' : '2px 0',
                 }}
               >
                 <button
@@ -834,12 +864,12 @@ if (!adHocLog || !isComplete || loggedRef.current) return
                   className="flex items-center gap-1.5 flex-1 min-w-0 text-left"
                   style={{ background: 'none', border: 'none', padding: 0 }}
                 >
-                  <span className="text-[10px] text-[var(--color-text-muted)] w-3 flex-shrink-0">{i + 1}</span>
-                  <span className={`${live ? 'text-[11px]' : 'text-sm'} truncate ${current ? 'font-semibold' : ''}`} style={{ color: 'var(--color-text)' }}>
+                  <span className="text-xs text-[var(--color-text-muted)] w-4 flex-shrink-0">{i + 1}</span>
+                  <span className={`text-sm truncate ${current ? 'font-semibold' : ''}`} style={{ color: 'var(--color-text)' }}>
                     {ex.name}
                   </span>
                   {ex.detail && (
-                    <span className="text-[10px] text-[var(--color-text-muted)] shrink-0">{ex.detail}</span>
+                    <span className="text-xs text-[var(--color-text-muted)] shrink-0">{ex.detail}</span>
                   )}
                 </button>
                 <ExerciseInfoButton name={ex.name} detail={ex.detail} />
