@@ -48,6 +48,22 @@ interface AuthState {
 // this timeout keeps the app from being stuck on the loading gate in that case.
 const AUTH_INIT_TIMEOUT_MS = 8000
 
+function readStoredUser(): User | null {
+  try {
+    const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
+    if (!url) return null
+    const ref = new URL(url).hostname.split('.')[0]
+    const raw = localStorage.getItem(`sb-${ref}-auth-token`)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { user?: User; currentSession?: { user?: User } }
+    return parsed.user ?? parsed.currentSession?.user ?? null
+  } catch {
+    return null
+  }
+}
+
+const storedUser = readStoredUser()
+
 async function loadProfile(userId: string): Promise<DbProfile | null> {
   const { data } = await supabase
     .from('user_profiles')
@@ -58,11 +74,11 @@ async function loadProfile(userId: string): Promise<DbProfile | null> {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
+  user: storedUser,
   session: null,
   profile: null,
-  profileLoaded: false,
-  loading: true,
+  profileLoaded: !storedUser,
+  loading: false,
 
   signIn: async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
@@ -117,7 +133,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (result === 'timeout') {
         console.error('[authStore] getSession() timed out after', AUTH_INIT_TIMEOUT_MS, 'ms — auth lock likely stuck on another tab')
-        set({ loading: false, profileLoaded: true })
+        set({ loading: false, profileLoaded: get().profileLoaded || !get().user })
       } else {
         const session = result.data.session
         const user    = session?.user ?? null
@@ -132,7 +148,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
 
-      supabase.auth.onAuthStateChange((_event, newSession) => {
+      supabase.auth.onAuthStateChange((event, newSession) => {
+        if (!newSession && event !== 'SIGNED_OUT' && get().user) return
         const userId = newSession?.user?.id
         set({
           session: newSession,
