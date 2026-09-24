@@ -3,6 +3,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import type { WizardExercise } from '../lib/customWorkouts'
 import { markPillarDone } from '../lib/pillarDone'
+import { completeLinkedRoutines } from '../lib/completeLinkedRoutines'
 
 export interface WodHistoryEntry {
   id: string
@@ -71,6 +72,7 @@ export function useWodHistory(wodName?: string) {
         completed_at: new Date().toISOString(),
       }
       markPillarDone('workout')
+      void completeLinkedRoutines('workout')
 
       if (!isSupabaseConfigured) {
         const all = readLocal()
@@ -110,6 +112,7 @@ export function useWodHistory(wodName?: string) {
         void queryClient.invalidateQueries({ queryKey: ['wod_history'] })
       }
       void queryClient.invalidateQueries({ queryKey: ['today_pillars'] })
+      void queryClient.invalidateQueries({ queryKey: ['routine_logs'] })
       void queryClient.invalidateQueries({ queryKey: ['week_pillars'] })
     },
   })

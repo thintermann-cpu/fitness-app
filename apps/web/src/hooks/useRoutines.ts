@@ -23,19 +23,19 @@ const MON_WED_FRI = [1, 3, 5]
 export const SUGGESTED_ROUTINES: Record<string, Array<Omit<Routine, 'id'>>> = {
   de: [
     { category: 'morning', name: 'Morgenroutine',       icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Post-Workout Stretch', icon: '💪', time: '12:00', link_url: null, linked_pillar: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'day',     name: 'Post-Workout Stretch', icon: '💪', time: '12:00', link_url: null, linked_pillar: 'stretching', active_days: MON_WED_FRI, sort_order: 0 },
     { category: 'evening', name: 'Abend-Reflexion',      icon: '📖', time: '21:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 0 },
     { category: 'day',     name: 'Wasser trinken',       icon: '💧', time: '12:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 1 },
   ],
   en: [
     { category: 'morning', name: 'Morning Routine',      icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Post-Workout Stretch', icon: '💪', time: '12:00', link_url: null, linked_pillar: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'day',     name: 'Post-Workout Stretch', icon: '💪', time: '12:00', link_url: null, linked_pillar: 'stretching', active_days: MON_WED_FRI, sort_order: 0 },
     { category: 'evening', name: 'Evening Reflection',   icon: '📖', time: '21:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 0 },
     { category: 'day',     name: 'Drink Water',          icon: '💧', time: '12:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 1 },
   ],
   es: [
     { category: 'morning', name: 'Rutina Matutina',                    icon: '🌅', time: '07:00', link_url: null, linked_pillar: null, active_days: WEEKDAYS,    sort_order: 0 },
-    { category: 'day',     name: 'Estiramiento Post-Entrenamiento',    icon: '💪', time: '12:00', link_url: null, linked_pillar: null, active_days: MON_WED_FRI, sort_order: 0 },
+    { category: 'day',     name: 'Estiramiento Post-Entrenamiento',    icon: '💪', time: '12:00', link_url: null, linked_pillar: 'stretching', active_days: MON_WED_FRI, sort_order: 0 },
     { category: 'evening', name: 'Reflexión Vespertina',               icon: '📖', time: '21:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 0 },
     { category: 'day',     name: 'Beber Agua',                         icon: '💧', time: '12:00', link_url: null, linked_pillar: null, active_days: ALL_DAYS,    sort_order: 1 },
   ],
