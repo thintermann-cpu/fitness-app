@@ -50,13 +50,11 @@ export function useFavorites() {
     staleTime: 5 * 60 * 1000,
     gcTime:    10 * 60 * 1000,
     queryFn: async (): Promise<Favorite[]> => {
-      if (!isSupabaseConfigured) return readLocal()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.user) return readLocal()
+      if (!isSupabaseConfigured || !userId) return readLocal()
       const { data, error } = await supabase
         .from('favorites')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
       if (error) return readLocal()
       const result = (data ?? []) as Favorite[]
@@ -115,11 +113,9 @@ export function useFavorites() {
         writeLocal(current.filter(
           f => !(f.content_type === content_type && f.content_id === content_id),
         ))
-        if (!isSupabaseConfigured) return
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session?.user) return
+        if (!isSupabaseConfigured || !userId) return
         await supabase.from('favorites').delete()
-          .eq('user_id', session.user.id)
+          .eq('user_id', userId)
           .eq('content_type', content_type)
           .eq('content_id', content_id)
       } else {
@@ -133,11 +129,9 @@ export function useFavorites() {
             created_at: new Date().toISOString(),
           },
         ])
-        if (!isSupabaseConfigured) return
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session?.user) return
+        if (!isSupabaseConfigured || !userId) return
         await supabase.from('favorites').insert({
-          user_id: session.user.id,
+          user_id: userId,
           content_type,
           content_id,
         })
