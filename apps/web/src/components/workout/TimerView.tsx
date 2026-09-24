@@ -467,7 +467,7 @@ if (!adHocLog || !isComplete || loggedRef.current) return
   }
 
   return (
-    <div className={`flex flex-col items-center w-full ${live ? 'gap-3 py-1' : 'gap-6 py-4'}`}>
+    <div className={`flex flex-col items-center w-full ${live ? 'flex-1 min-h-0 h-full' : 'gap-6 py-4'}`}>
       <CountdownOverlay
         isOpen={showCountdown}
         onComplete={() => { setShowCountdown(false); startTimer() }}
@@ -643,6 +643,8 @@ if (!adHocLog || !isComplete || loggedRef.current) return
         </div>
       )}
 
+      {live && <div className="flex-1 min-h-3" />}
+
       {/* Main time display */}
       <div className="flex flex-col items-center gap-1">
         {isTabata && (isRunning || isPaused) && (
@@ -675,6 +677,8 @@ if (!adHocLog || !isComplete || loggedRef.current) return
           </p>
         )}
       </div>
+
+      {live && <div className="flex-1 min-h-3" />}
 
       {(isRunning || isPaused) && (mode === 'fortime' || mode === 'amrap') && (
         <div className="w-full flex flex-col items-center gap-2">
@@ -761,6 +765,8 @@ if (!adHocLog || !isComplete || loggedRef.current) return
         </div>
       )}
 
+      {live && <div className="flex-1 min-h-2" />}
+
       {/* Controls */}
       <div className="flex items-center gap-3">
         {!isRunning && !isPaused && (
@@ -838,9 +844,11 @@ if (!adHocLog || !isComplete || loggedRef.current) return
         </div>
       )}
 
+      {live && <div className="flex-1 min-h-2" />}
+
       {/* Exercise list */}
       {exercises && exercises.length > 0 && (
-        <div className={`w-full rounded-xl bg-white/5 ${live ? 'px-2 py-1.5 space-y-0.5' : 'mt-2 px-4 py-3 space-y-1.5'}`}>
+        <div className={`w-full rounded-xl bg-white/5 ${live ? 'px-2 py-1.5 space-y-0.5 shrink min-h-0 overflow-y-auto' : 'mt-2 px-4 py-3 space-y-1.5'}`}>
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)] mb-1">
             Übungen
           </p>

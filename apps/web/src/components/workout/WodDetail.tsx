@@ -180,7 +180,7 @@ export function WodDetail({ wodName, onBack }: Props) {
       ? customWorkout.mode as 'fortime' | 'amrap' | 'emom' | 'tabata'
       : 'fortime'
     return (
-      <div className={showTimer ? 'space-y-2' : 'space-y-5'}>
+      <div className={showTimer ? 'flex flex-col h-full min-h-0 gap-2' : 'space-y-5'}>
         {showTimer ? (
           <div className="flex items-center gap-1">
             <button
@@ -292,7 +292,7 @@ export function WodDetail({ wodName, onBack }: Props) {
         )}
 
         {showTimer && (
-          <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2">
+          <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2 flex-1 min-h-0 flex flex-col">
             {(launch?.mode ?? customWorkout.mode) === 'krafttraining' ? (
               <KraftTimerView
                 exercises={launch?.kraft?.exercises ?? launch?.exercises ?? customWorkout.exercises}
@@ -422,7 +422,7 @@ export function WodDetail({ wodName, onBack }: Props) {
   }
 
   return (
-    <div className={showTimer ? 'space-y-2' : 'space-y-5'}>
+    <div className={showTimer ? 'flex flex-col h-full min-h-0 gap-2' : 'space-y-5'}>
       {showTimer ? (
         <div className="flex items-center gap-1">
           <button
@@ -712,7 +712,7 @@ export function WodDetail({ wodName, onBack }: Props) {
 
       {/* Embedded timer */}
       {showTimer && launch?.mode === 'krafttraining' && launch.kraft ? (
-        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2">
+        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2 flex-1 min-h-0 flex flex-col">
           <KraftTimerView
             exercises={launch.kraft.exercises}
             restBetweenSets={launch.kraft.restBetweenSets}
@@ -725,7 +725,7 @@ export function WodDetail({ wodName, onBack }: Props) {
           />
         </div>
       ) : showTimer ? (
-        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2">
+        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2 flex-1 min-h-0 flex flex-col">
           <TimerView
             key={`${launch?.mode ?? timerMode}-${launch?.minutes ?? sessionMinutes}-${launch?.scheme ?? sessionScheme}-${exerciseSig(launch?.exercises ?? sessionItems)}`}
             initialMode={(launch?.mode && launch.mode !== 'krafttraining' ? launch.mode : timerMode === 'krafttraining' ? 'fortime' : timerMode)}
