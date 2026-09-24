@@ -7,7 +7,7 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-const ZONE = 'Europe/Zurich'
+const FALLBACK_ZONE = 'Europe/Zurich'
 
 type Pref = {
   user_id: string
@@ -18,13 +18,20 @@ type Pref = {
   morning_time: string
   evening_time: string
   wod_time: string
+  timezone?: string | null
 }
 
 type Sub = { user_id: string; subscription: PushSubscriptionJSON }
 
-function zurichNow() {
+function zonedNow(zone: string) {
+  let timeZone = zone || FALLBACK_ZONE
+  try {
+    Intl.DateTimeFormat('en-GB', { timeZone }).format()
+  } catch {
+    timeZone = FALLBACK_ZONE
+  }
   const parts = new Intl.DateTimeFormat('en-GB', {
-    timeZone: ZONE,
+    timeZone,
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
@@ -145,15 +152,14 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ sent, failed }), { headers: { ...CORS, 'Content-Type': 'application/json' } })
   }
 
-  const now = zurichNow()
   const { data: prefs } = await supabase.from('push_preferences').select('*')
-  const { data: already } = await supabase.from('dispatch_log').select('kind, title, created_at').gte('created_at', `${now.date}T00:00:00Z`)
-  const sentKeys = new Set((already ?? []).map((row) => `${row.kind}`))
+  const since = new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString()
+  const { data: already } = await supabase.from('dispatch_log').select('kind, title').gte('created_at', since)
+  const sentKeys = new Set((already ?? []).map((row) => `${row.title}`))
   const prefByUser = new Map(((prefs ?? []) as Pref[]).map((p) => [p.user_id, p]))
 
   let sent = 0
   let failed = 0
-  const kindsSent = new Set<string>()
 
   for (const sub of subscriptions) {
     const pref = prefByUser.get(sub.user_id) ?? {
@@ -165,9 +171,13 @@ Deno.serve(async (req) => {
       morning_time: '07:00',
       evening_time: '21:00',
       wod_time: '12:00',
+      timezone: FALLBACK_ZONE,
     }
+    const now = zonedNow(pref.timezone || FALLBACK_ZONE)
     const jobs: { kind: string; title: string; body: string }[] = []
-    if (pref.morning_enabled && inWindow(now.hhmm, pref.morning_time) && !sentKeys.has('morning')) {
+    const due = (kind: string, enabled: boolean, time: string) =>
+      enabled && inWindow(now.hhmm, time) && !sentKeys.has(`${kind}:${sub.user_id}:${now.date}`)
+    if (due('morning', pref.morning_enabled, pref.morning_time)) {
       const { data: routines } = await supabase.from('routines').select('name, active_days').eq('user_id', sub.user_id)
       const names = (routines ?? [])
         .filter((r) => ((r.active_days as number[] | null) ?? [0, 1, 2, 3, 4, 5, 6]).includes(now.weekday))
@@ -175,25 +185,25 @@ Deno.serve(async (req) => {
       const extra = names.length ? ` Heute: ${names.join(', ')}.` : ''
       jobs.push({ kind: 'morning', title: 'Guten Morgen', body: `Dein Tag bei CarveOut.${extra}` })
     }
-    if (pref.evening_enabled && inWindow(now.hhmm, pref.evening_time) && !sentKeys.has('evening')) {
+    if (due('evening', pref.evening_enabled, pref.evening_time)) {
       jobs.push({ kind: 'evening', title: 'Abend', body: 'Kurz den Tag abschliessen?' })
     }
-    if (pref.wod_enabled && inWindow(now.hhmm, pref.wod_time) && !sentKeys.has('wod')) {
+    if (due('wod', pref.wod_enabled, pref.wod_time)) {
       jobs.push({ kind: 'wod', title: 'Training', body: 'Dein Workout wartet.' })
     }
     for (const job of jobs) {
+      const key = `${job.kind}:${sub.user_id}:${now.date}`
       if (await sendOne(sub, { title: job.title, body: job.body, url: '/home' })) {
         sent += 1
-        kindsSent.add(job.kind)
-      } else failed += 1
+        sentKeys.add(key)
+        await supabase.from('dispatch_log').insert({ kind: job.kind, title: key, body: job.body, sent_count: 1, error_count: 0 })
+      } else {
+        failed += 1
+      }
     }
   }
 
-  for (const kind of kindsSent) {
-    await supabase.from('dispatch_log').insert({ kind, title: kind, body: 'tick', sent_count: sent, error_count: failed })
-  }
-
-  return new Response(JSON.stringify({ sent, failed, zone: ZONE, time: now.hhmm }), {
+  return new Response(JSON.stringify({ sent, failed }), {
     headers: { ...CORS, 'Content-Type': 'application/json' },
   })
 })

@@ -9,6 +9,7 @@ import { subscribeToPush, unsubscribeFromPush, getPushSubscriptionStatus } from 
 import { FeedbackModal } from '../components/ui/FeedbackModal'
 import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from '../hooks/useToast'
+import { CityTimezoneField } from '../components/settings/CityTimezoneField'
 
 type View = 'main' | 'profile' | 'equipment' | 'pillars' | 'training' | 'notifications' | 'abo'
 
@@ -50,6 +51,8 @@ type PushPrefs = {
   morning_time:       string
   evening_time:       string
   wod_time:           string
+  city:               string
+  timezone:           string
 }
 
 const PUSH_REMINDERS: {
@@ -65,6 +68,7 @@ const PUSH_REMINDERS: {
 const DEFAULT_PUSH_PREFS: PushPrefs = {
   morning_enabled: true, evening_enabled: true, wod_enabled: false, inactivity_enabled: true,
   morning_time: '07:00', evening_time: '21:00', wod_time: '12:00',
+  city: '', timezone: 'Europe/Zurich',
 }
 
 // ── Shared sub-components ─────────────────────────────────────────────────────
@@ -235,6 +239,8 @@ export function SettingsPage() {
             morning_time:       data.morning_time       ?? '07:00',
             evening_time:       data.evening_time       ?? '21:00',
             wod_time:           data.wod_time           ?? '12:00',
+            city:               data.city               ?? '',
+            timezone:           data.timezone           ?? 'Europe/Zurich',
           })
         })
     })
@@ -328,7 +334,6 @@ export function SettingsPage() {
   }
 
   const handleSavePushPrefs = async () => {
-    if (!pushEnabled) return
     setSavingPush(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -717,6 +722,12 @@ export function SettingsPage() {
                 <p className="text-xs text-center" style={{ color: '#ef4444' }}>{pushError}</p>
               )}
 
+              <CityTimezoneField
+                city={pushPrefs.city}
+                timezone={pushPrefs.timezone}
+                onPick={(hit) => setPushPrefs((p) => ({ ...p, city: hit.label, timezone: hit.timezone }))}
+              />
+
               {pushEnabled && (
                 <>
                   {PUSH_REMINDERS.map(reminder => {
@@ -757,9 +768,9 @@ export function SettingsPage() {
                       </div>
                     )
                   })}
-                  <SaveButton loading={savingPush} saved={savedPush} onClick={handleSavePushPrefs} />
                 </>
               )}
+              <SaveButton loading={savingPush} saved={savedPush} onClick={handleSavePushPrefs} />
             </>
           )}
         </div>
