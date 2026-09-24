@@ -8,12 +8,11 @@ import AdminRoute from './components/AdminRoute'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { OnboardingPage } from './pages/OnboardingPage'
-import { RoutinePage } from './pages/RoutinePage'
+import { LandingPage } from './pages/LandingPage'
 import { WorkoutPage } from './pages/WorkoutPage'
 import { CustomWorkoutsPage } from './pages/CustomWorkoutsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { HomePage } from './pages/HomePage'
-import { LandingPage } from './pages/LandingPage'
 import { ImpressumPage } from './pages/ImpressumPage'
 import { DatenschutzPage } from './pages/DatenschutzPage'
 import { StretchingPage } from './pages/StretchingPage'
@@ -90,14 +89,20 @@ function ProtectedLayout() {
 
 function AuthLayout() {
   const { user, loading } = useAuthStore()
-  if (!loading && user) return <Navigate to="/home" replace />
+  if (!loading && user) return <Navigate to="/" replace />
   return <Outlet />
 }
 
-function LandingPublicRoute() {
-  const { user, loading } = useAuthStore()
-  if (loading) return null
-  return user ? <Navigate to="/home" replace /> : <LandingPage />
+function RootLayout() {
+  const { user, loading, profile } = useAuthStore()
+  if (!user) {
+    if (loading) return null
+    return <LandingPage />
+  }
+  if (profile !== null && !profile.primary_pillar) {
+    return <Navigate to="/onboarding" replace />
+  }
+  return <AppShell />
 }
 
 function AppContent() {
@@ -110,7 +115,6 @@ function AppContent() {
   return (
     <Routes>
       {/* Public landing page */}
-      <Route path="/" element={<LandingPublicRoute />} />
       <Route path="/impressum"   element={<ImpressumPage />} />
       <Route path="/datenschutz" element={<DatenschutzPage />} />
 
@@ -119,14 +123,18 @@ function AppContent() {
         <Route path="/register" element={<RegisterPage />} />
       </Route>
 
+      <Route path="/" element={<RootLayout />}>
+        <Route index element={<HomePage />} />
+      </Route>
+      <Route path="/home" element={<Navigate to="/" replace />} />
+      <Route path="/routine" element={<Navigate to="/" replace />} />
+
       <Route element={<ProtectedLayout />}>
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route element={<AppShell />}>
-          <Route path="/home"              element={<HomePage />} />
           <Route path="/workout"             element={<WorkoutPage />} />
           <Route path="/workout/custom"     element={<CustomWorkoutsPage />} />
           <Route path="/workout/:wodName"   element={<WorkoutPage />} />
-          <Route path="/routine"          element={<RoutinePage />} />
           <Route path="/stretching"       element={<StretchingPage />} />
           <Route path="/meditation"       element={<MeditationPage />} />
           <Route path="/favorites"        element={<FavoritesPage />} />

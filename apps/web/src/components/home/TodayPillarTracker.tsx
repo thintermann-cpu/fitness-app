@@ -17,7 +17,7 @@ const PILLARS = [
 ] as const
 
 const PILLAR_ROUTES: Record<string, string> = {
-  routine: '/routine', workout: '/workout', stretching: '/stretching', meditation: '/meditation',
+  routine: '/', workout: '/workout', stretching: '/stretching', meditation: '/meditation',
 }
 
 const HEADER: Record<Lang, (done: number, total: number) => string> = {

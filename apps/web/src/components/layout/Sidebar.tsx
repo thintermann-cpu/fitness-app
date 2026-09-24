@@ -5,17 +5,16 @@ import { useFavorites } from '../../hooks/useFavorites'
 const ALL_PILLARS = ['workout', 'routine', 'stretching', 'meditation']
 
 const NAV_ITEMS = [
-  { path: '/home',       icon: '🏠', key: 'home',       color: '#F0EDE8', pillarId: null       },
-  { path: '/routine',    icon: '📋', key: 'routine',    color: '#4A90D9', pillarId: 'routine'  },
-  { path: '/workout',    icon: '💪', key: 'workout',    color: '#E8642A', pillarId: 'workout'  },
-  { path: '/stretching', icon: '🤸', key: 'stretching', color: '#7BC67E', pillarId: 'stretching' },
-  { path: '/meditation', icon: '🧘', key: 'meditation', color: '#9B7FD4', pillarId: 'meditation' },
+  { path: '/',           icon: '☀️', key: 'home',       color: 'var(--color-pillar-routine)',    pillarId: null         },
+  { path: '/workout',    icon: '💪', key: 'workout',    color: 'var(--color-pillar-workout)',    pillarId: 'workout'    },
+  { path: '/stretching', icon: '🤸', key: 'stretching', color: 'var(--color-pillar-stretching)', pillarId: 'stretching' },
+  { path: '/meditation', icon: '🧘', key: 'meditation', color: 'var(--color-pillar-meditation)', pillarId: 'meditation' },
 ] as const
 
 const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
-  de: { home: 'Mein Tag', workout: 'Training', routine: 'Routine',  stretching: 'Mobilität',  meditation: 'Achtsamkeit' },
-  en: { home: 'My Day',   workout: 'Workout',  routine: 'Routines', stretching: 'Mobility',   meditation: 'Mindfulness' },
-  es: { home: 'Mi Día',   workout: 'Entreno',  routine: 'Rutinas',  stretching: 'Movilidad',  meditation: 'Atención'    },
+  de: { home: 'Mein Tag', workout: 'Training', stretching: 'Mobilität',  meditation: 'Achtsamkeit' },
+  en: { home: 'My Day',   workout: 'Workout',  stretching: 'Mobility',   meditation: 'Mindfulness' },
+  es: { home: 'Mi Día',   workout: 'Entreno',  stretching: 'Movilidad',  meditation: 'Atención'    },
 }
 
 export function Sidebar() {
@@ -56,8 +55,8 @@ export function Sidebar() {
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {visibleItems.map(({ path, icon, key, color }) => {
           const label    = labels[key] ?? key
-          const isActive = path === '/home'
-            ? pathname === '/home'
+          const isActive = path === '/'
+            ? pathname === '/'
             : (pathname === path
                 || (path !== '/workout' && pathname.startsWith(path))
                 || (path === '/workout' && (pathname === '/workout' || pathname.startsWith('/workout/'))))
@@ -68,7 +67,7 @@ export function Sidebar() {
               to={path}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
               style={{
-                backgroundColor: isActive ? `${color}18` : 'transparent',
+                backgroundColor: isActive ? `color-mix(in srgb, ${color} 12%, transparent)` : 'transparent',
                 color: isActive ? color : 'var(--color-text-muted)',
               }}
             >

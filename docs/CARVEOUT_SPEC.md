@@ -105,8 +105,8 @@ apps/web/src/
 │   │   └── LandingFooter.tsx   # Footer mit DE/EN-Toggle + Links
 │   ├── layout/
 │   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header (52px, bg: --color-bg-card + border): Links: CarveOut-Logo + Name; Rechts: Vorname als Link zu /settings (max-[360px]:hidden, aria-label "Einstellungen") · Mute · Favoriten · Settings-Link; MAIN_ROUTES-Reihenfolge: /home · /routine · /workout · /stretching · /meditation; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge); bei `isSessionActive` sind Mobile-Header und Bottom-Nav ausgeblendet
-│   │   ├── BottomNav.tsx      # Tab-Navigation (versteckt ab lg); Reihenfolge: Home · Routine · Workout · Stretching · Meditation; alle 5 Tabs immer sichtbar — inaktive Pillars gedimmt + Alert-Modal beim Antippen; bei `hide_inactive_pillars=true` (localStorage) werden inaktive Tabs ausgeblendet; aktive Pillars aus `user_profiles.active_pillars` (CustomEvent-Sync via `hide_inactive_changed` + `active_pillars_changed`); erstes Item: Home `/home` (de: Mein Tag, en: My Day, es: Mi Día); Routine-Item (de: Routinen, en: Routines, es: Rutinas)
-│   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, sichtbar ab lg); Reihenfolge: Home · Routine · Workout · Stretching · Meditation; Achtsamkeit-Icon 🧘, Mobilität-Icon 🤸 (wie TodayPillarTracker); Footer: ein `<Link to="/settings">` (Avatar + Name + Zahnrad), kein nested `<a>`; inaktive Pillars gedimmt; `hide_inactive_pillars` blendet aus; isActive-Fix `/home`
+│   │   ├── BottomNav.tsx      # 4 Tabs (versteckt ab lg): Mein Tag `/` (`--color-pillar-routine`), Training `/workout`, Mobilität `/stretching`, Achtsamkeit `/meditation`. Kein eigener Routine-Tab. Inaktive Pillars weiter ausblendbar.
+│   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, ab lg); dieselben 4 Punkte wie BottomNav, Mein Tag auf `/`. Footer: ein Link zu /settings.
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
 │   ├── home/
 │   │   ├── TodayPillarTracker.tsx  # 4 Chips (Done/Open) aus useTodayPillars; dreisprachig; Header-Label: "Aktueller Stand von heute · N von 4" (de/en/es); Chip-Reihenfolge: Routine · Workout · Mobilität · Achtsamkeit; kurzer Tap → Pillar-Route (useNavigate); **Long-Press (500ms)** → Bottom-Sheet Context-Menu "Heute erledigt ✓" / "Already done" — schreibt in `pillar_manual_logs` via Supabase Upsert; zeigt "Bereits erledigt" wenn Pillar schon done; `longFiredRef` verhindert Navigation nach Long-Press
@@ -213,12 +213,12 @@ apps/web/src/
 ### Routing (App.tsx)
 
 ```
-/                              → LandingPublicRoute (nicht-auth: LandingPage; auth: Redirect /home)
+/                              → RootLayout (nicht-auth: LandingPage; auth: HomePage, Mein Tag inkl. Routinen)
 /impressum                     → ImpressumPage (öffentlich, kein Auth nötig)
 /datenschutz                   → DatenschutzPage (öffentlich, kein Auth nötig)
-/login, /register              → AuthLayout (kein Auth nötig; auth: Redirect /home)
-/home → AppShell (ProtectedLayout)
-  /home                        → HomePage (Dashboard)
+/login, /register              → AuthLayout (kein Auth nötig; auth: Redirect /)
+/home, /routine                → Redirect /
+/                                → HomePage in AppShell (Begrüssung, Pillar-Stand, Mood + Wasser, Tabs Routinen/To-Do/Woche, Workout des Tages)
   /onboarding
   /workout
   /workout/custom
