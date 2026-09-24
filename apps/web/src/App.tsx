@@ -28,9 +28,26 @@ import { AdminPlaceholderPage } from './pages/admin/AdminPlaceholderPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, staleTime: 5 * 60 * 1000, gcTime: 10 * 60 * 1000 },
+    queries: { retry: 1, staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000, refetchOnWindowFocus: true },
   },
 })
+
+function RefreshPillarsOnFocus() {
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return
+      void queryClient.invalidateQueries({ queryKey: ['today_pillars'] })
+      void queryClient.invalidateQueries({ queryKey: ['week_pillars'] })
+    }
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener('focus', refresh)
+    return () => {
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener('focus', refresh)
+    }
+  }, [])
+  return null
+}
 
 function ProfileRedirect() {
   const { search } = useLocation()
@@ -135,6 +152,7 @@ function AppContent() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <RefreshPillarsOnFocus />
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>

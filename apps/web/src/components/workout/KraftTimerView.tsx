@@ -237,6 +237,13 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
         </p>
         <div className="flex flex-col gap-3 w-full mt-2">
           <button
+            onClick={() => navigate('/stretching')}
+            className="py-3.5 rounded-2xl font-bold text-base text-white"
+            style={{ backgroundColor: 'var(--color-pillar-stretching)' }}
+          >
+            {lang === 'de' ? 'Cooldown · Mobilität' : 'Cooldown · Mobility'}
+          </button>
+          <button
             onClick={() => navigate('/home')}
             className="py-3.5 rounded-2xl font-bold text-base text-white"
             style={{ backgroundColor: '#E8642A' }}
