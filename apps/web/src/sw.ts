@@ -22,7 +22,7 @@ precacheAndRoute(self.__WB_MANIFEST)
 
 // Network-first for Supabase API calls
 registerRoute(
-  ({ url }) => url.hostname.includes('supabase.co'),
+  ({ url }) => url.hostname.includes('supabase.co') && !url.pathname.includes('/auth/'),
   new NetworkFirst({ cacheName: 'supabase-api', networkTimeoutSeconds: 5 }),
 )
 
