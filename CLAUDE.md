@@ -38,7 +38,7 @@ CSS-Variablen liegen in `apps/web/src/styles/tokens.css` als `--color-pillar-*`.
 1. Vor Code-Änderungen: relevante Spec-Abschnitte lesen, kurzen Plan formulieren. Bei Implementation grösserer Features (>30 Zeilen, Worker/Schema-Touch): Plan-Skizze zuerst (5–10 Zeilen, Datenmodell + Komponenten-Signaturen), Freigabe abwarten.
 2. Implementieren — kleine Schritte, klar benannt.
 3. Lokal verifizieren (`npm run build`, ggf. `npm run lint`).
-4. Commit + Push auf `main`. Sagt Tim „push“, ist der Merge nach `main` mit gemeint. CI/CD deployt automatisch.
+4. Commit + Push auf `main`. Sagt Tim „push“, ist der Merge nach `main` mit gemeint. Vor dem Push und vor dem Merge `docs/CARVEOUT_SPEC.md` nachziehen, wenn der Diff Komponenten, Routen, Datenmodell, Hooks oder sichtbares Verhalten ändert. CI/CD deployt automatisch.
 5. Deploy-Verifikation: kurzer Check auf `carveout.app` (Build geladen, Routen erreichbar).
 6. Nach signifikanten Änderungen: Doc-Keeper-Subagent aufrufen (Pflicht — nicht optional). Gilt auch wenn Cowork den Code geschrieben hat.
 
@@ -56,6 +56,7 @@ CSS-Variablen liegen in `apps/web/src/styles/tokens.css` als `--color-pillar-*`.
 `CARVEOUT_SPEC.md` ist die Wahrheit. Nach Code-Änderungen, die Spec-relevant sind (neue Komponenten, Routen, Datenmodelle, Hooks, Phasen-Status), Doc-Keeper-Subagent aufrufen — er liest Diff, schlägt Spec-Update vor, ich sehe den Diff bevor er committet wird.
 
 **Pflicht-Regel (gilt für Claude Code UND Cowork):**
+- Vor jedem Push und vor jedem Merge nach `main` die Spec nachziehen, wenn der Diff Komponenten, Routen, Datenmodell, Hooks oder sichtbares Verhalten ändert. Der Merge wartet, bis die Spec den Code beschreibt.
 - Claude Code: Doc-Keeper nach jedem Commit aufrufen, der neue Komponenten, Hooks, Datenmodell-Änderungen oder Phasen-Status betrifft. Nicht nur nach expliziter Aufforderung.
 - Cowork: Spec-Update am Ende jeder Session manuell durchführen (siehe Cowork-Doc-Keeper-Prompt unten). Bei grösseren Sessions zusätzlich mid-session wenn >3 Spec-relevante Änderungen akkumuliert sind.
 
