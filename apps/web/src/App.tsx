@@ -90,8 +90,8 @@ function ProtectedLayout() {
 
 function AuthLayout() {
   const { user, loading } = useAuthStore()
-  if (loading) return null
-  return user ? <Navigate to="/home" replace /> : <Outlet />
+  if (!loading && user) return <Navigate to="/home" replace />
+  return <Outlet />
 }
 
 function LandingPublicRoute() {
