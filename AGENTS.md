@@ -13,3 +13,4 @@ Produkt- und Architektur-Kontext: `CLAUDE.md` und `docs/CARVEOUT_SPEC.md`. Spec 
 - Stripe Secret Key gehört in Supabase Edge Function Secrets, nicht in Cursor und nicht ins Repo.
 - Tailwind v4: kein `tailwind.config.js`. Farben über CSS-Variablen `--color-pillar-*`.
 - Wenn Tim „push“ sagt, heißt das committen, pushen und nach `main` mergen. Nur der Push auf `main` deployt.
+- Vor jedem Push und vor jedem Merge `docs/CARVEOUT_SPEC.md` nachziehen, wenn der Diff Komponenten, Routen, Datenmodell, Hooks oder sichtbares Verhalten ändert. Der Merge wartet, bis die Spec den Code beschreibt.
