@@ -3,9 +3,9 @@ import { useAuthStore } from '../store/authStore'
 import type { ReactNode } from 'react'
 
 export default function AdminRoute({ children }: { children: ReactNode }) {
-  const { user, loading, profile } = useAuthStore()
+  const { user, loading, profile, profileLoaded } = useAuthStore()
 
-  if (loading) {
+  if (loading || (user && !profileLoaded)) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
