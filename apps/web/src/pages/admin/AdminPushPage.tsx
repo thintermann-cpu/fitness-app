@@ -38,8 +38,8 @@ export function AdminPushPage() {
     <div style={{ maxWidth: 640 }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)' }}>Push Reminders</h1>
       <p style={{ color: 'var(--color-text-muted)', fontSize: 14, marginTop: 8 }}>
-        Dieselbe Funktion schickt die Erinnerungen aus den Einstellungen und eine Nachricht an alle Abos.
-        Zeiten gelten in Europe/Zurich. Der private VAPID-Schlüssel liegt in den Supabase-Secrets.
+        Nur Push: Erinnerungen aus den Einstellungen und eine Nachricht an alle Abos. Keine E-Mail.
+        Zeiten gelten in Europe/Zurich, bis jede Person eine eigene Zeitzone hat. Der private VAPID-Schlüssel liegt in den Supabase-Secrets.
       </p>
       <label style={{ display: 'block', marginTop: 20, fontSize: 13, color: 'var(--color-text-muted)' }}>Titel</label>
       <input value={title} onChange={(e) => setTitle(e.target.value)} style={field} />

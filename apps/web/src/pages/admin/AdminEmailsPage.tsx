@@ -18,7 +18,7 @@ export function AdminEmailsPage() {
     <div style={{ maxWidth: 640 }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text)' }}>Emails</h1>
       <p style={{ color: 'var(--color-text-muted)', fontSize: 14, marginTop: 8 }}>
-        Geht über Resend an alle Konten mit E-Mail. Absender ist das Secret NOTIFY_FROM.
+        Newsletter, Zahlung und Konto. Keine Trainings-Erinnerung. Die geht nur als Push. Absender ist das Secret NOTIFY_FROM.
       </p>
       <label style={{ display: 'block', marginTop: 20, fontSize: 13, color: 'var(--color-text-muted)' }}>Betreff</label>
       <input value={subject} onChange={(e) => setSubject(e.target.value)} style={field} />

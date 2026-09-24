@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
   }
   const mode = body.mode ?? 'tick'
 
+  // Newsletter, Zahlung, Konto. Tick und Broadcast schicken nur Push.
   if (mode === 'email') {
     const resendKey = Deno.env.get('RESEND_API_KEY')
     const from = Deno.env.get('NOTIFY_FROM') ?? 'onboarding@resend.dev'

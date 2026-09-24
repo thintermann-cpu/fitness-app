@@ -40,6 +40,8 @@ function RefreshPillarsOnFocus() {
       if (document.visibilityState !== 'visible') return
       void queryClient.invalidateQueries({ queryKey: ['today_pillars'] })
       void queryClient.invalidateQueries({ queryKey: ['week_pillars'] })
+      void queryClient.invalidateQueries({ queryKey: ['routine_logs'] })
+      void queryClient.invalidateQueries({ queryKey: ['routine_logs_week'] })
     }
     document.addEventListener('visibilitychange', refresh)
     window.addEventListener('focus', refresh)
