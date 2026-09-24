@@ -426,7 +426,7 @@ Ab dem `lg`-Breakpoint (≥ 1024 px):
 
 ## 8. Admin-Bereich
 
-Zugangsbedingung: `user_profiles.role IN ('admin', 'moderator')`, geprüft von `AdminRoute.tsx`, erst nachdem das Profil geladen ist. `onAuthStateChange` fragt das Profil erst nach dem Callback ab, damit ein Refresh nicht am Auth-Lock hängen bleibt. Die Login-Seite bleibt sichtbar, während die Session lädt, und der Login wartet nicht auf das Profil. Ein Refresh zeichnet sofort mit der gespeicherten Anmeldung und wartet nicht auf `getSession()`. Auth-Antworten cached der Service Worker nicht.
+Zugangsbedingung: `user_profiles.role IN ('admin', 'moderator')`, geprüft von `AdminRoute.tsx`, erst nachdem das Profil geladen ist. `onAuthStateChange` fragt das Profil erst nach dem Callback ab, damit ein Refresh nicht am Auth-Lock hängen bleibt. Die Login-Seite bleibt sichtbar, während die Session lädt, und der Login wartet nicht auf das Profil. Ein Refresh zeichnet sofort mit der gespeicherten Anmeldung. Kommt `getSession()` später an, werden Profil und Favoriten nachgeladen. Eine leere Favoriten-Antwort überschreibt den lokalen Stand nicht. Auth-Antworten cached der Service Worker nicht.
 
 | Route | Seite |
 |---|---|
