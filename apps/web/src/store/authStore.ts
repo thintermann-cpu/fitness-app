@@ -129,23 +129,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const timeout = new Promise<'timeout'>((resolve) =>
         setTimeout(() => resolve('timeout'), AUTH_INIT_TIMEOUT_MS),
       )
-      const result = await Promise.race([supabase.auth.getSession(), timeout])
+      const sessionPromise = supabase.auth.getSession()
+      const result = await Promise.race([sessionPromise, timeout])
+
+      const applySession = (session: Session | null) => {
+        const user = session?.user ?? null
+        set({ session, user, loading: false, profileLoaded: !user })
+        if (!user) return
+        loadProfile(user.id)
+          .then((profile) => set({ profile, profileLoaded: true }))
+          .catch(() => set({ profileLoaded: true }))
+      }
 
       if (result === 'timeout') {
         console.error('[authStore] getSession() timed out after', AUTH_INIT_TIMEOUT_MS, 'ms — auth lock likely stuck on another tab')
         set({ loading: false, profileLoaded: get().profileLoaded || !get().user })
+        void sessionPromise.then(({ data }) => applySession(data.session)).catch(() => set({ profileLoaded: true }))
       } else {
-        const session = result.data.session
-        const user    = session?.user ?? null
-
-        // Unblock rendering immediately — profile loads async in background
-        set({ session, user, loading: false, profileLoaded: !user })
-
-        if (user) {
-          loadProfile(user.id)
-            .then((profile) => set({ profile, profileLoaded: true }))
-            .catch(() => set({ profileLoaded: true }))
-        }
+        applySession(result.data.session)
       }
 
       supabase.auth.onAuthStateChange((event, newSession) => {

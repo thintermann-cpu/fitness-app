@@ -60,8 +60,8 @@ export function useFavorites() {
         .order('created_at', { ascending: false })
       if (error) return readLocal()
       const result = (data ?? []) as Favorite[]
-      writeLocal(result)
-      return result
+      if (result.length > 0) writeLocal(result)
+      return result.length > 0 ? result : readLocal()
     },
   })
 
