@@ -31,6 +31,8 @@ interface AuthState {
   user: User | null
   session: Session | null
   profile: DbProfile | null
+  /** False while the signed-in user's profile row is still loading. */
+  profileLoaded: boolean
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<void>
@@ -59,31 +61,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
   profile: null,
+  profileLoaded: false,
   loading: true,
 
   signIn: async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     const profile = data.user ? await loadProfile(data.user.id) : null
-    set({ user: data.user, session: data.session, profile })
+    set({ user: data.user, session: data.session, profile, profileLoaded: true })
   },
 
   signUp: async (email, password) => {
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
-    set({ user: data.user, session: data.session, profile: null })
+    set({ user: data.user, session: data.session, profile: null, profileLoaded: true })
   },
 
   signOut: async () => {
     await supabase.auth.signOut()
-    set({ user: null, session: null, profile: null })
+    set({ user: null, session: null, profile: null, profileLoaded: true })
   },
 
   fetchProfile: async () => {
     const { user } = get()
     if (!user) return
     const profile = await loadProfile(user.id)
-    set({ profile })
+    set({ profile, profileLoaded: true })
   },
 
   updateProfile: async (data) => {
@@ -112,18 +115,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const user    = session?.user ?? null
 
         // Unblock rendering immediately — profile loads async in background
-        set({ session, user, loading: false })
+        set({ session, user, loading: false, profileLoaded: !user })
 
         if (user) {
           loadProfile(user.id)
-            .then((profile) => set({ profile }))
-            .catch(() => {})
+            .then((profile) => set({ profile, profileLoaded: true }))
+            .catch(() => set({ profileLoaded: true }))
         }
       }
 
       supabase.auth.onAuthStateChange(async (_event, newSession) => {
         const profile = newSession?.user ? await loadProfile(newSession.user.id) : null
-        set({ session: newSession, user: newSession?.user ?? null, profile })
+        set({ session: newSession, user: newSession?.user ?? null, profile, profileLoaded: true })
       })
     } catch {
       set({ loading: false })

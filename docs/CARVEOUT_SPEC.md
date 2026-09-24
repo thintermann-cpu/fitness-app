@@ -426,7 +426,7 @@ Ab dem `lg`-Breakpoint (≥ 1024 px):
 
 ## 8. Admin-Bereich
 
-Zugangsbedingung: `user_profiles.role IN ('admin', 'moderator')`, geprüft von `AdminRoute.tsx`.
+Zugangsbedingung: `user_profiles.role IN ('admin', 'moderator')`, geprüft von `AdminRoute.tsx`, erst nachdem das Profil geladen ist.
 
 | Route | Seite |
 |---|---|
