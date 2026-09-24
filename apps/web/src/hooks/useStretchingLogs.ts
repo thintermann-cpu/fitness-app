@@ -96,6 +96,8 @@ export function useStretchingLogs() {
       return Object.assign(data as StretchingLog, meta)
     },
     onSuccess: (data) => {
+      void import('../lib/completeLinkedRoutines').then(({ completeLinkedRoutines }) => completeLinkedRoutines('stretching'))
+      void queryClient.invalidateQueries({ queryKey: ['routine_logs'] })
       const prepend = (old: StretchingLog[] | undefined) =>
         old ? [data, ...old.filter((e) => e.id !== data.id)] : [data]
       queryClient.setQueryData(qk, prepend)

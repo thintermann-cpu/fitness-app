@@ -93,6 +93,8 @@ export function useMeditationLogs() {
       return data as MeditationLog
     },
     onSuccess: () => {
+      void import('../lib/completeLinkedRoutines').then(({ completeLinkedRoutines }) => completeLinkedRoutines('meditation'))
+      void queryClient.invalidateQueries({ queryKey: ['routine_logs'] })
       void queryClient.invalidateQueries({ queryKey: ['meditation_logs'] })
     },
   })

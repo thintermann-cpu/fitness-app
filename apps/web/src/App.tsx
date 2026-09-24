@@ -24,7 +24,9 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { AdminUsersPage } from './pages/admin/AdminUsersPage'
 import { AdminTasksPage } from './pages/admin/AdminTasksPage'
 import { AdminWodsPage } from './pages/admin/AdminWodsPage'
-import { AdminPlaceholderPage } from './pages/admin/AdminPlaceholderPage'
+import { AdminPushPage } from './pages/admin/AdminPushPage'
+import { AdminEmailsPage } from './pages/admin/AdminEmailsPage'
+import { AdminFeedbackPage } from './pages/admin/AdminFeedbackPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +40,8 @@ function RefreshPillarsOnFocus() {
       if (document.visibilityState !== 'visible') return
       void queryClient.invalidateQueries({ queryKey: ['today_pillars'] })
       void queryClient.invalidateQueries({ queryKey: ['week_pillars'] })
+      void queryClient.invalidateQueries({ queryKey: ['routine_logs'] })
+      void queryClient.invalidateQueries({ queryKey: ['routine_logs_week'] })
     }
     document.addEventListener('visibilitychange', refresh)
     window.addEventListener('focus', refresh)
@@ -139,9 +143,9 @@ function AppContent() {
       >
         <Route index                   element={<AdminDashboardPage />} />
         <Route path="users"            element={<AdminUsersPage />} />
-        <Route path="push"             element={<AdminPlaceholderPage title="Push Reminders" />} />
-        <Route path="emails"           element={<AdminPlaceholderPage title="Emails" />} />
-        <Route path="feedback"         element={<AdminPlaceholderPage title="Feedback" />} />
+        <Route path="push"             element={<AdminPushPage />} />
+        <Route path="emails"           element={<AdminEmailsPage />} />
+        <Route path="feedback"         element={<AdminFeedbackPage />} />
         <Route path="wods"             element={<AdminWodsPage />} />
         <Route path="tasks"            element={<AdminTasksPage />} />
       </Route>
