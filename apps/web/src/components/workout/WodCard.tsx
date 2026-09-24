@@ -36,13 +36,13 @@ export function WodCard({ wod, onClick }: Props) {
   const label   = getWodTypeLabel(wod.type, lang)
 
   return (
-    <div className="w-full rounded-[var(--radius-md)] bg-[var(--color-bg-card)] border border-white/5 p-4">
+    <div className="w-full rounded-[var(--radius-md)] bg-[var(--color-bg-card)] border border-white/5 p-3">
       <div className="flex items-start gap-2">
         <button
           onClick={onClick}
           className="flex-1 min-w-0 text-left active:scale-[0.98] transition-transform"
         >
-          <span className="font-semibold text-[var(--color-text)] text-base leading-tight">
+          <span className="font-semibold text-[var(--color-text)] text-sm leading-tight">
             {wod.name}
           </span>
         </button>
@@ -56,21 +56,22 @@ export function WodCard({ wod, onClick }: Props) {
           >
             {label}
           </span>
-          <FavoriteButton contentType="wod" contentId={wod.name} color="#E8642A" />
+          <FavoriteButton contentType="wod" contentId={wod.name} color="var(--color-pillar-workout)" />
         </div>
       </div>
 
       <button onClick={onClick} className="w-full text-left">
-        <p className="mt-1 text-sm text-[var(--color-text-muted)] line-clamp-1">
+        <p className="mt-1 text-xs leading-tight text-[var(--color-text-muted)] line-clamp-1">
           {preview}
         </p>
 
-        <div className="mt-3 flex items-center gap-3">
+        <div className="mt-1 flex items-center gap-2">
           <div className="flex gap-1">
             {Array.from({ length: 4 }).map((_, i) => (
               <span
                 key={i}
-                className={`w-2 h-2 rounded-full ${i < dots ? 'bg-[#E8642A]' : 'bg-white/15'}`}
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: i < dots ? 'var(--color-pillar-workout)' : 'rgba(255,255,255,0.15)' }}
               />
             ))}
           </div>

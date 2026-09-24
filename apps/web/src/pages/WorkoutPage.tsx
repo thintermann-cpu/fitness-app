@@ -4,6 +4,7 @@ import type { WorkoutLocation } from '../store/authStore'
 import { DEFAULT_EQUIPMENT_BY_LOCATION } from '../store/authStore'
 import { useSessionStore } from '../store/sessionStore'
 import { WodList } from '../components/workout/WodList'
+import { TodaysWod } from '../components/home/TodaysWod'
 import { WodDetail } from '../components/workout/WodDetail'
 import { TimerView } from '../components/workout/TimerView'
 import { KraftTimerView } from '../components/workout/KraftTimerView'
@@ -18,7 +19,7 @@ import { type TimerMode } from '../lib/timerLabels'
 type Tab = 'wods' | 'timer' | 'history'
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'wods',    label: 'Workouts' },
+  { id: 'wods',    label: 'WODs' },
   { id: 'timer',   label: 'Timer' },
   { id: 'history', label: 'History' },
 ]
@@ -197,7 +198,7 @@ export function WorkoutPage() {
       {/* Header — hidden while the timer tab is running */}
       {!(isSessionActive && tab === 'timer') && <div className="px-4 pt-4 lg:pt-10 pb-2 flex items-end justify-between">
         <h1 className="text-2xl font-black text-[var(--color-text)]">
-          <span style={{ color: '#E8642A' }}>Workout</span>
+          <span style={{ color: 'var(--color-pillar-workout)' }}>Workout</span>
         </h1>
       </div>}
 
@@ -210,9 +211,10 @@ export function WorkoutPage() {
               key={t.id}
               onClick={() => !locked && setTab(t.id)}
               disabled={locked}
+              style={tab === t.id ? { backgroundColor: 'var(--color-pillar-workout)' } : undefined}
               className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                 tab === t.id
-                  ? 'bg-[#E8642A] text-white'
+                  ? 'text-white'
                   : locked
                   ? 'text-[var(--color-text-muted)] opacity-30 cursor-not-allowed'
                   : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
@@ -228,44 +230,54 @@ export function WorkoutPage() {
       <div className={`flex-1 px-4 max-w-lg mx-auto w-full ${isSessionActive && tab === 'timer' ? 'py-2 pb-2' : 'py-4 pb-24'}`}>
         {tab === 'wods' && (
           <>
-            {/* Custom workouts section — link to /workout/custom */}
-            <div className="mb-5 flex items-center justify-between">
+            <TodaysWod />
+
+            <div className="mt-3 flex items-center justify-between gap-2">
               <button
                 onClick={() => navigate('/workout/custom')}
                 className="text-sm font-semibold"
-                style={{ color: '#E8642A' }}
+                style={{ color: 'var(--color-pillar-workout)' }}
               >
-                Eigene Workouts{savedWorkouts.length > 0 ? ` (${savedWorkouts.length})` : ''} →
+                Meine Workouts{savedWorkouts.length > 0 ? ` (${savedWorkouts.length})` : ''}
               </button>
               <button
                 onClick={() => setWizardOpen(true)}
                 className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                style={{ backgroundColor: '#E8642A18', color: '#E8642A' }}
+                style={{ backgroundColor: 'color-mix(in srgb, var(--color-pillar-workout) 12%, transparent)', color: 'var(--color-pillar-workout)' }}
               >
-                + Neu
+                + Neues Workout
               </button>
             </div>
 
-            {/* Location selector */}
-            <div className="flex gap-2 mb-4">
-              {LOCATIONS.map((loc) => (
-                <button
-                  key={loc.id}
-                  onClick={() => handleLocationSelect(loc.id)}
-                  className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-xs font-medium transition-colors"
-                  style={{
-                    backgroundColor: effectiveLocation === loc.id ? '#E8642A20' : 'var(--color-bg-card)',
-                    border:          `1.5px solid ${effectiveLocation === loc.id ? '#E8642A' : 'transparent'}`,
-                    color:           effectiveLocation === loc.id ? '#E8642A' : 'var(--color-text-muted)',
-                  }}
-                >
-                  <span className="text-base">{loc.emoji}</span>
-                  <span>{loc.label}</span>
-                </button>
-              ))}
+            <div className="py-1.5 flex items-center justify-between gap-3 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              <span className="shrink-0">Standort & Equipment</span>
+              <select
+                value={location ?? ''}
+                onChange={(e) => {
+                  const next = e.target.value as WorkoutLocation | ''
+                  if (!next) {
+                    handleLocationSelect(location as WorkoutLocation)
+                    return
+                  }
+                  if (equipmentSpecified) setClearEquipmentTick((tick) => tick + 1)
+                  setLocation(next)
+                  try { localStorage.setItem(LOCATION_STORAGE_KEY, next) } catch { /* ignore */ }
+                }}
+                className="min-w-0 max-w-[60%] px-2.5 py-1 rounded-md text-xs focus:outline-none"
+                style={{
+                  backgroundColor: 'var(--color-bg-elevated)',
+                  color: 'var(--color-text)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                }}
+              >
+                <option value="">Alle</option>
+                {LOCATIONS.map((loc) => (
+                  <option key={loc.id} value={loc.id}>{loc.emoji} {loc.label}</option>
+                ))}
+              </select>
             </div>
             {equipmentSpecified && (
-              <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 Ort-Filter aus, solange Equipment gesucht wird.
               </p>
             )}
