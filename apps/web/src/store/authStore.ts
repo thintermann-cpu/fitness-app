@@ -109,7 +109,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (result === 'timeout') {
         console.error('[authStore] getSession() timed out after', AUTH_INIT_TIMEOUT_MS, 'ms — auth lock likely stuck on another tab')
-        set({ loading: false })
+        set({ loading: false, profileLoaded: true })
       } else {
         const session = result.data.session
         const user    = session?.user ?? null
@@ -124,12 +124,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
 
-      supabase.auth.onAuthStateChange(async (_event, newSession) => {
-        const profile = newSession?.user ? await loadProfile(newSession.user.id) : null
-        set({ session: newSession, user: newSession?.user ?? null, profile, profileLoaded: true })
+      supabase.auth.onAuthStateChange((_event, newSession) => {
+        const userId = newSession?.user?.id
+        set({
+          session: newSession,
+          user: newSession?.user ?? null,
+          loading: false,
+          profile: userId ? get().profile : null,
+          profileLoaded: !userId,
+        })
+        if (!userId) return
+        // Leave the auth lock before querying. Awaiting here deadlocks getSession on the next refresh.
+        setTimeout(() => {
+          loadProfile(userId)
+            .then((profile) => set({ profile, profileLoaded: true }))
+            .catch(() => set({ profileLoaded: true }))
+        }, 0)
       })
     } catch {
-      set({ loading: false })
+      set({ loading: false, profileLoaded: true })
     }
   },
 }))
