@@ -162,54 +162,45 @@ export function TodaysWod() {
 
   // ── Normal / high-mood WOD card ──────────────────────────────────────────────
   const duration = parseInt(wod.dauer) || 0
-  const preview  = (wod.beschreibung ?? '').slice(0, 80)
 
   return (
     <section
-      className="rounded-2xl p-4"
+      className="rounded-xl px-3 py-2"
       style={{ backgroundColor: 'var(--color-bg-card)' }}
     >
-      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--color-text-muted)' }}>
+      <p className="text-[10px] font-semibold leading-none" style={{ color: 'var(--color-text-muted)' }}>
         {labels.header}
       </p>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="font-bold text-base leading-tight" style={{ color: 'var(--color-text)' }}>
-          {wod.name}
-        </h3>
-        <span
-          className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-          style={{ backgroundColor: '#E8642A20', color: '#E8642A' }}
+      <h3 className="mt-1 font-bold text-sm leading-tight" style={{ color: 'var(--color-text)' }}>
+        {wod.name}
+      </h3>
+      <div className="mt-1 flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          {duration > 0 && (
+            <span className="text-xs leading-none" style={{ color: 'var(--color-text-muted)' }}>
+              {duration} min
+            </span>
+          )}
+          <span
+            className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full leading-none"
+            style={{ backgroundColor: 'color-mix(in srgb, var(--color-pillar-workout) 16%, transparent)', color: 'var(--color-pillar-workout)' }}
+          >
+            {wod.typ}
+          </span>
+          {isHighMood && (
+            <span className="text-[10px] leading-none" style={{ color: 'var(--color-pillar-workout)' }}>
+              {labels.pushBadge}
+            </span>
+          )}
+        </div>
+        <button
+          onClick={() => navigate(`/workout/${encodeURIComponent(wod.name)}`)}
+          className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--color-pillar-workout) 16%, transparent)', color: 'var(--color-pillar-workout)' }}
         >
-          {wod.typ}
-        </span>
+          {labels.cta}
+        </button>
       </div>
-      <div className="flex items-center gap-2 mb-2 flex-wrap">
-        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: '#E8642A15', color: '#E8642A' }}>
-          {labels.badge}
-        </span>
-        {isHighMood && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#E8642A30', color: '#E8642A' }}>
-            {labels.pushBadge}
-          </span>
-        )}
-        {duration > 0 && (
-          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            ⏱ {duration} min
-          </span>
-        )}
-      </div>
-      {preview && (
-        <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-          {preview}{wod.beschreibung.length > 80 ? '…' : ''}
-        </p>
-      )}
-      <button
-        onClick={() => navigate(`/workout/${encodeURIComponent(wod.name)}`)}
-        className="px-4 py-2 rounded-xl text-sm font-semibold transition-opacity active:opacity-70"
-        style={{ backgroundColor: '#E8642A22', color: '#E8642A' }}
-      >
-        {labels.cta}
-      </button>
     </section>
   )
 }
