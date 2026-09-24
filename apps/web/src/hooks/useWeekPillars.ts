@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { localPillarDone } from '../lib/pillarDone'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 
@@ -37,7 +38,8 @@ export function useWeekPillars() {
   return useQuery({
     queryKey: ['week_pillars', user?.id ?? 'anon'],
     enabled: !!user,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: 'always',
     gcTime: 10 * 60 * 1000,
     queryFn: async (): Promise<DayPillars[]> => {
       const days = getLastSevenDays()
@@ -68,10 +70,10 @@ export function useWeekPillars() {
         date,
         dayLabel: getDayLabel(date, lang),
         isToday: date === today,
-        workout:    workoutDays.has(date)  || (manualByDay[date]?.has('workout')    ?? false),
-        stretching: stretchDays.has(date)  || (manualByDay[date]?.has('stretching') ?? false),
-        meditation: medDays.has(date)      || (manualByDay[date]?.has('meditation') ?? false),
-        routine:    routineDays.has(date)  || (manualByDay[date]?.has('routine')    ?? false),
+        workout:    workoutDays.has(date)  || (manualByDay[date]?.has('workout')    ?? false) || (date === today && localPillarDone('workout')),
+        stretching: stretchDays.has(date)  || (manualByDay[date]?.has('stretching') ?? false) || (date === today && localPillarDone('stretching')),
+        meditation: medDays.has(date)      || (manualByDay[date]?.has('meditation') ?? false) || (date === today && localPillarDone('meditation')),
+        routine:    routineDays.has(date)  || (manualByDay[date]?.has('routine')    ?? false) || (date === today && localPillarDone('routine')),
       }))
     },
   })

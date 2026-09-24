@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import type { WizardExercise } from '../lib/customWorkouts'
+import { markPillarDone } from '../lib/pillarDone'
 
 export interface WodHistoryEntry {
   id: string
@@ -69,6 +70,7 @@ export function useWodHistory(wodName?: string) {
         id: crypto.randomUUID(),
         completed_at: new Date().toISOString(),
       }
+      markPillarDone('workout')
 
       if (!isSupabaseConfigured) {
         const all = readLocal()
