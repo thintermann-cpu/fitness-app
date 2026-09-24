@@ -246,7 +246,7 @@ export function WodList({
               setPage(0)
             }}
             placeholder="Workout suchen…"
-            className="w-full bg-[var(--color-bg-card)] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[#E8642A] text-sm"
+            className="w-full bg-[var(--color-bg-card)] border border-white/8 rounded-xl pl-9 pr-4 py-3 text-[var(--color-text)] placeholder:text-[var(--color-text-subtle)] focus:outline-none focus:border-[var(--color-pillar-workout)] text-sm"
           />
         </div>
         <button
@@ -295,7 +295,7 @@ export function WodList({
 
       {/* List */}
       {(isLoading && accWods.length === 0) ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-24 rounded-[var(--radius-md)] bg-[var(--color-bg-card)] animate-pulse" />
           ))}
@@ -306,7 +306,7 @@ export function WodList({
           <p className="text-sm text-[var(--color-text-muted)]">WODs konnten nicht geladen werden.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {accWods.map((wod) => (
             <WodCard key={wod.id} wod={wod} onClick={() => onSelectWod(wod.name)} />
           ))}
@@ -318,7 +318,8 @@ export function WodList({
         <button
           onClick={() => setPage((p) => p + 1)}
           disabled={isFetching}
-          className="w-full py-3 rounded-xl border border-[#E8642A]/40 text-[#E8642A] font-medium text-sm disabled:opacity-50 active:scale-[0.98] transition-transform"
+          className="w-full py-3 rounded-xl border font-medium text-sm disabled:opacity-50 active:scale-[0.98] transition-transform"
+          style={{ borderColor: 'color-mix(in srgb, var(--color-pillar-workout) 40%, transparent)', color: 'var(--color-pillar-workout)' }}
         >
           {isFetching ? 'Loading…' : 'Load more'}
         </button>
