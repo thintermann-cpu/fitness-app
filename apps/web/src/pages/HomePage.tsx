@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { TodayPillarTracker } from '../components/home/TodayPillarTracker'
 import { AdaptiveSuggestion } from '../components/home/AdaptiveSuggestion'
-import { TodaysWod } from '../components/home/TodaysWod'
 import { OnboardingSlides } from '../components/home/OnboardingSlides'
 import { WhatsNewBanner } from '../components/home/WhatsNewBanner'
 import { MoodCheck } from '../components/routine/MoodCheck'
@@ -179,7 +178,6 @@ export function HomePage() {
           <WeekView routines={routines} weekLogs={weekLogs} weekDates={weekDates} />
         )}
 
-        <TodaysWod />
       </div>
 
       {editingRoutine && (
