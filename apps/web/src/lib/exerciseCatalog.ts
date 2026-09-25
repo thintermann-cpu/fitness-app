@@ -993,6 +993,23 @@ function plainRepParts(reps: string): string[] | null {
   return parts
 }
 
+/** Same leading count on every line ("10 Curl") belongs in the reps field. */
+function sharedLeadingReps(
+  lines: { name: string; detail?: string; sets?: number; repCount?: number }[],
+): { reps: string; name: string }[] | null {
+  if (lines.length < 2) return null
+  const parsed = lines.map((line) => {
+    if (line.sets || line.repCount || line.detail) return null
+    const match = line.name.match(/^(\d+)\s+(.+)$/)
+    if (!match?.[1] || !match[2] || !/[a-zäöü]/i.test(match[2])) return null
+    return { reps: match[1], name: match[2].trim() }
+  })
+  if (parsed.some((row) => !row)) return null
+  const reps = parsed[0]!.reps
+  if (!parsed.every((row) => row!.reps === reps)) return null
+  return parsed as { reps: string; name: string }[]
+}
+
 function restSeconds(text: string): number | undefined {
   const seconds = text.match(/pause:\s*(\d+)\s*s/i)
   if (seconds) return Number(seconds[1])
@@ -1042,6 +1059,14 @@ export function presentCatalogWorkout(input: {
     sets: line.sets,
     repCount: line.repCount,
   }))
+  const sameReps = sharedLeadingReps(lines)
+  if (sameReps) {
+    lines = lines.map((line, index) => ({
+      ...line,
+      name: sameReps[index].name,
+      detail: sameReps[index].reps,
+    }))
+  }
 
   if (strength) {
     const shared = eachSet
