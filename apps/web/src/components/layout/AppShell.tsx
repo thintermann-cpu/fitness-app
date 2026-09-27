@@ -76,7 +76,7 @@ export function AppShell() {
       <Sidebar />
 
       {/* Content area: offset by sidebar width on desktop */}
-      <div className="flex flex-col flex-1 min-h-0 lg:pl-[240px]">
+      <div className="flex flex-col flex-1 min-h-0 min-w-0 lg:pl-[240px]">
         {/* Mobile header — hidden while a workout timer is running */}
         {!sessionActive && <div
           className="lg:hidden flex items-center px-3 border-b sticky top-0 z-20"
@@ -121,7 +121,7 @@ export function AppShell() {
           </div>
         </div>}
 
-        <main className={`flex-1 min-h-0 overflow-y-auto ${sessionActive ? 'pb-0' : 'pb-[60px] lg:pb-0'}`}>
+        <main className={`page-frame flex-1 min-h-0 overflow-x-hidden overflow-y-auto ${sessionActive ? 'pb-0' : 'pb-[60px] lg:pb-0'}`}>
           <Outlet />
         </main>
         {!sessionActive && <BottomNav />}

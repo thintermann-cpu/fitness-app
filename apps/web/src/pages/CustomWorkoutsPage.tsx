@@ -80,7 +80,7 @@ export function CustomWorkoutsPage() {
     : workouts
 
   return (
-    <div className="min-h-full bg-[var(--color-bg)] px-4 pt-4 pb-4 max-w-lg mx-auto">
+    <div className="page-frame min-h-full bg-[var(--color-bg)] px-4 pt-4 pb-4">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
@@ -130,7 +130,7 @@ export function CustomWorkoutsPage() {
           Kein Treffer für „{search.trim()}“
         </p>
       ) : (
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 w-full min-w-0">
           {visible.map((w) => {
             const meta = [
               MODE_LABELS[w.mode] ?? w.mode,
@@ -140,7 +140,7 @@ export function CustomWorkoutsPage() {
             return (
               <div
                 key={w.id}
-                className="flex items-center gap-2 rounded-xl px-3 py-2"
+                className="flex w-full min-w-0 items-center gap-2 rounded-xl px-3 py-2"
                 style={{ backgroundColor: 'var(--color-bg-card)' }}
               >
                 <div className="flex-1 min-w-0">

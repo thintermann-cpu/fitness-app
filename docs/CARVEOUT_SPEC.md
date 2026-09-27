@@ -422,6 +422,8 @@ Ab dem `lg`-Breakpoint (≥ 1024 px):
 - `BottomNav` wird ausgeblendet (`hidden lg:hidden`)
 - AppShell passt den Content-Bereich entsprechend an
 
+Inhaltsbreite: `.page-frame` (`width: 100%`, `min-width: 0`, `max-width: 100%`) auf der Shell und den Pillar-Seiten. Die Spalte folgt der verfügbaren Breite. Ein fixes `max-w-lg` (32rem) wurde zum Mindestmaß des Flex-Items und hat im Hochformat die Zeilenaktionen abgeschnitten; im Querformat blieb die Liste schmal.
+
 ---
 
 ## 8. Admin-Bereich
