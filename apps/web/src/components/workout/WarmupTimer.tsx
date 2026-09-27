@@ -3,18 +3,18 @@ import { useAudio } from '../../hooks/useAudio'
 import { useToastStore } from '../../store/toastStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 
-const REST_SEC = 4
 const RING_RADIUS = 70
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
 
-export type WarmupRoutineId = 'short' | 'standard'
+export type WarmupRoutineId = 'short' | 'standard' | 'kraft'
 
 interface WarmupExercise { name: string; desc: string; sek: number }
 
-export const WARMUP_SESSIONS: Record<WarmupRoutineId, { label: string; minutes: string; exercises: WarmupExercise[] }> = {
+export const WARMUP_SESSIONS: Record<WarmupRoutineId, { label: string; minutes: string; restSec: number; exercises: WarmupExercise[] }> = {
   short: {
     label: 'Kurz',
     minutes: '3 min',
+    restSec: 4,
     exercises: [
       { name: 'Armkreisen',     desc: 'Große Kreise mit beiden Armen',              sek: 30 },
       { name: 'Inchworms',      desc: 'Hände zum Boden, in die Plank laufen und zurück', sek: 30 },
@@ -26,6 +26,7 @@ export const WARMUP_SESSIONS: Record<WarmupRoutineId, { label: string; minutes: 
   standard: {
     label: 'Standard',
     minutes: '4 min',
+    restSec: 4,
     exercises: [
       { name: 'Jumping Jacks', desc: 'Arme und Beine gleichzeitig spreizen',       sek: 40 },
       { name: 'High Knees',    desc: 'Knie hoch ziehen, schnelles Tempo',           sek: 40 },
@@ -33,6 +34,22 @@ export const WARMUP_SESSIONS: Record<WarmupRoutineId, { label: string; minutes: 
       { name: 'Leg Swings',    desc: 'Bein vor und zurück schwingen, je Seite',     sek: 30 },
       { name: 'Arm Circles',   desc: 'Große Kreise mit beiden Armen',               sek: 30 },
       { name: 'Air Squats',    desc: 'Tief in die Knie, Brust hoch',                sek: 40 },
+    ],
+  },
+  kraft: {
+    label: 'Kraft',
+    minutes: '7:20',
+    restSec: 10,
+    exercises: [
+      { name: 'Armkreisen',                    desc: 'Große Kreise mit beiden Armen',              sek: 40 },
+      { name: 'Good Morning, ohne Last',       desc: 'Rücken lang, aus der Hüfte falten',          sek: 40 },
+      { name: 'Good Morning, leichte Hantel',  desc: 'Hantel vor der Brust, leicht',               sek: 40 },
+      { name: 'Kurzhantel-Squat',              desc: 'Goblet, Hantel vor der Brust',               sek: 40 },
+      { name: 'Ausfallschritte',               desc: 'Hantel optional, im Wechsel',                sek: 40 },
+      { name: 'Klimmzug',                      desc: 'Leicht, Band ist erlaubt',                   sek: 40 },
+      { name: 'Kurzhantel-Rudern',             desc: 'Eine Hantel, aufgestützt',                   sek: 40 },
+      { name: 'Liegestütz',                    desc: 'Locker, Knie sind erlaubt',                  sek: 40 },
+      { name: 'Hüftbeuge mit leichter Hantel', desc: 'Aus der Hüfte falten, Rücken bleibt lang',   sek: 40 },
     ],
   },
 }
@@ -48,7 +65,9 @@ interface Props {
 
 export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standard' }: Props) {
   const [routineId, setRoutineId] = useState<WarmupRoutineId>(routine)
-  const exercises = WARMUP_SESSIONS[routineId].exercises
+  const session = WARMUP_SESSIONS[routineId]
+  const exercises = session.exercises
+  const restSec = session.restSec
   const [phase, setPhase]           = useState<Phase>('idle')
   const [showCountdown, setShowCountdown] = useState(false)
   const [currentIdx, setCurrentIdx] = useState(0)
@@ -87,7 +106,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
   }, [isTimerActive])
 
   const current      = exercises[currentIdx]
-  const phaseTotal   = phase === 'rest' ? REST_SEC : (current?.sek ?? 0)
+  const phaseTotal   = phase === 'rest' ? restSec : (current?.sek ?? 0)
   const progress     = phaseTotal > 0 ? timeLeft / phaseTotal : 1
   const dashOffset   = CIRCUMFERENCE * (1 - progress)
   const ringColor    = phase === 'rest' ? '#60A5FA' : '#E8642A'
@@ -138,7 +157,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
         if (currentIdx < exercises.length - 1) {
           void audio.playBeep()
           setPhase('rest')
-          setTimeLeft(REST_SEC)
+          setTimeLeft(restSec)
         } else {
           setPhase('done')
           if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
@@ -157,7 +176,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
 
     const id = window.setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000)
     return () => clearInterval(id)
-  }, [timeLeft, paused, phase, currentIdx, audio, addToast])
+  }, [timeLeft, paused, phase, currentIdx, audio, addToast, restSec, exercises])
 
   if (!isOpen) return null
 

@@ -144,7 +144,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
       mode === 'tabata' ? Math.round((tabataWork + tabataRest) * tabataRounds / 60) :
       mode === 'emom'   ? emomInterval * emomRounds :
       minutes
-    const w: WarmupRoutineId | false = warmup === 'short' || warmup === 'standard' ? warmup : false
+    const w: WarmupRoutineId | false = warmup && warmup !== 'none' ? warmup : false
     const exs        = isKraft ? undefined : (exercises.length > 0 ? exercises : undefined)
     const savedName  = !isAdhoc && name.trim()
       ? name.trim()
@@ -220,7 +220,10 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
             return (
               <button
                 key={id}
-                onClick={() => setMode(id)}
+                onClick={() => {
+                  setMode(id)
+                  if (id !== 'krafttraining') setWarmup((current) => current === 'kraft' ? null : current)
+                }}
                 className="w-full flex items-center gap-3 rounded-xl px-3 py-2 transition-all text-left"
                 style={{
                   backgroundColor: mode === id ? `${m.color}18` : 'var(--color-bg-card)',
@@ -626,6 +629,11 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
               { id: 'none' as const, label: 'Keins', hint: 'Direkt ins Workout' },
               { id: 'short' as const, label: `${WARMUP_SESSIONS.short.label} · ${WARMUP_SESSIONS.short.minutes}`, hint: 'Armkreisen, Inchworms, Ausfallschritte, Jumping Jacks, Liegestütze' },
               { id: 'standard' as const, label: `${WARMUP_SESSIONS.standard.label} · ${WARMUP_SESSIONS.standard.minutes}`, hint: 'Jumping Jacks bis Air Squats' },
+              ...(isKraft ? [{
+                id: 'kraft' as const,
+                label: `${WARMUP_SESSIONS.kraft.label} · ${WARMUP_SESSIONS.kraft.minutes}`,
+                hint: 'Armkreisen bis Hüftbeuge, 40 Sekunden, 10 Sekunden Pause',
+              }] : []),
             ]).map((opt) => {
               const active = warmup === opt.id
               return (

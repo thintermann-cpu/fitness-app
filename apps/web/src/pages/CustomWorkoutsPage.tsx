@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCustomWorkouts } from '../hooks/useCustomWorkouts'
 import { FreeTimerWizard, type KraftConfig, type TimerInitConfig, type WizardInitialValues } from '../components/workout/FreeTimerWizard'
+import type { WarmupRoutineId } from '../components/workout/WarmupTimer'
 import type { TimerMode } from '../lib/timerLabels'
 import type { WizardExercise, CustomWorkout } from '../lib/customWorkouts'
 import { parseWorkoutSearch, workoutMatchesQuery } from '../lib/exerciseCatalog'
@@ -28,7 +29,7 @@ export function CustomWorkoutsPage() {
   function handleEditSave(
     mode: TimerMode,
     minutes: number,
-    _withWarmup?: 'short' | 'standard' | false,
+    _withWarmup?: WarmupRoutineId | false,
     kraftConfig?: KraftConfig,
     exercises?: WizardExercise[],
     workoutName?: string,
