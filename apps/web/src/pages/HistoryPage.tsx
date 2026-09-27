@@ -84,7 +84,7 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="min-h-full px-4 pt-10 pb-24 max-w-lg mx-auto" style={{ backgroundColor: 'var(--color-bg)' }}>
+    <div className="page-frame min-h-full px-4 pt-10 pb-24" style={{ backgroundColor: 'var(--color-bg)' }}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
@@ -139,7 +139,7 @@ export function HistoryPage() {
           {entries.map((entry) => (
             <div
               key={entry.id}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              className="flex w-full min-w-0 items-center gap-3 px-4 py-3 rounded-xl"
               style={{ backgroundColor: 'var(--color-bg-card)' }}
             >
               <div

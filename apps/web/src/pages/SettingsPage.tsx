@@ -381,7 +381,7 @@ export function SettingsPage() {
   // ── MAIN LIST ────────────────────────────────────────────────────────────────
 
   if (view === 'main') return (
-    <div className="p-4 max-w-md mx-auto" style={{ color: 'var(--color-text)' }}>
+    <div className="page-frame p-4" style={{ color: 'var(--color-text)' }}>
       <h1 className="text-xl font-bold pt-2 pb-5">Einstellungen</h1>
 
       <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
@@ -440,7 +440,7 @@ export function SettingsPage() {
   // ── SUB-VIEWS ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-4 max-w-md mx-auto" style={{ color: 'var(--color-text)' }}>
+    <div className="page-frame p-4" style={{ color: 'var(--color-text)' }}>
       <SubHeader title={VIEW_TITLES[view]} onBack={back} />
 
       {/* ── PROFIL ── */}

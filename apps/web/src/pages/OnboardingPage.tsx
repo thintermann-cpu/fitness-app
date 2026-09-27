@@ -102,7 +102,7 @@ export function OnboardingPage() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 max-w-md mx-auto w-full">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 w-full min-w-0 max-w-md mx-auto">
         <div key={animKey} className="step-enter w-full space-y-8">
 
           {/* ── Step 0: Language ── */}

@@ -232,7 +232,7 @@ export function WodList({
     <div className="space-y-3">
       {/* Search + Dice + Filter row */}
       <div className="flex gap-2">
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
             🔍
           </span>

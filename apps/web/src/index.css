@@ -47,6 +47,15 @@ body {
 
 #root {
   min-height: 100svh;
+  min-width: 0;
+}
+
+/* Shell content follows the viewport. A fixed 32rem cap becomes the flex
+   item's minimum size and clips portrait phones; in landscape it stays narrow. */
+.page-frame {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 @keyframes slideInRight {

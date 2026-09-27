@@ -54,7 +54,7 @@ export function FavoritesPage() {
     })
 
   return (
-    <div className="min-h-full bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
+    <div className="min-h-full w-full min-w-0 bg-[var(--color-bg)] flex flex-col overflow-x-hidden">
       {/* Header */}
       <div className="px-4 pt-4 pb-4 flex items-center gap-3">
         <button
@@ -68,7 +68,7 @@ export function FavoritesPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 pb-24 max-w-lg mx-auto w-full space-y-3">
+      <div className="page-frame flex-1 px-4 pb-24 space-y-3">
         {totalFavs === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" width="48" height="48">

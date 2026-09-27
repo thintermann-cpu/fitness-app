@@ -95,7 +95,7 @@ export function HomePage() {
   return (
     <>
       <OnboardingSlides lang={lang} />
-      <div className="p-4 space-y-4 max-w-md mx-auto" style={{ color: 'var(--color-text)' }}>
+      <div className="page-frame p-4 space-y-4" style={{ color: 'var(--color-text)' }}>
         <header className="pt-2 space-y-0.5">
           <h1 className="text-2xl font-bold">{greeting}</h1>
           <p className="text-sm capitalize" style={{ color: 'var(--color-text-muted)' }}>{dateLabel}</p>
