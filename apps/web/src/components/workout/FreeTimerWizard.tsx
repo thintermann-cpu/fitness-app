@@ -101,7 +101,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
   const [emomRounds,   setEmomRounds]   = useState(() => initialValues?.emomRounds   ?? 10)
 
   const isKraft   = mode === 'krafttraining'
-  const stepCount = isKraft ? 3 : 4
+  const stepCount = 4
 
   const reset = () => {
     setStep(initialStep); setMode(initialValues?.mode ?? 'fortime'); setExercises(initialValues?.exercises ?? []); setScheme(initialValues?.scheme ?? '')
@@ -156,7 +156,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
 
   const canNext = (() => {
     if (!isAdhoc && step === 2) return name.trim().length > 0
-    if (!isKraft && step === lastStep) return warmup !== null
+    if (step === lastStep) return warmup !== null
     if (isKraft && step === 1) return exercises.length > 0
     return true
   })()
@@ -614,8 +614,8 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
         </div>
       )}
 
-      {/* Step 3 (non-kraft): Warmup? */}
-      {!isKraft && step === 3 && (
+      {/* Step 3: Warmup? — Kraft und die anderen Modi */}
+      {step === 3 && (
         <div>
           <p className="text-lg font-black mb-2" style={{ color: 'var(--color-text)' }}>🔥 Warmup zuerst?</p>
           <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
