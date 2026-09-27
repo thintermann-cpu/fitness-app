@@ -295,6 +295,7 @@ export function WorkoutPage() {
             {timerConfig ? (
               <>
                 {timerConfig.mode === 'krafttraining' && timerConfig.kraftConfig ? (
+                  showWarmupTimer || showWorkoutCountdown ? null : (
                   <KraftTimerView
                     exercises={timerConfig.kraftConfig.exercises}
                     restBetweenSets={timerConfig.kraftConfig.restBetweenSets}
@@ -302,6 +303,7 @@ export function WorkoutPage() {
                     workoutName={timerConfig.workoutName}
                     onShowHistory={() => setTab('history')}
                   />
+                  )
                 ) : (
                   <TimerView key={timerKey}
                     adHocLog={!!timerConfig.adHocLog}
