@@ -38,7 +38,7 @@ export const WARMUP_SESSIONS: Record<WarmupRoutineId, { label: string; minutes: 
   },
   kraft: {
     label: 'Kraft',
-    minutes: '7:20',
+    minutes: '8:10',
     restSec: 10,
     exercises: [
       { name: 'Armkreisen',                    desc: 'Große Kreise mit beiden Armen',              sek: 40 },
@@ -50,6 +50,7 @@ export const WARMUP_SESSIONS: Record<WarmupRoutineId, { label: string; minutes: 
       { name: 'Kurzhantel-Rudern',             desc: 'Eine Hantel, aufgestützt',                   sek: 40 },
       { name: 'Liegestütz',                    desc: 'Locker, Knie sind erlaubt',                  sek: 40 },
       { name: 'Hüftbeuge mit leichter Hantel', desc: 'Aus der Hüfte falten, Rücken bleibt lang',   sek: 40 },
+      { name: 'Jumping Jacks',                 desc: 'Arme und Beine gleichzeitig, Puls hoch',    sek: 40 },
     ],
   },
 }

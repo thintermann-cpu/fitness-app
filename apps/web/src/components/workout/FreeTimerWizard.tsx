@@ -632,7 +632,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
               ...(isKraft ? [{
                 id: 'kraft' as const,
                 label: `${WARMUP_SESSIONS.kraft.label} · ${WARMUP_SESSIONS.kraft.minutes}`,
-                hint: 'Armkreisen bis Hüftbeuge, 40 Sekunden, 10 Sekunden Pause',
+                hint: 'Armkreisen bis Jumping Jacks, 40 Sekunden, 10 Sekunden Pause',
               }] : []),
             ]).map((opt) => {
               const active = warmup === opt.id
