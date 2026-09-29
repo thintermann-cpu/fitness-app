@@ -330,14 +330,15 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
             {phase === 'rest' ? (
               <div className="text-center">
                 <p className="text-sm font-semibold" style={{ color: '#60A5FA' }}>Kurze Pause</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                  Nächste: {exercises[currentIdx + 1]?.name}
+                <p className="text-[10px] font-semibold uppercase tracking-wider mt-2" style={{ color: 'rgba(232,100,42,0.6)' }}>Nächste</p>
+                <p className="text-[1.5rem] leading-tight font-bold" style={{ color: 'var(--color-text)' }}>
+                  {exercises[currentIdx + 1]?.name}
                 </p>
               </div>
             ) : (
               <div className="text-center">
-                <p className="text-base font-bold" style={{ color: 'var(--color-text)' }}>{current.name}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{current.desc}</p>
+                <p className="text-[2rem] leading-tight font-bold" style={{ color: 'var(--color-text)' }}>{current.name}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{current.desc}</p>
               </div>
             )}
 
@@ -348,18 +349,21 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
                 style={{ backgroundColor: 'rgba(232,100,42,0.1)', border: '1px solid rgba(232,100,42,0.2)' }}
               >
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'rgba(232,100,42,0.6)' }}>Nächste</p>
-                <p className="text-xs font-medium" style={{ color: '#E8642A' }}>{exercises[currentIdx + 1].name}</p>
+                <p className="text-[1.5rem] leading-tight font-bold" style={{ color: '#E8642A' }}>{exercises[currentIdx + 1].name}</p>
               </div>
             )}
 
             {/* Exercise list with checkmarks */}
             <div className="w-full rounded-xl px-3 py-2" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
               <div className="space-y-0.5">
-                {exercises.map((ex, i) => (
+                {exercises.map((ex, i) => {
+                  const isCurrent = phase === 'exercise' && i === currentIdx
+                  const isUpcoming = i === currentIdx + 1
+                  return (
                   <div
                     key={ex.name}
                     className="flex items-center gap-2 px-1 py-1 rounded-lg transition-colors"
-                    style={i === currentIdx && phase === 'exercise' ? { backgroundColor: 'rgba(232,100,42,0.1)' } : {}}
+                    style={isCurrent ? { backgroundColor: 'rgba(232,100,42,0.1)' } : {}}
                   >
                     <span
                       className="text-[10px] w-3 text-center"
@@ -368,10 +372,10 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
                       {done[i] ? '✓' : '○'}
                     </span>
                     <p
-                      className="text-xs flex-1"
+                      className={`flex-1 min-w-0 ${isCurrent || isUpcoming ? 'text-2xl leading-tight font-semibold' : 'text-xs'}`}
                       style={{
                         color:
-                          i === currentIdx && phase === 'exercise' ? '#E8642A'
+                          isCurrent ? '#E8642A'
                           : done[i] ? 'rgba(255,255,255,0.35)'
                           : 'var(--color-text-muted)',
                       }}
@@ -382,7 +386,8 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
                       {ex.sek}s
                     </span>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
 
