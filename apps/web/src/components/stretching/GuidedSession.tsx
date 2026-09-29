@@ -7,6 +7,7 @@ import { useSessionStore } from '../../store/sessionStore'
 import { ExerciseIllustration } from './ExerciseIllustration'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { ExerciseKeyframes } from '../shared/ExerciseKeyframes'
+import { mobilityFramePaths } from '../../lib/mobilityFrames'
 import { NextExercisePreview } from '../shared/NextExercisePreview'
 import { useAnalytics } from '../../hooks/useAnalytics'
 
@@ -131,6 +132,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
   const [showMenu, setShowMenu] = useState(false)
 
   const current = orderedExercises[currentIndex]
+  const poseFrames = mobilityFramePaths(current?.name_en)
 
   // Wake Lock
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
@@ -483,15 +485,18 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
               </div>
             ) : (
               <>
-                <ExerciseKeyframes
-                  exerciseId={current?.id ?? ''}
-                  frames={[]}
-                  interval={2500}
-                />
-                <ExerciseIllustration
-                  imageKey={current?.image_key ?? null}
-                  muscleGroup={current?.muscle_group ?? ''}
-                />
+                {poseFrames.length > 0 ? (
+                  <ExerciseKeyframes
+                    exerciseId={current?.id ?? ''}
+                    frames={poseFrames}
+                    interval={2500}
+                  />
+                ) : (
+                  <ExerciseIllustration
+                    imageKey={current?.image_key ?? null}
+                    muscleGroup={current?.muscle_group ?? ''}
+                  />
+                )}
               </>
             )}
           </div>
