@@ -65,21 +65,47 @@ export function OnboardingPage() {
     setEquipment((prev) => prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id])
 
   const handleFinish = async () => {
-    if (!user) return
+    if (!user) {
+      setError('Bitte melde dich an und starte das Onboarding erneut.')
+      return
+    }
     setSaving(true)
     setError(null)
 
-    const { error: dbErr } = await supabase
+    const { data: sessionData } = await supabase.auth.getSession()
+    if (!sessionData.session) {
+      setError('Die Anmeldung ist noch nicht aktiv. Bitte die E-Mail bestätigen oder dich neu anmelden.')
+      setSaving(false)
+      return
+    }
+
+    const payload = {
+      language,
+      goal,
+      equipment,
+      primary_pillar: 'workout',
+      active_pillars: ALL_PILLARS,
+      updated_at: new Date().toISOString(),
+    }
+
+    // The signup trigger already inserted the row. Update avoids the insert
+    // policy check that made upsert fail with "new row violates row-level security".
+    const updated = await supabase
       .from('user_profiles')
-      .upsert({
-        id: user.id,
-        language,
-        goal,
-        equipment,
-        primary_pillar: 'workout',
-        active_pillars: ALL_PILLARS,
-        updated_at: new Date().toISOString(),
-      })
+      .update(payload)
+      .eq('id', user.id)
+      .select('id')
+      .maybeSingle()
+
+    let dbErr = updated.error
+    if (!dbErr && !updated.data) {
+      const inserted = await supabase
+        .from('user_profiles')
+        .insert({ id: user.id, ...payload })
+        .select('id')
+        .maybeSingle()
+      dbErr = inserted.error
+    }
 
     if (dbErr) {
       setError(dbErr.message)
@@ -93,9 +119,9 @@ export function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg)' }}>
+    <div className="h-svh flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--color-bg)' }}>
       {/* Progress bar */}
-      <div className="h-1 w-full" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
+      <div className="h-1 w-full shrink-0" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
         <div
           className="h-full transition-all duration-500"
           style={{
@@ -105,8 +131,8 @@ export function OnboardingPage() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 w-full min-w-0 max-w-md mx-auto">
-        <div key={animKey} className="step-enter w-full space-y-8">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-8 w-full min-w-0">
+        <div key={animKey} className="step-enter w-full max-w-md mx-auto space-y-8 pb-8">
 
           {/* ── Step 0: Language ── */}
           {step === 0 && (
