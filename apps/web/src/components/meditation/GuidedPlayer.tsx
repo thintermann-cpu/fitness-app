@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAnalytics } from '../../hooks/useAnalytics'
+import { useAuthStore } from '../../store/authStore'
 
 const PILLAR_COLOR = '#9B7FD4'
 
@@ -13,16 +14,37 @@ const TYPE_BADGE: Record<string, string> = {
   visualization: 'Visualisierung',
 }
 
+type Lang = 'de' | 'en' | 'es'
+
 interface Session {
   id: string
-  title: string
+  title: string | Partial<Record<Lang, string>>
   duration: number
   type: string
-  file: string
+  file?: string
+  files?: Partial<Record<Lang, string>>
   available: boolean
 }
 
+const COPY: Record<Lang, { heading: string; soon: string; pause: string; play: string }> = {
+  de: { heading: 'Geführte Audio-Sessions', soon: 'Bald verfügbar', pause: 'Pausieren', play: 'Abspielen' },
+  en: { heading: 'Guided audio sessions', soon: 'Coming soon', pause: 'Pause', play: 'Play' },
+  es: { heading: 'Sesiones de audio guiadas', soon: 'Pronto', pause: 'Pausar', play: 'Reproducir' },
+}
+
+function sessionTitle(session: Session, lang: Lang): string {
+  if (typeof session.title === 'string') return session.title
+  return session.title[lang] ?? session.title.de ?? session.title.en ?? session.id
+}
+
+function sessionFile(session: Session, lang: Lang): string | null {
+  const localized = session.files?.[lang] ?? (lang === 'es' ? session.files?.en : undefined)
+  return localized ?? session.file ?? null
+}
+
 export function GuidedPlayer() {
+  const lang = ((useAuthStore((s) => s.profile?.language) ?? 'de') as Lang)
+  const copy = COPY[lang] ?? COPY.de
   const [sessions,  setSessions]  = useState<Session[]>([])
   const [activeId,  setActiveId]  = useState<string | null>(null)
   const [playing,   setPlaying]   = useState(false)
@@ -49,8 +71,10 @@ export function GuidedPlayer() {
       }
       return
     }
+    const file = sessionFile(s, lang)
+    if (!file) return
     audioRef.current?.pause()
-    const audio = new Audio(`/audio/sessions/${s.file}`)
+    const audio = new Audio(`/audio/sessions/${file}`)
     audio.addEventListener('timeupdate', () => {
       setProgress(audio.duration > 0 ? audio.currentTime / audio.duration : 0)
     })
@@ -70,7 +94,7 @@ export function GuidedPlayer() {
     <div className="space-y-2">
       <p className="text-[10px] font-semibold uppercase tracking-wide mb-1"
          style={{ color: 'var(--color-text-muted)' }}>
-        Geführte Audio-Sessions
+        {copy.heading}
       </p>
       {sessions.map((s) => {
         const isActive = activeId === s.id
@@ -95,7 +119,7 @@ export function GuidedPlayer() {
                   color: s.available ? PILLAR_COLOR : 'var(--color-text-muted)',
                   cursor: s.available ? 'pointer' : 'default',
                 }}
-                aria-label={isActive && playing ? 'Pausieren' : 'Abspielen'}
+                aria-label={isActive && playing ? copy.pause : copy.play}
               >
                 {isActive && playing ? '⏸' : '▶'}
               </button>
@@ -104,7 +128,7 @@ export function GuidedPlayer() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>
-                    {s.title}
+                    {sessionTitle(s, lang)}
                   </span>
                   <span
                     className="text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0"
@@ -115,7 +139,7 @@ export function GuidedPlayer() {
                 </div>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                   {s.duration} min
-                  {!s.available && ' · Bald verfügbar'}
+                  {!s.available && ` · ${copy.soon}`}
                 </p>
               </div>
             </div>

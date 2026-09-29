@@ -1,9 +1,100 @@
 [
-  { "id": "body-scan-5",   "title": "Body Scan",              "duration": 5,  "type": "body_scan",      "file": "de/body-scan-5.mp3",   "available": false },
-  { "id": "body-scan-10",  "title": "Body Scan",              "duration": 10, "type": "body_scan",      "file": "de/body-scan-10.mp3",  "available": false },
-  { "id": "breathing-5",   "title": "Atemmeditation",         "duration": 5,  "type": "breathing",      "file": "de/breathing-5.mp3",   "available": false },
-  { "id": "focus-10",      "title": "Fokus-Meditation",       "duration": 10, "type": "focus",          "file": "de/focus-10.mp3",      "available": false },
-  { "id": "sleep-15",      "title": "Einschlaf-Meditation",   "duration": 15, "type": "sleep",          "file": "de/sleep-15.mp3",      "available": false },
-  { "id": "morning-10",    "title": "Morgen-Achtsamkeit",     "duration": 10, "type": "morning",        "file": "de/morning-10.mp3",    "available": false },
-  { "id": "stress-10",     "title": "Stressabbau",            "duration": 10, "type": "stress_relief",  "file": "de/stress-10.mp3",     "available": false }
+  {
+    "id": "body-scan-5",
+    "title": {
+      "de": "Körper-Scan",
+      "en": "Body Scan"
+    },
+    "duration": 5,
+    "type": "body_scan",
+    "files": {
+      "de": "de/body-scan-5.mp3",
+      "en": "en/body-scan-5.mp3"
+    },
+    "available": true
+  },
+  {
+    "id": "body-scan-10",
+    "title": {
+      "de": "Tiefer Körper-Scan",
+      "en": "Deep Body Scan"
+    },
+    "duration": 10,
+    "type": "body_scan",
+    "files": {
+      "de": "de/body-scan-10.mp3",
+      "en": "en/body-scan-10.mp3"
+    },
+    "available": false
+  },
+  {
+    "id": "breathing-5",
+    "title": {
+      "de": "Atemmeditation",
+      "en": "Breath Meditation"
+    },
+    "duration": 5,
+    "type": "breathing",
+    "files": {
+      "de": "de/breathing-5.mp3",
+      "en": "en/breathing-5.mp3"
+    },
+    "available": false
+  },
+  {
+    "id": "focus-10",
+    "title": {
+      "de": "Fokus-Meditation",
+      "en": "Focus Meditation"
+    },
+    "duration": 10,
+    "type": "focus",
+    "files": {
+      "de": "de/focus-10.mp3",
+      "en": "en/focus-10.mp3"
+    },
+    "available": false
+  },
+  {
+    "id": "sleep-15",
+    "title": {
+      "de": "Einschlaf-Meditation",
+      "en": "Sleep Meditation"
+    },
+    "duration": 15,
+    "type": "sleep",
+    "files": {
+      "de": "de/sleep-15.mp3",
+      "en": "en/sleep-15.mp3"
+    },
+    "available": false
+  },
+  {
+    "id": "morning-10",
+    "title": {
+      "de": "Morgen-Achtsamkeit",
+      "en": "Morning Mindfulness"
+    },
+    "duration": 10,
+    "type": "morning",
+    "files": {
+      "de": "de/morning-10.mp3",
+      "en": "en/morning-10.mp3"
+    },
+    "available": false
+  },
+  {
+    "id": "stress-10",
+    "title": {
+      "de": "Stressabbau",
+      "en": "Stress Relief"
+    },
+    "duration": 10,
+    "type": "stress_relief",
+    "files": {
+      "de": "de/stress-10.mp3",
+      "en": "en/stress-10.mp3"
+    },
+    "available": false
+  }
 ]
