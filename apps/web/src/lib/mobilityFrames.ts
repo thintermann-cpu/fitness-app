@@ -1,3 +1,5 @@
+import type { PoseFigure } from './poseFigure'
+
 /** All 65 mobility exercises. Three frames each. Unknown names keep the stick figure. */
 const SLUGS = [
   'hip-flexor-lunge',
@@ -67,11 +69,7 @@ const SLUGS = [
   'malasana-low-squat',
 ]
 
-function frames(slug: string): string[] {
-  return [1, 2, 3].map((n) => `/exercises/mobility/${slug}/${n}.webp`)
-}
-
-const FRAMES: Record<string, string[]> = Object.fromEntries(SLUGS.map((slug) => [slug, frames(slug)]))
+const SLUG_SET = new Set(SLUGS)
 
 /** English catalog name → folder slug. Apostrophes drop, 90/90 becomes 90-90. */
 export function mobilitySlug(nameEn: string): string {
@@ -84,7 +82,13 @@ export function mobilitySlug(nameEn: string): string {
 }
 
 /** Frame URLs for one mobility exercise. Empty when the name is not in the catalog. */
-export function mobilityFramePaths(nameEn: string | null | undefined): string[] {
+export function mobilityFramePaths(
+  nameEn: string | null | undefined,
+  figure: PoseFigure = 'male',
+): string[] {
   if (!nameEn) return []
-  return FRAMES[mobilitySlug(nameEn)] ?? []
+  const slug = mobilitySlug(nameEn)
+  if (!SLUG_SET.has(slug)) return []
+  const root = figure === 'female' ? '/exercises/mobility-f' : '/exercises/mobility'
+  return [1, 2, 3].map((n) => `${root}/${slug}/${n}.webp`)
 }

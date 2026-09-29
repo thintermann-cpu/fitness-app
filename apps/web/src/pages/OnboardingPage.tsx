@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import { Button } from '../components/ui/Button'
+import { savePoseFigure, type PoseFigure } from '../lib/poseFigure'
 
-const TOTAL_STEPS = 3
+const TOTAL_STEPS = 4
 
 const LANGUAGES = [
   { id: 'de', label: 'Deutsch',  flag: '🇩🇪' },
@@ -50,6 +51,7 @@ export function OnboardingPage() {
   const [language,  setLanguage]  = useState('de')
   const [goal,      setGoal]      = useState<string | null>(null)
   const [equipment, setEquipment] = useState<string[]>([])
+  const [figure,    setFigure]    = useState<PoseFigure>('male')
 
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState<string | null>(null)
@@ -85,6 +87,7 @@ export function OnboardingPage() {
       return
     }
 
+    await savePoseFigure(figure, user.id)
     await fetchProfile()
     navigate('/', { replace: true })
   }
@@ -225,18 +228,59 @@ export function OnboardingPage() {
                 })}
               </div>
 
+              <Button className="w-full" onClick={advance}>
+                {equipment.length > 0 ? 'Weiter' : 'Überspringen'}
+              </Button>
+            </>
+          )}
+
+          {/* ── Step 3: Figure ── */}
+          {step === 3 && (
+            <>
+              <div className="text-center space-y-3">
+                <div className="text-5xl">🧍</div>
+                <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+                  Abbildung
+                </h1>
+                <p style={{ color: 'var(--color-text-muted)' }}>
+                  Welche Figur siehst du in den Übungen?
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {([
+                  { id: 'male', label: 'Mann' },
+                  { id: 'female', label: 'Frau' },
+                ] as const).map((option) => {
+                  const selected = figure === option.id
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => setFigure(option.id)}
+                      className="rounded-2xl px-5 py-4 flex items-center gap-4 transition-transform active:scale-[0.98]"
+                      style={{
+                        backgroundColor: selected ? 'var(--color-primary)22' : 'var(--color-bg-card)',
+                        border: `2px solid ${selected ? 'var(--color-primary)' : 'transparent'}`,
+                        color: 'var(--color-text)',
+                      }}
+                    >
+                      <span className="font-semibold">{option.label}</span>
+                      {selected && (
+                        <span className="ml-auto text-sm" style={{ color: 'var(--color-primary)' }}>✓</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
               {error && (
                 <p className="text-sm text-center" style={{ color: 'var(--color-error)' }}>
                   {error}
                 </p>
               )}
 
-              <Button
-                className="w-full"
-                loading={saving}
-                onClick={handleFinish}
-              >
-                {equipment.length > 0 ? 'Los geht\'s 🚀' : 'Überspringen 🚀'}
+              <Button className="w-full" loading={saving} onClick={handleFinish}>
+                Los geht's 🚀
               </Button>
             </>
           )}
