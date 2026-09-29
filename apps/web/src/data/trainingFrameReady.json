@@ -1,0 +1,38 @@
+{
+  "male": [
+    "pull-ups",
+    "strict-pull-ups",
+    "push-ups",
+    "burpees",
+    "air-squats",
+    "sit-ups",
+    "double-unders",
+    "toes-to-bar",
+    "handstand-push-ups",
+    "handstand-walk",
+    "handstand-hold",
+    "muscle-ups",
+    "ring-muscle-ups",
+    "box-jumps",
+    "jumping-jacks",
+    "wall-balls"
+  ],
+  "female": [
+    "pull-ups",
+    "strict-pull-ups",
+    "push-ups",
+    "burpees",
+    "air-squats",
+    "sit-ups",
+    "double-unders",
+    "toes-to-bar",
+    "handstand-push-ups",
+    "handstand-walk",
+    "handstand-hold",
+    "muscle-ups",
+    "ring-muscle-ups",
+    "box-jumps",
+    "jumping-jacks",
+    "wall-balls"
+  ]
+}

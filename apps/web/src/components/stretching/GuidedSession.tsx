@@ -8,6 +8,7 @@ import { ExerciseIllustration } from './ExerciseIllustration'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { ExerciseKeyframes } from '../shared/ExerciseKeyframes'
 import { mobilityFramePaths } from '../../lib/mobilityFrames'
+import { exerciseBlurb, exerciseVideoSearchUrl } from '../../lib/exerciseBlurbs'
 import { usePoseFigure } from '../../lib/poseFigure'
 import { NextExercisePreview } from '../shared/NextExercisePreview'
 import { useAnalytics } from '../../hooks/useAnalytics'
@@ -29,6 +30,7 @@ const T = {
     backToRoutines: 'Zurück zu Routinen',
     backToYoga: 'Zurück zu Yoga',
     instructions: 'Anleitung',
+    video: 'Auf YouTube suchen',
     configure: 'Session konfigurieren',
     exerciseDuration: 'Übungsdauer',
     pauseDuration: 'Pausendauer',
@@ -46,6 +48,7 @@ const T = {
     backToRoutines: 'Back to Routines',
     backToYoga: 'Back to Yoga',
     instructions: 'Instructions',
+    video: 'Search on YouTube',
     configure: 'Configure Session',
     exerciseDuration: 'Exercise duration',
     pauseDuration: 'Rest duration',
@@ -63,6 +66,7 @@ const T = {
     backToRoutines: 'Volver a rutinas',
     backToYoga: 'Volver a Yoga',
     instructions: 'Instrucciones',
+    video: 'Buscar en YouTube',
     configure: 'Configurar sesión',
     exerciseDuration: 'Duración del ejercicio',
     pauseDuration: 'Duración del descanso',
@@ -135,6 +139,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
   const current = orderedExercises[currentIndex]
   const poseFigure = usePoseFigure()
   const poseFrames = mobilityFramePaths(current?.name_en, poseFigure)
+  const infoBlurb = exerciseBlurb(current?.name_en, lang)
 
   // Wake Lock
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
@@ -521,7 +526,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
               <h2 className="text-3xl font-bold text-[var(--color-text)] text-center">
                 {current?.name}
               </h2>
-              {(current?.instructions?.length ?? 0) > 0 && (
+              {((current?.instructions?.length ?? 0) > 0 || !!infoBlurb) && (
                 <button
                   onClick={() => setShowInfo(true)}
                   className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs text-[var(--color-text-muted)] hover:bg-white/20 transition-colors shrink-0"
@@ -616,6 +621,9 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
                 ✕
               </button>
             </div>
+            {infoBlurb && (
+              <p className="mb-4 text-sm leading-relaxed text-[var(--color-text)]">{infoBlurb}</p>
+            )}
             <div className="space-y-2">
               {current.instructions.map((step, i) => (
                 <div key={i} className="flex gap-2 text-sm text-[var(--color-text-muted)]">
@@ -626,6 +634,17 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
                 </div>
               ))}
             </div>
+            {current.name_en && (
+              <a
+                href={exerciseVideoSearchUrl(current.name_en)}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-5 inline-flex text-sm font-semibold"
+                style={{ color: PILLAR_COLOR }}
+              >
+                {t.video}
+              </a>
+            )}
           </div>
         </div>
       )}

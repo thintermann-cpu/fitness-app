@@ -1,0 +1,1459 @@
+[
+  {
+    "slug": "pull-ups",
+    "title": "Pull-ups",
+    "equipment": "pull-up-bar",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "strict-pull-ups",
+    "title": "Strict Pull-ups",
+    "equipment": "pull-up-bar",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "push-ups",
+    "title": "Push-ups",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "burpees",
+    "title": "Burpees",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Stand, Füsse schulterbreit",
+      "Hände am Boden, Füsse springen zurück",
+      "Brust zum Boden",
+      "Füsse springen nach vorn",
+      "Strecksprung, wieder im Stand"
+    ]
+  },
+  {
+    "slug": "air-squats",
+    "title": "Air Squats",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "sit-ups",
+    "title": "Sit-ups",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Rückenlage, Knie gebeugt",
+      "Oberkörper hebt, Schultern lösen den Boden",
+      "Aufrechte Position, zurück in die Rückenlage"
+    ]
+  },
+  {
+    "slug": "double-unders",
+    "title": "Double Unders",
+    "equipment": "jump-rope",
+    "steps": [
+      "Startposition",
+      "Bewegung in der Mitte eines Zyklus",
+      "Ende eines Zyklus, bereit für den nächsten"
+    ]
+  },
+  {
+    "slug": "toes-to-bar",
+    "title": "Toes-to-Bar",
+    "equipment": "pull-up-bar",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "handstand-push-ups",
+    "title": "Handstand Push-ups",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Kick-up an die Wand, Bauch zur Wand oder Rücken",
+      "Kopf senkt zum Boden",
+      "Drücken bis die Arme gestreckt sind",
+      "Kurze Pause im Stütz"
+    ]
+  },
+  {
+    "slug": "handstand-walk",
+    "title": "Handstand Walk",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Kick-up in den Handstand",
+      "Gewicht auf eine Hand",
+      "Andere Hand setzt nach vorn",
+      "Schritte, Körper bleibt gestreckt"
+    ]
+  },
+  {
+    "slug": "handstand-hold",
+    "title": "Handstand Hold",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Position einnehmen",
+      "Halten, ohne die Form zu verlieren",
+      "Kontrolliert lösen"
+    ]
+  },
+  {
+    "slug": "muscle-ups",
+    "title": "Muscle-ups",
+    "equipment": "pull-up-bar",
+    "steps": [
+      "Hängen, Hohlkörper",
+      "Zug bis zum Brustbein",
+      "Übergang, Brust über die Stange",
+      "Stützen, Arme gestreckt"
+    ]
+  },
+  {
+    "slug": "ring-muscle-ups",
+    "title": "Ring Muscle-ups",
+    "equipment": "rings",
+    "steps": [
+      "Ringe im Hang",
+      "Zug, Ringe an den Körper",
+      "Übergang, Ringe drehen",
+      "Stütz, Arme gestreckt"
+    ]
+  },
+  {
+    "slug": "box-jumps",
+    "title": "Box Jumps",
+    "equipment": "box",
+    "steps": [
+      "Stand vor der Box",
+      "Ausholen, Arme schwingen",
+      "Landung weich auf der Box, ganz oben",
+      "Aufstehen oder absteigen"
+    ]
+  },
+  {
+    "slug": "jumping-jacks",
+    "title": "Jumping Jacks",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Startposition",
+      "Bewegung in der Mitte eines Zyklus",
+      "Ende eines Zyklus, bereit für den nächsten"
+    ]
+  },
+  {
+    "slug": "wall-balls",
+    "title": "Wall Balls",
+    "equipment": "wall-ball",
+    "steps": [
+      "Ball im Rack, Stand vor der Wand",
+      "Kniebeuge, Ball bleibt an der Brust",
+      "Hochdrücken und Wurf zum Ziel",
+      "Fang und zurück in den Rack"
+    ]
+  },
+  {
+    "slug": "thrusters",
+    "title": "Thrusters",
+    "equipment": "barbell",
+    "steps": [
+      "Stange im Front Rack",
+      "Tiefe Frontkniebeuge",
+      "Hochdrücken aus der Beuge",
+      "Stange überkopf, Arme gestreckt"
+    ]
+  },
+  {
+    "slug": "deadlifts",
+    "title": "Deadlifts",
+    "equipment": "barbell",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "kb-swings",
+    "title": "KB Swings",
+    "equipment": "kettlebell",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "db-thrusters",
+    "title": "DB Thrusters",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hanteln an den Schultern",
+      "Kniebeuge",
+      "Hochdrücken",
+      "Hanteln überkopf, Arme gestreckt"
+    ]
+  },
+  {
+    "slug": "db-push-press",
+    "title": "DB Push Press",
+    "equipment": "dumbbell",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "sandbag-cleans",
+    "title": "Sandbag Cleans",
+    "equipment": "sandbag",
+    "steps": [
+      "Sack am Boden",
+      "Sack an den Körper ziehen",
+      "Auf die Schulter oder in den Rack",
+      "Stand"
+    ]
+  },
+  {
+    "slug": "row",
+    "title": "Row",
+    "equipment": "rower",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "kb-snatches",
+    "title": "KB Snatches",
+    "equipment": "kettlebell",
+    "steps": [
+      "Kugel zwischen den Beinen",
+      "Schwung zur Hüfte",
+      "Hand dreht, Kugel setzt auf",
+      "Stand, Arm gestreckt"
+    ]
+  },
+  {
+    "slug": "kb-goblet-squats",
+    "title": "KB Goblet Squats",
+    "equipment": "kettlebell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "kb-push-press",
+    "title": "KB Push Press",
+    "equipment": "kettlebell",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "kb-deadlifts",
+    "title": "KB Deadlifts",
+    "equipment": "kettlebell",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "kb-cleans",
+    "title": "KB Cleans",
+    "equipment": "kettlebell",
+    "steps": [
+      "Kugel zwischen den Beinen",
+      "Schwung zur Hüfte",
+      "Hand dreht zum Rack",
+      "Stand, Ellbogen nach unten"
+    ]
+  },
+  {
+    "slug": "db-deadlifts",
+    "title": "DB Deadlifts",
+    "equipment": "dumbbell",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "run",
+    "title": "Run",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Startposition",
+      "Bewegung in der Mitte eines Zyklus",
+      "Ende eines Zyklus, bereit für den nächsten"
+    ]
+  },
+  {
+    "slug": "wall-walks",
+    "title": "Wall Walks",
+    "equipment": "wall",
+    "steps": [
+      "Liegestützposition, Füsse an der Wand",
+      "Füsse laufen die Wand hoch",
+      "Hände laufen zur Wand, Hüfte über den Schultern",
+      "Zurück in die Liegestützposition"
+    ]
+  },
+  {
+    "slug": "db-snatches",
+    "title": "DB Snatches",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hantel zwischen den Füssen",
+      "Zug entlang des Körpers",
+      "Umsatz überkopf",
+      "Stand, Arm gestreckt"
+    ]
+  },
+  {
+    "slug": "overhead-squats",
+    "title": "Overhead Squats",
+    "equipment": "barbell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "v-ups",
+    "title": "V-ups",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Rückenlage, Arme und Beine lang",
+      "Oberkörper und Beine heben zur Mitte",
+      "Hände Richtung Füsse, zurück in die Länge"
+    ]
+  },
+  {
+    "slug": "lunges",
+    "title": "Lunges",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "l-sit-hold",
+    "title": "L-Sit Hold",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Position einnehmen",
+      "Halten, ohne die Form zu verlieren",
+      "Kontrolliert lösen"
+    ]
+  },
+  {
+    "slug": "squat-snatches",
+    "title": "Squat Snatches",
+    "equipment": "barbell",
+    "steps": [
+      "Start am Boden",
+      "Zug",
+      "Umsatz in die tiefe Kniebeuge",
+      "Aufstehen, Stange überkopf"
+    ]
+  },
+  {
+    "slug": "farmers-carry",
+    "title": "Farmers Carry",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Gerät aufnehmen, aufrecht stehen",
+      "Gehen, Schultern bleiben tief",
+      "Kontrolliert absetzen"
+    ]
+  },
+  {
+    "slug": "snatches",
+    "title": "Snatches",
+    "equipment": "barbell",
+    "steps": [
+      "Stange über dem Mittelfuss",
+      "Erstzug, Stange am Bein",
+      "Zweitzug, Hüfte öffnet",
+      "Umsatz unter die Stange",
+      "Stand, Stange überkopf fixiert"
+    ]
+  },
+  {
+    "slug": "squat-cleans",
+    "title": "Squat Cleans",
+    "equipment": "barbell",
+    "steps": [
+      "Start am Boden",
+      "Zug",
+      "Fang in der tiefen Frontkniebeuge",
+      "Aufstehen"
+    ]
+  },
+  {
+    "slug": "power-snatches",
+    "title": "Power Snatches",
+    "equipment": "barbell",
+    "steps": [
+      "Start am Boden",
+      "Zug",
+      "Umsatz über der Parallele",
+      "Stand, Stange überkopf"
+    ]
+  },
+  {
+    "slug": "power-cleans",
+    "title": "Power Cleans",
+    "equipment": "barbell",
+    "steps": [
+      "Start am Boden",
+      "Zug",
+      "Fang über der Parallele",
+      "Stand im Front Rack"
+    ]
+  },
+  {
+    "slug": "front-squats",
+    "title": "Front Squats",
+    "equipment": "barbell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "cleans",
+    "title": "Cleans",
+    "equipment": "barbell",
+    "steps": [
+      "Stange über dem Mittelfuss",
+      "Zug bis zur Hüfte",
+      "Umsatz in den Front Rack",
+      "Aufstehen"
+    ]
+  },
+  {
+    "slug": "push-press",
+    "title": "Push Press",
+    "equipment": "barbell",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "push-jerk",
+    "title": "Push Jerk",
+    "equipment": "barbell",
+    "steps": [
+      "Front Rack",
+      "Dip",
+      "Drive, Füsse lösen kurz",
+      "Fang im Stand, Arme gestreckt"
+    ]
+  },
+  {
+    "slug": "jerks",
+    "title": "Jerks",
+    "equipment": "barbell",
+    "steps": [
+      "Stange im Front Rack",
+      "Knie beugen",
+      "Stossen",
+      "Fang mit gestreckten Armen"
+    ]
+  },
+  {
+    "slug": "split-jerk",
+    "title": "Split Jerk",
+    "equipment": "barbell",
+    "steps": [
+      "Front Rack",
+      "Dip",
+      "Stossen und Ausfallschritt",
+      "Vorderes Bein heranziehen, Stange überkopf"
+    ]
+  },
+  {
+    "slug": "clean-jerk",
+    "title": "Clean & Jerk",
+    "equipment": "barbell",
+    "steps": [
+      "Start am Boden",
+      "Zug",
+      "Umsatz in den Front Rack",
+      "Dip und Stoss",
+      "Fang überkopf"
+    ]
+  },
+  {
+    "slug": "back-squats",
+    "title": "Back Squats",
+    "equipment": "barbell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "bench-press",
+    "title": "Bench Press",
+    "equipment": "barbell",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "dips",
+    "title": "Dips",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "ring-dips",
+    "title": "Ring Dips",
+    "equipment": "rings",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "ring-rows",
+    "title": "Ring Rows",
+    "equipment": "rings",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "mountain-climbers",
+    "title": "Mountain Climbers",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Liegestützposition",
+      "Ein Knie zieht zur Brust",
+      "Bein streckt zurück, das andere Knie zieht nach"
+    ]
+  },
+  {
+    "slug": "plank",
+    "title": "Plank",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Position einnehmen",
+      "Halten, ohne die Form zu verlieren",
+      "Kontrolliert lösen"
+    ]
+  },
+  {
+    "slug": "hollow-hold",
+    "title": "Hollow Hold",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Position einnehmen",
+      "Halten, ohne die Form zu verlieren",
+      "Kontrolliert lösen"
+    ]
+  },
+  {
+    "slug": "hollow-rocks",
+    "title": "Hollow Rocks",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Rückenlage, unterer Rücken am Boden",
+      "Arme und Beine heben, Hohlkörper",
+      "Kleines Schaukeln, Form bleibt",
+      "Zurück in die ruhige Hohlposition"
+    ]
+  },
+  {
+    "slug": "hollow-crunches",
+    "title": "Hollow Crunches",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Startposition",
+      "Bewegung in der Mitte eines Zyklus",
+      "Ende eines Zyklus, bereit für den nächsten"
+    ]
+  },
+  {
+    "slug": "russian-twists",
+    "title": "Russian Twists",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Sitz, Oberkörper leicht zurückgelehnt",
+      "Drehen zur einen Seite",
+      "Durch die Mitte zur anderen Seite"
+    ]
+  },
+  {
+    "slug": "jump-squats",
+    "title": "Jump Squats",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "pistol-squats",
+    "title": "Pistol Squats",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Stand auf einem Bein",
+      "Freies Bein nach vorn",
+      "Tiefe einbeinige Kniebeuge",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "good-mornings",
+    "title": "Good Mornings",
+    "equipment": "barbell",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "box-step-ups",
+    "title": "Box Step-ups",
+    "equipment": "box",
+    "steps": [
+      "Ein Fuss auf der Box",
+      "Hochdrücken zum Stand",
+      "Kurzer Stand oben",
+      "Absteigen"
+    ]
+  },
+  {
+    "slug": "devil-press",
+    "title": "Devil Press",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hanteln am Boden, Burpee-Position",
+      "Liegestütz",
+      "Schwung der Hanteln durch die Beine",
+      "Hanteln überkopf im Stand"
+    ]
+  },
+  {
+    "slug": "man-makers",
+    "title": "Man Makers",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hanteln am Boden",
+      "Liegestütz",
+      "Rudern links und rechts",
+      "Clean in den Rack und Thruster"
+    ]
+  },
+  {
+    "slug": "ghd-sit-ups",
+    "title": "GHD Sit-ups",
+    "equipment": "ghd",
+    "steps": [
+      "Sitz im GHD, Füsse fixiert",
+      "Oberkörper senkt nach hinten",
+      "Schwung aus der Hüfte zurück",
+      "Aufrechte Endposition"
+    ]
+  },
+  {
+    "slug": "rope-climbs",
+    "title": "Rope Climbs",
+    "equipment": "rope",
+    "steps": [
+      "Sprung oder Stand am Seil",
+      "Beine klemmen das Seil",
+      "Ziehen und Beine nachsetzen",
+      "Oben berühren, kontrolliert ablassen"
+    ]
+  },
+  {
+    "slug": "ski-erg",
+    "title": "Ski Erg",
+    "equipment": "ski-erg",
+    "steps": [
+      "Startposition",
+      "Bewegung in der Mitte eines Zyklus",
+      "Ende eines Zyklus, bereit für den nächsten"
+    ]
+  },
+  {
+    "slug": "assault-bike",
+    "title": "Assault Bike",
+    "equipment": "bike",
+    "steps": [
+      "Startposition",
+      "Bewegung in der Mitte eines Zyklus",
+      "Ende eines Zyklus, bereit für den nächsten"
+    ]
+  },
+  {
+    "slug": "wall-sit",
+    "title": "Wall Sit",
+    "equipment": "wall",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "broad-jumps",
+    "title": "Broad Jumps",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Startposition",
+      "Bewegung in der Mitte eines Zyklus",
+      "Ende eines Zyklus, bereit für den nächsten"
+    ]
+  },
+  {
+    "slug": "knees-to-elbows",
+    "title": "Knees-to-Elbows",
+    "equipment": "pull-up-bar",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "crunches",
+    "title": "Crunches",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Startposition",
+      "Bewegung in der Mitte eines Zyklus",
+      "Ende eines Zyklus, bereit für den nächsten"
+    ]
+  },
+  {
+    "slug": "leg-raises",
+    "title": "Leg Raises",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Rückenlage, Beine lang",
+      "Beine heben bis über die Hüfte",
+      "Langsam zurück, unterer Rücken bleibt ruhig"
+    ]
+  },
+  {
+    "slug": "hanging-knee-raises",
+    "title": "Hanging Knee Raises",
+    "equipment": "pull-up-bar",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "shoulder-to-overhead",
+    "title": "Shoulder-to-Overhead",
+    "equipment": "barbell",
+    "steps": [
+      "Gerät an der Schulter",
+      "Dip oder strikter Start",
+      "Gerät überkopf",
+      "Stand fixiert"
+    ]
+  },
+  {
+    "slug": "hang-power-cleans",
+    "title": "Hang Power Cleans",
+    "equipment": "barbell",
+    "steps": [
+      "Stange an den Oberschenkeln",
+      "Nachladen",
+      "Zug und Fang über der Parallele",
+      "Stand"
+    ]
+  },
+  {
+    "slug": "hang-snatches",
+    "title": "Hang Snatches",
+    "equipment": "barbell",
+    "steps": [
+      "Stange an den Oberschenkeln",
+      "Knie beugen, Stange bleibt nah",
+      "Zug und Umsatz",
+      "Stand überkopf"
+    ]
+  },
+  {
+    "slug": "squat-clean-jerk",
+    "title": "Squat Clean & Jerk",
+    "equipment": "barbell",
+    "steps": [
+      "Start am Boden",
+      "Zug",
+      "Fang in der Frontkniebeuge",
+      "Aufstehen",
+      "Dip, Stoss, Fang überkopf"
+    ]
+  },
+  {
+    "slug": "romanian-deadlifts",
+    "title": "Romanian Deadlifts",
+    "equipment": "barbell",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "bent-over-rows",
+    "title": "Bent-over Rows",
+    "equipment": "barbell",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "turkish-get-ups",
+    "title": "Turkish Get-ups",
+    "equipment": "kettlebell",
+    "steps": [
+      "Rückenlage, Kugel zum Himmel",
+      "Auf den Ellbogen",
+      "Auf die Hand, Hüfte hebt",
+      "Ausfallschritt zum Kniestand",
+      "Aufstehen, Kugel bleibt überkopf"
+    ]
+  },
+  {
+    "slug": "glute-bridges",
+    "title": "Glute Bridges",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "hip-extensions",
+    "title": "Hip Extensions",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "back-extensions",
+    "title": "Back Extensions",
+    "equipment": "ghd",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "db-rows",
+    "title": "DB Rows",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "db-front-squats",
+    "title": "DB Front Squats",
+    "equipment": "dumbbell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "db-overhead-squats",
+    "title": "DB Overhead Squats",
+    "equipment": "dumbbell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "db-lunges",
+    "title": "DB Lunges",
+    "equipment": "dumbbell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "db-clusters",
+    "title": "DB Clusters",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hanteln im Rack",
+      "Kniebeuge",
+      "Drücken oder Stossen",
+      "Hanteln zurück in den Rack"
+    ]
+  },
+  {
+    "slug": "db-burpees",
+    "title": "DB Burpees",
+    "equipment": "dumbbell",
+    "steps": [
+      "Kurzhanteln am Boden, Stand darüber",
+      "Hände auf den Hanteln, Füsse zurück",
+      "Liegestütz",
+      "Füsse nach vorn",
+      "Hanteln zur Schulter und Strecksprung"
+    ]
+  },
+  {
+    "slug": "db-swings",
+    "title": "DB Swings",
+    "equipment": "dumbbell",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "db-squats",
+    "title": "DB Squats",
+    "equipment": "dumbbell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "kb-front-squats",
+    "title": "KB Front Squats",
+    "equipment": "kettlebell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "kb-thrusters",
+    "title": "KB Thrusters",
+    "equipment": "kettlebell",
+    "steps": [
+      "Kugeln im Rack",
+      "Kniebeuge",
+      "Hochdrücken",
+      "Arme gestreckt überkopf"
+    ]
+  },
+  {
+    "slug": "kb-lunges",
+    "title": "KB Lunges",
+    "equipment": "kettlebell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "kb-halos",
+    "title": "KB Halos",
+    "equipment": "kettlebell",
+    "steps": [
+      "Kugel vor der Brust, beide Hände am Horn",
+      "Kugel kreist um den Kopf zur einen Seite",
+      "Weiter hinter dem Kopf",
+      "Zurück vor die Brust"
+    ]
+  },
+  {
+    "slug": "kb-rows",
+    "title": "KB Rows",
+    "equipment": "kettlebell",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "kb-press",
+    "title": "KB Press",
+    "equipment": "kettlebell",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "sandbag-squats",
+    "title": "Sandbag Squats",
+    "equipment": "sandbag",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "sandbag-carries",
+    "title": "Sandbag Carries",
+    "equipment": "sandbag",
+    "steps": [
+      "Gerät aufnehmen, aufrecht stehen",
+      "Gehen, Schultern bleiben tief",
+      "Kontrolliert absetzen"
+    ]
+  },
+  {
+    "slug": "sandbag-front-squats",
+    "title": "Sandbag Front Squats",
+    "equipment": "sandbag",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "sandbag-push-press",
+    "title": "Sandbag Push Press",
+    "equipment": "sandbag",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "high-knees",
+    "title": "High Knees",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Startposition",
+      "Bewegung in der Mitte eines Zyklus",
+      "Ende eines Zyklus, bereit für den nächsten"
+    ]
+  },
+  {
+    "slug": "bear-complex",
+    "title": "Bear Complex",
+    "equipment": "barbell",
+    "steps": [
+      "Power Clean in den Front Rack",
+      "Frontkniebeuge",
+      "Push Press",
+      "Back Squat",
+      "Push Press zurück in den Stand"
+    ]
+  },
+  {
+    "slug": "band-pull-aparts",
+    "title": "Band Pull-aparts",
+    "equipment": "resistance-band",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "band-press",
+    "title": "Band Press",
+    "equipment": "resistance-band",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "sumo-deadlift-high-pull",
+    "title": "Sumo Deadlift High Pull",
+    "equipment": "barbell",
+    "steps": [
+      "Weiter Stand, Stange zwischen den Füssen",
+      "Stange entlang der Beine",
+      "Hüfte öffnet, Ellbogen hoch",
+      "Stange auf Brusthöhe"
+    ]
+  },
+  {
+    "slug": "chin-ups",
+    "title": "Chin-ups",
+    "equipment": "pull-up-bar",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "db-cleans",
+    "title": "DB Cleans",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hanteln an den Seiten",
+      "Zug",
+      "Drehen in den Rack",
+      "Stand"
+    ]
+  },
+  {
+    "slug": "db-clean-jerk",
+    "title": "DB Clean & Jerk",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hanteln am Boden",
+      "Zug in den Rack",
+      "Dip",
+      "Stoss überkopf"
+    ]
+  },
+  {
+    "slug": "db-power-snatches",
+    "title": "DB Power Snatches",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hantel am Oberschenkel",
+      "Zug",
+      "Fang über der Parallele",
+      "Stand überkopf"
+    ]
+  },
+  {
+    "slug": "kb-jerk",
+    "title": "KB Jerk",
+    "equipment": "kettlebell",
+    "steps": [
+      "Kugel im Rack",
+      "Dip",
+      "Stoss",
+      "Fang, Arm gestreckt"
+    ]
+  },
+  {
+    "slug": "kb-back-squat",
+    "title": "KB Back Squat",
+    "equipment": "kettlebell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "kb-clean-press",
+    "title": "KB Clean & Press",
+    "equipment": "kettlebell",
+    "steps": [
+      "Clean in den Rack",
+      "Rippen bleiben unten",
+      "Striktes Drücken",
+      "Arm gestreckt"
+    ]
+  },
+  {
+    "slug": "kb-clean-jerk",
+    "title": "KB Clean & Jerk",
+    "equipment": "kettlebell",
+    "steps": [
+      "Kugel zwischen den Beinen",
+      "Clean in den Rack",
+      "Dip",
+      "Stoss überkopf"
+    ]
+  },
+  {
+    "slug": "kb-offset-push-ups",
+    "title": "KB Offset Push-ups",
+    "equipment": "kettlebell",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "kb-horn-curls",
+    "title": "KB Horn Curls",
+    "equipment": "kettlebell",
+    "steps": [
+      "Stand, beide Hände am Horn, Arme gestreckt",
+      "Kugel curl zur Brust",
+      "Langsam zurück in die Streckung"
+    ]
+  },
+  {
+    "slug": "kb-windmills",
+    "title": "KB Windmills",
+    "equipment": "kettlebell",
+    "steps": [
+      "Kugel überkopf, Füsse versetzt",
+      "Hüfte schiebt zur Seite",
+      "Freie Hand Richtung Boden, Arm bleibt gestreckt",
+      "Zurück zum Stand"
+    ]
+  },
+  {
+    "slug": "kb-rotation-swings",
+    "title": "KB Rotation Swings",
+    "equipment": "kettlebell",
+    "steps": [
+      "Gerät nah am Körper, Rücken lang",
+      "Hüfte und Knie strecken, Gerät bleibt an den Beinen",
+      "Stand, Schultern über der Hüfte"
+    ]
+  },
+  {
+    "slug": "arch-hold",
+    "title": "Arch Hold",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Position einnehmen",
+      "Halten, ohne die Form zu verlieren",
+      "Kontrolliert lösen"
+    ]
+  },
+  {
+    "slug": "tuck-ups",
+    "title": "Tuck-ups",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Rückenlage, Arme und Beine lang",
+      "Knie und Oberkörper ziehen zusammen",
+      "Zurück in die Länge"
+    ]
+  },
+  {
+    "slug": "toe-touches",
+    "title": "Toe Touches",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Rückenlage, Beine zur Decke",
+      "Oberkörper hebt, Hände zu den Zehen",
+      "Schultern zurück zum Boden"
+    ]
+  },
+  {
+    "slug": "ground-to-overhead",
+    "title": "Ground-to-Overhead",
+    "equipment": "barbell",
+    "steps": [
+      "Gerät am Boden",
+      "Zug zum Körper",
+      "Gerät überkopf bringen",
+      "Stand, Arme gestreckt"
+    ]
+  },
+  {
+    "slug": "snatch-balance",
+    "title": "Snatch Balance",
+    "equipment": "barbell",
+    "steps": [
+      "Stange im Nacken, weiter Griff",
+      "Dip",
+      "Umsatz unter die Stange in die Kniebeuge",
+      "Aufstehen, Arme gestreckt"
+    ]
+  },
+  {
+    "slug": "clean-press",
+    "title": "Clean & Press",
+    "equipment": "barbell",
+    "steps": [
+      "Start am Boden",
+      "Zug in den Front Rack",
+      "Striktes Drücken",
+      "Stand, Arme gestreckt"
+    ]
+  },
+  {
+    "slug": "hang-cleans",
+    "title": "Hang Cleans",
+    "equipment": "barbell",
+    "steps": [
+      "Hang an den Oberschenkeln",
+      "Nachladen",
+      "Umsatz in die Kniebeuge",
+      "Aufstehen"
+    ]
+  },
+  {
+    "slug": "muscle-cleans",
+    "title": "Muscle Cleans",
+    "equipment": "barbell",
+    "steps": [
+      "Stange an den Oberschenkeln",
+      "Zug ohne Umsatz in die Hocke",
+      "Ellbogen drehen nach vorn",
+      "Stand im Front Rack"
+    ]
+  },
+  {
+    "slug": "push-up-to-burpee",
+    "title": "Push-up to Burpee",
+    "equipment": "Körpergewicht",
+    "steps": [
+      "Stand",
+      "Liegestütz bis zur Streckung",
+      "Füsse nach vorn",
+      "Strecksprung"
+    ]
+  },
+  {
+    "slug": "around-the-world",
+    "title": "Around the World",
+    "equipment": "plate",
+    "steps": [
+      "Scheibe vor dem Körper",
+      "Scheibe um die Hüfte nach links",
+      "Weiter um den Rücken",
+      "Zurück nach vorn"
+    ]
+  },
+  {
+    "slug": "kb-russian-twists",
+    "title": "KB Russian Twists",
+    "equipment": "kettlebell",
+    "steps": [
+      "Sitz, Kugel vor der Brust, Oberkörper leicht zurück",
+      "Drehen zur einen Seite",
+      "Durch die Mitte zur anderen Seite"
+    ]
+  },
+  {
+    "slug": "db-shoulder-to-overhead",
+    "title": "DB Shoulder-to-Overhead",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hanteln an der Schulter",
+      "Drücken oder Stossen",
+      "Arme gestreckt",
+      "Stand"
+    ]
+  },
+  {
+    "slug": "db-step-ups",
+    "title": "DB Step-ups",
+    "equipment": "dumbbell",
+    "steps": [
+      "Ein Fuss auf der Box, Hanteln an den Seiten",
+      "Durch die Ferse hochdrücken",
+      "Stand auf der Box",
+      "Kontrolliert absteigen"
+    ]
+  },
+  {
+    "slug": "db-overhead-lunges",
+    "title": "DB Overhead Lunges",
+    "equipment": "dumbbell",
+    "steps": [
+      "Stand, Gewicht auf der ganzen Fusssohle",
+      "Tiefste Position, Knie folgen den Zehen",
+      "Hochdrücken zum Stand"
+    ]
+  },
+  {
+    "slug": "strict-press",
+    "title": "Strict Press",
+    "equipment": "barbell",
+    "steps": [
+      "Stabile Startposition, Rippen unten",
+      "Tiefster Punkt",
+      "Drücken bis die Arme gestreckt sind"
+    ]
+  },
+  {
+    "slug": "dead-hangs",
+    "title": "Dead Hangs",
+    "equipment": "pull-up-bar",
+    "steps": [
+      "Hang oder lange Startposition",
+      "Ziehen bis zum Zielpunkt",
+      "Kontrolliert zurück in den Start"
+    ]
+  },
+  {
+    "slug": "floor-wipers",
+    "title": "Floor Wipers",
+    "equipment": "barbell",
+    "steps": [
+      "Rückenlage, Stange über der Brust, Arme gestreckt",
+      "Beine zusammen zur einen Seite",
+      "Zurück zur Mitte",
+      "Zur anderen Seite"
+    ]
+  },
+  {
+    "slug": "db-hang-clean-to-overhead",
+    "title": "DB Hang Clean-to-Overhead",
+    "equipment": "dumbbell",
+    "steps": [
+      "Hanteln im Hang",
+      "Clean in den Rack",
+      "Kniebeuge",
+      "Drücken überkopf"
+    ]
+  }
+]

@@ -1,6 +1,17 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { equipmentById, lookupExerciseName } from '../../lib/exerciseCatalog'
+import { exerciseBlurb, exerciseVideoSearchUrl, type BlurbLang } from '../../lib/exerciseBlurbs'
+import { trainingFramePaths } from '../../lib/trainingFrames'
+import { usePoseFigure } from '../../lib/poseFigure'
+import { useAuthStore } from '../../store/authStore'
+import { ExerciseKeyframes } from '../shared/ExerciseKeyframes'
+
+const VIDEO_LABEL: Record<BlurbLang, string> = {
+  de: 'Auf YouTube suchen',
+  en: 'Search on YouTube',
+  es: 'Buscar en YouTube',
+}
 
 interface Props {
   name: string
@@ -9,10 +20,15 @@ interface Props {
 
 export function ExerciseInfoButton({ name, detail }: Props) {
   const [open, setOpen] = useState(false)
+  const lang = (useAuthStore((s) => s.profile?.language) ?? 'de') as BlurbLang
+  const figure = usePoseFigure()
   const hit = lookupExerciseName(name)
   const gear = (hit?.equipment ?? [])
     .map((id) => equipmentById(id)?.name)
     .filter((label): label is string => !!label)
+  const blurb = exerciseBlurb(hit?.name ?? name, lang)
+  const frames = trainingFramePaths(hit?.name ?? name, figure)
+  const videoHref = exerciseVideoSearchUrl(hit?.name ?? name)
 
   return (
     <>
@@ -67,9 +83,25 @@ export function ExerciseInfoButton({ name, detail }: Props) {
                 {gear.join(' · ')}
               </p>
             )}
-            <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-              Kurzbeschreibung und Bewegungsbilder folgen.
-            </p>
+            {frames.length > 0 && (
+              <div className="relative mt-4 h-44 w-full overflow-hidden rounded-2xl">
+                <ExerciseKeyframes exerciseId={hit?.id ?? name} frames={frames} interval={1600} />
+              </div>
+            )}
+            {blurb && (
+              <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                {blurb}
+              </p>
+            )}
+            <a
+              href={videoHref}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex text-sm font-semibold"
+              style={{ color: 'var(--color-pillar-workout)' }}
+            >
+              {VIDEO_LABEL[lang] ?? VIDEO_LABEL.de}
+            </a>
           </div>
         </div>,
         document.body,
