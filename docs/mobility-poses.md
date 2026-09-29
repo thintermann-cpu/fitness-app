@@ -2,7 +2,7 @@
 
 Eine Nummer pro Übung. Drei Bilder: Start, Mitte, Ende. Das ist die Lesevorlage, noch nicht der Text im Info-Fenster. Dateien liegen unter `apps/web/public/exercises/mobility/<slug>/1.webp`. Fehlt der Satz, bleibt die Strichfigur.
 
-Gezeichnet ist bisher die Hüftgruppe (1–8). Dieselbe Figur, flacher Grund `#9ED8A3`, Quadrat, ohne Text.
+Alle 65 Übungen sind gezeichnet. Dieselbe Figur, flacher Grund `#9ED8A3`, Quadrat, ohne Text.
 
 1. Hüftbeuger-Ausfallschritt · hip-flexor-lunge
 1. Großer Schritt, hinteres Knie noch oben
