@@ -179,7 +179,7 @@ export function WodList({
   const toggleDraftExclude = (eq: string) =>
     setDraftExclude((prev) => prev.includes(eq) ? prev.filter((e) => e !== eq) : [...prev, eq])
 
-  const { data, isLoading, isFetching, isError } = useWods({
+  const { data, isLoading, isPending, isFetching, isError } = useWods({
     type:             type || undefined,
     category:         category || undefined,
     difficulty:       difficulty || undefined,
@@ -290,11 +290,11 @@ export function WodList({
 
       {/* Count */}
       <p className="text-xs text-[var(--color-text-subtle)]">
-        {total > 0 ? `${total} Workout${total !== 1 ? 's' : ''}` : isLoading ? '' : 'Keine Workouts gefunden'}
+        {total > 0 ? `${total} Workout${total !== 1 ? 's' : ''}` : (isPending || isLoading) ? '' : 'Keine Workouts gefunden'}
       </p>
 
       {/* List */}
-      {(isLoading && accWods.length === 0) ? (
+      {((isPending || isLoading) && accWods.length === 0) ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-24 rounded-[var(--radius-md)] bg-[var(--color-bg-card)] animate-pulse" />
