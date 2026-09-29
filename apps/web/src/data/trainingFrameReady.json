@@ -32,10 +32,22 @@
     "run",
     "wall-walks",
     "db-snatches",
+    "overhead-squats",
+    "v-ups",
+    "lunges",
+    "l-sit-hold",
+    "squat-snatches",
+    "farmers-carry",
+    "snatches",
+    "squat-cleans",
     "power-snatches",
     "power-cleans",
     "front-squats",
-    "cleans"
+    "cleans",
+    "push-press",
+    "push-jerk",
+    "jerks",
+    "split-jerk"
   ],
   "female": [
     "pull-ups",
@@ -70,9 +82,21 @@
     "run",
     "wall-walks",
     "db-snatches",
+    "overhead-squats",
+    "v-ups",
+    "lunges",
+    "l-sit-hold",
+    "squat-snatches",
+    "farmers-carry",
+    "snatches",
+    "squat-cleans",
     "power-snatches",
     "power-cleans",
     "front-squats",
-    "cleans"
+    "cleans",
+    "push-press",
+    "push-jerk",
+    "jerks",
+    "split-jerk"
   ]
 }
