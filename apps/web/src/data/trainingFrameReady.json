@@ -15,7 +15,23 @@
     "ring-muscle-ups",
     "box-jumps",
     "jumping-jacks",
-    "wall-balls"
+    "wall-balls",
+    "thrusters",
+    "deadlifts",
+    "kb-swings",
+    "db-thrusters",
+    "db-push-press",
+    "sandbag-cleans",
+    "row",
+    "kb-snatches",
+    "kb-goblet-squats",
+    "kb-push-press",
+    "kb-deadlifts",
+    "kb-cleans",
+    "db-deadlifts",
+    "run",
+    "wall-walks",
+    "db-snatches"
   ],
   "female": [
     "pull-ups",
@@ -33,6 +49,22 @@
     "ring-muscle-ups",
     "box-jumps",
     "jumping-jacks",
-    "wall-balls"
+    "wall-balls",
+    "thrusters",
+    "deadlifts",
+    "kb-swings",
+    "db-thrusters",
+    "db-push-press",
+    "sandbag-cleans",
+    "row",
+    "kb-snatches",
+    "kb-goblet-squats",
+    "kb-push-press",
+    "kb-deadlifts",
+    "kb-cleans",
+    "db-deadlifts",
+    "run",
+    "wall-walks",
+    "db-snatches"
   ]
 }
