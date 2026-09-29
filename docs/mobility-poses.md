@@ -2,7 +2,7 @@
 
 Eine Nummer pro Übung. Drei Bilder: Start, Mitte, Ende. Das ist die Lesevorlage, noch nicht der Text im Info-Fenster. Dateien liegen unter `apps/web/public/exercises/mobility/<slug>/1.webp`. Fehlt der Satz, bleibt die Strichfigur.
 
-Alle 65 Übungen sind gezeichnet. Dieselbe Figur, flacher Grund `#9ED8A3`, Quadrat, ohne Text.
+Alle 65 Übungen sind gezeichnet, jeweils für Mann (`public/exercises/mobility/`) und Frau (`public/exercises/mobility-f/`). Dieselbe Figur je Satz, flacher Grund `#9ED8A3`, Quadrat, ohne Text.
 
 1. Hüftbeuger-Ausfallschritt · hip-flexor-lunge
 1. Großer Schritt, hinteres Knie noch oben

@@ -8,6 +8,7 @@ import { ExerciseIllustration } from './ExerciseIllustration'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { ExerciseKeyframes } from '../shared/ExerciseKeyframes'
 import { mobilityFramePaths } from '../../lib/mobilityFrames'
+import { usePoseFigure } from '../../lib/poseFigure'
 import { NextExercisePreview } from '../shared/NextExercisePreview'
 import { useAnalytics } from '../../hooks/useAnalytics'
 
@@ -132,7 +133,8 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
   const [showMenu, setShowMenu] = useState(false)
 
   const current = orderedExercises[currentIndex]
-  const poseFrames = mobilityFramePaths(current?.name_en)
+  const poseFigure = usePoseFigure()
+  const poseFrames = mobilityFramePaths(current?.name_en, poseFigure)
 
   // Wake Lock
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)

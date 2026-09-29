@@ -10,6 +10,7 @@ import { FeedbackModal } from '../components/ui/FeedbackModal'
 import { useSubscription } from '../hooks/useSubscription'
 import { useToast } from '../hooks/useToast'
 import { CityTimezoneField } from '../components/settings/CityTimezoneField'
+import { savePoseFigure, usePoseFigure, type PoseFigure } from '../lib/poseFigure'
 
 type View = 'main' | 'profile' | 'equipment' | 'pillars' | 'training' | 'notifications' | 'abo'
 
@@ -126,12 +127,49 @@ function SubHeader({ title, onBack }: { title: string; onBack: () => void }) {
   )
 }
 
+const POSE_FIGURES: { id: PoseFigure; label: string }[] = [
+  { id: 'male', label: 'Mann' },
+  { id: 'female', label: 'Frau' },
+]
+
+function PoseFigureChoice({
+  value,
+  onChange,
+}: {
+  value: PoseFigure
+  onChange: (figure: PoseFigure) => void
+}) {
+  return (
+    <div className="flex gap-2">
+      {POSE_FIGURES.map((option) => {
+        const selected = value === option.id
+        return (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => onChange(option.id)}
+            className="flex-1 rounded-xl py-3 text-sm font-semibold transition-transform active:scale-95"
+            style={{
+              backgroundColor: selected ? 'var(--color-primary)22' : 'var(--color-bg-card)',
+              border: `2px solid ${selected ? 'var(--color-primary)' : 'transparent'}`,
+              color: 'var(--color-text)',
+            }}
+          >
+            {option.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function SettingsPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { profile, user, updateProfile, signOut, fetchProfile } = useAuthStore()
+  const poseFigure = usePoseFigure()
   const toast = useToast()
   const [view, setView] = useState<View>('main')
   const [feedbackOpen, setFeedbackOpen] = useState(false)
@@ -386,7 +424,7 @@ export function SettingsPage() {
 
       <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: 'var(--color-bg-card)' }}>
         {([
-          { id: 'profile'       as View, emoji: '👤', label: 'Profil',             desc: 'Name, Sprache' },
+          { id: 'profile'       as View, emoji: '👤', label: 'Profil',             desc: 'Name, Sprache, Abbildung' },
           { id: 'equipment'     as View, emoji: '⚙️', label: 'Equipment',          desc: 'Trainingsort & Geräte' },
           { id: 'pillars'       as View, emoji: '🏛️', label: 'Pillars',            desc: 'Aktive Bereiche' },
           { id: 'training'      as View, emoji: '🎯', label: 'Training',           desc: 'Skalierungen, Silent Mode' },
@@ -451,6 +489,15 @@ export function SettingsPage() {
             value={displayName}
             onChange={e => setDisplayName(e.target.value)}
           />
+          <div className="space-y-2">
+            <p className="text-sm font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+              Abbildung in den Übungen
+            </p>
+            <PoseFigureChoice
+              value={poseFigure}
+              onChange={(figure) => { void savePoseFigure(figure, user?.id) }}
+            />
+          </div>
           <div className="flex gap-2">
             {LANGUAGES.map(l => {
               const sel = language === l.id

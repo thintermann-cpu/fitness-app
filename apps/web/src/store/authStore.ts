@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { applyProfilePoseFigure } from '../lib/poseFigure'
 
 export type WorkoutLocation = 'home' | 'gym' | 'bodyweight' | 'outdoor'
 
@@ -23,6 +24,8 @@ export interface DbProfile {
   role: 'admin' | 'moderator' | 'user' | null
   subscription_status: string | null
   substitution_enabled: boolean
+  /** Illustration in mobility sessions. Absent until migration 033 is applied. */
+  pose_figure?: 'male' | 'female' | null
   created_at: string
   updated_at: string
 }
@@ -70,6 +73,7 @@ async function loadProfile(userId: string): Promise<DbProfile | null> {
     .select('*')
     .eq('id', userId)
     .single()
+  if (data?.pose_figure) applyProfilePoseFigure(data.pose_figure)
   return data ?? null
 }
 

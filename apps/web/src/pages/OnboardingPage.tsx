@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import { Button } from '../components/ui/Button'
+import { savePoseFigure, type PoseFigure } from '../lib/poseFigure'
 
-const TOTAL_STEPS = 3
+const TOTAL_STEPS = 4
 
 const LANGUAGES = [
   { id: 'de', label: 'Deutsch',  flag: '🇩🇪' },
@@ -50,6 +51,7 @@ export function OnboardingPage() {
   const [language,  setLanguage]  = useState('de')
   const [goal,      setGoal]      = useState<string | null>(null)
   const [equipment, setEquipment] = useState<string[]>([])
+  const [figure,    setFigure]    = useState<PoseFigure>('male')
 
   const [saving, setSaving] = useState(false)
   const [error,  setError]  = useState<string | null>(null)
@@ -63,21 +65,47 @@ export function OnboardingPage() {
     setEquipment((prev) => prev.includes(id) ? prev.filter((e) => e !== id) : [...prev, id])
 
   const handleFinish = async () => {
-    if (!user) return
+    if (!user) {
+      setError('Bitte melde dich an und starte das Onboarding erneut.')
+      return
+    }
     setSaving(true)
     setError(null)
 
-    const { error: dbErr } = await supabase
+    const { data: sessionData } = await supabase.auth.getSession()
+    if (!sessionData.session) {
+      setError('Die Anmeldung ist noch nicht aktiv. Bitte die E-Mail bestätigen oder dich neu anmelden.')
+      setSaving(false)
+      return
+    }
+
+    const payload = {
+      language,
+      goal,
+      equipment,
+      primary_pillar: 'workout',
+      active_pillars: ALL_PILLARS,
+      updated_at: new Date().toISOString(),
+    }
+
+    // The signup trigger already inserted the row. Update avoids the insert
+    // policy check that made upsert fail with "new row violates row-level security".
+    const updated = await supabase
       .from('user_profiles')
-      .upsert({
-        id: user.id,
-        language,
-        goal,
-        equipment,
-        primary_pillar: 'workout',
-        active_pillars: ALL_PILLARS,
-        updated_at: new Date().toISOString(),
-      })
+      .update(payload)
+      .eq('id', user.id)
+      .select('id')
+      .maybeSingle()
+
+    let dbErr = updated.error
+    if (!dbErr && !updated.data) {
+      const inserted = await supabase
+        .from('user_profiles')
+        .insert({ id: user.id, ...payload })
+        .select('id')
+        .maybeSingle()
+      dbErr = inserted.error
+    }
 
     if (dbErr) {
       setError(dbErr.message)
@@ -85,14 +113,15 @@ export function OnboardingPage() {
       return
     }
 
+    await savePoseFigure(figure, user.id)
     await fetchProfile()
     navigate('/', { replace: true })
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg)' }}>
+    <div className="h-svh flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--color-bg)' }}>
       {/* Progress bar */}
-      <div className="h-1 w-full" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
+      <div className="h-1 w-full shrink-0" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
         <div
           className="h-full transition-all duration-500"
           style={{
@@ -102,8 +131,8 @@ export function OnboardingPage() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-10 w-full min-w-0 max-w-md mx-auto">
-        <div key={animKey} className="step-enter w-full space-y-8">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-8 w-full min-w-0">
+        <div key={animKey} className="step-enter w-full max-w-md mx-auto space-y-8 pb-8">
 
           {/* ── Step 0: Language ── */}
           {step === 0 && (
@@ -225,18 +254,59 @@ export function OnboardingPage() {
                 })}
               </div>
 
+              <Button className="w-full" onClick={advance}>
+                {equipment.length > 0 ? 'Weiter' : 'Überspringen'}
+              </Button>
+            </>
+          )}
+
+          {/* ── Step 3: Figure ── */}
+          {step === 3 && (
+            <>
+              <div className="text-center space-y-3">
+                <div className="text-5xl">🧍</div>
+                <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+                  Abbildung
+                </h1>
+                <p style={{ color: 'var(--color-text-muted)' }}>
+                  Welche Figur siehst du in den Übungen?
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {([
+                  { id: 'male', label: 'Mann' },
+                  { id: 'female', label: 'Frau' },
+                ] as const).map((option) => {
+                  const selected = figure === option.id
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => setFigure(option.id)}
+                      className="rounded-2xl px-5 py-4 flex items-center gap-4 transition-transform active:scale-[0.98]"
+                      style={{
+                        backgroundColor: selected ? 'var(--color-primary)22' : 'var(--color-bg-card)',
+                        border: `2px solid ${selected ? 'var(--color-primary)' : 'transparent'}`,
+                        color: 'var(--color-text)',
+                      }}
+                    >
+                      <span className="font-semibold">{option.label}</span>
+                      {selected && (
+                        <span className="ml-auto text-sm" style={{ color: 'var(--color-primary)' }}>✓</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
               {error && (
                 <p className="text-sm text-center" style={{ color: 'var(--color-error)' }}>
                   {error}
                 </p>
               )}
 
-              <Button
-                className="w-full"
-                loading={saving}
-                onClick={handleFinish}
-              >
-                {equipment.length > 0 ? 'Los geht\'s 🚀' : 'Überspringen 🚀'}
+              <Button className="w-full" loading={saving} onClick={handleFinish}>
+                Los geht's 🚀
               </Button>
             </>
           )}
