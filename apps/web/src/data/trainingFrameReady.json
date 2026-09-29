@@ -31,7 +31,11 @@
     "db-deadlifts",
     "run",
     "wall-walks",
-    "db-snatches"
+    "db-snatches",
+    "power-snatches",
+    "power-cleans",
+    "front-squats",
+    "cleans"
   ],
   "female": [
     "pull-ups",
@@ -65,6 +69,10 @@
     "db-deadlifts",
     "run",
     "wall-walks",
-    "db-snatches"
+    "db-snatches",
+    "power-snatches",
+    "power-cleans",
+    "front-squats",
+    "cleans"
   ]
 }
