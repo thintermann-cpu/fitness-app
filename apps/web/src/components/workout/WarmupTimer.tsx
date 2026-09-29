@@ -370,7 +370,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
                       {done[i] ? '✓' : '○'}
                     </span>
                     <p
-                      className={`flex-1 min-w-0 ${isCurrent ? 'text-2xl leading-tight font-semibold' : 'text-sm'}`}
+                      className={`flex-1 min-w-0 text-sm ${isCurrent ? 'font-semibold' : ''}`}
                       style={{
                         color:
                           isCurrent ? '#E8642A'
