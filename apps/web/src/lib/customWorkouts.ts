@@ -34,6 +34,20 @@ export interface CustomSession {
   createdAt: string
 }
 
+/** Workouts created before this instant with exactly one exercise are removed once. Newer ones stay. */
+export const SINGLE_EXERCISE_CLEANUP_BEFORE = '2026-09-29T05:00:00.000Z'
+
+export function isStaleSingleExerciseWorkout(
+  workout: { exercises?: unknown[] | null; createdAt: string },
+  cutoff = SINGLE_EXERCISE_CLEANUP_BEFORE,
+): boolean {
+  if ((workout.exercises?.length ?? 0) !== 1) return false
+  const created = Date.parse(workout.createdAt)
+  const limit = Date.parse(cutoff)
+  if (Number.isNaN(created) || Number.isNaN(limit)) return false
+  return created < limit
+}
+
 const WK_KEY = 'carveout_custom_workouts'
 const SS_KEY = 'carveout_custom_sessions'
 

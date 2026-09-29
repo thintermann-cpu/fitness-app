@@ -1,18 +1,14 @@
--- Cleanup: Ein-Übungs-Workouts aus custom_workouts entfernen
--- Bug-Queue-Eintrag: BUGS.md, "## Offen" (manueller DB-Eingriff, NICHT automatisiert)
+-- Cleanup: bestehende Ein-Übungs-Workouts aus custom_workouts entfernen
+-- Freigabe: 2026-09-29. Erstellung neuer Ein-Übungs-Workouts bleibt erlaubt.
 --
--- Zweck: bestehende Custom Workouts mit genau 1 Übung löschen (Eintönigkeit
--- vermeiden). Erstellung neuer Ein-Übungs-Workouts bleibt weiterhin erlaubt —
--- dieses Skript räumt nur den aktuellen Datenbestand auf, es ist kein
--- Schema-Fix und keine Migration.
---
--- WICHTIG: Erst Schritt 1 ausführen und Ergebnis prüfen. Schritt 2 (DELETE)
--- nur nach expliziter Freigabe von Tim ausführen — betrifft ggf. Daten
--- mehrerer User.
+-- Cutoff ist derselbe Zeitpunkt wie SINGLE_EXERCISE_CLEANUP_BEFORE in
+-- apps/web/src/lib/customWorkouts.ts. Die App löscht betroffene eigene
+-- Zeilen beim nächsten Laden. Dieses Skript räumt dieselben Zeilen für
+-- alle User in einem Schritt auf (SQL-Editor, Rolle mit Bypass-RLS).
+-- Nicht als Migration: ein späterer Lauf würde nichts mehr treffen, und
+-- neu angelegte Ein-Übungs-Workouts liegen nach dem Cutoff.
 
--- ============================================================
--- Schritt 1: Vorschau — zeigt alle betroffenen Zeilen (read-only)
--- ============================================================
+-- Vorschau
 SELECT
   id,
   user_id,
@@ -21,16 +17,19 @@ SELECT
   jsonb_array_length(exercises) AS exercise_count,
   created_at
 FROM public.custom_workouts
-WHERE jsonb_array_length(exercises) = 1
+WHERE jsonb_typeof(exercises) = 'array'
+  AND jsonb_array_length(exercises) = 1
+  AND created_at < timestamptz '2026-09-29 05:00:00+00'
 ORDER BY created_at DESC;
 
--- Kurzfassung: nur die Anzahl
 SELECT COUNT(*) AS betroffene_workouts
 FROM public.custom_workouts
-WHERE jsonb_array_length(exercises) = 1;
+WHERE jsonb_typeof(exercises) = 'array'
+  AND jsonb_array_length(exercises) = 1
+  AND created_at < timestamptz '2026-09-29 05:00:00+00';
 
--- ============================================================
--- Schritt 2: Löschen — ERST NACH FREIGABE auskommentieren + ausführen
--- ============================================================
--- DELETE FROM public.custom_workouts
--- WHERE jsonb_array_length(exercises) = 1;
+-- Einmalig ausführen, nachdem die Vorschau geprüft ist.
+DELETE FROM public.custom_workouts
+WHERE jsonb_typeof(exercises) = 'array'
+  AND jsonb_array_length(exercises) = 1
+  AND created_at < timestamptz '2026-09-29 05:00:00+00';

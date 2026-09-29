@@ -3,13 +3,13 @@
 Format je Zeile: `- [Prio] Beschreibung`. Prio ist `Hoch`, `Mittel` oder `Niedrig` (ohne Tag = `Mittel`).
 
 ## Offen
-- [Niedrig] `useWods`: `wods`-Query feuert beim Laden von `/workout` teils doppelt (Profil lädt nach, `userEquipment` ändert den Query-Key).
-- [Mittel] Bestehende Ein-Übungs-Workouts aus der Datenbank bereinigen — destruktiv, braucht Freigabe von Tim. Erstellung von Ein-Übungs-Workouts bleibt erlaubt.
-- [Niedrig] Workout-Liste zeigt bei mehreren Aufrufen identische Top-Einträge (`order('name')`). Würfel ist live; die Liste selbst bleibt namenssortiert.
 
 ## In Bearbeitung
 
 ## Erledigt
+- [Niedrig] `useWods`: `wods`-Query doppelt, weil `userEquipment` nach dem Profil den Key ändert. Query startet erst, wenn das Profil da ist; Equipment im Key ist sortiert. Branch `cursor/fix-open-bugs-841f`.
+- [Mittel] Bestehende Ein-Übungs-Workouts vor dem 29.09.2026 05:00 UTC werden beim Laden der eigenen Workouts gelöscht. Neue Ein-Übungs-Workouts bleiben. Globales SQL liegt in `scripts/cleanup-single-exercise-workouts.sql` (dieses Environment hat keinen Zugriff auf die CarveOut-Datenbank). Branch `cursor/fix-open-bugs-841f`.
+- [Niedrig] Workout-Liste immer dieselben Top-Einträge (`order('name')`). Liste ist pro Tab-Session gemischt (`wod_list_order_seed`), „Mehr laden“ bleibt in dieser Reihenfolge. Würfel bleibt zufällig. Branch `cursor/fix-open-bugs-841f`.
 - [Mittel] Stripe Return-URL verloren — `success_url` jetzt `/settings?checkout=success`; `/profile` leitet Query mit. Branch `cursor/fix-stripe-dice-sidebar-toggle-a5fc`.
 - [Niedrig] Würfel (`pickRandomWod`) nur lokales JSON — live Supabase via `fetchMatchingWods`. Branch `cursor/fix-stripe-dice-sidebar-toggle-a5fc`.
 - [Niedrig] Sidebar nested `<a>` + Achtsamkeit 🧠 — ein Link `/settings`, Icon 🧘 (Sidebar + BottomNav). Branch `cursor/fix-stripe-dice-sidebar-toggle-a5fc`.

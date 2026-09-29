@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { useAuthStore } from '../store/authStore'
+import { sessionListSeed, shuffleWithSeed, wodCatalogEnabled } from '../lib/wodListOrder'
 import {
   decomposeProgramText,
   fitsLocationEquipment,
@@ -210,12 +212,43 @@ function applyLocalFilters(wods: Wod[], filters: Omit<WodFilters, 'page'>): Wod[
   return wods
 }
 
+function paginateShuffled(filtered: Wod[], filters: WodFilters): { data: Wod[]; count: number } {
+  const ordered = shuffleWithSeed(filtered, sessionListSeed())
+  const page = filters.page ?? 0
+  return { data: ordered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE), count: ordered.length }
+}
+
 async function fetchLocalWods(filters: WodFilters): Promise<{ data: Wod[]; count: number }> {
   const all = await loadLocalWods()
-  const filtered = applyLocalFilters(all, filters)
-  const page = filters.page ?? 0
-  return { data: filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE), count: filtered.length }
+  return paginateShuffled(applyLocalFilters(all, filters), filters)
 }
+
+function canonicalEquipment(values?: string[]): string {
+  if (!values?.length) return ''
+  return [...values].map(normEq).sort().join('\u0001')
+}
+
+/** Stable key. A new array with the same gear does not start a second fetch. */
+export function wodQueryKey(filters: WodFilters) {
+  return [
+    'wods',
+    filters.page ?? 0,
+    filters.type ?? '',
+    filters.category ?? '',
+    filters.difficulty ?? '',
+    filters.search ?? '',
+    filters.equipmentCount ?? 'any',
+    canonicalEquipment(filters.equipmentFilter),
+    canonicalEquipment(filters.excludeEquipment),
+    canonicalEquipment(filters.userEquipment),
+    filters.silentMode ? 1 : 0,
+    filters.minDuration ?? 0,
+    filters.maxDuration ?? 0,
+    filters.editorsPick ? 1 : 0,
+    filters.wodCategory ?? '',
+  ] as const
+}
+
 
 const SUPABASE_TIMEOUT_MS = 8000
 
@@ -254,10 +287,15 @@ export async function pickRandomWod(filters: Omit<WodFilters, 'page'>): Promise<
 }
 
 export function useWods(filters: WodFilters = {}) {
+  const profileLoaded = useAuthStore((s) => s.profileLoaded)
+  const signedIn = useAuthStore((s) => s.user != null)
+  // A signed-in profile arrives after the first paint. Starting the catalog
+  // before that lets userEquipment flip the key and fetch the list twice.
+  const ready = wodCatalogEnabled(signedIn, profileLoaded, filters.userEquipment)
   return useQuery({
-    queryKey: ['wods', filters],
+    queryKey: wodQueryKey(filters),
+    enabled: ready,
     queryFn: async () => {
-      const page = filters.page ?? 0
       if (!isSupabaseConfigured) return fetchLocalWods(filters)
       const rows = await loadSupabaseWods()
       if (!rows) {
@@ -266,11 +304,7 @@ export function useWods(filters: WodFilters = {}) {
         }
         return fetchLocalWods(filters)
       }
-      const filtered = applyLocalFilters(rows, filters)
-      return {
-        data: filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-        count: filtered.length,
-      }
+      return paginateShuffled(applyLocalFilters(rows, filters), filters)
     },
     staleTime: 5 * 60 * 1000,
     retry: false,

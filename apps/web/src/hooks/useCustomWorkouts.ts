@@ -6,6 +6,7 @@ import {
   loadLocalWorkouts,
   saveLocalWorkout,
   deleteLocalWorkout,
+  isStaleSingleExerciseWorkout,
 } from '../lib/customWorkouts'
 
 interface DbRow {
@@ -71,6 +72,22 @@ function workoutToDb(w: CustomWorkout, userId: string) {
   }
 }
 
+async function withoutStaleSingleExercise(workouts: CustomWorkout[], localOnly: boolean): Promise<CustomWorkout[]> {
+  const stale = workouts.filter((w) => isStaleSingleExerciseWorkout(w))
+  if (stale.length === 0) return workouts
+  const ids = stale.map((w) => w.id)
+  for (const id of ids) deleteLocalWorkout(id)
+  if (!localOnly) {
+    const { error } = await supabase.from('custom_workouts').delete().in('id', ids)
+    if (error) {
+      console.error('[useCustomWorkouts] single-exercise cleanup:', error.message)
+      return workouts
+    }
+  }
+  const drop = new Set(ids)
+  return workouts.filter((w) => !drop.has(w.id))
+}
+
 export function useCustomWorkouts() {
   const queryClient = useQueryClient()
   const userId = useAuthStore((s) => s.user?.id ?? null)
@@ -81,16 +98,16 @@ export function useCustomWorkouts() {
     // Wait for auth to resolve before querying (avoids caching empty result for unauthenticated state)
     enabled: isSupabaseConfigured ? !!userId : true,
     queryFn: async (): Promise<CustomWorkout[]> => {
-      if (!isSupabaseConfigured || !userId) return loadLocalWorkouts()
+      if (!isSupabaseConfigured || !userId) return withoutStaleSingleExercise(loadLocalWorkouts(), true)
       const { data, error } = await supabase
         .from('custom_workouts')
         .select('*')
         .order('created_at', { ascending: false })
       if (error) {
         console.error('[useCustomWorkouts] SELECT error:', error.message)
-        return loadLocalWorkouts()
+        return withoutStaleSingleExercise(loadLocalWorkouts(), true)
       }
-      return (data as DbRow[]).map(dbToWorkout)
+      return withoutStaleSingleExercise((data as DbRow[]).map(dbToWorkout), false)
     },
   })
 
