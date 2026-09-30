@@ -47,7 +47,17 @@
     "push-press",
     "push-jerk",
     "jerks",
-    "split-jerk"
+    "split-jerk",
+    "ring-dips",
+    "ring-rows",
+    "mountain-climbers",
+    "plank",
+    "devil-press",
+    "man-makers",
+    "ski-erg",
+    "assault-bike",
+    "wall-sit",
+    "broad-jumps"
   ],
   "female": [
     "pull-ups",
@@ -97,6 +107,16 @@
     "push-press",
     "push-jerk",
     "jerks",
-    "split-jerk"
+    "split-jerk",
+    "ring-dips",
+    "ring-rows",
+    "mountain-climbers",
+    "plank",
+    "devil-press",
+    "man-makers",
+    "ski-erg",
+    "assault-bike",
+    "wall-sit",
+    "broad-jumps"
   ]
 }
