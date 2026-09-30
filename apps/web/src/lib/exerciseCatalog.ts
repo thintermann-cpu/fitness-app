@@ -948,14 +948,36 @@ function splitMovementText(text: string): string[] {
   return parts
 }
 
+/** Clock prefix such as "12 Min AMRAP:" belongs on the duration, not the first exercise. */
+function stripClockPrefix(name: string): string {
+  return name.replace(/^\d+\s*min(?:utes)?(?:\s+amrap)?\s*:\s*/i, '').trim()
+}
+
+const HOLLOW_CRUNCH_LABEL: Record<'de' | 'en' | 'es', string> = {
+  de: 'Hollow-Crunches',
+  en: 'Hollow Crunches',
+  es: 'Crunches hollow',
+}
+
+function expandHollowCrunch(name: string): string {
+  return stripClockPrefix(name).replace(/\bHC\b/g, 'Hollow Crunches')
+}
+
+/** HC is Hollow Crunches. Show the full name in the profile language. */
+export function localizeWorkoutExerciseName(name: string, lang: string): string {
+  const code = lang === 'en' ? 'en' : lang === 'es' ? 'es' : 'de'
+  const expanded = expandHollowCrunch(name)
+  return expanded.replace(/Hollow Crunches/g, HOLLOW_CRUNCH_LABEL[code])
+}
+
 function movementParts(text: string): string[] {
   return splitMovementText(text)
-    .map((part) => part.trim()
+    .map((part) => expandHollowCrunch(part.trim()
       .replace(/^[a-zäöü][^:]{0,24}:\s*(?=\d+\.\s)/i, '')
       .replace(/^(odd|even|jede minute|min\s*\d+|core)\s*:\s*/i, '')
       .replace(/^\d+\.\s*/, '')
       .replace(/^\d+\s*(?:runden|rounds)\s*:\s*/i, '')
-      .trim())
+      .trim()))
     .filter((part) => {
       if (!part) return false
       if (/^(pause|vorgabe)\b/i.test(part)) return false

@@ -1,5 +1,6 @@
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
+import { localizeWorkoutExerciseName } from '../../lib/exerciseCatalog'
 import { FavoriteButton } from '../ui/FavoriteButton'
 import type { Wod } from '../../hooks/useWods'
 
@@ -30,8 +31,8 @@ export function WodCard({ wod, onClick }: Props) {
   const preview = !rx || rx.kind === 'single'
     ? wod.exercises
     : rx.kind === 'strength'
-      ? rx.lines.map((line) => `${line.name} ${line.detail ?? `${line.sets}×${line.repCount}`}`).join(' · ')
-      : [rx.scheme, rx.lines.map((line) => line.detail ? `${line.name} ${line.detail}` : line.name).join(', ')].filter(Boolean).join(' — ')
+      ? rx.lines.map((line) => `${localizeWorkoutExerciseName(line.name, lang)} ${line.detail ?? `${line.sets}×${line.repCount}`}`).join(' · ')
+      : [rx.scheme, rx.lines.map((line) => line.detail ? `${localizeWorkoutExerciseName(line.name, lang)} ${line.detail}` : localizeWorkoutExerciseName(line.name, lang)).join(', ')].filter(Boolean).join(' — ')
   const dots    = DIFFICULTY_DOTS[wod.difficulty] ?? 2
   const label   = getWodTypeLabel(wod.type, lang)
 

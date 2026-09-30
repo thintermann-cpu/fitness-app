@@ -5,7 +5,7 @@ import { useAnalytics } from '../../hooks/useAnalytics'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { WOD_TYPE_TO_MODE } from '../../lib/timerLabels'
-import { composeWorkoutScheme, parseWodExercises } from '../../lib/exerciseCatalog'
+import { composeWorkoutScheme, localizeWorkoutExerciseName, parseWodExercises } from '../../lib/exerciseCatalog'
 import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { useWodHistory } from '../../hooks/useWodHistory'
@@ -63,12 +63,17 @@ function exercisesFromBlob(text: string): WizardExercise[] {
   }))
 }
 
-function prescriptionItems(wod: Wod): WizardExercise[] {
+function prescriptionItems(wod: Wod, lang: string): WizardExercise[] {
   const lines = wod.prescription?.lines ?? []
-  if (!lines.length) return exercisesFromBlob(wod.exercises)
+  if (!lines.length) {
+    return exercisesFromBlob(wod.exercises).map((item) => ({
+      ...item,
+      name: localizeWorkoutExerciseName(item.name, lang),
+    }))
+  }
   return lines.map((line, i) => ({
     id: `rx-${i}-${line.name}`,
-    name: line.name,
+    name: localizeWorkoutExerciseName(line.name, lang),
     detail: line.detail,
     sets: line.sets,
     rep_count: line.repCount,
@@ -146,7 +151,7 @@ export function WodDetail({ wodName, onBack }: Props) {
   useEffect(() => {
     if (!wod) return
     setSessionMinutes(wod.estimated_minutes > 0 ? wod.estimated_minutes : 20)
-    setSessionItems(prescriptionItems(wod))
+    setSessionItems(prescriptionItems(wod, lang))
     setSessionScheme(wod.prescription?.scheme || composeWorkoutScheme({
       runden: wod.runden,
       reps: wod.reps,
@@ -155,7 +160,7 @@ export function WodDetail({ wodName, onBack }: Props) {
     }))
     setAdjustOpen(false)
     setLaunch(null)
-  }, [wod?.id, wod?.exercises, wod?.estimated_minutes, wod?.runden, wod?.reps, wod?.description])
+  }, [wod?.id, wod?.exercises, wod?.estimated_minutes, wod?.runden, wod?.reps, wod?.description, lang])
 
   if (isLoading) {
     return (
@@ -381,7 +386,7 @@ export function WodDetail({ wodName, onBack }: Props) {
   const timerMode: TimerMode = catalogWod.prescription?.kind === 'strength'
     ? 'krafttraining'
     : (WOD_TYPE_TO_MODE[catalogWod.type] ?? 'fortime')
-  const catalogItems = prescriptionItems(catalogWod)
+  const catalogItems = prescriptionItems(catalogWod, lang)
   const catalogMinutes = catalogWod.estimated_minutes > 0 ? catalogWod.estimated_minutes : 20
   const catalogScheme = catalogWod.prescription?.scheme || composeWorkoutScheme({
     runden: catalogWod.runden,
