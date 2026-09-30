@@ -138,7 +138,10 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
 
   const current = orderedExercises[currentIndex]
   const poseFigure = usePoseFigure()
-  const poseFrames = mobilityFramePaths(current?.name_en, poseFigure)
+  const poseFrames = useMemo(
+    () => mobilityFramePaths(current?.name_en, poseFigure),
+    [current?.name_en, poseFigure],
+  )
   const infoBlurb = exerciseBlurb(current?.name_en, lang)
 
   // Wake Lock
