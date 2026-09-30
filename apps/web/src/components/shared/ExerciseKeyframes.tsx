@@ -6,14 +6,26 @@ interface KeyframeProps {
   interval?: number
 }
 
-export function ExerciseKeyframes({ frames, interval = 2000 }: KeyframeProps) {
-  const [activeIdx, setActiveIdx] = useState(0)
+export function ExerciseKeyframes({ exerciseId, frames, interval = 2000 }: KeyframeProps) {
+  const sequence = frames.join('\n')
+  const [state, setState] = useState({ sequence, exerciseId, idx: 0 })
+  if (state.sequence !== sequence || state.exerciseId !== exerciseId) {
+    setState({ sequence, exerciseId, idx: 0 })
+  }
+  const activeIdx = state.sequence === sequence && state.exerciseId === exerciseId ? state.idx : 0
 
   useEffect(() => {
-    if (frames.length <= 1) return
-    const id = setInterval(() => setActiveIdx((i) => (i + 1) % frames.length), interval)
-    return () => clearInterval(id)
-  }, [frames, interval])
+    const count = sequence === '' ? 0 : sequence.split('\n').length
+    if (count <= 1) return
+    const id = window.setInterval(() => {
+      setState((prev) => (
+        prev.sequence === sequence && prev.exerciseId === exerciseId
+          ? { ...prev, idx: (prev.idx + 1) % count }
+          : prev
+      ))
+    }, interval)
+    return () => window.clearInterval(id)
+  }, [sequence, exerciseId, interval])
 
   if (frames.length === 0) return null
 
