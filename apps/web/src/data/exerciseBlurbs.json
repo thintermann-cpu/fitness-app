@@ -1,0 +1,1226 @@
+{
+  "hip-flexor-lunge": {
+    "kind": "mobility",
+    "de": "Mach einen großen Schritt nach vorn, das hintere Knie bleibt oben. Senke das hintere Knie und schiebe die Hüfte nach vorn, während der Oberkörper aufrecht bleibt.",
+    "en": "Take a big step forward, keeping the back knee up. Lower the back knee and push your hips forward while keeping your torso upright.",
+    "es": "Da un gran paso hacia adelante, manteniendo la rodilla trasera arriba. Baja la rodilla trasera y empuja tus caderas hacia adelante mientras mantienes el torso erguido."
+  },
+  "pigeon-pose": {
+    "kind": "mobility",
+    "de": "Beginne im Vierfüßlerstand, das vordere Knie seitlich ablegen. Strecke das hintere Bein und senke die Hüfte, während der Oberkörper über das vordere Schienbein geht.",
+    "en": "Start in a tabletop position, placing the front knee to the side. Extend the back leg and lower your hips while bringing your torso over the front shin.",
+    "es": "Comienza en posición de cuatro patas, colocando la rodilla delantera de lado. Extiende la pierna trasera y baja las caderas mientras llevas el torso sobre la espinilla delantera."
+  },
+  "figure-four-stretch": {
+    "kind": "mobility",
+    "de": "Lie auf dem Rücken mit angewinkelten Knien. Lege den Knöchel auf das andere Knie und ziehe das untere Bein zur Brust.",
+    "en": "Lie on your back with both knees bent. Place one ankle on the opposite knee and pull the lower leg towards your chest.",
+    "es": "Acuéstate de espaldas con ambas rodillas dobladas. Coloca un tobillo sobre la rodilla opuesta y tira de la pierna inferior hacia tu pecho."
+  },
+  "butterfly-stretch": {
+    "kind": "mobility",
+    "de": "Setze dich mit zusammengefügten Fußsohlen und hochstehenden Knien. Lass die Knie sinken, greife nach den Füßen und beuge den Oberkörper sanft nach vorn.",
+    "en": "Sit with the soles of your feet together and knees raised. Let your knees drop, reach for your feet, and gently bend your torso forward.",
+    "es": "Siéntate con las plantas de los pies juntas y las rodillas levantadas. Deja que las rodillas caigan, agarra tus pies y flexiona suavemente el torso hacia adelante."
+  },
+  "low-lunge-hip-opener": {
+    "kind": "mobility",
+    "de": "Gehe in einen tiefen Ausfallschritt und platziere die Hände am Boden. Drehe den Oberkörper zur vorderen Seite und hebe einen Arm nach oben, während die Brust offen bleibt.",
+    "en": "Step into a low lunge with your hands on the ground. Rotate your torso to the front side, raising one arm up while keeping your chest open.",
+    "es": "Pasa a una zancada baja con las manos en el suelo. Gira el torso hacia el lado frontal, levantando un brazo hacia arriba mientras mantienes el pecho abierto."
+  },
+  "seated-hip-rotation": {
+    "kind": "mobility",
+    "de": "Setze dich und hebe ein Knie. Rotiere das Bein nach außen und dann nach innen, während du einen Kreis machst.",
+    "en": "Sit down and lift one knee. Rotate the leg outward and then inward as you make a circle.",
+    "es": "Siéntate y levanta una rodilla. Rota la pierna hacia afuera y luego hacia adentro mientras haces un círculo."
+  },
+  "90-90-hip-stretch": {
+    "kind": "mobility",
+    "de": "Setze dich und forme mit dem vorderen Bein einen Winkel. Halte beide Unterschenkel im rechten Winkel und beuge den Oberkörper über das vordere Bein.",
+    "en": "Sit down and create an angle with the front leg. Keep both lower legs at a right angle and lean your torso over the front leg.",
+    "es": "Siéntate y forma un ángulo con la pierna delantera. Mantén ambas espinillas en ángulo recto y inclina el torso sobre la pierna delantera."
+  },
+  "standing-hip-circle": {
+    "kind": "mobility",
+    "de": "Stehe auf und lege die Hände an die Hüfte. Kreise dein Becken zuerst zur einen Seite und dann zur anderen Seite.",
+    "en": "Stand up and place your hands on your hips. Circle your pelvis to one side and then to the other side.",
+    "es": "Párate y coloca las manos en las caderas. Rueda tu pelvis hacia un lado y luego hacia el otro."
+  },
+  "cat-cow-stretch": {
+    "kind": "mobility",
+    "de": "Beginne im Vierfüßlerstand mit neutralem Rücken. Runde deinen Rücken, indem du das Kinn zur Brust ziehst, und hebe dann die Brust, während du nach vorn schaust.",
+    "en": "Start in a tabletop position with a neutral back. Round your back by bringing your chin to your chest, then lift your chest while looking forward.",
+    "es": "Comienza en posición de cuatro patas con la espalda neutral. Redondea tu espalda llevando el mentón al pecho y luego levanta el pecho mientras miras hacia adelante."
+  },
+  "childs-pose": {
+    "kind": "mobility",
+    "de": "Setze dich im Fersensitz und halte den Oberkörper aufrecht. Senke dann den Oberkörper und lege die Stirn auf den Boden, während die Arme nach vorn gestreckt sind.",
+    "en": "Sit back on your heels and keep your torso upright. Then lower your torso and rest your forehead on the ground with your arms extended forward.",
+    "es": "Siéntate sobre tus talones y mantén el torso erguido. Luego baja el torso y apoya la frente en el suelo con los brazos extendidos hacia adelante."
+  },
+  "seated-spinal-twist": {
+    "kind": "mobility",
+    "de": "Setze dich und winkele ein Bein an. Beginne die Drehung, indem du eine Hand auf das Knie legst und drehe dann die Brust weiter, während du über die Schulter schaust.",
+    "en": "Sit down and bend one leg. Start the twist by placing one hand on the knee, then continue to rotate your chest while looking over your shoulder.",
+    "es": "Siéntate y dobla una pierna. Comienza la torsión colocando una mano sobre la rodilla y luego continúa girando el pecho mientras miras sobre tu hombro."
+  },
+  "cobra-stretch": {
+    "kind": "mobility",
+    "de": "Liege in Bauchlage mit den Händen unter den Schultern. Hebe die Brust, während die Ellbogen gebeugt bleiben und die Hüfte am Boden bleibt.",
+    "en": "Lie on your stomach with your hands under your shoulders. Lift your chest while keeping your elbows bent and your hips on the ground.",
+    "es": "Acuéstate boca abajo con las manos debajo de los hombros. Levanta el pecho mientras mantienes los codos doblados y las caderas en el suelo."
+  },
+  "knees-to-chest": {
+    "kind": "mobility",
+    "de": "Zieh deine Knie sanft zur Brust und halte die Position für einen tiefen Atemzug.",
+    "en": "Gently pull your knees to your chest and hold the position for a deep breath.",
+    "es": "Tira suavemente tus rodillas hacia el pecho y mantén la posición para una respiración profunda."
+  },
+  "thoracic-extension": {
+    "kind": "mobility",
+    "de": "Lass deinen Brustkorb sanft anheben und spüre die Dehnung in der oberen Wirbelsäule.",
+    "en": "Let your chest gently rise and feel the stretch in your upper spine.",
+    "es": "Deja que tu pecho se eleve suavemente y siente el estiramiento en tu columna superior."
+  },
+  "foam-roll-back": {
+    "kind": "mobility",
+    "de": "Rolle langsam eine Wirbelbreite tiefer und spüre die Entspannung im Rücken.",
+    "en": "Roll slowly down a vertebra and feel the relaxation in your back.",
+    "es": "Rueda lentamente una vértebra más abajo y siente la relajación en tu espalda."
+  },
+  "standing-back-bend": {
+    "kind": "mobility",
+    "de": "Beuge deinen Oberkörper kontrolliert nach hinten und spüre die Öffnung in der Brust.",
+    "en": "Bend your upper body back carefully and feel the opening in your chest.",
+    "es": "Inclina tu torso hacia atrás con cuidado y siente la apertura en tu pecho."
+  },
+  "superman-stretch": {
+    "kind": "mobility",
+    "de": "Hebe Brust und Beine gleichzeitig vom Boden und halte die Position für einige Atemzüge.",
+    "en": "Lift your chest and legs off the ground simultaneously and hold the position for a few breaths.",
+    "es": "Levanta tu pecho y piernas del suelo simultáneamente y mantén la posición durante algunas respiraciones."
+  },
+  "thread-the-needle": {
+    "kind": "mobility",
+    "de": "Schiebe einen Arm unter deinem Körper hindurch und lasse die Schulter sanft auf den Boden sinken.",
+    "en": "Slide one arm under your body and let your shoulder gently rest on the ground.",
+    "es": "Desliza un brazo debajo de tu cuerpo y deja que tu hombro repose suavemente en el suelo."
+  },
+  "cross-body-shoulder-stretch": {
+    "kind": "mobility",
+    "de": "Ziehe den Arm näher zur Brust und spüre die Dehnung in der Schulter.",
+    "en": "Pull the arm closer to your chest and feel the stretch in your shoulder.",
+    "es": "Acerca el brazo a tu pecho y siente el estiramiento en tu hombro."
+  },
+  "doorway-chest-stretch": {
+    "kind": "mobility",
+    "de": "Mache einen Schritt nach vorn und öffne deine Brust, während die Schulter tief bleibt.",
+    "en": "Step forward and open your chest while keeping your shoulder low.",
+    "es": "Da un paso hacia adelante y abre tu pecho manteniendo el hombro abajo."
+  },
+  "overhead-triceps-stretch": {
+    "kind": "mobility",
+    "de": "Ziehe den Ellbogen mit der anderen Hand und halte den Oberarm neben dem Ohr.",
+    "en": "Pull the elbow with the other hand and keep the upper arm next to your ear.",
+    "es": "Tira del codo con la otra mano y mantén el brazo superior junto a tu oído."
+  },
+  "shoulder-circles": {
+    "kind": "mobility",
+    "de": "Kreiere sanfte Kreise mit den Schultern und lasse sie wieder sinken.",
+    "en": "Make gentle circles with your shoulders and let them drop back down.",
+    "es": "Haz círculos suaves con tus hombros y déjalos caer hacia abajo."
+  },
+  "shoulder-blade-squeeze": {
+    "kind": "mobility",
+    "de": "Ziehe deine Schulterblätter zusammen und halte die Position für einen Moment.",
+    "en": "Squeeze your shoulder blades together and hold the position for a moment.",
+    "es": "Aprieta tus omóplatos juntos y mantén la posición por un momento."
+  },
+  "wall-shoulder-stretch": {
+    "kind": "mobility",
+    "de": "Drehe deinen Oberkörper weg von der Wand und spüre die Dehnung in der Schulter.",
+    "en": "Turn your upper body away from the wall and feel the stretch in your shoulder.",
+    "es": "Gira tu torso alejándote de la pared y siente el estiramiento en tu hombro."
+  },
+  "sleeper-stretch": {
+    "kind": "mobility",
+    "de": "Lege dich auf die Seite und lass deinen Unterarm sanft Richtung Boden sinken.",
+    "en": "Lie on your side and let your forearm gently sink towards the ground.",
+    "es": "Acuéstate de lado y deja que tu antebrazo se hunda suavemente hacia el suelo."
+  },
+  "eagle-arms-stretch": {
+    "kind": "mobility",
+    "de": "Kreuze deine Arme vor der Brust und hebe die Ellbogen, um die Dehnung zu intensivieren.",
+    "en": "Cross your arms in front of your chest and lift your elbows to deepen the stretch.",
+    "es": "Cruza los brazos frente a tu pecho y levanta los codos para intensificar el estiramiento."
+  },
+  "standing-hamstring-stretch": {
+    "kind": "mobility",
+    "de": "Stelle eine Ferse nach vorne und schiebe die Hüfte nach hinten, während du dich über das Bein neigst.",
+    "en": "Place one heel forward and push your hips back as you lean over your leg.",
+    "es": "Coloca un talón hacia adelante y empuja tus caderas hacia atrás mientras te inclinas sobre tu pierna."
+  },
+  "seated-forward-fold": {
+    "kind": "mobility",
+    "de": "Setze dich mit langen Beinen und beginne, deinen Oberkörper über die Beine zu falten.",
+    "en": "Sit with your legs extended and begin to fold your torso over your legs.",
+    "es": "Siéntate con las piernas extendidas y comienza a doblar tu torso sobre las piernas."
+  },
+  "supine-hamstring-stretch": {
+    "kind": "mobility",
+    "de": "Liege auf dem Rücken und hebe ein Bein, während du es sanft zur Decke streckst.",
+    "en": "Lie on your back and lift one leg, gently stretching it towards the ceiling.",
+    "es": "Acuéstate de espaldas y levanta una pierna, estirándola suavemente hacia el techo."
+  },
+  "downward-dog": {
+    "kind": "mobility",
+    "de": "Gehe in den Vierfüßlerstand und hebe deine Hüfte, während du deinen Rücken lang machst.",
+    "en": "Start in a tabletop position and lift your hips while lengthening your back.",
+    "es": "Comienza en posición de cuatro patas y levanta tus caderas mientras alargas tu espalda."
+  },
+  "standing-forward-fold": {
+    "kind": "mobility",
+    "de": "Stehe mit weichen Knien und falte deinen Oberkörper aus der Hüfte nach vorne.",
+    "en": "Stand with soft knees and fold your torso forward from the hips.",
+    "es": "Párate con las rodillas suaves y dobla tu torso hacia adelante desde las caderas."
+  },
+  "half-split": {
+    "kind": "mobility",
+    "de": "Mache einen Ausfallschritt und strecke das vordere Bein, während du die Hüfte zurückschiebst.",
+    "en": "Take a lunge and extend the front leg while pushing your hips back.",
+    "es": "Haz una zancada y extiende la pierna delantera mientras empujas tus caderas hacia atrás."
+  },
+  "lying-hamstring-lift": {
+    "kind": "mobility",
+    "de": "Liege auf dem Rücken und hebe ein Bein, während das andere angewinkelt bleibt.",
+    "en": "Lie on your back and lift one leg while keeping the other bent.",
+    "es": "Acuéstate de espaldas y levanta una pierna mientras mantienes la otra doblada."
+  },
+  "wide-legged-forward-fold": {
+    "kind": "mobility",
+    "de": "Stehe mit weit gespreizten Beinen und falte deinen Oberkörper in die Mitte.",
+    "en": "Stand with your legs wide apart and fold your torso towards the center.",
+    "es": "Párate con las piernas bien separadas y dobla tu torso hacia el centro."
+  },
+  "doorway-chest-opener": {
+    "kind": "mobility",
+    "de": "Lehne deine Unterarme am Türrahmen an und mache einen Schritt durch die Tür.",
+    "en": "Rest your forearms against the door frame and step through the door.",
+    "es": "Apoya tus antebrazos en el marco de la puerta y da un paso hacia adelante."
+  },
+  "lying-chest-stretch": {
+    "kind": "mobility",
+    "de": "Liege auf dem Rücken, lasse einen Arm zur Seite sinken und öffne die Brust.",
+    "en": "Lie on your back, let one arm drop to the side, and open your chest.",
+    "es": "Acuéstate de espaldas, deja caer un brazo hacia un lado y abre tu pecho."
+  },
+  "clasped-hands-pec-stretch": {
+    "kind": "mobility",
+    "de": "Verschränke deine Hände hinter dem Rücken und strecke die Arme. Hebe die Brust und ziehe die Hände sanft vom Körper weg.",
+    "en": "Clasp your hands behind your back and stretch your arms. Lift your chest and gently pull your hands away from your body.",
+    "es": "Entrecruza tus manos detrás de la espalda y estira los brazos. Levanta el pecho y tira suavemente de tus manos hacia afuera."
+  },
+  "seated-twist-chest-open": {
+    "kind": "mobility",
+    "de": "Setze dich mit einem Bein über das andere und drehe deinen Oberkörper. Halte die Brust offen und schaue über deine Schulter.",
+    "en": "Sit with one leg over the other and twist your torso. Keep your chest open and look over your shoulder.",
+    "es": "Siéntate con una pierna sobre la otra y gira tu torso. Mantén el pecho abierto y mira por encima de tu hombro."
+  },
+  "side-lying-chest-stretch": {
+    "kind": "mobility",
+    "de": "Liege auf der Seite, der obere Arm ist nach vorne gestreckt. Öffne den Arm zur Decke und lasse ihn dann nach hinten sinken.",
+    "en": "Lie on your side with your top arm stretched forward. Open your arm towards the ceiling and let it sink back.",
+    "es": "Acuéstate de lado con el brazo superior estirado hacia adelante. Abre el brazo hacia el techo y déjalo caer hacia atrás."
+  },
+  "standing-calf-stretch": {
+    "kind": "mobility",
+    "de": "Mache einen Ausfallschritt, die hintere Ferse bleibt am Boden. Strecke das hintere Knie und schiebe die Hüfte nach vorn.",
+    "en": "Take a step back, keeping your back heel on the ground. Straighten your back knee and push your hips forward.",
+    "es": "Da un paso hacia atrás, manteniendo el talón trasero en el suelo. Estira la rodilla trasera y empuja las caderas hacia adelante."
+  },
+  "seated-calf-stretch": {
+    "kind": "mobility",
+    "de": "Setze dich mit einem langen Bein und einem Tuch um den Vorfuß. Ziehe den Fuß heran und schiebe die Ferse weg, das Knie bleibt gestreckt.",
+    "en": "Sit with one leg extended and a towel around your forefoot. Pull your foot towards you and push your heel away, keeping your knee straight.",
+    "es": "Siéntate con una pierna extendida y una toalla alrededor del antepié. Acerca el pie hacia ti y empuja el talón hacia afuera, manteniendo la rodilla recta."
+  },
+  "downward-dog-calf-walk": {
+    "kind": "mobility",
+    "de": "Gehe in den herabschauenden Hund, beide Fersen hoch. Lasse eine Ferse sinken und dann die andere, abwechselnd.",
+    "en": "Get into downward dog with both heels lifted. Let one heel sink, then the other, alternating.",
+    "es": "Ponte en perro boca abajo con ambos talones levantados. Deja caer un talón y luego el otro, alternando."
+  },
+  "step-calf-stretch": {
+    "kind": "mobility",
+    "de": "Stelle den Vorfuß auf die Stufe, die Ferse bleibt frei. Lasse die Ferse sinken, das Knie bleibt gestreckt und das Gewicht auf dem Vorfuß.",
+    "en": "Place the ball of your foot on the step, keeping your heel free. Let your heel drop, keeping your knee straight and weight on the ball.",
+    "es": "Coloca la parte delantera del pie en el escalón, manteniendo el talón libre. Deja caer el talón, manteniendo la rodilla recta y el peso en la parte delantera."
+  },
+  "wall-calf-stretch": {
+    "kind": "mobility",
+    "de": "Stelle dich mit den Händen an die Wand und ein Bein hinten. Drücke die hintere Ferse in den Boden und strecke das hintere Knie.",
+    "en": "Stand with your hands on the wall and one leg back. Press your back heel into the ground and straighten your back knee.",
+    "es": "Párate con las manos en la pared y una pierna atrás. Presiona el talón trasero contra el suelo y estira la rodilla trasera."
+  },
+  "neck-side-stretch": {
+    "kind": "mobility",
+    "de": "Setze dich oder stehe mit neutralem Kopf. Neige dein Ohr zur Schulter, während die andere Schulter unten bleibt.",
+    "en": "Sit or stand with a neutral head. Tilt your ear towards your shoulder while keeping the other shoulder down.",
+    "es": "Siéntate o párate con la cabeza neutral. Inclina tu oído hacia el hombro mientras mantienes el otro hombro abajo."
+  },
+  "neck-rotation": {
+    "kind": "mobility",
+    "de": "Blicke geradeaus und drehe deinen Kopf zur Seite. Halte dein Kinn über der Schulter und lass die Schultern ruhig.",
+    "en": "Look straight ahead and turn your head to the side. Keep your chin over your shoulder and your shoulders relaxed.",
+    "es": "Mira hacia adelante y gira la cabeza hacia un lado. Mantén el mentón sobre el hombro y los hombros relajados."
+  },
+  "chin-tuck": {
+    "kind": "mobility",
+    "de": "Blicke geradeaus und ziehe dein Kinn gerade nach hinten. Halte deinen Nacken lang, ohne den Kopf zu neigen.",
+    "en": "Look straight ahead and tuck your chin straight back. Keep your neck long without tilting your head.",
+    "es": "Mira hacia adelante y mete el mentón hacia atrás. Mantén el cuello largo sin inclinar la cabeza."
+  },
+  "shoulder-shrug-release": {
+    "kind": "mobility",
+    "de": "Ziehen deine Schultern hoch zu den Ohren und halte kurz. Lass die Schultern dann wieder fallen.",
+    "en": "Lift your shoulders up to your ears and hold briefly. Then let your shoulders drop back down.",
+    "es": "Levanta los hombros hacia las orejas y mantén por un momento. Luego deja caer los hombros hacia abajo."
+  },
+  "upper-trap-stretch": {
+    "kind": "mobility",
+    "de": "Halte die Sitzkante fest und neige deinen Kopf zur anderen Seite. Achte darauf, dass die Schulter unten bleibt.",
+    "en": "Hold the edge of the seat and tilt your head to the other side. Keep the shoulder down.",
+    "es": "Sostén el borde del asiento y inclina tu cabeza hacia el otro lado. Mantén el hombro abajo."
+  },
+  "standing-side-stretch": {
+    "kind": "mobility",
+    "de": "Stehe aufrecht und strecke einen Arm neben deinem Ohr. Neige deinen Oberkörper zur Seite und halte die andere Hand am Oberschenkel.",
+    "en": "Stand tall and stretch one arm beside your ear. Lean your torso to the side while keeping the other hand on your thigh.",
+    "es": "Párate erguido y estira un brazo al lado de tu oído. Inclina tu torso hacia un lado mientras mantienes la otra mano en el muslo."
+  },
+  "worlds-greatest-stretch": {
+    "kind": "mobility",
+    "de": "Mache einen tiefen Ausfallschritt und bringe deine Hände nach innen. Lass einen Unterarm zum Boden sinken und drehe den gleichen Arm nach oben.",
+    "en": "Take a deep lunge and bring your hands inside. Let one forearm sink to the ground and twist the same arm upward.",
+    "es": "Haz una zancada profunda y lleva tus manos hacia adentro. Deja que un antebrazo baje al suelo y gira el mismo brazo hacia arriba."
+  },
+  "inchworm-stretch": {
+    "kind": "mobility",
+    "de": "Stehe auf und bringe deine Hände zum Boden. Laufe mit den Händen in die Plank-Position und dann mit den Füßen zurück zu den Händen.",
+    "en": "Stand and bring your hands to the ground. Walk your hands out to a plank position, then walk your feet back to your hands.",
+    "es": "Párate y lleva tus manos al suelo. Camina con las manos hacia la posición de plancha y luego vuelve a caminar con los pies hacia las manos."
+  },
+  "sun-salutation": {
+    "kind": "mobility",
+    "de": "Stehe auf, die Arme neben dem Körper. Hebe die Arme über den Kopf und beuge dich dann nach vorne, die Hände Richtung Boden.",
+    "en": "Stand with your arms by your sides. Raise your arms overhead and then fold forward, reaching your hands toward the ground.",
+    "es": "Párate con los brazos a los lados. Levanta los brazos sobre tu cabeza y luego inclínate hacia adelante, llevando las manos hacia el suelo."
+  },
+  "bear-hug-stretch": {
+    "kind": "mobility",
+    "de": "Halte deine Arme seitlich und kreuze sie vor der Brust. Greife mit den Händen deine Schulterblätter.",
+    "en": "Extend your arms out to the sides and cross them in front of your chest. Grab your shoulder blades with your hands.",
+    "es": "Extiende tus brazos hacia los lados y crúzalos frente a tu pecho. Agarra tus omóplatos con las manos."
+  },
+  "lying-spinal-twist": {
+    "kind": "mobility",
+    "de": "Liege auf dem Rücken und ziehe die Knie zur Brust. Lass die Knie zur Seite sinken, während die Schultern am Boden bleiben.",
+    "en": "Lie on your back and pull your knees to your chest. Let your knees drop to the side while keeping your shoulders on the ground.",
+    "es": "Acuéstate de espaldas y lleva las rodillas hacia el pecho. Deja que las rodillas caigan hacia un lado mientras mantienes los hombros en el suelo."
+  },
+  "happy-baby-pose": {
+    "kind": "mobility",
+    "de": "Liege auf dem Rücken und ziehe die Knie zur Brust. Halte die Fußaußenkanten und öffne die Knie Richtung Achseln.",
+    "en": "Lie on your back and pull your knees to your chest. Hold the outer edges of your feet and open your knees toward your armpits.",
+    "es": "Acuéstate de espaldas y lleva las rodillas hacia el pecho. Sostén los bordes exteriores de tus pies y abre las rodillas hacia tus axilas."
+  },
+  "legs-up-the-wall": {
+    "kind": "mobility",
+    "de": "Setze dich seitlich an die Wand und lege deinen Rücken ab. Hebe deine Beine an die Wand und lasse die Arme neben dem Körper ruhen.",
+    "en": "Sit sideways against the wall and lie back. Raise your legs up the wall and let your arms rest beside your body.",
+    "es": "Siéntate de lado contra la pared y acuéstate. Levanta tus piernas hacia la pared y deja que tus brazos descansen a los lados."
+  },
+  "reclined-bound-angle": {
+    "kind": "mobility",
+    "de": "Liege auf dem Rücken mit zusammengefügten Fußsohlen. Lass die Knie öffnen und die Arme seitlich liegen.",
+    "en": "Lie on your back with the soles of your feet together. Let your knees open and your arms rest at your sides.",
+    "es": "Acuéstate de espaldas con las plantas de los pies juntas. Deja que las rodillas se abran y los brazos descansen a los lados."
+  },
+  "forward-fold-with-arm-swing": {
+    "kind": "mobility",
+    "de": "Stehe auf und lasse die Arme hängen. Schwinge die Arme nach oben und falte deinen Oberkörper, während die Arme nach hinten schwingen.",
+    "en": "Stand and let your arms hang down. Swing your arms up and fold your torso while swinging your arms back.",
+    "es": "Párate y deja que tus brazos cuelguen. Balancea los brazos hacia arriba y pliega tu torso mientras balanceas los brazos hacia atrás."
+  },
+  "dynamic-arm-circles": {
+    "kind": "mobility",
+    "de": "Stehe aufrecht mit den Armen seitlich. Mache kleine Kreise und lasse die Kreise größer werden, während die Schultern tief bleiben.",
+    "en": "Stand tall with your arms out to the sides. Make small circles and gradually make them larger while keeping your shoulders down.",
+    "es": "Párate erguido con los brazos a los lados. Haz círculos pequeños y gradualmente hazlos más grandes mientras mantienes los hombros hacia abajo."
+  },
+  "hip-flexor-thoracic-rotation": {
+    "kind": "mobility",
+    "de": "Halte den Oberkörper aufrecht und drehe ihn sanft, während du die hintere Hüfte nach vorn schiebst.",
+    "en": "Keep your torso upright and gently rotate it while pushing the back hip forward.",
+    "es": "Mantén el torso erguido y gíralo suavemente mientras empujas la cadera trasera hacia adelante."
+  },
+  "t-spine-rotation": {
+    "kind": "mobility",
+    "de": "Drehe deinen Ellbogen zur Decke und folge mit der Brust, um die Rotation zu vertiefen.",
+    "en": "Rotate your elbow towards the ceiling and follow with your chest to deepen the rotation.",
+    "es": "Gira tu codo hacia el techo y sigue con el pecho para profundizar la rotación."
+  },
+  "reverse-prayer-stretch": {
+    "kind": "mobility",
+    "de": "Finde die Verbindung deiner Handflächen hinter dem Rücken und ziehe die Hände sanft zwischen die Schulterblätter.",
+    "en": "Find the connection of your palms behind your back and gently pull your hands between your shoulder blades.",
+    "es": "Encuentra la conexión de tus palmas detrás de la espalda y tira suavemente de las manos entre los omóplatos."
+  },
+  "sumo-squat-hold": {
+    "kind": "mobility",
+    "de": "Sinke tief in die Kniebeuge und halte die Ellbogen innen an den Knien für Stabilität.",
+    "en": "Sink deep into the squat and keep your elbows inside your knees for stability.",
+    "es": "Baja profundamente en la sentadilla y mantén los codos dentro de las rodillas para estabilidad."
+  },
+  "malasana-low-squat": {
+    "kind": "mobility",
+    "de": "Halte die Fersen am Boden und bringe die Hände im Gebet vor der Brust zusammen.",
+    "en": "Keep your heels on the ground and bring your hands together in prayer in front of your chest.",
+    "es": "Mantén los talones en el suelo y junta las manos en oración frente al pecho."
+  },
+  "pull-ups": {
+    "kind": "training",
+    "de": "Ziehe dich kontrolliert bis zum Zielpunkt hoch und kehre dann sanft in die Ausgangsposition zurück.",
+    "en": "Pull yourself up to the target point in a controlled manner, then gently return to the starting position.",
+    "es": "Súbete al punto objetivo de manera controlada y luego regresa suavemente a la posición inicial."
+  },
+  "strict-pull-ups": {
+    "kind": "training",
+    "de": "Achte darauf, dass du die Bewegung kontrolliert ausführst und die Ausgangsposition sauber erreichst.",
+    "en": "Make sure to perform the movement in a controlled manner and reach the starting position cleanly.",
+    "es": "Asegúrate de realizar el movimiento de manera controlada y alcanzar la posición inicial de forma limpia."
+  },
+  "push-ups": {
+    "kind": "training",
+    "de": "Drücke dich bis zur vollen Streckung der Arme und achte auf eine stabile Körperhaltung.",
+    "en": "Push yourself up to full arm extension and maintain a stable body position.",
+    "es": "Empújate hasta la extensión completa de los brazos y mantén una posición corporal estable."
+  },
+  "burpees": {
+    "kind": "training",
+    "de": "Bewege dich fließend vom Stand in die Liegestützposition und zurück in den Stand mit einem Strecksprung.",
+    "en": "Move fluidly from standing to the push-up position and back to standing with a jump.",
+    "es": "Muévete fluidamente de pie a la posición de flexión y de regreso a pie con un salto."
+  },
+  "air-squats": {
+    "kind": "training",
+    "de": "Achte darauf, dass deine Knie den Zehen folgen, während du in die tiefste Position gehst.",
+    "en": "Make sure your knees follow your toes as you go into the deepest position.",
+    "es": "Asegúrate de que tus rodillas sigan a tus dedos del pie mientras bajas a la posición más profunda."
+  },
+  "sit-ups": {
+    "kind": "training",
+    "de": "Hebe deinen Oberkörper kontrolliert und achte darauf, dass deine Schultern den Boden verlassen.",
+    "en": "Lift your torso in a controlled manner, ensuring your shoulders leave the ground.",
+    "es": "Levanta tu torso de manera controlada, asegurándote de que tus hombros se despeguen del suelo."
+  },
+  "double-unders": {
+    "kind": "training",
+    "de": "Finde deinen Rhythmus und springe hoch, während du das Seil zweimal unter deinen Füßen durchführst.",
+    "en": "Find your rhythm and jump high while passing the rope under your feet twice.",
+    "es": "Encuentra tu ritmo y salta alto mientras pasas la cuerda dos veces por debajo de tus pies."
+  },
+  "toes-to-bar": {
+    "kind": "training",
+    "de": "Häng dich fest und zieh deine Füße kontrolliert zur Stange. Halte die Spannung und lass dich langsam zurück in die Ausgangsposition.",
+    "en": "Hang firmly and pull your feet up to the bar in a controlled manner. Maintain tension and slowly return to the starting position.",
+    "es": "Cuélgate firmemente y levanta tus pies hacia la barra de manera controlada. Mantén la tensión y regresa lentamente a la posición inicial."
+  },
+  "handstand-push-ups": {
+    "kind": "training",
+    "de": "Kicke in den Handstand und senke deinen Kopf kontrolliert zum Boden. Drücke dich hoch, bis deine Arme gestreckt sind.",
+    "en": "Kick up into a handstand and lower your head to the ground in a controlled manner. Push up until your arms are fully extended.",
+    "es": "Patea hacia el handstand y baja tu cabeza al suelo de manera controlada. Empuja hacia arriba hasta que tus brazos estén completamente extendidos."
+  },
+  "handstand-walk": {
+    "kind": "training",
+    "de": "Kicke in den Handstand und verlagere dein Gewicht auf eine Hand. Setze die andere Hand nach vorn und mache kontrollierte Schritte.",
+    "en": "Kick up into a handstand and shift your weight onto one hand. Place the other hand forward and take controlled steps.",
+    "es": "Patea hacia el handstand y desplaza tu peso sobre una mano. Coloca la otra mano hacia adelante y da pasos controlados."
+  },
+  "handstand-hold": {
+    "kind": "training",
+    "de": "Nehme die Handstand-Position ein und halte sie stabil. Achte darauf, die Form nicht zu verlieren, bevor du kontrolliert löst.",
+    "en": "Assume the handstand position and hold it steady. Ensure you don’t lose form before you release in a controlled manner.",
+    "es": "Asume la posición de handstand y manténla estable. Asegúrate de no perder la forma antes de soltar de manera controlada."
+  },
+  "muscle-ups": {
+    "kind": "training",
+    "de": "Hänge im Hohlkörper und ziehe bis zur Brust. Mache den Übergang und stütze dich mit gestreckten Armen über die Stange.",
+    "en": "Hang in a hollow body and pull up to your chest. Transition and support yourself with straight arms over the bar.",
+    "es": "Cuélgate en posición de cuerpo hueco y tira hasta el pecho. Haz la transición y sostente con los brazos rectos sobre la barra."
+  },
+  "ring-muscle-ups": {
+    "kind": "training",
+    "de": "Hänge an den Ringen und ziehe sie an deinen Körper. Mache den Übergang, drehe die Ringe und stütze dich mit gestreckten Armen.",
+    "en": "Hang on the rings and pull them to your body. Transition, rotate the rings, and support yourself with straight arms.",
+    "es": "Cuélgate de los anillos y júntalos a tu cuerpo. Haz la transición, gira los anillos y sostente con los brazos rectos."
+  },
+  "box-jumps": {
+    "kind": "training",
+    "de": "Stehe vor der Box und schwinge deine Arme beim Absprung. Landung weich auf der Box und stehe auf oder steige ab.",
+    "en": "Stand in front of the box and swing your arms as you jump. Land softly on the box and either stand up or step down.",
+    "es": "Párate frente a la caja y balancea tus brazos al saltar. Aterriza suavemente sobre la caja y levántate o baja."
+  },
+  "jumping-jacks": {
+    "kind": "training",
+    "de": "Beginne in der Startposition und führe die Bewegung in der Mitte eines Zyklus aus. Sei bereit für den nächsten Zyklus am Ende.",
+    "en": "Start in the initial position and perform the movement in the middle of a cycle. Be ready for the next cycle at the end.",
+    "es": "Comienza en la posición inicial y realiza el movimiento en medio de un ciclo. Prepárate para el siguiente ciclo al final."
+  },
+  "wall-balls": {
+    "kind": "training",
+    "de": "Halte den Ball im Rack und stehe vor der Wand. Mache eine Kniebeuge, drücke hoch und werfe den Ball zum Ziel.",
+    "en": "Hold the ball in the rack and stand in front of the wall. Perform a squat, press up, and throw the ball at the target.",
+    "es": "Sostén la pelota en el rack y párate frente a la pared. Haz una sentadilla, empuja hacia arriba y lanza la pelota al objetivo."
+  },
+  "thrusters": {
+    "kind": "training",
+    "de": "Halte die Stange im Front Rack und mache eine tiefe Frontkniebeuge. Drücke die Stange über Kopf, bis die Arme gestreckt sind.",
+    "en": "Hold the bar in the front rack and perform a deep front squat. Press the bar overhead until your arms are fully extended.",
+    "es": "Sostén la barra en el rack frontal y haz una sentadilla frontal profunda. Empuja la barra por encima de la cabeza hasta que tus brazos estén completamente extendidos."
+  },
+  "deadlifts": {
+    "kind": "training",
+    "de": "Halte das Gerät nah am Körper und achte auf einen langen Rücken. Strecke Hüfte und Knie, während das Gerät an den Beinen bleibt.",
+    "en": "Keep the device close to your body and maintain a long back. Extend your hips and knees while keeping the device along your legs.",
+    "es": "Mantén el equipo cerca de tu cuerpo y asegúrate de tener la espalda recta. Extiende las caderas y las rodillas mientras mantienes el equipo cerca de tus piernas."
+  },
+  "kb-swings": {
+    "kind": "training",
+    "de": "Halte das Gerät nah am Körper und achte auf einen langen Rücken. Strecke Hüfte und Knie, während das Gerät an den Beinen bleibt.",
+    "en": "Keep the kettlebell close to your body and maintain a long back. Extend your hips and knees while keeping the kettlebell along your legs.",
+    "es": "Mantén la kettlebell cerca de tu cuerpo y asegúrate de tener la espalda recta. Extiende las caderas y las rodillas mientras mantienes la kettlebell cerca de tus piernas."
+  },
+  "db-thrusters": {
+    "kind": "training",
+    "de": "Hanteln an den Schultern, Kniebeuge und dann hochdrücken. Halte deine Körpermitte stabil.",
+    "en": "Start with the dumbbells at your shoulders, squat down, then press up. Keep your core engaged.",
+    "es": "Comienza con las mancuernas en los hombros, haz una sentadilla y luego presiona hacia arriba. Mantén tu núcleo comprometido."
+  },
+  "db-push-press": {
+    "kind": "training",
+    "de": "Stelle dich stabil auf, Rippen unten und drücke bis die Arme gestreckt sind. Achte auf eine saubere Bewegung.",
+    "en": "Stand stable with your ribs down and press until your arms are extended. Focus on a clean movement.",
+    "es": "Párate firme con las costillas hacia abajo y presiona hasta que los brazos estén extendidos. Concéntrate en un movimiento limpio."
+  },
+  "sandbag-cleans": {
+    "kind": "training",
+    "de": "Ziehe den Sack an deinen Körper und bringe ihn auf die Schulter oder in den Rack. Halte den Rücken gerade.",
+    "en": "Pull the sandbag to your body and bring it to your shoulder or rack position. Keep your back straight.",
+    "es": "Tira de la bolsa de arena hacia tu cuerpo y llévala al hombro o a la posición de rack. Mantén la espalda recta."
+  },
+  "row": {
+    "kind": "training",
+    "de": "Beginne in einer hängenden Position und ziehe bis zum Zielpunkt. Kontrolliere die Rückkehr in die Startposition.",
+    "en": "Start in a hanging position and pull until you reach the target point. Control your return to the start.",
+    "es": "Comienza en una posición colgante y tira hasta alcanzar el punto objetivo. Controla tu regreso al inicio."
+  },
+  "kb-snatches": {
+    "kind": "training",
+    "de": "Schwinge die Kugel zwischen den Beinen und bringe sie über Kopf. Halte den Arm gestreckt.",
+    "en": "Swing the kettlebell between your legs and bring it overhead. Keep your arm extended.",
+    "es": "Balancea la kettlebell entre tus piernas y llévala por encima de la cabeza. Mantén el brazo extendido."
+  },
+  "kb-goblet-squats": {
+    "kind": "training",
+    "de": "Halte das Gewicht auf der ganzen Fußsohle und gehe in die tiefste Position. Drücke dich dann zurück in den Stand.",
+    "en": "Keep the weight on your whole foot and go to the lowest position. Then press back to standing.",
+    "es": "Mantén el peso en toda la planta del pie y baja a la posición más baja. Luego, presiona hacia arriba para volver a estar de pie."
+  },
+  "kb-push-press": {
+    "kind": "training",
+    "de": "Stelle dich stabil auf, Rippen unten und drücke bis die Arme gestreckt sind. Achte auf eine saubere Bewegung.",
+    "en": "Stand stable with your ribs down and press until your arms are extended. Focus on a clean movement.",
+    "es": "Párate firme con las costillas hacia abajo y presiona hasta que los brazos estén extendidos. Concéntrate en un movimiento limpio."
+  },
+  "kb-deadlifts": {
+    "kind": "training",
+    "de": "Halte das Gerät nah am Körper und strecke Hüfte und Knie. Achte auf eine gerade Rückenhaltung.",
+    "en": "Keep the kettlebell close to your body and extend your hips and knees. Maintain a straight back.",
+    "es": "Mantén la kettlebell cerca de tu cuerpo y extiende las caderas y las rodillas. Mantén la espalda recta."
+  },
+  "kb-cleans": {
+    "kind": "training",
+    "de": "Schwinge die Kugel zwischen den Beinen und bringe sie in den Rack. Halte die Ellbogen nach unten.",
+    "en": "Swing the kettlebell between your legs and bring it into the rack position. Keep your elbows down.",
+    "es": "Balancea la kettlebell entre tus piernas y llévala a la posición de rack. Mantén los codos hacia abajo."
+  },
+  "db-deadlifts": {
+    "kind": "training",
+    "de": "Halte das Gerät nah am Körper und strecke Hüfte und Knie. Achte auf eine gerade Rückenhaltung.",
+    "en": "Keep the dumbbells close to your body and extend your hips and knees. Maintain a straight back.",
+    "es": "Mantén las mancuernas cerca de tu cuerpo y extiende las caderas y las rodillas. Mantén la espalda recta."
+  },
+  "run": {
+    "kind": "training",
+    "de": "Beginne in der Startposition und finde deinen Rhythmus. Bereite dich auf den nächsten Zyklus vor.",
+    "en": "Start in the starting position and find your rhythm. Get ready for the next cycle.",
+    "es": "Comienza en la posición inicial y encuentra tu ritmo. Prepárate para el siguiente ciclo."
+  },
+  "wall-walks": {
+    "kind": "training",
+    "de": "Beginne in der Liegestützposition und laufe die Wand hoch. Halte deine Hüfte über den Schultern.",
+    "en": "Start in a push-up position and walk your feet up the wall. Keep your hips over your shoulders.",
+    "es": "Comienza en posición de flexión y camina con los pies por la pared. Mantén las caderas sobre los hombros."
+  },
+  "db-snatches": {
+    "kind": "training",
+    "de": "Halt die Hantel fest zwischen deinen Füßen und zieh sie kontrolliert entlang deines Körpers nach oben.",
+    "en": "Hold the dumbbell firmly between your feet and pull it up along your body in a controlled manner.",
+    "es": "Sostén la mancuerna firmemente entre tus pies y júntala controladamente a lo largo de tu cuerpo."
+  },
+  "overhead-squats": {
+    "kind": "training",
+    "de": "Steh fest auf deinen Füßen und gehe in die tiefste Position, während deine Knie den Zehen folgen.",
+    "en": "Stand firm on your feet and go into the deepest position while your knees follow your toes.",
+    "es": "Párate firme sobre tus pies y baja a la posición más profunda mientras tus rodillas siguen tus dedos."
+  },
+  "v-ups": {
+    "kind": "training",
+    "de": "Lieg auf dem Rücken, hebe gleichzeitig deinen Oberkörper und deine Beine zur Mitte.",
+    "en": "Lie on your back, lifting both your upper body and legs towards the center at the same time.",
+    "es": "Acuéstate de espaldas, levantando simultáneamente tu torso y tus piernas hacia el centro."
+  },
+  "lunges": {
+    "kind": "training",
+    "de": "Steh fest auf deinen Füßen und gehe in die tiefste Position, während deine Knie den Zehen folgen.",
+    "en": "Stand firm on your feet and go into the deepest position while your knees follow your toes.",
+    "es": "Párate firme sobre tus pies y baja a la posición más profunda mientras tus rodillas siguen tus dedos."
+  },
+  "l-sit-hold": {
+    "kind": "training",
+    "de": "Nimm die Position ein und halte sie, ohne die Form zu verlieren.",
+    "en": "Assume the position and hold it without losing your form.",
+    "es": "Adopta la posición y manténla sin perder la forma."
+  },
+  "squat-snatches": {
+    "kind": "training",
+    "de": "Starte am Boden und ziehe die Hantel in die tiefe Kniebeuge, bevor du aufstehst.",
+    "en": "Start from the ground and pull the bar into a deep squat before standing up.",
+    "es": "Comienza desde el suelo y levanta la barra en una sentadilla profunda antes de levantarte."
+  },
+  "farmers-carry": {
+    "kind": "training",
+    "de": "Nimm das Gerät auf und gehe aufrecht, während deine Schultern tief bleiben.",
+    "en": "Pick up the equipment and walk upright while keeping your shoulders down.",
+    "es": "Levanta el equipo y camina erguido mientras mantienes los hombros hacia abajo."
+  },
+  "snatches": {
+    "kind": "training",
+    "de": "Positioniere die Stange über deinem Mittelfuß und ziehe sie kontrolliert nach oben.",
+    "en": "Position the bar over your midfoot and pull it up in a controlled manner.",
+    "es": "Coloca la barra sobre tu pie medio y júntala controladamente hacia arriba."
+  },
+  "squat-cleans": {
+    "kind": "training",
+    "de": "Starte am Boden, ziehe die Hantel und fange sie in der tiefen Frontkniebeuge.",
+    "en": "Start from the ground, pull the bar, and catch it in a deep front squat.",
+    "es": "Comienza desde el suelo, levanta la barra y cátala en una sentadilla frontal profunda."
+  },
+  "power-snatches": {
+    "kind": "training",
+    "de": "Starte am Boden, ziehe die Hantel und bringe sie über der Parallele in die Standposition.",
+    "en": "Start from the ground, pull the bar, and bring it above parallel into the standing position.",
+    "es": "Comienza desde el suelo, levanta la barra y colócala por encima de la paralela en posición de pie."
+  },
+  "power-cleans": {
+    "kind": "training",
+    "de": "Starte am Boden, ziehe die Hantel und fange sie über der Parallele im Front Rack.",
+    "en": "Start from the ground, pull the bar, and catch it above parallel in the front rack.",
+    "es": "Comienza desde el suelo, levanta la barra y cátala por encima de la paralela en el rack frontal."
+  },
+  "front-squats": {
+    "kind": "training",
+    "de": "Steh fest auf deinen Füßen und gehe in die tiefste Position, während deine Knie den Zehen folgen.",
+    "en": "Stand firm on your feet and go into the deepest position while your knees follow your toes.",
+    "es": "Párate firme sobre tus pies y baja a la posición más profunda mientras tus rodillas siguen tus dedos."
+  },
+  "cleans": {
+    "kind": "training",
+    "de": "Halte die Stange über dem Mittelfuß und ziehe sie bis zur Hüfte. Bring sie dann in den Front Rack und stehe auf.",
+    "en": "Keep the bar over the midfoot and pull it to your hips. Then bring it into the front rack and stand up.",
+    "es": "Mantén la barra sobre la parte media del pie y júntala hasta las caderas. Luego, colócala en la posición frontal y levántate."
+  },
+  "push-press": {
+    "kind": "training",
+    "de": "Stelle dich stabil auf, mit den Rippen unten. Drücke die Stange bis die Arme gestreckt sind.",
+    "en": "Stand stable with your ribs down. Press the bar until your arms are fully extended.",
+    "es": "Ponte en una posición estable, con las costillas hacia abajo. Empuja la barra hasta que los brazos estén completamente extendidos."
+  },
+  "push-jerk": {
+    "kind": "training",
+    "de": "Beginne im Front Rack und mache einen Dip. Drücke und löse kurz die Füße, fange im Stand mit gestreckten Armen.",
+    "en": "Start in the front rack and dip down. Drive up, briefly lift your feet, and catch in a standing position with arms extended.",
+    "es": "Comienza en la posición frontal y haz un dip. Impulsa hacia arriba, levanta brevemente los pies y atrapa en posición de pie con los brazos extendidos."
+  },
+  "jerks": {
+    "kind": "training",
+    "de": "Halte die Stange im Front Rack und beuge die Knie. Stoße die Stange und fange sie mit gestreckten Armen.",
+    "en": "Hold the bar in the front rack and bend your knees. Push the bar and catch it with your arms extended.",
+    "es": "Sostén la barra en la posición frontal y flexiona las rodillas. Empuja la barra y atrápala con los brazos extendidos."
+  },
+  "split-jerk": {
+    "kind": "training",
+    "de": "Beginne im Front Rack und mache einen Dip. Stoße und mache einen Ausfallschritt, ziehe das vordere Bein heran und halte die Stange über Kopf.",
+    "en": "Start in the front rack and dip down. Push and step forward, bring the front leg back and hold the bar overhead.",
+    "es": "Comienza en la posición frontal y haz un dip. Empuja y da un paso hacia adelante, acerca la pierna delantera y sostiene la barra sobre la cabeza."
+  },
+  "clean-jerk": {
+    "kind": "training",
+    "de": "Starte am Boden und ziehe die Stange hoch. Bring sie in den Front Rack, mache einen Dip und Stoß, fange über Kopf.",
+    "en": "Start from the ground and pull the bar up. Bring it into the front rack, dip and jerk, and catch it overhead.",
+    "es": "Comienza desde el suelo y levanta la barra. Colócala en la posición frontal, haz un dip y un empuje, y atrápala sobre la cabeza."
+  },
+  "back-squats": {
+    "kind": "training",
+    "de": "Stehe stabil mit dem Gewicht auf der ganzen Fußsohle. Gehe in die tiefste Position, während die Knie den Zehen folgen, und drücke hoch.",
+    "en": "Stand stable with your weight on the entire foot. Go to the lowest position with your knees following your toes, then press up.",
+    "es": "Párate firme con el peso en toda la planta del pie. Baja a la posición más baja, siguiendo las rodillas hacia los dedos, y empuja hacia arriba."
+  },
+  "bench-press": {
+    "kind": "training",
+    "de": "Nimm eine stabile Startposition ein, mit den Rippen unten. Drücke die Stange bis die Arme gestreckt sind.",
+    "en": "Take a stable starting position with your ribs down. Press the bar until your arms are fully extended.",
+    "es": "Adopta una posición inicial estable, con las costillas hacia abajo. Empuja la barra hasta que los brazos estén completamente extendidos."
+  },
+  "dips": {
+    "kind": "training",
+    "de": "Beginne in einer stabilen Position mit den Rippen unten. Senke dich bis zum tiefsten Punkt und drücke hoch.",
+    "en": "Start in a stable position with your ribs down. Lower yourself to the lowest point and push back up.",
+    "es": "Comienza en una posición estable con las costillas hacia abajo. Baja hasta el punto más bajo y empuja hacia arriba."
+  },
+  "ring-dips": {
+    "kind": "training",
+    "de": "Beginne in einer stabilen Position mit den Rippen unten. Senke dich bis zum tiefsten Punkt und drücke hoch.",
+    "en": "Start in a stable position with your ribs down. Lower yourself to the lowest point and push back up.",
+    "es": "Comienza en una posición estable con las costillas hacia abajo. Baja hasta el punto más bajo y empuja hacia arriba."
+  },
+  "ring-rows": {
+    "kind": "training",
+    "de": "Hänge in einer langen Startposition und ziehe bis zum Zielpunkt. Kontrolliere den Rückweg in die Startposition.",
+    "en": "Hang in a long starting position and pull to the target point. Control the return back to the start.",
+    "es": "Cuelga en una posición inicial larga y tira hasta el punto objetivo. Controla el regreso a la posición inicial."
+  },
+  "mountain-climbers": {
+    "kind": "training",
+    "de": "Beginne in der Liegestützposition. Ziehe ein Knie zur Brust und strecke das andere Bein zurück, während du das andere Knie nachziehst.",
+    "en": "Start in a plank position. Pull one knee to your chest and extend the other leg back while bringing the other knee in.",
+    "es": "Comienza en posición de plancha. Lleva una rodilla al pecho y extiende la otra pierna hacia atrás mientras acercas la otra rodilla."
+  },
+  "plank": {
+    "kind": "training",
+    "de": "Halte die Plank-Position stabil und achte auf eine gerade Linie von Kopf bis Fuß.",
+    "en": "Maintain a stable plank position, ensuring a straight line from head to toe.",
+    "es": "Mantén una posición de plancha estable, asegurándote de que haya una línea recta de la cabeza a los pies."
+  },
+  "hollow-hold": {
+    "kind": "training",
+    "de": "Halte die Hollow-Position, während du deinen unteren Rücken am Boden drückst.",
+    "en": "Hold the hollow position while pressing your lower back into the ground.",
+    "es": "Mantén la posición hueca presionando la parte baja de la espalda contra el suelo."
+  },
+  "hollow-rocks": {
+    "kind": "training",
+    "de": "Schaukle sanft in der Hollow-Position, ohne die Form zu verlieren.",
+    "en": "Gently rock in the hollow position without losing your form.",
+    "es": "Balancea suavemente en la posición hueca sin perder la forma."
+  },
+  "hollow-crunches": {
+    "kind": "training",
+    "de": "Führe die Crunch-Bewegung kontrolliert aus und halte die Hollow-Position.",
+    "en": "Perform the crunch movement in a controlled manner while maintaining the hollow position.",
+    "es": "Realiza el movimiento de crunch de manera controlada mientras mantienes la posición hueca."
+  },
+  "russian-twists": {
+    "kind": "training",
+    "de": "Drehe deinen Oberkörper zur Seite und halte die Spannung im Bauch.",
+    "en": "Twist your torso to the side while keeping tension in your core.",
+    "es": "Gira tu torso hacia un lado manteniendo la tensión en el abdomen."
+  },
+  "jump-squats": {
+    "kind": "training",
+    "de": "Gehe in die tiefste Position und drücke dich explosiv nach oben.",
+    "en": "Go into the deepest position and push explosively upwards.",
+    "es": "Baja a la posición más profunda y empuja explosivamente hacia arriba."
+  },
+  "pistol-squats": {
+    "kind": "training",
+    "de": "Halte dein freies Bein nach vorn und führe die einbeinige Kniebeuge kontrolliert aus.",
+    "en": "Keep your free leg extended forward and perform the single-leg squat in a controlled manner.",
+    "es": "Mantén tu pierna libre extendida hacia adelante y realiza la sentadilla a una pierna de manera controlada."
+  },
+  "good-mornings": {
+    "kind": "training",
+    "de": "Halte deinen Rücken lang und beuge dich aus der Hüfte.",
+    "en": "Keep your back long and hinge at the hips.",
+    "es": "Mantén la espalda recta e inclínate desde las caderas."
+  },
+  "box-step-ups": {
+    "kind": "training",
+    "de": "Drücke dich kontrolliert auf die Box und halte kurz oben.",
+    "en": "Press up onto the box in a controlled manner and hold briefly at the top.",
+    "es": "Empuja hacia arriba en la caja de manera controlada y mantén brevemente en la parte superior."
+  },
+  "devil-press": {
+    "kind": "training",
+    "de": "Führe den Burpee aus und bringe die Hanteln explosiv über Kopf.",
+    "en": "Perform the burpee and explosively bring the dumbbells overhead.",
+    "es": "Realiza el burpee y lleva las mancuernas explosivamente por encima de la cabeza."
+  },
+  "man-makers": {
+    "kind": "training",
+    "de": "Führe den Liegestütz und das Rudern kontrolliert aus, bevor du in den Thruster übergehst.",
+    "en": "Perform the push-up and rowing in a controlled manner before transitioning to the thruster.",
+    "es": "Realiza la flexión y el remo de manera controlada antes de pasar al thruster."
+  },
+  "ghd-sit-ups": {
+    "kind": "training",
+    "de": "Senke deinen Oberkörper kontrolliert nach hinten und bringe ihn wieder nach oben.",
+    "en": "Lower your upper body back in a controlled manner and bring it back up.",
+    "es": "Baja tu torso hacia atrás de manera controlada y vuelve a subirlo."
+  },
+  "rope-climbs": {
+    "kind": "training",
+    "de": "Klettere kontrolliert am Seil hoch und berühre oben, bevor du wieder absteigst.",
+    "en": "Climb the rope steadily and touch the top before lowering yourself down.",
+    "es": "Súbete por la cuerda con control y toca la parte superior antes de bajar."
+  },
+  "ski-erg": {
+    "kind": "training",
+    "de": "Beginne in der Startposition und führe die Bewegung gleichmäßig durch.",
+    "en": "Start in the position and perform the movement smoothly.",
+    "es": "Comienza en la posición y realiza el movimiento de manera fluida."
+  },
+  "assault-bike": {
+    "kind": "training",
+    "de": "Beginne in der Startposition und halte einen gleichmäßigen Rhythmus während der Bewegung.",
+    "en": "Start in the position and maintain a steady rhythm throughout the movement.",
+    "es": "Comienza en la posición y mantén un ritmo constante durante el movimiento."
+  },
+  "wall-sit": {
+    "kind": "training",
+    "de": "Gehe in die tiefste Position, während deine Knie den Zehen folgen.",
+    "en": "Go into the lowest position while your knees follow your toes.",
+    "es": "Baja a la posición más baja mientras tus rodillas siguen a tus dedos del pie."
+  },
+  "broad-jumps": {
+    "kind": "training",
+    "de": "Starte kraftvoll und springe so weit wie möglich, bevor du dich für den nächsten Sprung bereit machst.",
+    "en": "Start powerfully and jump as far as you can before getting ready for the next jump.",
+    "es": "Comienza con fuerza y salta tan lejos como puedas antes de prepararte para el siguiente salto."
+  },
+  "knees-to-elbows": {
+    "kind": "training",
+    "de": "Ziehen deine Knie kontrolliert zu den Ellenbogen und kehre dann zurück in die Ausgangsposition.",
+    "en": "Pull your knees up to your elbows in a controlled manner, then return to the starting position.",
+    "es": "Levanta tus rodillas hacia los codos de manera controlada y luego regresa a la posición inicial."
+  },
+  "crunches": {
+    "kind": "training",
+    "de": "Beginne in der Startposition und führe die Bewegung kontrolliert durch.",
+    "en": "Start in the position and perform the movement in a controlled manner.",
+    "es": "Comienza en la posición y realiza el movimiento de manera controlada."
+  },
+  "leg-raises": {
+    "kind": "training",
+    "de": "Hebe deine Beine bis über die Hüfte und senke sie dann langsam zurück.",
+    "en": "Lift your legs above your hips and then lower them back slowly.",
+    "es": "Levanta tus piernas por encima de la cadera y luego bájalas lentamente."
+  },
+  "hanging-knee-raises": {
+    "kind": "training",
+    "de": "Ziehen deine Knie kontrolliert zu deinem Oberkörper und kehre dann zurück.",
+    "en": "Pull your knees up to your torso in a controlled manner, then return.",
+    "es": "Levanta tus rodillas hacia tu torso de manera controlada y luego regresa."
+  },
+  "shoulder-to-overhead": {
+    "kind": "training",
+    "de": "Beginne mit dem Gerät an der Schulter und drücke es überkopf in einer stabilen Position.",
+    "en": "Start with the device at your shoulder and press it overhead in a stable position.",
+    "es": "Comienza con el dispositivo en el hombro y presiónalo sobre tu cabeza en una posición estable."
+  },
+  "hang-power-cleans": {
+    "kind": "training",
+    "de": "Lade die Stange an den Oberschenkeln nach und ziehe sie über die Parallele.",
+    "en": "Load the bar at your thighs and pull it above parallel.",
+    "es": "Carga la barra en los muslos y júgala por encima de la paralela."
+  },
+  "hang-snatches": {
+    "kind": "training",
+    "de": "Halte die Stange nah am Körper, während du sie überkopf ziehst.",
+    "en": "Keep the bar close to your body as you pull it overhead.",
+    "es": "Mantén la barra cerca de tu cuerpo mientras la levantas por encima de la cabeza."
+  },
+  "squat-clean-jerk": {
+    "kind": "training",
+    "de": "Achte darauf, dass du beim Aufstehen die Hüfte und die Schultern gleichzeitig hebst.",
+    "en": "Focus on lifting your hips and shoulders at the same time when standing up.",
+    "es": "Concéntrate en levantar tus caderas y hombros al mismo tiempo al levantarte."
+  },
+  "romanian-deadlifts": {
+    "kind": "training",
+    "de": "Halte den Rücken gerade und die Hantel nah am Körper während der Bewegung.",
+    "en": "Keep your back straight and the bar close to your body throughout the movement.",
+    "es": "Mantén la espalda recta y la barra cerca de tu cuerpo durante el movimiento."
+  },
+  "bent-over-rows": {
+    "kind": "training",
+    "de": "Ziehe die Hantel kontrolliert bis zur Brust und halte den Rücken stabil.",
+    "en": "Pull the barbell to your chest in a controlled manner while keeping your back stable.",
+    "es": "Tira de la barra hacia tu pecho de manera controlada mientras mantienes la espalda estable."
+  },
+  "turkish-get-ups": {
+    "kind": "training",
+    "de": "Bewege dich langsam und kontrolliert durch jede Position, während du die Kugel über Kopf hältst.",
+    "en": "Move slowly and controlled through each position while keeping the kettlebell overhead.",
+    "es": "Muévete lenta y controladamente a través de cada posición mientras mantienes la kettlebell sobre tu cabeza."
+  },
+  "glute-bridges": {
+    "kind": "training",
+    "de": "Drücke die Hüften nach oben und halte die Spannung in den Gesäßmuskeln.",
+    "en": "Lift your hips up and maintain tension in your glutes.",
+    "es": "Levanta tus caderas y mantén la tensión en tus glúteos."
+  },
+  "hip-extensions": {
+    "kind": "training",
+    "de": "Halte deinen Rücken gerade und konzentriere dich auf die Bewegung aus der Hüfte.",
+    "en": "Keep your back straight and focus on the movement coming from your hips.",
+    "es": "Mantén la espalda recta y concéntrate en el movimiento que proviene de tus caderas."
+  },
+  "back-extensions": {
+    "kind": "training",
+    "de": "Achte darauf, dass du die Bewegung kontrolliert ausführst und den Rücken nicht überstreckst.",
+    "en": "Make sure to perform the movement in a controlled manner without overextending your back.",
+    "es": "Asegúrate de realizar el movimiento de manera controlada sin sobreextender la espalda."
+  },
+  "db-rows": {
+    "kind": "training",
+    "de": "Ziehe die Hanteln bis zur Taille und halte den Rücken während der Bewegung stabil.",
+    "en": "Pull the dumbbells to your waist while keeping your back stable during the movement.",
+    "es": "Tira de las mancuernas hacia tu cintura mientras mantienes la espalda estable durante el movimiento."
+  },
+  "db-front-squats": {
+    "kind": "training",
+    "de": "Halte das Gewicht stabil und achte darauf, dass deine Knie nicht über die Zehen hinausgehen.",
+    "en": "Keep the weight stable and ensure your knees do not go beyond your toes.",
+    "es": "Mantén el peso estable y asegúrate de que tus rodillas no pasen de tus dedos del pie."
+  },
+  "db-overhead-squats": {
+    "kind": "training",
+    "de": "Halte die Hanteln über Kopf und achte auf eine stabile Körpermitte während der Kniebeuge.",
+    "en": "Keep the dumbbells overhead and focus on a stable core during the squat.",
+    "es": "Mantén las mancuernas sobre tu cabeza y concéntrate en un núcleo estable durante la sentadilla."
+  },
+  "db-lunges": {
+    "kind": "training",
+    "de": "Achte darauf, dass dein vorderes Knie nicht über die Zehen hinausgeht, während du tief gehst.",
+    "en": "Ensure your front knee does not go beyond your toes as you lower yourself.",
+    "es": "Asegúrate de que tu rodilla delantera no pase de tus dedos del pie mientras te bajas."
+  },
+  "db-clusters": {
+    "kind": "training",
+    "de": "Führe die Kniebeuge kontrolliert aus, bevor du die Hanteln drückst oder stößt.",
+    "en": "Perform the squat in a controlled manner before pressing or jerking the dumbbells.",
+    "es": "Realiza la sentadilla de manera controlada antes de presionar o empujar las mancuernas."
+  },
+  "db-burpees": {
+    "kind": "training",
+    "de": "Starte mit den Hanteln am Boden und springe in die Liegestützposition. Drücke dich hoch und springe explosiv nach oben.",
+    "en": "Start with the dumbbells on the floor and jump into a push-up position. Push yourself up and jump explosively.",
+    "es": "Comienza con las mancuernas en el suelo y salta a la posición de flexión. Empújate hacia arriba y salta explosivamente."
+  },
+  "db-swings": {
+    "kind": "training",
+    "de": "Halte das Gerät nah am Körper und achte auf einen langen Rücken. Bewege Hüfte und Knie, während das Gerät an den Beinen bleibt.",
+    "en": "Keep the device close to your body and maintain a long back. Move your hips and knees while the device stays by your legs.",
+    "es": "Mantén el dispositivo cerca de tu cuerpo y mantén la espalda recta. Mueve tus caderas y rodillas mientras el dispositivo permanece junto a tus piernas."
+  },
+  "db-squats": {
+    "kind": "training",
+    "de": "Stehe stabil mit dem Gewicht auf der ganzen Fußsohle. Gehe in die tiefste Position, während deine Knie den Zehen folgen.",
+    "en": "Stand firmly with your weight on the entire foot. Go into the deepest position while your knees follow your toes.",
+    "es": "Párate firme con el peso en toda la planta del pie. Baja hasta la posición más profunda mientras tus rodillas siguen tus dedos."
+  },
+  "kb-front-squats": {
+    "kind": "training",
+    "de": "Stehe stabil mit dem Gewicht auf der ganzen Fußsohle. Gehe in die tiefste Position, während deine Knie den Zehen folgen.",
+    "en": "Stand firmly with your weight on the entire foot. Go into the deepest position while your knees follow your toes.",
+    "es": "Párate firme con el peso en toda la planta del pie. Baja hasta la posición más profunda mientras tus rodillas siguen tus dedos."
+  },
+  "kb-thrusters": {
+    "kind": "training",
+    "de": "Halte die Kugeln im Rack und gehe in die Kniebeuge. Drücke explosiv nach oben, bis die Arme gestreckt sind.",
+    "en": "Hold the kettlebells in the rack position and go into a squat. Press explosively upwards until your arms are extended.",
+    "es": "Sostén las kettlebells en la posición de rack y baja en una sentadilla. Empuja explosivamente hacia arriba hasta que tus brazos estén extendidos."
+  },
+  "kb-lunges": {
+    "kind": "training",
+    "de": "Stehe stabil mit dem Gewicht auf der ganzen Fußsohle. Gehe in die tiefste Position, während deine Knie den Zehen folgen.",
+    "en": "Stand firmly with your weight on the entire foot. Go into the deepest position while your knees follow your toes.",
+    "es": "Párate firme con el peso en toda la planta del pie. Baja hasta la posición más profunda mientras tus rodillas siguen tus dedos."
+  },
+  "kb-halos": {
+    "kind": "training",
+    "de": "Halte die Kugel vor der Brust und kreise sie um deinen Kopf. Achte darauf, dass die Bewegung kontrolliert bleibt.",
+    "en": "Hold the kettlebell in front of your chest and circle it around your head. Ensure the movement remains controlled.",
+    "es": "Sostén la kettlebell frente a tu pecho y hazla girar alrededor de tu cabeza. Asegúrate de que el movimiento sea controlado."
+  },
+  "kb-rows": {
+    "kind": "training",
+    "de": "Beginne in einer hängenden oder langen Startposition. Ziehe bis zum Zielpunkt und kontrolliere die Rückkehr.",
+    "en": "Start in a hanging or long position. Pull to the target point and control your return.",
+    "es": "Comienza en una posición colgante o larga. Tira hasta el punto objetivo y controla tu regreso."
+  },
+  "kb-press": {
+    "kind": "training",
+    "de": "Beginne in einer stabilen Position mit den Rippen unten. Drücke bis deine Arme gestreckt sind.",
+    "en": "Start in a stable position with your ribs down. Press until your arms are extended.",
+    "es": "Comienza en una posición estable con las costillas hacia abajo. Empuja hasta que tus brazos estén extendidos."
+  },
+  "sandbag-squats": {
+    "kind": "training",
+    "de": "Stehe stabil mit dem Gewicht auf der ganzen Fußsohle. Gehe in die tiefste Position, während deine Knie den Zehen folgen.",
+    "en": "Stand firmly with your weight on the entire foot. Go into the deepest position while your knees follow your toes.",
+    "es": "Párate firme con el peso en toda la planta del pie. Baja hasta la posición más profunda mientras tus rodillas siguen tus dedos."
+  },
+  "sandbag-carries": {
+    "kind": "training",
+    "de": "Nehme das Gerät auf und stehe aufrecht. Gehe kontrolliert und achte darauf, dass deine Schultern tief bleiben.",
+    "en": "Pick up the bag and stand upright. Walk steadily, keeping your shoulders down.",
+    "es": "Levanta la bolsa y mantente erguido. Camina de manera controlada, manteniendo los hombros hacia abajo."
+  },
+  "sandbag-front-squats": {
+    "kind": "training",
+    "de": "Stehe stabil mit dem Gewicht auf der ganzen Fußsohle. Gehe in die tiefste Position, während deine Knie den Zehen folgen.",
+    "en": "Stand firmly with your weight on the entire foot. Go into the deepest position while your knees follow your toes.",
+    "es": "Párate firme con el peso en toda la planta del pie. Baja hasta la posición más profunda mientras tus rodillas siguen tus dedos."
+  },
+  "sandbag-push-press": {
+    "kind": "training",
+    "de": "Stabile Startposition, Rippen unten. Drücke den Sandbag bis deine Arme gestreckt sind.",
+    "en": "Start in a stable position with ribs down. Press the sandbag until your arms are fully extended.",
+    "es": "Comienza en una posición estable con las costillas hacia abajo. Empuja la bolsa de arena hasta que tus brazos estén completamente extendidos."
+  },
+  "high-knees": {
+    "kind": "training",
+    "de": "Beginne in der Startposition. Hebe die Knie hoch und bringe sie in die Mitte deines Zyklus.",
+    "en": "Start in the initial position. Lift your knees high and bring them to the center of your cycle.",
+    "es": "Comienza en la posición inicial. Levanta las rodillas y llévalas al centro de tu ciclo."
+  },
+  "bear-complex": {
+    "kind": "training",
+    "de": "Beginne mit einem Power Clean in den Front Rack. Führe dann die Frontkniebeuge und Push Press aus.",
+    "en": "Start with a power clean into the front rack. Then perform a front squat and push press.",
+    "es": "Comienza con un clean de potencia en el rack frontal. Luego realiza una sentadilla frontal y un push press."
+  },
+  "band-pull-aparts": {
+    "kind": "training",
+    "de": "Beginne in einer langen Position. Ziehe das Band bis zum Zielpunkt und kontrolliere die Rückkehr.",
+    "en": "Start in a long position. Pull the band to the target point and control your return.",
+    "es": "Comienza en una posición larga. Tira de la banda hasta el punto objetivo y controla el regreso."
+  },
+  "band-press": {
+    "kind": "training",
+    "de": "Stabile Startposition, Rippen unten. Drücke das Band bis deine Arme gestreckt sind.",
+    "en": "Start in a stable position with ribs down. Press the band until your arms are fully extended.",
+    "es": "Comienza en una posición estable con las costillas hacia abajo. Empuja la banda hasta que tus brazos estén completamente extendidos."
+  },
+  "sumo-deadlift-high-pull": {
+    "kind": "training",
+    "de": "Stehe weit, die Stange zwischen den Füßen. Öffne die Hüfte und ziehe die Stange bis zur Brusthöhe.",
+    "en": "Stand wide with the bar between your feet. Open your hips and pull the bar to chest height.",
+    "es": "Párate ancho con la barra entre tus pies. Abre las caderas y tira de la barra hasta la altura del pecho."
+  },
+  "chin-ups": {
+    "kind": "training",
+    "de": "Beginne in einer hängenden Position. Ziehe dich bis zum Zielpunkt hoch und kontrolliere die Rückkehr.",
+    "en": "Start in a hanging position. Pull yourself up to the target point and control your return.",
+    "es": "Comienza en una posición colgante. Sube hasta el punto objetivo y controla el regreso."
+  },
+  "db-cleans": {
+    "kind": "training",
+    "de": "Hanteln an den Seiten, ziehe sie hoch. Drehe die Hanteln in den Rack und stehe auf.",
+    "en": "Dumbbells at your sides, pull them up. Rotate the dumbbells into the rack and stand.",
+    "es": "Mancuernas a los lados, súbelas. Rota las mancuernas al rack y ponte de pie."
+  },
+  "db-clean-jerk": {
+    "kind": "training",
+    "de": "Hanteln am Boden, ziehe sie in den Rack. Dip und stoße über Kopf.",
+    "en": "Dumbbells on the floor, pull them into the rack. Dip and push overhead.",
+    "es": "Mancuernas en el suelo, súbelas al rack. Haz un dip y empuja por encima de la cabeza."
+  },
+  "db-power-snatches": {
+    "kind": "training",
+    "de": "Hantel am Oberschenkel, ziehe sie hoch. Fange über der Parallele und stehe über Kopf.",
+    "en": "Dumbbell at your thigh, pull it up. Catch above parallel and stand overhead.",
+    "es": "Mancuerna en el muslo, súbela. Atrapa por encima de la paralela y ponte de pie sobre la cabeza."
+  },
+  "kb-jerk": {
+    "kind": "training",
+    "de": "Kugel im Rack, mache einen Dip. Stoße und fange mit gestrecktem Arm.",
+    "en": "Kettlebell in the rack, perform a dip. Push and catch with an extended arm.",
+    "es": "Kettlebell en el rack, haz un dip. Empuja y atrapa con el brazo extendido."
+  },
+  "kb-back-squat": {
+    "kind": "training",
+    "de": "Stehe mit dem Gewicht auf der ganzen Fußsohle. Gehe in die tiefste Position und drücke hoch.",
+    "en": "Stand with weight on the entire foot. Go into the deepest position and press up.",
+    "es": "Párate con el peso en toda la planta del pie. Ve a la posición más baja y empuja hacia arriba."
+  },
+  "kb-clean-press": {
+    "kind": "training",
+    "de": "Führe die Kugel kontrolliert in den Rack und drücke sie dann strikt nach oben.",
+    "en": "Lift the kettlebell into the rack position and then press it strictly overhead.",
+    "es": "Lleva la kettlebell a la posición de rack y luego presiónala estrictamente hacia arriba."
+  },
+  "kb-clean-jerk": {
+    "kind": "training",
+    "de": "Bringe die Kugel zwischen deinen Beinen in den Rack und stoße sie dann über Kopf.",
+    "en": "Bring the kettlebell between your legs into the rack and then jerk it overhead.",
+    "es": "Lleva la kettlebell entre tus piernas al rack y luego empújala hacia arriba."
+  },
+  "kb-offset-push-ups": {
+    "kind": "training",
+    "de": "Beginne in einer stabilen Position und drücke dich bis die Arme gestreckt sind.",
+    "en": "Start in a stable position and push up until your arms are fully extended.",
+    "es": "Comienza en una posición estable y empuja hasta que tus brazos estén completamente extendidos."
+  },
+  "kb-horn-curls": {
+    "kind": "training",
+    "de": "Halte die Kugel mit beiden Händen am Horn und curl sie langsam zur Brust.",
+    "en": "Hold the kettlebell with both hands at the horn and curl it slowly to your chest.",
+    "es": "Sostén la kettlebell con ambas manos en el cuerno y curl lentamente hacia tu pecho."
+  },
+  "kb-windmills": {
+    "kind": "training",
+    "de": "Halte die Kugel über Kopf und schiebe die Hüfte zur Seite, während die freie Hand zum Boden geht.",
+    "en": "Hold the kettlebell overhead and push your hips to the side as your free hand reaches toward the ground.",
+    "es": "Mantén la kettlebell sobre tu cabeza y empuja tus caderas hacia un lado mientras tu mano libre llega al suelo."
+  },
+  "kb-rotation-swings": {
+    "kind": "training",
+    "de": "Halte das Gerät nah am Körper und strecke Hüfte und Knie, während du in die Standposition zurückkehrst.",
+    "en": "Keep the kettlebell close to your body and extend your hips and knees as you return to standing.",
+    "es": "Mantén la kettlebell cerca de tu cuerpo y extiende tus caderas y rodillas mientras vuelves a la posición de pie."
+  },
+  "arch-hold": {
+    "kind": "training",
+    "de": "Nehme die Position ein und halte sie, ohne die Form zu verlieren.",
+    "en": "Assume the position and hold it without losing form.",
+    "es": "Asume la posición y manténla sin perder la forma."
+  },
+  "tuck-ups": {
+    "kind": "training",
+    "de": "Ziehe Knie und Oberkörper zusammen und kehre dann in die Länge zurück.",
+    "en": "Pull your knees and torso together, then return to the extended position.",
+    "es": "Junta tus rodillas y torso, luego regresa a la posición extendida."
+  },
+  "toe-touches": {
+    "kind": "training",
+    "de": "Hebe deinen Oberkörper und bringe deine Hände zu den Zehen, während die Schultern auf dem Boden bleiben.",
+    "en": "Lift your torso and reach your hands toward your toes while keeping your shoulders on the ground.",
+    "es": "Levanta tu torso y lleva tus manos hacia tus dedos mientras mantienes los hombros en el suelo."
+  },
+  "ground-to-overhead": {
+    "kind": "training",
+    "de": "Beginne mit dem Gerät am Boden und bringe es kontrolliert über Kopf.",
+    "en": "Start with the kettlebell on the ground and bring it overhead in a controlled manner.",
+    "es": "Comienza con la kettlebell en el suelo y llévala sobre tu cabeza de manera controlada."
+  },
+  "snatch-balance": {
+    "kind": "training",
+    "de": "Führe einen Dip aus und bringe die Stange in die Kniebeuge, bevor du aufstehst.",
+    "en": "Perform a dip and bring the bar into a squat before standing up.",
+    "es": "Realiza un dip y lleva la barra a una sentadilla antes de levantarte."
+  },
+  "clean-press": {
+    "kind": "training",
+    "de": "Beginne am Boden und bringe die Stange in den Front Rack, bevor du sie drückst.",
+    "en": "Start from the ground and bring the bar into the front rack before pressing it.",
+    "es": "Comienza desde el suelo y lleva la barra al rack frontal antes de presionarla."
+  },
+  "hang-cleans": {
+    "kind": "training",
+    "de": "Hänge die Hanteln an den Oberschenkeln und lade sie explosiv nach oben.",
+    "en": "Hang the weights at your thighs and explosively pull them up.",
+    "es": "Cuelga las pesas en los muslos y súbelas explosivamente."
+  },
+  "muscle-cleans": {
+    "kind": "training",
+    "de": "Zug die Stange ohne Hocke und drehe die Ellbogen nach vorn.",
+    "en": "Pull the bar without squatting and rotate your elbows forward.",
+    "es": "Tira de la barra sin hacer sentadillas y gira los codos hacia adelante."
+  },
+  "push-up-to-burpee": {
+    "kind": "training",
+    "de": "Mach einen Liegestütz bis zur Streckung und spring dann explosiv nach oben.",
+    "en": "Perform a push-up until fully extended, then jump explosively upwards.",
+    "es": "Haz una flexión hasta estirarte completamente y luego salta explosivamente hacia arriba."
+  },
+  "around-the-world": {
+    "kind": "training",
+    "de": "Halte die Scheibe vor deinem Körper und führe sie um deine Hüfte nach links.",
+    "en": "Hold the plate in front of your body and move it around your hips to the left.",
+    "es": "Sostén el disco frente a tu cuerpo y muévelo alrededor de tus caderas hacia la izquierda."
+  },
+  "kb-russian-twists": {
+    "kind": "training",
+    "de": "Drehe deinen Oberkörper zur einen Seite und dann zur anderen Seite.",
+    "en": "Twist your torso to one side and then to the other side.",
+    "es": "Gira tu torso hacia un lado y luego hacia el otro."
+  },
+  "db-shoulder-to-overhead": {
+    "kind": "training",
+    "de": "Drücke die Hanteln über deinen Kopf, bis die Arme gestreckt sind.",
+    "en": "Press the dumbbells overhead until your arms are fully extended.",
+    "es": "Presiona las mancuernas por encima de tu cabeza hasta que los brazos estén completamente extendidos."
+  },
+  "db-step-ups": {
+    "kind": "training",
+    "de": "Drücke durch die Ferse hoch und stehe kontrolliert auf der Box.",
+    "en": "Push through your heel to stand on the box with control.",
+    "es": "Empuja con el talón para subir a la caja con control."
+  },
+  "db-overhead-lunges": {
+    "kind": "training",
+    "de": "Gehe in die tiefste Position, während du das Gewicht über Kopf hältst.",
+    "en": "Go into the lowest position while holding the weight overhead.",
+    "es": "Baja a la posición más baja mientras sostienes el peso por encima de la cabeza."
+  },
+  "strict-press": {
+    "kind": "training",
+    "de": "Drücke die Hanteln bis die Arme gestreckt sind, ohne den Körper zu bewegen.",
+    "en": "Press the dumbbells until your arms are extended without moving your body.",
+    "es": "Presiona las mancuernas hasta que los brazos estén extendidos sin mover el cuerpo."
+  },
+  "dead-hangs": {
+    "kind": "training",
+    "de": "Hänge dich kontrolliert zurück in die Startposition.",
+    "en": "Hang and then control your return to the starting position.",
+    "es": "Cuelga y luego controla tu regreso a la posición inicial."
+  },
+  "floor-wipers": {
+    "kind": "training",
+    "de": "Bewege deine Beine zur Seite und zurück zur Mitte, während die Stange über der Brust bleibt.",
+    "en": "Move your legs to the side and back to the center while keeping the bar over your chest.",
+    "es": "Mueve tus piernas hacia un lado y de regreso al centro mientras mantienes la barra sobre tu pecho."
+  },
+  "db-hang-clean-to-overhead": {
+    "kind": "training",
+    "de": "Führe die Hanteln in den Rack und drücke sie dann über Kopf.",
+    "en": "Bring the dumbbells into the rack and then press them overhead.",
+    "es": "Lleva las mancuernas al rack y luego presiona hacia arriba."
+  }
+}
