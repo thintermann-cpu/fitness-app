@@ -39,7 +39,7 @@
       "de": "de/breathing-5.mp3",
       "en": "en/breathing-5.mp3"
     },
-    "available": false
+    "available": true
   },
   {
     "id": "focus-10",
@@ -53,7 +53,7 @@
       "de": "de/focus-10.mp3",
       "en": "en/focus-10.mp3"
     },
-    "available": false
+    "available": true
   },
   {
     "id": "sleep-15",
@@ -67,7 +67,7 @@
       "de": "de/sleep-15.mp3",
       "en": "en/sleep-15.mp3"
     },
-    "available": false
+    "available": true
   },
   {
     "id": "morning-10",
@@ -81,7 +81,7 @@
       "de": "de/morning-10.mp3",
       "en": "en/morning-10.mp3"
     },
-    "available": false
+    "available": true
   },
   {
     "id": "stress-10",
@@ -95,6 +95,6 @@
       "de": "de/stress-10.mp3",
       "en": "en/stress-10.mp3"
     },
-    "available": false
+    "available": true
   }
 ]
