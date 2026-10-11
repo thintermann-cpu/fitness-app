@@ -3,7 +3,9 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import { sessionListSeed, shuffleWithSeed, wodCatalogEnabled } from '../lib/wodListOrder'
 import {
+  alignEmomRoundLabel,
   decomposeProgramText,
+  emomIntervalCount,
   fitsLocationEquipment,
   parseWorkoutSearch,
   presentCatalogWorkout,
@@ -114,7 +116,8 @@ function mapRawToWod(raw: RawWod): Wod {
     exercises = decomposed.exercises
     if (decomposed.equipment.length) equipment = decomposed.equipment
   }
-  const prescription = presentCatalogWorkout({
+  const storedMinutes = Number(raw.estimated_minutes) || parseInt(String(raw.dauer ?? ''), 10) || 0
+  let prescription = presentCatalogWorkout({
     exercises,
     description,
     runden: raw.runden,
@@ -123,9 +126,21 @@ function mapRawToWod(raw: RawWod): Wod {
     type: raw.type ?? raw.typ,
     category: raw.category ?? raw.kategorie ?? '',
     wodCategory: raw.wod_category ?? undefined,
-    estimatedMinutes: Number(raw.estimated_minutes) || parseInt(String(raw.dauer ?? ''), 10) || 0,
+    estimatedMinutes: storedMinutes,
     equipment,
   })
+  let estimatedMinutes = storedMinutes
+  const typeKey = (prescription.type || raw.type || raw.typ || '').toLowerCase()
+  if (typeKey === 'emom') {
+    const count = Math.max(1, prescription.lines.length)
+    const fromRounds = Number(String(raw.runden ?? '').match(/\d+/)?.[0] ?? 0)
+    const programmed = storedMinutes || fromRounds
+    const aligned = emomIntervalCount(count, programmed)
+    if (aligned !== programmed) {
+      prescription = { ...prescription, scheme: alignEmomRoundLabel(prescription.scheme, programmed, aligned) }
+    }
+    estimatedMinutes = aligned
+  }
   return {
     id: String(raw.id),
     name: raw.name,
@@ -135,7 +150,7 @@ function mapRawToWod(raw: RawWod): Wod {
     exercises,
     equipment,
     difficulty: raw.difficulty ?? raw.schwierigkeit ?? '',
-    estimated_minutes: Number(raw.estimated_minutes) || parseInt(String(raw.dauer ?? ''), 10) || 0,
+    estimated_minutes: estimatedMinutes,
     is_editors_pick: raw.is_editors_pick ?? EDITORS_PICK_IDS.has(String(raw.id)),
     wod_category: prescription.wodCategory ?? raw.wod_category ?? undefined,
     equipment_tags: tags.length ? tags : undefined,

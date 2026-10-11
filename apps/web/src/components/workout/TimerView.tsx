@@ -9,6 +9,7 @@ import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { NextExercisePreview } from '../shared/NextExercisePreview'
 import { ExerciseInfoButton } from './ExerciseInfoButton'
 import type { WizardExercise } from '../../lib/customWorkouts'
+import { emomIntervalCount } from '../../lib/exerciseCatalog'
 
 type TimerMode = 'fortime' | 'amrap' | 'emom' | 'tabata'
 
@@ -100,7 +101,7 @@ function beep(type: 'start' | 'interval' | 'end' | 'countdown') {
 }
 
 function Stepper({
-  label, value, onChange, min, max, unit,
+  label, value, onChange, min, max, unit, step = 1,
 }: {
   label: string
   value: number
@@ -108,13 +109,14 @@ function Stepper({
   min: number
   max: number
   unit?: string
+  step?: number
 }) {
   return (
     <div className="flex flex-col items-center gap-2">
       <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
       <div className="flex items-center gap-2">
         <button
-          onClick={() => onChange(Math.max(min, value - 1))}
+          onClick={() => onChange(Math.max(min, value - step))}
           className="w-8 h-8 rounded-full bg-white/10 text-[var(--color-text)] font-bold flex items-center justify-center active:bg-white/20"
         >
           −
@@ -124,7 +126,7 @@ function Stepper({
           {unit && <span className="text-xs text-[var(--color-text-muted)] ml-0.5">{unit}</span>}
         </div>
         <button
-          onClick={() => onChange(Math.min(max, value + 1))}
+          onClick={() => onChange(Math.min(max, value + step))}
           className="w-8 h-8 rounded-full bg-white/10 text-[var(--color-text)] font-bold flex items-center justify-center active:bg-white/20"
         >
           +
@@ -148,6 +150,13 @@ export function TimerView({
   // EMOM config
   const [emomInterval, setEmomInterval] = useState(initialEmomInterval ?? 1)
   const [emomRounds,   setEmomRounds]   = useState(initialEmomRounds   ?? 10)
+  const emomSlots = Math.max(1, exercises?.length ?? 1)
+  const emomRoundMax = emomSlots < 2 ? 30 : Math.max(emomSlots, Math.floor(30 / emomSlots) * emomSlots)
+
+  useEffect(() => {
+    if (mode !== 'emom' || emomSlots < 2) return
+    setEmomRounds((current) => Math.min(emomRoundMax, emomIntervalCount(emomSlots, current)))
+  }, [mode, emomSlots, emomRoundMax])
   // Tabata config
   const [tabataWork,   setTabataWork]   = useState(initialTabataWork   ?? 20)
   const [tabataRest,   setTabataRest]   = useState(initialTabataRest   ?? 10)
@@ -571,10 +580,11 @@ if (!adHocLog || !isComplete || loggedRef.current) return
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-6 justify-items-center">
                 <Stepper label="Intervall" value={emomInterval} onChange={setEmomInterval} min={1} max={5} unit="min" />
-                <Stepper label="Runden"    value={emomRounds}   onChange={setEmomRounds}   min={1} max={30} />
+                <Stepper label="Runden" value={emomRounds} onChange={setEmomRounds} min={emomSlots < 2 ? 1 : emomSlots} max={emomRoundMax} step={emomSlots < 2 ? 1 : emomSlots} />
               </div>
               <p className="text-xs text-center text-[var(--color-text-muted)]">
                 Gesamt: {emomInterval * emomRounds} min
+                {emomSlots > 1 && emomRounds % emomSlots === 0 ? ` · ${emomRounds / emomSlots}×` : ''}
               </p>
             </div>
           )}

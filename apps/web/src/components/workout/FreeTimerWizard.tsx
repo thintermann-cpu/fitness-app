@@ -1,10 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { WizardShell } from '../wizard/WizardShell'
 import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { TIMER_LABELS, TIMER_MODE_LIST } from '../../lib/timerLabels'
 import type { TimerMode } from '../../lib/timerLabels'
+import { emomIntervalCount } from '../../lib/exerciseCatalog'
 import { WARMUP_SESSIONS, type WarmupRoutineId } from './WarmupTimer'
+
+function emomRoundMax(count: number) {
+  if (count <= 1) return 30
+  return Math.max(count, Math.floor(30 / count) * count)
+}
+
+function alignWizardRounds(count: number, rounds: number) {
+  const slots = Math.max(1, count)
+  const min = slots <= 1 ? 1 : slots
+  if (rounds < min) return min
+  const aligned = emomIntervalCount(slots, rounds)
+  return Math.min(emomRoundMax(slots), Math.max(min, aligned))
+}
 
 export type { TimerMode }
 
@@ -99,6 +113,12 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
   // EMOM config
   const [emomInterval, setEmomInterval] = useState(() => initialValues?.emomInterval ?? 1)
   const [emomRounds,   setEmomRounds]   = useState(() => initialValues?.emomRounds   ?? 10)
+  const emomSlots = Math.max(1, exercises.length)
+
+  useEffect(() => {
+    if (mode !== 'emom') return
+    setEmomRounds((current) => alignWizardRounds(emomSlots, current))
+  }, [mode, emomSlots])
 
   const isKraft   = mode === 'krafttraining'
   const stepCount = 4
@@ -485,34 +505,35 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
                 <p className="text-xs font-semibold mb-2 tracking-wide" style={{ color: 'var(--color-text-muted)' }}>RUNDEN</p>
                 <div className="flex items-center justify-center gap-4">
                   <button
-                    onClick={() => setEmomRounds((r) => Math.max(1, r - 1))}
+                    onClick={() => setEmomRounds((r) => alignWizardRounds(emomSlots, r - emomSlots))}
                     className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
                     style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
                   >-</button>
                   <span className="text-xl font-black w-16 text-center" style={{ color: 'var(--color-text)' }}>{emomRounds}</span>
                   <button
-                    onClick={() => setEmomRounds((r) => Math.min(30, r + 1))}
+                    onClick={() => setEmomRounds((r) => alignWizardRounds(emomSlots, r + emomSlots))}
                     className="w-11 h-11 rounded-xl font-bold text-xl flex items-center justify-center"
                     style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
                   >+</button>
                 </div>
                 <input
                   type="range"
-                  min={1}
-                  max={30}
-                  step={1}
-                  value={emomRounds}
-                  onChange={(e) => setEmomRounds(Number(e.target.value))}
+                  min={emomSlots <= 1 ? 1 : emomSlots}
+                  max={emomRoundMax(emomSlots)}
+                  step={emomSlots}
+                  value={alignWizardRounds(emomSlots, emomRounds)}
+                  onChange={(e) => setEmomRounds(alignWizardRounds(emomSlots, Number(e.target.value)))}
                   className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                   style={{ accentColor: modeInfo.color }}
                 />
                 <div className="flex justify-between text-[10px] mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                  <span>1</span>
-                  <span>30 Runden</span>
+                  <span>{emomSlots <= 1 ? 1 : emomSlots}</span>
+                  <span>{emomRoundMax(emomSlots)} Runden</span>
                 </div>
               </div>
               <p className="text-xs text-center" style={{ color: 'var(--color-text-muted)' }}>
                 Gesamt: {emomInterval * emomRounds} min
+                {exercises.length > 1 && emomRounds % exercises.length === 0 ? ` · ${emomRounds / exercises.length}×` : ''}
               </p>
             </div>
           )}
