@@ -1,3 +1,6 @@
+-- Live database already has role, subscription_status, get_my_role(), and the admin read policy.
+-- Do not run this file again.
+
 -- ============================================================
 -- Migration: Add role column to user_profiles + Admin RLS
 -- Run this in the Supabase SQL Editor

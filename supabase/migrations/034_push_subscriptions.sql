@@ -1,3 +1,6 @@
+-- Live database already has these objects. Do not run this file again.
+-- push_preferences is defined again in 030_push_preferences.sql, which is the numbered source of truth.
+
 -- Push Subscriptions: stores Web Push API subscription objects per user
 CREATE TABLE IF NOT EXISTS public.push_subscriptions (
   id           UUID        DEFAULT gen_random_uuid() PRIMARY KEY,

@@ -294,6 +294,7 @@ Stripe Checkout: keine In-App-Success/Cancel-Pages. `useSubscription.startChecko
 **Projekt:** `ipkazxttlkiufgsdyjdw`
 **Region:** EU Frankfurt (`eu-central-1`)
 **Auth:** Supabase Auth (Email/Password; JWT)
+**Login-Links:** Redirect-URLs sind eine Einstellung im Supabase-Dashboard (Authentication → URL Configuration), kein App-Code. Site URL `https://carveout.app`, zusätzliche Redirect-URL `https://carveout.app/**`. Der Passwort-Reset schickt `redirectTo` auf `{origin}/login`.
 **Datenbank:** PostgreSQL mit Row Level Security (RLS) auf allen User-Tabellen
 
 ### Tabellen
@@ -313,7 +314,7 @@ Stripe Checkout: keine In-App-Success/Cancel-Pages. `useSubscription.startChecko
 | `meditations` | 20 Einträge (name/description/instructions als JSONB, category, duration_min, difficulty, background_sound) |
 | `breathwork_techniques` | 8 Techniken (inhale_sec, hold_in_sec, exhale_sec, hold_out_sec, cycles) |
 | `meditation_logs` | Session-Logs pro Nutzer |
-| `push_subscriptions` | Web Push Subscription JSON pro User; Migration: `add_push_subscriptions` (kein Nummern-Präfix — inkonsistent; sollte `029_push_subscriptions.sql` folgen) |
+| `push_subscriptions` | Web Push Subscription JSON pro User; Migration `034_push_subscriptions.sql` (früher ohne Nummer, in der Live-DB schon angewendet, nicht erneut ausführen) |
 | `push_preferences` | Reminder-Einstellungen (morning/evening/wod/inactivity + Zeiten); Migration `030_push_preferences.sql`, RLS mit USING und WITH CHECK |
 | `favorites` | Favoriten pro Nutzer: `content_type` (wod \| stretching_routine \| meditation), `content_id` (string); DDL als Kommentar in `useFavorites.ts` |
 | `feedback` | User-Feedback: `category` (bug \| idee \| lob), `message` text; RLS: User kann nur eigene Einträge einfügen + lesen (Migration 014); DB-Webhook auf INSERT → `notify-feedback` Edge Function (Migration 020) |
@@ -600,6 +601,7 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 | **Session BE** | **Versand und Admin** — `send-dispatch` schickt Web-Push an die Abos (Erinnerung nach `push_preferences`, Broadcast an alle). E-Mail über Resend ist davon getrennt: Newsletter, Zahlung, Konto, nie die Erinnerung. Morgen-Push nennt die heutigen Routinen. Die Uhrzeit gilt in der Stadt aus den Benachrichtigungen (`push_preferences.city` und `timezone`, Migration 032, Vorschlag via Open-Meteo). Ohne Stadt: Europe/Zurich. Secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `RESEND_API_KEY`. Admin-Seiten Push, Emails, Feedback ersetzen die Platzhalter. Ein Pillar-Abschluss hakt heutige Routinen mit passendem `linked_pillar` ab. `routine_logs` werden beim Öffnen und beim Zurückkehren neu geladen. |
 | **Session BD** | **Kachel bleibt nach dem Workout** — Jeder Abschluss (Ad-hoc, eigenes, Katalog, Kraft) schreibt das Workout lokal in `carveout_pillar_done` und in `wod_history`. `useTodayPillars` und `useWeekPillars` lesen den lokalen Stand mit, `staleTime: 0`, Reload und Fokus laden neu. Auf dem Fertig-Screen steht „Cooldown · Mobilität“ und führt nach `/stretching`. Migration `030_push_preferences.sql` schreibt die Push-Einstellungen fest. |
 | **Session BC** | **Workout-Detail aufgeräumt** — In der Ansicht vor dem Start sind das Warmup-Akkordeon, der Warmup-Knopf neben Start und der Scaling-Block weg. Anpassen, Equipment und Start bleiben. Warmup gibt es weiter im Start-Wizard. |
+| **Session BK** | **Zwei Alt-Migrationen nur umbenannt** — Live-Check (PostgREST): `push_subscriptions` inkl. RLS, `push_preferences` inkl. `city`/`timezone`, `user_profiles.role`, `subscription_status` und `get_my_role()` sind vorhanden. Deshalb `add_push_subscriptions.sql` → `034_push_subscriptions.sql` und `add_role_and_admin_rls.sql` → `035_role_and_admin_rls.sql`, ohne zweiten Lauf. `push_preferences` bleibt die nummerierte Quelle in `030_push_preferences.sql`. Login-Redirects bleiben Dashboard (Authentication → URL Configuration), kein Code. `033_pose_figure.sql` ist geschrieben; `user_profiles.pose_figure` fehlt in der Live-DB noch (PostgREST `42703`). |
 
 ### Offen / Roadmap
 
@@ -624,8 +626,7 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 | **Product Tour** | Abgeschlossen (Session AO): `OnboardingSlides.tsx` |
 | **Offline-Strategie** | Explizite Offline-Phase: welche Features offline laufen sollen (offen); `isSupabaseConfigured` ist Konstante `true`, Hook-Fallbacks tot; Custom-WOD hat noch localStorage-Zweig im Hook |
 | **Block-Timer** | Pomodoro-artiger Arbeits-/Pausen-Timer im Routine-Pillar; konfigurierbar (Fokus-Zeit, Pause, Runden) |
-| **Migration ohne Nummer** | `add_push_subscriptions.sql` + `add_role_and_admin_rls.sql` auf Nummern-Präfix umstellen. `push_preferences` liegt in `030_push_preferences.sql`. |
-| **Supabase Redirect-URLs** | Konfigurieren für OAuth / Magic Link |
+| **Figur-Wahl in der DB** | `033_pose_figure.sql` einmal ausführen. Spalte `user_profiles.pose_figure` fehlt live (PostgREST `42703`). Datei nicht neu entwerfen. Der vorhandene Access-Token darf die SQL-API dieses Projekts nicht aufrufen. |
 | **packages/ui** | Shared Component Library befüllen |
 | **E2E-Tests** | Playwright o.ä. |
 | **Random-WOD-Picker (erweiterbar)** | Aktuell: Würfel-Button in WodList; offen: eigener Screen |
@@ -665,4 +666,4 @@ Dokumentiert behobene Bugs mit Kontext — damit Regressions erkannt werden und 
 
 ---
 
-*Letzte Aktualisierung: September 2026 — Session BF: Workout des Tages nur im WODs-Tab*
+*Letzte Aktualisierung: Oktober 2026 — Session BK: Alt-Migrationen nummeriert, Login-Redirects als Dashboard*
