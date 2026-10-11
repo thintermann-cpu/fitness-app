@@ -173,7 +173,7 @@ apps/web/src/
 │   ├── useBreathworkTechniques.ts  # Breathwork-Techniken
 │   ├── useFavorites.ts        # localStorage + Supabase Dual-Write, optimistic UI; content_type: wod | stretching_routine | meditation
 │   ├── useSubscription.ts     # Liest `subscription_status` + `trial_ends_at` aus `user_profiles` (authStore); gibt zurück: `status`, `isActive`, `isTrial`, `isExpired`, `trialDaysLeft`, `startCheckout(priceId)` (POST `/api/stripe/checkout` → redirect)
-│   ├── useAudio.ts            # `playGong`/`playBeep`/`playComplete` weiterhin Web Audio API (Oszillator-Töne); **`startBackground`/`stopBackground` nutzen jetzt `<audio loop>` mit echten MP3-Dateien** (`AMBIENT_FILE`-Map → `public/audio/ambient/*.mp3`) statt generierter Web-Audio-Buffer; `SoundKey` erweitert um `fire` | `night` (7 Sounds + `silence`); isMuted-Check via audioStore in allen play*-Funktionen + startBackground
+│   ├── useAudio.ts            # `playGong`/`playBeep`/`playComplete` weiterhin Web Audio API (Oszillator-Töne); **`startBackground`/`stopBackground` nutzen jetzt `<audio loop>` mit echten MP3-Dateien** (`AMBIENT_FILE`-Map → `public/audio/ambient/*.mp3`) statt generierter Web-Audio-Buffer; `SoundKey`: `bowl` `rain` `forest` `waves` `white_noise` `fire` `night` `wind` `harp` `zen_guitar` `deep_om` plus `silence`; isMuted-Check via audioStore in allen play*-Funktionen + startBackground
 │   ├── useAnalytics.ts        # Wrapper um posthog.capture: track(event, props?) — Events: meditation_started, yoga_flow_started, workout_completed, ambient_sound_selected
 │   └── useToast.ts            # Wrapper um toastStore: toast.success/error/info/warning/show
 ├── sw.ts                      # Service Worker (Workbox injectManifest; **NavigationRoute+NetworkFirst vor precacheAndRoute registriert** → kein Blank-Screen nach Cache-Clear; **StaleWhileRevalidate-Route für `/audio/ambient/*.mp3`** (cacheName `ambient-audio`, Offline-Cache); precaching + Push-Handler; gebaut zu dist/sw.js via vite-plugin-pwa)
@@ -190,7 +190,7 @@ apps/web/src/
     ├── onboarding-slides.json  # 5 Produkttour-Slides; Felder: id/emoji/title/subtitle/pillarColor + `pillars[]` (SlidePillar: label/color/emoji — Slide 2) + `subtitleExtra` (Slides 3+4); JSON-Datei, von OnboardingSlides.tsx geladen
     ├── whats-new.json          # What's-New-Daten (version/emoji/title/text); pro Release manuell aktualisieren
     └── audio/
-        ├── ambient/           # erwartet 7 CC0-MP3s (bowl/rain/forest/waves/whitenoise/fire/night.mp3); **Ordner leer im Repo** — `useAudio.startBackground()` findet die Dateien nicht
+        ├── ambient/           # 11 MP3s: 7 CC0 (bowl/rain/forest/waves/whitenoise/fire/night) + 4 generierte Loops (wind/harp/zen_guitar/deep_om); Quelle `SOURCES.txt`
         └── sessions/
             ├── sessions.json  # 7 geführte Sessions (body_scan/breathing/focus/sleep/morning/stress_relief); title und files je de/en; available sobald beide MP3s da sind
             └── meditation-ping.wav  # 528 Hz Sinus-Ping (1,4 s Decay), generiert via scripts/generate_ping.mjs
@@ -635,7 +635,7 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 
 ### Meditation Overhaul (geplant)
 
-**Ambient Sounds — Dateien liegen im Repo.** 7 MP3s in `public/audio/ambient/` (`bowl/rain/forest/waves/whitenoise/fire/night`), Quelle in `SOURCES.txt` (CC0 bzw. generiertes Rauschen). `useAudio.startBackground` spielt sie in einer Loop. Web Audio API bleibt für Gong/Beep/Complete. Kurztexte für Mobilität und Training: `apps/web/src/data/exerciseBlurbs.json` (de/en/es). Trainings-Frames: Pfade über `trainingFrames.ts`, Dateien unter `public/exercises/training` und `training-f`, freigeschaltet über `trainingFrameReady.json`.
+**Ambient Sounds — Dateien liegen im Repo.** 11 MP3s in `public/audio/ambient/`: 7 CC0-Feldaufnahmen (`bowl/rain/forest/waves/whitenoise/fire/night`, Rauschen generiert) und 4 generierte Loops (`wind/harp/zen_guitar/deep_om`). Quelle in `SOURCES.txt`. `AmbientPlayer` und `useAudio.startBackground` spielen sie in einer Loop; die Timer-Chips (freie Meditation, Custom Timer, Session) bieten dieselben Keys. Web Audio API bleibt für Gong/Beep/Complete. Kurztexte für Mobilität und Training: `apps/web/src/data/exerciseBlurbs.json` (de/en/es). Trainings-Frames: Pfade über `trainingFrames.ts`, Dateien unter `public/exercises/training` und `training-f`, freigeschaltet über `trainingFrameReady.json`.
 
 **Geführte Sessions mit TTS-Narration:** Sieben Sessions in `public/audio/sessions/sessions.json` (Körper-Scan 5 und 10, Atem 5, Fokus 10, Schlaf 15, Morgen 10, Stress 10), deutsch und englisch. `available` ist wahr, sobald beide MP3s da sind. Skript und Sprache kommen aus `scripts/build_guided_audio.py` (gpt-4o-mini und gpt-4o-mini-tts). Der Körper-Scan wird nicht neu erzeugt.
 

@@ -25,6 +25,10 @@ const SOUND_OPTIONS: { key: SoundKey; label: string }[] = [
   { key: 'white_noise', label: '〰 Rauschen' },
   { key: 'fire',        label: '🔥 Feuer' },
   { key: 'night',       label: '🦗 Nacht' },
+  { key: 'wind',        label: '💨 Wind' },
+  { key: 'harp',        label: '🎶 Harfe' },
+  { key: 'zen_guitar',  label: '🎸 Zen-Gitarre' },
+  { key: 'deep_om',     label: '🕉 Deep Om' },
 ]
 
 const PILLAR_COLOR = '#9B7FD4'

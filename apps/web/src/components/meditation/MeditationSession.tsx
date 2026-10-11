@@ -29,6 +29,10 @@ const T = {
       bowl:       'Klangschale',
       fire:       'Feuer',
       night:      'Nacht',
+      wind:       'Wind',
+      harp:       'Harfe',
+      zen_guitar: 'Zen-Gitarre',
+      deep_om:    'Deep Om',
     },
   },
   en: {
@@ -51,6 +55,10 @@ const T = {
       bowl:       'Singing Bowl',
       fire:       'Fire',
       night:      'Night',
+      wind:       'Wind',
+      harp:       'Harp',
+      zen_guitar: 'Zen Guitar',
+      deep_om:    'Deep Om',
     },
   },
   es: {
@@ -73,11 +81,15 @@ const T = {
       bowl:       'Cuenco',
       fire:       'Fuego',
       night:      'Noche',
+      wind:       'Viento',
+      harp:       'Arpa',
+      zen_guitar: 'Guitarra zen',
+      deep_om:    'Deep Om',
     },
   },
 }
 
-const SOUNDS: SoundKey[] = ['silence', 'rain', 'forest', 'waves', 'white_noise', 'bowl', 'fire', 'night']
+const SOUNDS: SoundKey[] = ['silence', 'rain', 'forest', 'waves', 'white_noise', 'bowl', 'fire', 'night', 'wind', 'harp', 'zen_guitar', 'deep_om']
 const SOUND_ICONS: Record<SoundKey, string> = {
   silence:    '🔇',
   rain:       '🌧',
@@ -87,6 +99,10 @@ const SOUND_ICONS: Record<SoundKey, string> = {
   bowl:       '🔔',
   fire:       '🔥',
   night:      '🦗',
+  wind:       '💨',
+  harp:       '🎶',
+  zen_guitar: '🎸',
+  deep_om:    '🕉',
 }
 
 type Lang = 'de' | 'en' | 'es'

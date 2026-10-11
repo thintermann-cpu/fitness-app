@@ -27,6 +27,12 @@ const SOUND_ICON: Record<string, string> = {
   waves:       '🌊',
   white_noise: '〰',
   bowl:        '🔔',
+  fire:        '🔥',
+  night:       '🦗',
+  wind:        '💨',
+  harp:        '🎶',
+  zen_guitar:  '🎸',
+  deep_om:     '🕉',
   silence:     '🔇',
 }
 
