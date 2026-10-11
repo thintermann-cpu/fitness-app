@@ -252,6 +252,7 @@ const SEEDS: Seed[] = [
   ['dead-hang', 'Dead Hangs', ['pull-up-bar'], ['dead hang', 'dead hangs']],
   ['floor-wiper', 'Floor Wipers', ['barbell'], ['floor wiper', 'floor wipers']],
   ['thruster-db-note', 'DB Hang Clean-to-Overhead', ['dumbbell'], ['db hang clean-to-overhead', 'db hang clean to overhead']],
+  ['pause', 'Pause', [], ['pause', 'rest', 'break', 'pausen']],
 ]
 
 const EXERCISES: CatalogExercise[] = []
@@ -936,9 +937,61 @@ function minuteCycleParts(text: string): string[] | null {
   return parts
 }
 
+/** "Alt: Push-ups / Ring Rows" and "Push-up + Burpee (alt)" are separate stations. */
+function alternatingParts(text: string): string[] | null {
+  const trimmed = text.trim()
+  const lead = trimmed.match(/^(?:alt|tabata)\s*:\s*(.+)$/i)
+  const marked = trimmed.match(/^(.+?)\s*\(alt\)\s*$/i)
+  const body = (lead?.[1] ?? marked?.[1])?.trim()
+  if (body) {
+    const parts = body.split(/\s*(?:\/|&|\+)\s*/).map((part) => part.trim()).filter(Boolean)
+    if (parts.length >= 2) return parts
+  }
+  const timed = trimmed.match(/^(\d+\s*s)\s+(.+?)\s*\/\s*(\d+\s*s)\s+(.+)$/i)
+  if (!timed) return null
+  return [`${timed[1]} ${timed[2]}`.trim(), `${timed[3]} ${timed[4]}`.trim()]
+}
+
+/**
+ * EMOM intervals must be a multiple of the exercise count.
+ * A stored length that already divides stays. Empty length defaults to three passes.
+ * Otherwise the nearest multiple; a tie prefers three passes when that is one of the two, else up.
+ */
+export function emomIntervalCount(exerciseCount: number, stored = 0): number {
+  const count = Math.max(1, Math.floor(exerciseCount) || 1)
+  const programmed = Math.floor(stored)
+  if (programmed <= 0) return count * 3
+  if (programmed % count === 0) return programmed
+  const down = Math.floor(programmed / count) * count
+  const up = down + count
+  if (down < count) return up
+  if (programmed - down === up - programmed) {
+    const three = count * 3
+    if (three === down || three === up) return three
+    return up
+  }
+  return programmed - down < up - programmed ? down : up
+}
+
+/** Rewrite a leading "10 Runden" or "10 Min" after the EMOM length changes. */
+export function alignEmomRoundLabel(scheme: string, from: number, to: number): string {
+  if (!scheme || from === to || from <= 0) return scheme
+  return scheme.replace(new RegExp(`^${from}(\\s*(?:runden|rounds|min)\\b)`, 'i'), `${to}$1`)
+}
+
+function pauseStation(name: string): { name: string; detail?: string } | null {
+  const trimmed = name.trim()
+  if (/^(pause|rest|break|pausen)$/i.test(normKey(trimmed))) return { name: 'Pause' }
+  const timed = trimmed.match(/^(\d+(?:[.,]\d+)?\s*(?:s|sec|secs|sek|min|mins|minute|minutes))\s+(pause|rest|break|pausen)$/i)
+  if (!timed) return null
+  return { name: 'Pause', detail: timed[1].replace(/\s+/g, ' ') }
+}
+
 function splitMovementText(text: string): string[] {
   const cycle = minuteCycleParts(text)
   if (cycle) return cycle.flatMap((part) => splitMovementText(part))
+  const alternating = alternatingParts(text)
+  if (alternating) return alternating.flatMap((part) => splitMovementText(part))
   const parts: string[] = []
   let current = ''
   let depth = 0
@@ -990,8 +1043,8 @@ function movementParts(text: string): string[] {
       .trim()))
     .filter((part) => {
       if (!part) return false
-      if (/^(pause|vorgabe)\b/i.test(part)) return false
-      if (/^\d+\s*s\s*pause/i.test(part)) return false
+      if (/^vorgabe\b/i.test(part)) return false
+      if (/^continue until failure$/i.test(part)) return false
       return /[a-zäöü]/i.test(part)
     })
 }
@@ -1068,12 +1121,18 @@ export function presentCatalogWorkout(input: {
     || setPairs.length >= 2
     || (setPairs.length === 1 && /sätze|sets/i.test(`${tail} ${description}`) && !roundish)
 
-  let lines: PrescriptionLine[] = rawLines.map((line) => ({
-    name: line.name,
-    detail: line.detail,
-    sets: line.sets,
-    repCount: line.repCount,
-  }))
+  let lines: PrescriptionLine[] = rawLines.map((line) => {
+    const station = pauseStation(line.name)
+    if (!station) {
+      return { name: line.name, detail: line.detail, sets: line.sets, repCount: line.repCount }
+    }
+    return {
+      name: station.name,
+      detail: line.detail ?? station.detail,
+      sets: line.sets,
+      repCount: line.repCount,
+    }
+  })
 
   if (strength) {
     const shared = eachSet

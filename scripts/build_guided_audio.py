@@ -109,12 +109,18 @@ def post(url: str, payload: dict, accept: str | None = None) -> bytes:
 
 def write_script(session: dict, lang: str) -> str:
     words = session["minutes"] * 165
+    floor = int(words * 0.9)
+    cap = int(words * 1.12)
     path = TEXT_ROOT / lang / f"{session['id']}.txt"
     audio = AUDIO_ROOT / lang / f"{session['id']}.mp3"
+    # Shipped audio stays. A new run must not rewrite the body scan or a finished take.
     if path.exists() and audio.exists() and audio.stat().st_size > 50_000:
         return path.read_text(encoding="utf-8")
-    if path.exists() and len(path.read_text(encoding="utf-8").split()) >= int(words * 0.9):
-        return path.read_text(encoding="utf-8")
+    if path.exists():
+        existing = path.read_text(encoding="utf-8")
+        count = len(existing.split())
+        if floor <= count <= cap:
+            return existing
     language = "German" if lang == "de" else "English"
     address = "du" if lang == "de" else "you"
     ending = (
@@ -130,7 +136,7 @@ def write_script(session: dict, lang: str) -> str:
                 "role": "system",
                 "content": (
                     f"You write a spoken {language} meditation script. "
-                    f"It MUST contain at least {words} words. If you are short, add more slow breath cycles and sensory detail until you pass {words} words. "
+                    f"It must contain between {floor} and {cap} words. Do not exceed {cap} words. "
                     f"Address the listener as {address}. Calm, concrete, no medical claims, no music cues, "
                     "no stage directions in brackets. Short paragraphs. Use ellipses sparingly for breaths. "
                     "The script is read aloud at about 150 words per minute and must fill the requested time. "
@@ -169,6 +175,19 @@ def write_script(session: dict, lang: str) -> str:
             ],
         }))
         text = f"{text}\n\n{extra['choices'][0]['message']['content'].strip()}"
+    if len(text.split()) > cap:
+        kept: list[str] = []
+        total = 0
+        for para in text.split("\n"):
+            piece = para.strip()
+            if not piece:
+                continue
+            count = len(piece.split())
+            if total + count > cap and total >= floor:
+                break
+            kept.append(piece)
+            total += count
+        text = "\n\n".join(kept)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text + "\n", encoding="utf-8")
     print(f"script {lang}/{session['id']} words={len(text.split())}", flush=True)

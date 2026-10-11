@@ -1222,5 +1222,11 @@
     "de": "Führe die Hanteln in den Rack und drücke sie dann über Kopf.",
     "en": "Bring the dumbbells into the rack and then press them overhead.",
     "es": "Lleva las mancuernas al rack y luego presiona hacia arriba."
+  },
+  "pause": {
+    "kind": "training",
+    "de": "Steh oder lieg still und atme ruhig, bis die Zeit um ist.",
+    "en": "Stand or lie still and breathe quietly until the time is up.",
+    "es": "Quédate quieto, de pie o tumbado, y respira con calma hasta que se acabe el tiempo."
   }
 }

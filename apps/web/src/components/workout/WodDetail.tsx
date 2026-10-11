@@ -5,7 +5,7 @@ import { useAnalytics } from '../../hooks/useAnalytics'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { WOD_TYPE_TO_MODE } from '../../lib/timerLabels'
-import { composeWorkoutScheme, localizeWorkoutExerciseName, parseWodExercises } from '../../lib/exerciseCatalog'
+import { composeWorkoutScheme, emomIntervalCount, localizeWorkoutExerciseName, parseWodExercises } from '../../lib/exerciseCatalog'
 import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { useWodHistory } from '../../hooks/useWodHistory'
@@ -161,6 +161,15 @@ export function WodDetail({ wodName, onBack }: Props) {
     setAdjustOpen(false)
     setLaunch(null)
   }, [wod?.id, wod?.exercises, wod?.estimated_minutes, wod?.runden, wod?.reps, wod?.description, lang])
+
+  useEffect(() => {
+    if (!wod) return
+    const mode = wod.prescription?.kind === 'strength'
+      ? 'krafttraining'
+      : (WOD_TYPE_TO_MODE[wod.type] ?? 'fortime')
+    if (mode !== 'emom' || sessionItems.length < 2) return
+    setSessionMinutes((current) => emomIntervalCount(sessionItems.length, current))
+  }, [wod, sessionItems.length])
 
   if (isLoading) {
     return (
@@ -372,7 +381,7 @@ export function WodDetail({ wodName, onBack }: Props) {
             tabataRest: customWorkout.tabataRest,
             tabataRounds: customWorkout.tabataRounds,
             emomInterval: customWorkout.emomInterval,
-            emomRounds: customWorkout.emomRounds,
+            emomRounds: customWorkout.emomRounds ?? (customWorkout.mode === 'emom' ? customWorkout.minutes : undefined),
           }}
           onStart={(mode, minutes, withWarmup, kraftConfig, exercises, _name, timerCfg) => {
             beginFromWizard(mode, minutes, withWarmup, kraftConfig, exercises, timerCfg)
@@ -399,6 +408,16 @@ export function WodDetail({ wodName, onBack }: Props) {
     sessionMinutes !== catalogMinutes
     || exerciseSig(sessionItems) !== exerciseSig(catalogItems)
     || sessionScheme !== catalogScheme
+  const emomSlots = timerMode === 'emom' ? sessionItems.length : 0
+  const sessionMinuteLabel = emomSlots > 1 && sessionMinutes % emomSlots === 0
+    ? `${sessionMinutes} min · ${sessionMinutes / emomSlots}×`
+    : `${sessionMinutes} min`
+  function nudgeSessionMinutes(current: number, direction: -1 | 1) {
+    if (emomSlots < 2) return Math.min(180, Math.max(1, current + direction))
+    const max = Math.floor(180 / emomSlots) * emomSlots
+    const base = emomIntervalCount(emomSlots, current)
+    return Math.min(max, Math.max(emomSlots, base + direction * emomSlots))
+  }
 
   function saveAsCustom() {
     const name = `${catalogWod.name} (angepasst)`
@@ -529,19 +548,19 @@ export function WodDetail({ wodName, onBack }: Props) {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setSessionMinutes((m) => Math.max(1, m - 1))}
+                onClick={() => setSessionMinutes((current) => nudgeSessionMinutes(current, -1))}
                 className="w-9 h-9 rounded-xl text-lg font-semibold"
                 style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid rgba(255,255,255,0.08)' }}
                 aria-label="Dauer minus"
               >
                 −
               </button>
-              <span className="text-sm font-semibold text-[var(--color-text)] tabular-nums w-16 text-center">
-                {sessionMinutes} min
+              <span className="text-sm font-semibold text-[var(--color-text)] tabular-nums min-w-16 text-center">
+                {sessionMinuteLabel}
               </span>
               <button
                 type="button"
-                onClick={() => setSessionMinutes((m) => Math.min(180, m + 1))}
+                onClick={() => setSessionMinutes((current) => nudgeSessionMinutes(current, 1))}
                 className="w-9 h-9 rounded-xl text-lg font-semibold"
                 style={{ backgroundColor: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid rgba(255,255,255,0.08)' }}
                 aria-label="Dauer plus"
@@ -560,7 +579,7 @@ export function WodDetail({ wodName, onBack }: Props) {
               )}
             </div>
           ) : (
-            <p className="text-sm font-semibold text-[var(--color-text)] tabular-nums">{sessionMinutes} min</p>
+            <p className="text-sm font-semibold text-[var(--color-text)] tabular-nums">{sessionMinuteLabel}</p>
           )}
           <div className="flex gap-2 mt-3">
             <button
@@ -808,6 +827,8 @@ export function WodDetail({ wodName, onBack }: Props) {
           exercises: sessionItems,
           scheme: sessionScheme,
           restBetweenSets: catalogWod.prescription?.restBetweenSets,
+          emomInterval: timerMode === 'emom' ? 1 : undefined,
+          emomRounds: timerMode === 'emom' ? sessionMinutes : undefined,
         }}
         onStart={(mode, minutes, withWarmup, kraftConfig, exercises, _name, timerCfg) => {
           beginFromWizard(mode, minutes, withWarmup, kraftConfig, exercises, timerCfg)

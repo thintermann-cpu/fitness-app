@@ -389,7 +389,7 @@ Ohne gewählte Kachel zeigt die Liste alle sichtbaren Workouts. Eine Kachel filt
 |---|---|
 | **AMRAP** | Gesamtzeit (frei wählbar) |
 | **ForTime** | Optionaler Zeit-Cap |
-| **EMOM** | Intervall-Dauer + Anzahl Runden |
+| **EMOM** | Intervall-Dauer + Anzahl Runden. Die Rundenzahl ist ein Vielfaches der Übungen (4 Übungen → 12 Runden als Default, gespeicherte Vielfache bleiben). |
 | **Tabata** | Work-Zeit / Pause-Zeit / Anzahl Runden |
 
 Alle Modi nutzen den drift-korrigierten `timer.worker.js` im Hintergrund.
@@ -606,7 +606,7 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 | Bereich | Inhalt |
 |---|---|
 | **Übungs-Grafiken** | Vor Ambient-MP3s. **Mobilität zuerst**, gezeichnet realistisch, in der Regel 3 Posen (Start/Mitte/Ende) als Einzelbilder über `ExerciseKeyframes`. Eine 4. Pose nur wenn die Bewegung sie braucht. Kein GIF, kein Video, keine Strichmännchen als Zielbild (Strichfigur nur Fallback, solange Frames fehlen). **Stand:** alle 65 Mobilitätsübungen liegen in `public/exercises/mobility/` (Mann) und `public/exercises/mobility-f/` (Frau). Die Wahl steht im Profil und im Onboarding. Vorlage in `docs/mobility-poses.md`. Training später, UI schlank: Info-Zeichen mit Kurztext, optional dieselben Frames, plus YouTube. Einbettung im Sheet vs. externer Link offen (GDPR). |
-| **Übungs-Katalog** | Umgesetzt in `lib/exerciseCatalog.ts`. Kanonische Übung (Name, Aliase DE/EN, Equipment). Der Übungsname ist kein Freitext. Ablauf (z. B. „3 Runden · 21-15-9“) und die Angabe pro Übung (Reps, Distanz) bleiben erhalten und sind editierbar. Weicht die Rundenzahl im Übungstext vom Feld `runden` ab, gilt der Text. „Start Timer“ und der Start eines eigenen Workouts öffnen zuerst den Timer-Wizard (Übungen vorausgefüllt, dann Dauer, dann Warm-up). Warm-up hat drei Wahlen: Keins, Kurz (3 min: Armkreisen, Inchworms, Ausfallschritte, Jumping Jacks, Liegestütze) und Standard (4 min). Der Countdown startet erst danach. Frames und YouTube-Id folgen mit den Grafiken. Mobilität bleibt bei `stretching_exercises`. |
+| **Übungs-Katalog** | Umgesetzt in `lib/exerciseCatalog.ts`. Kanonische Übung (Name, Aliase DE/EN, Equipment). Der Übungsname ist kein Freitext. Pause (Aliase Rest, Break) ist im Katalog und in jedem Übungs-Editor wählbar; eine Pause im Ablauf ist eine eigene Station, ein Pausenhinweis in der Beschreibung bleibt ein Hinweis. Tabata-Zeilen mit `Alt:` oder `(alt)` sowie `Tabata: A / B` werden einzelne Übungen. Die EMOM-Dauer ist ein Vielfaches der Übungszahl. Ablauf (z. B. „3 Runden · 21-15-9“) und die Angabe pro Übung (Reps, Distanz) bleiben erhalten und sind editierbar. Weicht die Rundenzahl im Übungstext vom Feld `runden` ab, gilt der Text. „Start Timer“ und der Start eines eigenen Workouts öffnen zuerst den Timer-Wizard (Übungen vorausgefüllt, dann Dauer, dann Warm-up). Warm-up hat drei Wahlen: Keins, Kurz (3 min: Armkreisen, Inchworms, Ausfallschritte, Jumping Jacks, Liegestütze) und Standard (4 min). Der Countdown startet erst danach. Frames und YouTube-Id folgen mit den Grafiken. Mobilität bleibt bei `stretching_exercises`. |
 | **Training-Suche Equipment** | Umgesetzt. Wörter wie Kurzhantel/Klimmzug werden Equipment bzw. Übung. Anzahl: Beliebig, 1, 2, 3, Mehr (4+). Beliebig plus genanntes Gerät heißt: dieses Gerät ist dabei, weitere Geräte bleiben offen. Körpergewicht zählt nicht, ein Kurzhantel-Paar ist ein Typ. Anzahl 1 heißt nur dieses Gerät. Ort-Kacheln sind aus, solange Equipment in der Suche steht. |
 | **Landingpage (Erweiterung)** | Waitlist-Integration; Pricing-CTAs live (Stripe-Checkout aktiv) |
 | **Stripe (Erweiterung)** | Customer Portal, Upgrade/Downgrade-Flow; Rechnungs-E-Mails |
@@ -637,11 +637,7 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 
 **Ambient Sounds — Dateien liegen im Repo.** 7 MP3s in `public/audio/ambient/` (`bowl/rain/forest/waves/whitenoise/fire/night`), Quelle in `SOURCES.txt` (CC0 bzw. generiertes Rauschen). `useAudio.startBackground` spielt sie in einer Loop. Web Audio API bleibt für Gong/Beep/Complete. Kurztexte für Mobilität und Training: `apps/web/src/data/exerciseBlurbs.json` (de/en/es). Trainings-Frames: Pfade über `trainingFrames.ts`, Dateien unter `public/exercises/training` und `training-f`, freigeschaltet über `trainingFrameReady.json`.
 
-**Geführte Sessions mit TTS-Narration (Schritt 2):**
-- 10 strukturierte Meditationen mit Phasentexten (`MEDITATION_SCRIPTS_DE.md` fertig)
-- Narration via OpenAI TTS API (~$2 für alle ~90 Clips)
-- Ablage: `apps/web/public/audio/sessions/[session-id]/[phase].mp3`
-- Guided Session Player erweitern um Audio-Playback
+**Geführte Sessions mit TTS-Narration:** Sieben Sessions in `public/audio/sessions/sessions.json` (Körper-Scan 5 und 10, Atem 5, Fokus 10, Schlaf 15, Morgen 10, Stress 10), deutsch und englisch. `available` ist wahr, sobald beide MP3s da sind. Skript und Sprache kommen aus `scripts/build_guided_audio.py` (gpt-4o-mini und gpt-4o-mini-tts). Der Körper-Scan wird nicht neu erzeugt.
 
 **Reihenfolge:** Übungs-Grafiken (Training + Mobilität) — danach Ambient-Dateien ins Repo — danach TTS-Script (Datei fehlt noch).
 
