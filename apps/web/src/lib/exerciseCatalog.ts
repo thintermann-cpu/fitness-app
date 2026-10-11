@@ -928,7 +928,17 @@ function canonTimerType(type: string): string {
   return type.trim()
 }
 
+/** "Min 1: 15 V-ups | Min 2: 20 KB Swings" is one exercise per minute, rotating in order. */
+function minuteCycleParts(text: string): string[] | null {
+  const parts = text.split(/\s*\|\s*/).map((part) => part.trim()).filter(Boolean)
+  if (parts.length < 2) return null
+  if (!parts.every((part) => /^min\s+\d+\s*:/i.test(part))) return null
+  return parts
+}
+
 function splitMovementText(text: string): string[] {
+  const cycle = minuteCycleParts(text)
+  if (cycle) return cycle.flatMap((part) => splitMovementText(part))
   const parts: string[] = []
   let current = ''
   let depth = 0
