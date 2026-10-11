@@ -1,7 +1,19 @@
 import { useRef, useCallback, useMemo } from 'react'
 import { useAudioStore } from '../store/audioStore'
 
-export type SoundKey = 'rain' | 'forest' | 'waves' | 'white_noise' | 'bowl' | 'fire' | 'night' | 'silence'
+export type SoundKey =
+  | 'rain'
+  | 'forest'
+  | 'waves'
+  | 'white_noise'
+  | 'bowl'
+  | 'fire'
+  | 'night'
+  | 'wind'
+  | 'harp'
+  | 'zen_guitar'
+  | 'deep_om'
+  | 'silence'
 
 const AMBIENT_FILE: Partial<Record<SoundKey, string>> = {
   bowl:        '/audio/ambient/bowl.mp3',
@@ -11,6 +23,10 @@ const AMBIENT_FILE: Partial<Record<SoundKey, string>> = {
   white_noise: '/audio/ambient/whitenoise.mp3',
   fire:        '/audio/ambient/fire.mp3',
   night:       '/audio/ambient/night.mp3',
+  wind:        '/audio/ambient/wind.mp3',
+  harp:        '/audio/ambient/harp.mp3',
+  zen_guitar:  '/audio/ambient/zen_guitar.mp3',
+  deep_om:     '/audio/ambient/deep_om.mp3',
 }
 
 export function useAudio() {

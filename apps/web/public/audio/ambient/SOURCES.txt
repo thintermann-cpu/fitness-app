@@ -5,5 +5,9 @@ rain.mp3       Spectrally Matched Rain Ambient, Part 5 — ekilyekil — Freesou
 forest.mp3     Forest birds, ambient seamless loop — Magnesus — Freesound 723913
 waves.mp3      Gentle Ocean Waves Loop — kkenny101 — Freesound 852826
 whitenoise.mp3 Generated white noise (no third-party recording)
+wind.mp3       Generated wind loop (filtered noise, no third-party recording)
+harp.mp3       Generated harp loop (Karplus-Strong, no third-party recording)
+zen_guitar.mp3 Generated zen-guitar loop (Karplus-Strong, no third-party recording)
+deep_om.mp3    Generated deep-om drone (no third-party recording)
 fire.mp3       Crackling Flames (loop) — NickTayloe — Freesound 813328
 night.mp3      Crickets during the night, close to the beach in Mexico — felix.blume — Freesound 479041
