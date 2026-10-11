@@ -15,6 +15,8 @@ import { WorkoutCountdown } from '../components/shared/WorkoutCountdown'
 import { useCustomWorkouts } from '../hooks/useCustomWorkouts'
 import { type CustomWorkout, type WizardExercise } from '../lib/customWorkouts'
 import { type TimerMode } from '../lib/timerLabels'
+import { isChained, isWorkBlock, seedFromBlock, type WorkoutBlock } from '../lib/workoutBlocks'
+import { BlockSession } from '../components/workout/BlockSession'
 
 type Tab = 'wods' | 'timer' | 'history'
 
@@ -48,6 +50,7 @@ type TimerConfig = {
   tabataWork?: number; tabataRest?: number; tabataRounds?: number
   emomInterval?: number; emomRounds?: number
   scheme?: string
+  blocks?: WorkoutBlock[]
 }
 
 export function WorkoutPage() {
@@ -104,6 +107,7 @@ export function WorkoutPage() {
         emomInterval: timerCfg?.emomInterval,
         emomRounds:   timerCfg?.emomRounds,
         scheme:       timerCfg?.scheme,
+        blocks:       timerCfg?.blocks,
       })
     }
     setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, adHocLog: true, ...timerCfg })
@@ -131,6 +135,7 @@ export function WorkoutPage() {
       emomInterval: timerCfg?.emomInterval,
       emomRounds:   timerCfg?.emomRounds,
       scheme:       timerCfg?.scheme,
+      blocks:       timerCfg?.blocks,
     })
   }
 
@@ -145,19 +150,22 @@ export function WorkoutPage() {
   }
 
   function handleStartSaved(w: CustomWorkout) {
+    const first = w.blocks?.find(isWorkBlock)
+    const seed = first ? seedFromBlock(first) : null
     setAdhocPreset({
       name: w.name,
-      mode: w.mode,
-      minutes: w.minutes,
-      exercises: w.exercises,
-      scheme: w.scheme,
-      restBetweenSets: w.restBetweenSets,
-      restBetweenExercises: w.restBetweenExercises,
-      tabataWork: w.tabataWork,
-      tabataRest: w.tabataRest,
-      tabataRounds: w.tabataRounds,
-      emomInterval: w.emomInterval,
-      emomRounds: w.emomRounds,
+      mode: seed?.mode ?? w.mode,
+      minutes: seed?.minutes ?? w.minutes,
+      exercises: seed?.exercises ?? w.exercises,
+      scheme: seed?.scheme ?? w.scheme,
+      restBetweenSets: seed?.restBetweenSets ?? w.restBetweenSets,
+      restBetweenExercises: seed?.restBetweenExercises ?? w.restBetweenExercises,
+      tabataWork: seed?.tabataWork ?? w.tabataWork,
+      tabataRest: seed?.tabataRest ?? w.tabataRest,
+      tabataRounds: seed?.tabataRounds ?? w.tabataRounds,
+      emomInterval: seed?.emomInterval ?? w.emomInterval,
+      emomRounds: seed?.emomRounds ?? w.emomRounds,
+      blocks: w.blocks,
     })
     setAdhocKey((key) => key + 1)
     setAdhocOpen(true)
@@ -294,7 +302,16 @@ export function WorkoutPage() {
           <div className="py-4">
             {timerConfig ? (
               <>
-                {timerConfig.mode === 'krafttraining' && timerConfig.kraftConfig ? (
+                {timerConfig.blocks && isChained(timerConfig.blocks) ? (
+                  showWarmupTimer || showWorkoutCountdown ? null : (
+                    <BlockSession
+                      key={timerKey}
+                      blocks={timerConfig.blocks}
+                      workoutName={timerConfig.workoutName}
+                      onSessionEnd={() => window.dispatchEvent(new CustomEvent('carveout:workout-completed'))}
+                    />
+                  )
+                ) : timerConfig.mode === 'krafttraining' && timerConfig.kraftConfig ? (
                   showWarmupTimer || showWorkoutCountdown ? null : (
                   <KraftTimerView
                     exercises={timerConfig.kraftConfig.exercises}

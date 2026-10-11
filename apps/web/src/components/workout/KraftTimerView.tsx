@@ -31,6 +31,9 @@ interface Props {
   workoutName?: string
   onComplete?: () => void
   onShowHistory?: () => void
+  /** Start the countdown immediately and hand the session back when the sets are done. */
+  autoStart?: boolean
+  onChainedFinish?: () => void
 }
 
 type KraftPhase = 'idle' | 'work' | 'rest' | 'done'
@@ -47,12 +50,12 @@ const WEIGHT_COLORS = {
   schwer: '#EF4444',
 }
 
-export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercises, workoutName, onComplete, onShowHistory: _onShowHistory }: Props) {
+export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercises, workoutName, onComplete, onShowHistory: _onShowHistory, autoStart = false, onChainedFinish }: Props) {
   const [phase,       setPhase]       = useState<KraftPhase>('idle')
   const [exIdx,       setExIdx]       = useState(0)
   const [setIdx,      setSetIdx]      = useState(0)
   const [timeLeft,    setTimeLeft]    = useState(0)
-  const [showCountdown, setShowCountdown] = useState(false)
+  const [showCountdown, setShowCountdown] = useState(autoStart)
   const restTypeRef      = useRef<'set' | 'exercise'>('set')
   const wakeLockRef      = useRef<{ release: () => Promise<void> } | null>(null)
   const navigate         = useNavigate()
@@ -152,7 +155,6 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   }
 
   function finishWorkout() {
-    setPhase('done')
     if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
     const totalSetsDone = exercises.reduce((acc, e) => acc + (e.sets ?? 3), 0)
     addEntry.mutate({
@@ -160,6 +162,11 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
       score_type: 'reps',
       score_value: String(totalSetsDone),
     })
+    if (onChainedFinish) {
+      onChainedFinish()
+      return
+    }
+    setPhase('done')
     onComplete?.()
   }
 

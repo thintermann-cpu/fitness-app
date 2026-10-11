@@ -29,6 +29,8 @@ interface Props {
   initialTabataRounds?: number
   initialEmomInterval?: number
   initialEmomRounds?: number
+  /** Log this part, then return to the block runner instead of the done screen. */
+  onChainedFinish?: () => void
 }
 
 interface TickData {
@@ -141,6 +143,7 @@ export function TimerView({
   warmupPending, workoutName,
   initialTabataWork, initialTabataRest, initialTabataRounds,
   initialEmomInterval, initialEmomRounds,
+  onChainedFinish,
 }: Props) {
   const autoStart = !!initialMode
 
@@ -183,6 +186,9 @@ export function TimerView({
   const workerRef = useRef<Worker | null>(null)
   const onCompleteRef = useRef(onComplete)
   onCompleteRef.current = onComplete
+  const onChainedFinishRef = useRef(onChainedFinish)
+  onChainedFinishRef.current = onChainedFinish
+  const handedRef = useRef(false)
   const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
   const autoStartedRef = useRef(false)
 
@@ -210,7 +216,7 @@ export function TimerView({
         finalElapsedRef.current = tickRef.current.elapsed
         setIsRunning(false)
         setIsComplete(true)
-        onCompleteRef.current?.()
+        if (!onChainedFinishRef.current) onCompleteRef.current?.()
       } else if (type === 'beep') {
         beep(e.data.beepType as 'start' | 'interval' | 'end' | 'countdown')
       } else if (type === 'reset') {
@@ -272,22 +278,28 @@ export function TimerView({
 
   // Ad-hoc history logging: uses ref so elapsed value is always current at fire time
   useEffect(() => {
-if (!adHocLog || !isComplete || loggedRef.current) return
-    loggedRef.current = true
-    const tally = tallyRef.current
-    const tallyNote = tally.rounds || tally.reps
-      ? `${tally.rounds} Runden${tally.reps ? ` + ${tally.reps} Reps` : ''}`
-      : undefined
-    const counted = mode === 'amrap' && (tally.rounds > 0 || tally.reps > 0)
-    addEntry.mutate({
-      wod_name: workoutName ?? `Ad-hoc ${MODE_TO_WOD_TYPE[mode]}`,
-      score_type: counted ? 'rounds' : 'time',
-      score_value: counted
-        ? (tally.reps ? `${tally.rounds}+${tally.reps}` : String(tally.rounds))
-        : formatMs(finalElapsedRef.current > 0 ? finalElapsedRef.current : tickRef.current.elapsed),
-      notes: tallyNote,
-      exercises: exercises && exercises.length > 0 ? exercises : undefined,
-    })
+    if (!isComplete) return
+    if (adHocLog && !loggedRef.current) {
+      loggedRef.current = true
+      const tally = tallyRef.current
+      const tallyNote = tally.rounds || tally.reps
+        ? `${tally.rounds} Runden${tally.reps ? ` + ${tally.reps} Reps` : ''}`
+        : undefined
+      const counted = mode === 'amrap' && (tally.rounds > 0 || tally.reps > 0)
+      addEntry.mutate({
+        wod_name: workoutName ?? `Ad-hoc ${MODE_TO_WOD_TYPE[mode]}`,
+        score_type: counted ? 'rounds' : 'time',
+        score_value: counted
+          ? (tally.reps ? `${tally.rounds}+${tally.reps}` : String(tally.rounds))
+          : formatMs(finalElapsedRef.current > 0 ? finalElapsedRef.current : tickRef.current.elapsed),
+        notes: tallyNote,
+        exercises: exercises && exercises.length > 0 ? exercises : undefined,
+      })
+    }
+    if (onChainedFinishRef.current && !handedRef.current) {
+      handedRef.current = true
+      onChainedFinishRef.current()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComplete])
 
@@ -386,6 +398,7 @@ if (!adHocLog || !isComplete || loggedRef.current) return
     setIsRunning(false)
     setIsPaused(true)
     setIsComplete(true)
+    if (!onChainedFinishRef.current) onCompleteRef.current?.()
   }, [])
 
   const lang       = useAuthStore((s) => s.profile?.language ?? 'de')
@@ -427,6 +440,8 @@ if (!adHocLog || !isComplete || loggedRef.current) return
       }
     }
   }
+
+  if (isComplete && onChainedFinish) return null
 
   if (isComplete) {
     const isDe = lang === 'de'

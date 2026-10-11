@@ -8,20 +8,21 @@ import {
   deleteLocalWorkout,
   isStaleSingleExerciseWorkout,
 } from '../lib/customWorkouts'
+import { readBlocks } from '../lib/workoutBlocks'
 
 interface DbRow {
   id: string
   user_id: string
   name: string
   mode: string
-  config: Record<string, number | string | string[] | undefined>
+  config: Record<string, unknown>
   exercises: CustomWorkout['exercises']
   with_warmup: boolean
   created_at: string
   updated_at: string
 }
 
-function num(v: number | string | string[] | undefined): number | undefined {
+function num(v: unknown): number | undefined {
   return typeof v === 'number' ? v : undefined
 }
 
@@ -46,6 +47,7 @@ function dbToWorkout(row: DbRow): CustomWorkout {
     emomRounds:           num(cfg.emomRounds),
     equipment,
     scheme: typeof cfg.scheme === 'string' ? cfg.scheme : undefined,
+    blocks: readBlocks(cfg.blocks),
   }
 }
 
@@ -66,6 +68,7 @@ function workoutToDb(w: CustomWorkout, userId: string) {
       emomRounds:           w.emomRounds,
       equipment:            w.equipment,
       scheme:               w.scheme,
+      blocks:               w.blocks,
     },
     exercises:   w.exercises,
     with_warmup: false,
