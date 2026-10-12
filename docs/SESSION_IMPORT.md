@@ -21,7 +21,7 @@ Nur die Teile aufnehmen, die die Session braucht. Das Beispiel unten zeigt jedes
 - Namen frei. Katalognamen bekommen Abbildung und Kurztext, wenn der Name trifft.
 - `note`: Ausführung, Tempo oder Form. Optional, bis 140 Zeichen.
 - `sides`: nur bei Ablauf-Übungen. `1` oder `2`. Bei `2` läuft die Zeit ein zweites Mal mit „andere Seite“.
-- Kraft: `sets` 1–20, `reps` 1–100. `weight` ist eine kg-Angabe: `100`, `"80 kg"` oder `"82,5 kg"`. Mehrere Lasten bleiben Text, zum Beispiel `"2×24 kg"` oder `"60/70/80"`. `leicht`, `mittel` und `schwer` gehen weiter. `restBetweenSets` und `restBetweenExercises` in Sekunden, 0–600. Standard 90 und 60.
+- Kraft: `sets` 1–20, `reps` 1–100. `weight` ist eine kg-Angabe (`100`, `"22.5 kg"`, `"82,5 kg"`) oder ein kurzer Text bis 40 Zeichen (`"2x 20-22.5 kg"`, `"Bodyweight"`, `"60/70/80"`). `leicht`, `mittel` und `schwer` gehen weiter. `restBetweenSets` und `restBetweenExercises` in Sekunden, 0–600. Standard 90 und 60.
 - `supersetWithPrevious: true` koppelt die Übung an die direkt davor. Die Sätze gelten für die ganze Gruppe, die Reps bleiben pro Übung. An der ersten Übung eines Teils wird das Flag ignoriert.
 - Pause: `seconds` 1–3600.
 - EMOM: `intervalMin` 1–10, `rounds` 1–60. Pro Übung `detail` für Reps oder Distanz.
