@@ -42,6 +42,10 @@ export function ExerciseListEditor({
     onChange(items.map((item) => (item.id === id ? { ...item, detail: detail || undefined } : item)))
   }
 
+  const updateNote = (id: string, note: string) => {
+    onChange(items.map((item) => (item.id === id ? { ...item, note: note.trim() ? note : undefined } : item)))
+  }
+
   const remove = (id: string) => onChange(items.filter((e) => e.id !== id))
 
   const moveUp = (i: number) => {
@@ -77,15 +81,27 @@ export function ExerciseListEditor({
               {ex.name}
             </span>
             {fromCatalog ? (
-              <input
-                type="text"
-                value={ex.detail ?? ''}
-                onChange={(e) => updateDetail(ex.id, e.target.value)}
-                placeholder="Reps, Distanz…"
-                aria-label={`Angabe zu ${ex.name}`}
-                className="w-full bg-transparent text-xs outline-none mt-0.5"
-                style={{ color: 'var(--color-text-muted)' }}
-              />
+              <>
+                <input
+                  type="text"
+                  value={ex.detail ?? ''}
+                  onChange={(e) => updateDetail(ex.id, e.target.value)}
+                  placeholder="Reps, Distanz…"
+                  aria-label={`Angabe zu ${ex.name}`}
+                  className="w-full bg-transparent text-xs outline-none mt-0.5"
+                  style={{ color: 'var(--color-text-muted)' }}
+                />
+                <input
+                  type="text"
+                  value={ex.note ?? ''}
+                  maxLength={140}
+                  onChange={(e) => updateNote(ex.id, e.target.value)}
+                  placeholder="Form, Tempo (optional)"
+                  aria-label={`Hinweis zu ${ex.name}`}
+                  className="w-full bg-transparent text-xs outline-none mt-0.5"
+                  style={{ color: 'var(--color-text-subtle)' }}
+                />
+              </>
             ) : ex.detail ? (
               <span className="block text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{ex.detail}</span>
             ) : null}

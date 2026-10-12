@@ -7,6 +7,10 @@ export interface WizardExercise {
   sets?: number
   rep_count?: number
   weight_level?: 'leicht' | 'mittel' | 'schwer'
+  /** Optional cue: execution, tempo, or form. */
+  note?: string
+  /** Shared by two or more consecutive exercises. One set of each, then rest. */
+  supersetId?: string
 }
 
 export interface CustomWorkout {

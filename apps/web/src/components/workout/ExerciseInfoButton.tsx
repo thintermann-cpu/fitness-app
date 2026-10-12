@@ -16,9 +16,10 @@ const VIDEO_LABEL: Record<BlurbLang, string> = {
 interface Props {
   name: string
   detail?: string
+  note?: string
 }
 
-export function ExerciseInfoButton({ name, detail }: Props) {
+export function ExerciseInfoButton({ name, detail, note }: Props) {
   const [open, setOpen] = useState(false)
   const lang = (useAuthStore((s) => s.profile?.language) ?? 'de') as BlurbLang
   const figure = usePoseFigure()
@@ -76,6 +77,11 @@ export function ExerciseInfoButton({ name, detail }: Props) {
             {detail && (
               <p className="mt-3 text-sm font-semibold" style={{ color: 'var(--color-pillar-workout)' }}>
                 {detail}
+              </p>
+            )}
+            {note && (
+              <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--color-text)' }}>
+                {note}
               </p>
             )}
             {gear.length > 0 && (
