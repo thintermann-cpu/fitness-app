@@ -32,6 +32,8 @@ export interface CustomWorkout {
   scheme?: string
   /** Ordered parts. A chain is two or more work parts, with optional pauses between them. */
   blocks?: WorkoutBlock[]
+  /** Start the saved part list directly. The wizard would rewrite the first part. */
+  directStart?: boolean
 }
 
 export interface CustomSession {

@@ -138,7 +138,7 @@ export function CustomWorkoutsPage() {
           {visible.map((w) => {
             const chain = w.blocks?.filter(isWorkBlock).map((block) => blockLabel(block))
             const meta = [
-              chain && chain.length > 1 ? chain.join(' → ') : (MODE_LABELS[w.mode] ?? w.mode),
+              chain && (chain.length > 1 || w.directStart) ? chain.join(' → ') : (MODE_LABELS[w.mode] ?? w.mode),
               w.minutes > 0 ? `${w.minutes} min` : '',
               w.exercises.length > 0 ? `${w.exercises.length} Übungen` : '',
             ].filter(Boolean).join(' · ')
@@ -165,14 +165,16 @@ export function CustomWorkoutsPage() {
                   >
                     ▶
                   </button>
-                  <button
-                    onClick={() => setEditWorkout(w)}
-                    className="w-8 h-8 rounded-lg text-xs font-semibold"
-                    style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
-                    aria-label="Bearbeiten"
-                  >
-                    ✎
-                  </button>
+                  {!w.directStart && (
+                    <button
+                      onClick={() => setEditWorkout(w)}
+                      className="w-8 h-8 rounded-lg text-xs font-semibold"
+                      style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
+                      aria-label="Bearbeiten"
+                    >
+                      ✎
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDelete(w.id)}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-xs"

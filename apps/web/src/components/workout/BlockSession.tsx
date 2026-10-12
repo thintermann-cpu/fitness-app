@@ -13,6 +13,7 @@ import {
 } from '../../lib/workoutBlocks'
 import { TimerView } from './TimerView'
 import { KraftTimerView } from './KraftTimerView'
+import { FlowTimerView } from './FlowTimerView'
 import type { WizardExercise } from '../../lib/customWorkouts'
 
 interface Props {
@@ -117,6 +118,12 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   function handoff(fromIndex: number) {
     const next = gateAfter(blocks, fromIndex)
     gateLock.current = false
+    const finishedBlock = blocks[fromIndex]
+    if (finishedBlock?.kind === 'flow' && finishedBlock.role === 'warmup' && next && !next.explicit && next.nextIndex >= 0) {
+      setIndex(next.nextIndex)
+      setGate(null)
+      return
+    }
     if (!next) {
       finish()
       return
@@ -201,6 +208,19 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
         exercises={withParsedSets(block.exercises)}
         restBetweenSets={block.restBetweenSets}
         restBetweenExercises={block.restBetweenExercises}
+        workoutName={entryName}
+        onChainedFinish={() => handoff(index)}
+      />
+    )
+  }
+
+  if (block.kind === 'flow') {
+    return (
+      <FlowTimerView
+        key={block.id}
+        exercises={block.exercises}
+        restSec={block.restSec}
+        role={block.role}
         workoutName={entryName}
         onChainedFinish={() => handoff(index)}
       />

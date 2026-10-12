@@ -17,6 +17,7 @@ import { type CustomWorkout, type WizardExercise } from '../lib/customWorkouts'
 import { type TimerMode } from '../lib/timerLabels'
 import { isChained, isWorkBlock, seedFromBlock, type WorkoutBlock } from '../lib/workoutBlocks'
 import { BlockSession } from '../components/workout/BlockSession'
+import { SessionImportSheet } from '../components/workout/SessionImportSheet'
 
 type Tab = 'wods' | 'timer' | 'history'
 
@@ -51,6 +52,8 @@ type TimerConfig = {
   emomInterval?: number; emomRounds?: number
   scheme?: string
   blocks?: WorkoutBlock[]
+  /** Play blocks even when there is only one part. Used by the JSON import. */
+  runBlocks?: boolean
 }
 
 export function WorkoutPage() {
@@ -72,6 +75,7 @@ export function WorkoutPage() {
   const [showWarmupTimer, setShowWarmupTimer] = useState(false)
   const [warmupRoutine, setWarmupRoutine] = useState<WarmupRoutineId>('standard')
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
   const { data: savedWorkouts = [], addWorkout } = useCustomWorkouts()
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
 
@@ -149,7 +153,55 @@ export function WorkoutPage() {
     }
   }
 
+  function startBlocks(blocks: WorkoutBlock[], name: string) {
+    setShowWarmupTimer(false)
+    setShowWorkoutCountdown(false)
+    setTimerConfig({
+      mode: 'fortime',
+      minutes: 0,
+      blocks,
+      workoutName: name,
+      adHocLog: true,
+      runBlocks: true,
+    })
+    setTimerKey((key) => key + 1)
+    setTab('timer')
+  }
+
+  function handleImportStart(blocks: WorkoutBlock[], name: string, save: boolean) {
+    if (save) {
+      const first = blocks.find(isWorkBlock)
+      const mode = first && first.kind !== 'flow' && first.kind !== 'pause' ? first.kind : 'fortime'
+      const exercises = first?.kind === 'flow'
+        ? first.exercises.map((exercise) => ({
+            id: exercise.id,
+            name: exercise.name,
+            note: exercise.note,
+            detail: `${exercise.seconds}s`,
+          }))
+        : first && first.kind !== 'pause'
+          ? first.exercises
+          : []
+      addWorkout.mutate({
+        id: crypto.randomUUID(),
+        name,
+        mode,
+        minutes: 0,
+        exercises,
+        createdAt: new Date().toISOString(),
+        blocks,
+        directStart: true,
+      })
+    }
+    setImportOpen(false)
+    startBlocks(blocks, name)
+  }
+
   function handleStartSaved(w: CustomWorkout) {
+    if (w.directStart && w.blocks && w.blocks.length > 0) {
+      startBlocks(w.blocks, w.name)
+      return
+    }
     const first = w.blocks?.find(isWorkBlock)
     const seed = first ? seedFromBlock(first) : null
     setAdhocPreset({
@@ -302,7 +354,7 @@ export function WorkoutPage() {
           <div className="py-4">
             {timerConfig ? (
               <>
-                {timerConfig.blocks && isChained(timerConfig.blocks) ? (
+                {timerConfig.blocks && (timerConfig.runBlocks || isChained(timerConfig.blocks)) ? (
                   showWarmupTimer || showWorkoutCountdown ? null : (
                     <BlockSession
                       key={timerKey}
@@ -359,6 +411,14 @@ export function WorkoutPage() {
                 >
                   Timer konfigurieren
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setImportOpen(true)}
+                  className="px-8 py-3 rounded-2xl font-semibold text-sm"
+                  style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
+                >
+                  Session einfügen
+                </button>
               </div>
             )}
           </div>
@@ -382,6 +442,11 @@ export function WorkoutPage() {
         title={adhocPreset?.name}
         initialStep={adhocPreset ? 1 : 0}
         initialValues={adhocPreset ?? undefined}
+      />
+      <SessionImportSheet
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        onStart={handleImportStart}
       />
       <WarmupTimer
         isOpen={showWarmupTimer}
