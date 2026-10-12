@@ -399,6 +399,8 @@ Alle Modi nutzen den drift-korrigierten `timer.worker.js` im Hintergrund.
 
 **Hinweis und Supersatz:** Jede Übung kann optional `note` tragen (Ausführung, Tempo, Form). Im Kraft-Timer steht der Hinweis unter dem Namen, im Metcon-Timer unter der Angabe und im Info-Sheet. Ein Supersatz sind mindestens zwei aufeinanderfolgende Übungen mit derselben `supersetId`. Pro Runde je ein Satz direkt hintereinander, Pause erst danach (`restBetweenSets`). Die Sätze gelten für den ganzen Supersatz, die Reps bleiben pro Übung. „Supersatz mit der nächsten“ verbindet, „Supersatz lösen“ trennt.
 
+**Session-Import:** Im Timer-Tab „Session einfügen“. Text oder JSON-Datei, derselbe Parser (`parseSessionImport`). Die Struktur und das Beispiel für einen Chatbot stehen in `docs/SESSION_IMPORT.md`. Der Text wird zu `WorkoutBlock[]` und läuft in `BlockSession`. Neu ist der Teil `flow`: Übungen mit Sekunden, Hinweis und optional `sides: 2` (zweite Runde „andere Seite“). `role: warmup` schreibt keinen Verlauf und geht ohne die 60-Sekunden-Frage in den nächsten Teil. `role: mobility` hakt Mobilität ab und schreibt `stretching_logs`. `role: flow` schreibt einen Workout-Verlauf. Freie Namen sind erlaubt. Ohne Katalogtreffer zeigt die Vorschau eine Warnung, der Start bleibt frei. Fehler in der Struktur blockieren den Start. „Auch sichern“ legt die Liste in `custom_workouts` mit `directStart`. Der erneute Start überspringt den Wizard. Der Stift zum Bearbeiten fehlt bei diesen Einträgen.
+
 **CountdownOverlay:** `TimerView` und `WarmupTimer` zeigen vor Timer-Start eine 3-2-1-Go-Einblendung (SVG-Puls-Animation). Die Zählung läuft im selben Worker-Takt; Wake Lock ist während des Countdowns bereits aktiv.
 
 **Screen Wake Lock:** Während der Timer läuft, aktivieren folgende Komponenten die Screen Wake Lock API (`navigator.wakeLock.request('screen')`), um Display-Timeout zu verhindern:
@@ -607,6 +609,7 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 | **Session BC** | **Workout-Detail aufgeräumt** — In der Ansicht vor dem Start sind das Warmup-Akkordeon, der Warmup-Knopf neben Start und der Scaling-Block weg. Anpassen, Equipment und Start bleiben. Warmup gibt es weiter im Start-Wizard. |
 | **Session BL** | **Workout-Teile** — Letzter Wizard-Schritt: Teile anfügen, sortieren, entfernen (Kraft, Pause, EMOM, AMRAP, For Time, Tabata). `BlockSession` läuft sie der Reihe nach. Dazwischen Pause mit „Weiter mit …“ oder „Überspringen“. Jeder gelaufene Teil ein eigener History-Eintrag. Ein Teil bleibt der alte Timer. |
 | **Session BM** | **Kraft-History, Sätze, Supersatz, Hinweis** — `KraftTimerView` schreibt `exercises` in `wod_history`. Die Karte zeigt Sätze×Reps, Gewicht und Hinweis (`formatHistoryExercises`). Zusätzliche Kraft-Teile nutzen `KraftExerciseEditor` (Sätze, Reps, Gewicht), nicht mehr fest 3×8. `WizardExercise.note` ist der optionale Form-/Tempo-Hinweis, in Kraft, Metcon-Liste und Info-Sheet. `supersetId` koppelt aufeinanderfolgende Übungen: eine Runde ohne Pause dazwischen, Sätze gemeinsam. |
+| **Session BN** | **Session-Import** — Timer-Tab „Session einfügen“: JSON-Text oder Datei (`docs/SESSION_IMPORT.md`). `flow`-Teil mit Sekunden, Hinweis, `sides`. Warm-up ohne eigenen Verlauf und ohne 60s-Frage. Mobilität schreibt `stretching_logs` und hakt den Pillar ab. Freie Namen, Warnung ohne Katalogtreffer. „Auch sichern“ setzt `custom_workouts.config.directStart` und startet die Liste direkt. |
 | **Session BK** | **Zwei Alt-Migrationen nur umbenannt** — Live-Check (PostgREST): `push_subscriptions` inkl. RLS, `push_preferences` inkl. `city`/`timezone`, `user_profiles.role`, `subscription_status` und `get_my_role()` sind vorhanden. Deshalb `add_push_subscriptions.sql` → `034_push_subscriptions.sql` und `add_role_and_admin_rls.sql` → `035_role_and_admin_rls.sql`, ohne zweiten Lauf. `push_preferences` bleibt die nummerierte Quelle in `030_push_preferences.sql`. Login-Redirects bleiben Dashboard (Authentication → URL Configuration), kein Code. `033_pose_figure.sql` ist geschrieben; `user_profiles.pose_figure` fehlt in der Live-DB noch (PostgREST `42703`). |
 
 ### Offen / Roadmap
@@ -672,4 +675,4 @@ Dokumentiert behobene Bugs mit Kontext — damit Regressions erkannt werden und 
 
 ---
 
-*Letzte Aktualisierung: Oktober 2026 — Session BM: Kraft-History, Supersatz, Hinweis*
+*Letzte Aktualisierung: Oktober 2026 — Session BN: Session-Import*

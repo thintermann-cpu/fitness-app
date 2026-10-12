@@ -48,6 +48,7 @@ function dbToWorkout(row: DbRow): CustomWorkout {
     equipment,
     scheme: typeof cfg.scheme === 'string' ? cfg.scheme : undefined,
     blocks: readBlocks(cfg.blocks),
+    directStart: cfg.directStart === true,
   }
 }
 
@@ -69,6 +70,7 @@ function workoutToDb(w: CustomWorkout, userId: string) {
       equipment:            w.equipment,
       scheme:               w.scheme,
       blocks:               w.blocks,
+      directStart:          w.directStart === true,
     },
     exercises:   w.exercises,
     with_warmup: false,

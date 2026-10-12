@@ -11,6 +11,17 @@ const BLOCK_LABELS = {
   tabata: 'Tabata',
 } as const
 
+export interface FlowExercise {
+  id: string
+  name: string
+  seconds: number
+  note?: string
+  /** 2 plays the station twice. The second pass says "andere Seite". */
+  sides?: 1 | 2
+}
+
+export type FlowRole = 'warmup' | 'mobility' | 'flow'
+
 export type WorkoutBlock =
   | { id: string; kind: 'krafttraining'; exercises: WizardExercise[]; restBetweenSets: number; restBetweenExercises: number }
   | { id: string; kind: 'pause'; seconds: number }
@@ -18,6 +29,7 @@ export type WorkoutBlock =
   | { id: string; kind: 'amrap'; exercises: WizardExercise[]; minutes: number; scheme?: string }
   | { id: string; kind: 'fortime'; exercises: WizardExercise[]; minutes: number; scheme?: string }
   | { id: string; kind: 'tabata'; exercises: WizardExercise[]; workSec: number; restSec: number; rounds: number; scheme?: string }
+  | { id: string; kind: 'flow'; role: FlowRole; restSec: number; exercises: FlowExercise[] }
 
 export interface BlockGate {
   pauseSec: number
@@ -25,16 +37,28 @@ export interface BlockGate {
   nextIndex: number
   /** Work block that "Überspringen" drops. Absent when the pause only ends the session. */
   skipIndex?: number
+  /** True when a Pause part set the length. False is the 60s default between parts. */
+  explicit: boolean
 }
 
 const DEFAULT_GATE_SEC = 60
 
 export function blockLabel(block: WorkoutBlock): string {
+  if (block.kind === 'flow') {
+    if (block.role === 'warmup') return 'Warm-up'
+    if (block.role === 'mobility') return 'Mobilität'
+    return 'Ablauf'
+  }
   return BLOCK_LABELS[block.kind]
 }
 
 export function blockColor(block: WorkoutBlock): string {
   if (block.kind === 'pause') return '#60A5FA'
+  if (block.kind === 'flow') {
+    if (block.role === 'mobility') return '#7BC67E'
+    if (block.role === 'warmup') return '#F59E0B'
+    return '#E8642A'
+  }
   return TIMER_LABELS[block.kind].color
 }
 
@@ -42,6 +66,11 @@ export function blockSummary(block: WorkoutBlock): string {
   if (block.kind === 'pause') return `${Math.round(block.seconds / 60)} min`
   if (block.kind === 'krafttraining') {
     return formatHistoryExercises(block.exercises) || 'Sätze'
+  }
+  if (block.kind === 'flow') {
+    const seconds = block.exercises.reduce((sum, exercise) => sum + exercise.seconds * (exercise.sides === 2 ? 2 : 1), 0)
+    const minutes = Math.max(1, Math.round(seconds / 60))
+    return `${block.exercises.length} Übungen · ${minutes} min`
   }
   if (block.kind === 'emom') return `${block.rounds}× ${block.intervalMin} min`
   if (block.kind === 'tabata') return `${block.rounds}× ${block.workSec}s / ${block.restSec}s`
@@ -67,6 +96,7 @@ export function createBlock(kind: WorkoutBlock['kind']): WorkoutBlock {
   if (kind === 'krafttraining') return { id, kind, exercises: [], restBetweenSets: 90, restBetweenExercises: 60 }
   if (kind === 'emom') return { id, kind, exercises: [], intervalMin: 1, rounds: 10 }
   if (kind === 'tabata') return { id, kind, exercises: [], workSec: 20, restSec: 10, rounds: 8 }
+  if (kind === 'flow') return { id, kind, role: 'flow', restSec: 10, exercises: [] }
   return { id, kind, exercises: [], minutes: kind === 'amrap' ? 12 : 10 }
 }
 
@@ -96,12 +126,13 @@ export function gateAfter(blocks: WorkoutBlock[], afterIndex: number): BlockGate
   }
   if (index >= blocks.length) {
     if (!explicit) return null
-    return { pauseSec: Math.max(1, pause), nextIndex: -1 }
+    return { pauseSec: Math.max(1, pause), nextIndex: -1, explicit: true }
   }
   return {
     pauseSec: explicit ? Math.max(1, pause) : DEFAULT_GATE_SEC,
     nextIndex: index,
     skipIndex: index,
+    explicit,
   }
 }
 
@@ -115,6 +146,7 @@ export function isWorkoutBlock(value: unknown): value is WorkoutBlock {
     || block.kind === 'amrap'
     || block.kind === 'fortime'
     || block.kind === 'tabata'
+    || block.kind === 'flow'
 }
 
 export function seedFromBlock(block: WorkoutBlock): {
@@ -132,6 +164,19 @@ export function seedFromBlock(block: WorkoutBlock): {
 } {
   if (block.kind === 'pause') {
     return { mode: 'fortime', minutes: Math.max(1, Math.round(block.seconds / 60)), exercises: [] }
+  }
+  if (block.kind === 'flow') {
+    const seconds = block.exercises.reduce((sum, exercise) => sum + exercise.seconds * (exercise.sides === 2 ? 2 : 1), 0)
+    return {
+      mode: 'fortime',
+      minutes: Math.max(1, Math.round(seconds / 60)),
+      exercises: block.exercises.map((exercise) => ({
+        id: exercise.id,
+        name: exercise.name,
+        note: exercise.note,
+        detail: `${exercise.seconds}s`,
+      })),
+    }
   }
   if (block.kind === 'krafttraining') {
     return {
