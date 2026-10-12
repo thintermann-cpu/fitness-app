@@ -91,8 +91,10 @@ export function gateAfter(blocks: WorkoutBlock[], afterIndex: number): BlockGate
   let index = afterIndex + 1
   let pause = 0
   let explicit = false
-  while (index < blocks.length && blocks[index].kind === 'pause') {
-    pause += blocks[index].seconds
+  while (index < blocks.length) {
+    const block = blocks[index]
+    if (block.kind !== 'pause') break
+    pause += block.seconds
     explicit = true
     index += 1
   }
