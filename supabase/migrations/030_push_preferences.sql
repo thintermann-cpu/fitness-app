@@ -1,6 +1,6 @@
 -- Formal record of push_preferences.
 -- The table was created manually in the dashboard and also sketched in
--- add_push_subscriptions.sql. This migration is the numbered source of truth.
+-- 034_push_subscriptions.sql. This migration is the numbered source of truth.
 
 CREATE TABLE IF NOT EXISTS public.push_preferences (
   id                 UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
