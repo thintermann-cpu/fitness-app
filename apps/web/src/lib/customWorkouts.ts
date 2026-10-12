@@ -7,6 +7,10 @@ export interface WizardExercise {
   sets?: number
   rep_count?: number
   weight_level?: 'leicht' | 'mittel' | 'schwer'
+  /** Exact load in kilograms, from a session import. */
+  weightKg?: number
+  /** Load that is not a single number, e.g. "2×24 kg". */
+  weightText?: string
   /** Optional cue: execution, tempo, or form. */
   note?: string
   /** Shared by two or more consecutive exercises. One set of each, then rest. */

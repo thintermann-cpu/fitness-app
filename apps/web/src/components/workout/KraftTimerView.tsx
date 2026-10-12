@@ -5,7 +5,7 @@ import { useWodHistory } from '../../hooks/useWodHistory'
 import { useSessionStore } from '../../store/sessionStore'
 import { useAuthStore } from '../../store/authStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
-import { alignSupersetSets, exerciseGroups, groupAt } from '../../lib/kraftPlan'
+import { alignSupersetSets, exerciseGroups, exerciseLoad, groupAt } from '../../lib/kraftPlan'
 
 type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
 
@@ -94,7 +94,8 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   const group        = groupAt(plan, exIdx)
   const totalSets    = plan[group.start]?.sets ?? ex?.sets ?? 3
   const reps         = ex?.rep_count ?? 8
-  const weight       = ex?.weight_level
+  const load         = ex ? exerciseLoad(ex) : undefined
+  const levelColor   = ex?.weight_level && ex.weightKg == null && !ex.weightText ? WEIGHT_COLORS[ex.weight_level] : '#E8642A'
   const isLastInGroup = exIdx >= group.end
   const isLastRound  = setIdx >= totalSets - 1
   const isLastEx     = group.end >= plan.length - 1
@@ -227,7 +228,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
                     <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{e.name}</p>
                     <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                       {e.sets ?? 3} × {e.rep_count ?? 8} Wdh.
-                      {e.weight_level && ` · ${e.weight_level}`}
+                      {exerciseLoad(e) && ` · ${exerciseLoad(e)}`}
                     </p>
                     {e.note && (
                       <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>{e.note}</p>
@@ -319,15 +320,17 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
         {ex?.note && !isRest && (
           <p className="text-sm px-4" style={{ color: 'var(--color-text-muted)' }}>{ex.note}</p>
         )}
-        {weight && (
+        {load && (
           <span
             className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full"
             style={{
-              backgroundColor: `${WEIGHT_COLORS[weight]}20`,
-              color: WEIGHT_COLORS[weight],
+              backgroundColor: `${levelColor}20`,
+              color: levelColor,
             }}
           >
-            {weight.charAt(0).toUpperCase() + weight.slice(1)}
+            {ex?.weight_level && ex.weightKg == null && !ex.weightText
+              ? load.charAt(0).toUpperCase() + load.slice(1)
+              : load}
           </span>
         )}
       </div>
