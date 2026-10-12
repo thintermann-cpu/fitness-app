@@ -1,4 +1,5 @@
 import { useWodHistory } from '../../hooks/useWodHistory'
+import { formatHistoryExercises } from '../../lib/kraftPlan'
 
 interface Props {
   wodName?: string
@@ -56,8 +57,8 @@ export function WodHistoryList({ wodName }: Props) {
                 <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{entry.notes}</p>
               )}
               {entry.exercises && entry.exercises.length > 0 && (
-                <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                  {entry.exercises.map((e) => e.name).join(' · ')}
+                <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                  {formatHistoryExercises(entry.exercises)}
                 </p>
               )}
             </div>

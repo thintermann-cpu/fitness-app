@@ -1,4 +1,5 @@
 import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
+import { KraftExerciseEditor } from './KraftExerciseEditor'
 import {
   blockColor,
   blockLabel,
@@ -33,6 +34,7 @@ function patch(parts: WorkoutBlock[], id: string, next: WorkoutBlock): WorkoutBl
 
 export function BlockComposer({ parts, onChange }: Props) {
   const workCount = parts.filter(isWorkBlock).length
+  const primaryId = parts.find(isWorkBlock)?.id
 
   function move(index: number, delta: number) {
     const target = index + delta
@@ -119,22 +121,15 @@ export function BlockComposer({ parts, onChange }: Props) {
             </div>
           )}
 
-          {part.kind === 'krafttraining' && part.exercises.length === 0 && (
-            <ExerciseListEditor
-              fromCatalog
-              items={part.exercises}
-              onChange={(exercises) => onChange(patch(parts, part.id, { ...part, exercises }))}
-              placeholder="Angabe z. B. 5×5 im Feld darunter"
-            />
+          {part.kind === 'krafttraining' && part.id === primaryId && (
+            <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+              Übungen und Sätze stehen im Schritt davor.
+            </p>
           )}
-          {part.kind === 'krafttraining' && part.exercises.length > 0 && part.id !== parts.find(isWorkBlock)?.id && (
-            <ExerciseListEditor
-              fromCatalog
-              items={part.exercises}
-              onChange={(exercises) => onChange(patch(parts, part.id, {
-                ...part,
-                exercises: exercises.map((exercise) => ({ ...exercise, sets: exercise.sets ?? 3, rep_count: exercise.rep_count ?? 8 })),
-              }))}
+          {part.kind === 'krafttraining' && part.id !== primaryId && (
+            <KraftExerciseEditor
+              exercises={part.exercises}
+              onChange={(exercises) => onChange(patch(parts, part.id, { ...part, exercises }))}
             />
           )}
         </div>

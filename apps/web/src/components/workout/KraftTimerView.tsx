@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { useSessionStore } from '../../store/sessionStore'
 import { useAuthStore } from '../../store/authStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
+import { alignSupersetSets, exerciseGroups, groupAt } from '../../lib/kraftPlan'
 
 type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
 
@@ -57,6 +58,8 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   const [timeLeft,    setTimeLeft]    = useState(0)
   const [showCountdown, setShowCountdown] = useState(autoStart)
   const restTypeRef      = useRef<'set' | 'exercise'>('set')
+  const pendingRef       = useRef<{ exIdx: number; setIdx: number } | null>(null)
+  const plan             = useMemo(() => alignSupersetSets(exercises), [exercises])
   const wakeLockRef      = useRef<{ release: () => Promise<void> } | null>(null)
   const navigate         = useNavigate()
   const { addEntry }     = useWodHistory()
@@ -87,12 +90,14 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
     beepKraft(880, 0.55, 0.12)
   }, [phase, timeLeft])
 
-  const ex = exercises[exIdx]
-  const totalSets    = ex?.sets ?? 3
+  const ex = plan[exIdx]
+  const group        = groupAt(plan, exIdx)
+  const totalSets    = plan[group.start]?.sets ?? ex?.sets ?? 3
   const reps         = ex?.rep_count ?? 8
   const weight       = ex?.weight_level
-  const isLastSet    = setIdx >= totalSets - 1
-  const isLastEx     = exIdx >= exercises.length - 1
+  const isLastInGroup = exIdx >= group.end
+  const isLastRound  = setIdx >= totalSets - 1
+  const isLastEx     = group.end >= plan.length - 1
 
   // Countdown timer (set-rest or exercise-rest)
   useEffect(() => {
@@ -109,14 +114,11 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   }, [phase, timeLeft])
 
   function advanceFromRest() {
-    if (restTypeRef.current === 'set') {
-      setSetIdx((s) => s + 1)
-      setPhase('work')
-    } else {
-      setExIdx((i) => i + 1)
-      setSetIdx(0)
-      setPhase('work')
-    }
+    const next = pendingRef.current
+    if (!next) return
+    setExIdx(next.exIdx)
+    setSetIdx(next.setIdx)
+    setPhase('work')
   }
 
   function startWorkout() {
@@ -126,16 +128,23 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   }
 
   function handleSetDone() {
-    if (isLastSet && isLastEx) {
+    if (isLastInGroup && isLastRound && isLastEx) {
       finishWorkout()
       return
     }
-    if (isLastSet) {
-      restTypeRef.current = 'exercise'
-      setTimeLeft(restBetweenExercises)
-    } else {
+    if (!isLastInGroup) {
+      setExIdx(exIdx + 1)
+      setPhase('work')
+      return
+    }
+    if (!isLastRound) {
+      pendingRef.current = { exIdx: group.start, setIdx: setIdx + 1 }
       restTypeRef.current = 'set'
       setTimeLeft(restBetweenSets)
+    } else {
+      pendingRef.current = { exIdx: group.end + 1, setIdx: 0 }
+      restTypeRef.current = 'exercise'
+      setTimeLeft(restBetweenExercises)
     }
     setPhase('rest')
   }
@@ -145,22 +154,23 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   }
 
   function skipExercise() {
-    if (isLastEx) {
+    if (exIdx >= plan.length - 1) {
       finishWorkout()
       return
     }
-    setExIdx((i) => i + 1)
+    setExIdx(exIdx + 1)
     setSetIdx(0)
     setPhase('work')
   }
 
   function finishWorkout() {
     if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
-    const totalSetsDone = exercises.reduce((acc, e) => acc + (e.sets ?? 3), 0)
+    const totalSetsDone = plan.reduce((acc, e) => acc + (e.sets ?? 3), 0)
     addEntry.mutate({
       wod_name: workoutName ?? 'Krafttraining',
       score_type: 'reps',
       score_value: String(totalSetsDone),
+      exercises: plan,
     })
     if (onChainedFinish) {
       onChainedFinish()
@@ -170,7 +180,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
     onComplete?.()
   }
 
-  const totalExercises = exercises.length
+  const totalExercises = plan.length
   const progressPct = totalExercises > 0
     ? Math.round(((exIdx + (setIdx + (phase === 'done' ? 1 : 0)) / totalSets) / totalExercises) * 100)
     : 0
@@ -190,28 +200,41 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
           </p>
           <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
             {totalExercises} Übung{totalExercises !== 1 ? 'en' : ''} ·{' '}
-            {exercises.reduce((a, e) => a + (e.sets ?? 3), 0)} Sätze gesamt
+            {plan.reduce((a, e) => a + (e.sets ?? 3), 0)} Sätze gesamt
           </p>
         </div>
 
         {/* Exercise overview */}
         <div className="w-full space-y-2">
-          {exercises.map((e, i) => (
+          {exerciseGroups(plan).map((item) => (
             <div
-              key={e.id}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
-              style={{ backgroundColor: 'var(--color-bg-card)' }}
+              key={plan[item.start]?.id ?? item.start}
+              className="rounded-xl"
+              style={{
+                backgroundColor: 'var(--color-bg-card)',
+                borderLeft: item.superset ? '3px solid #E8642A' : undefined,
+              }}
             >
-              <span className="text-xs font-bold w-5 text-center" style={{ color: 'var(--color-text-muted)' }}>
-                {i + 1}
-              </span>
-              <div className="flex-1">
-                <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{e.name}</p>
-                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  {e.sets ?? 3} × {e.rep_count ?? 8} Wdh.
-                  {e.weight_level && ` · ${e.weight_level}`}
-                </p>
-              </div>
+              {item.superset && (
+                <p className="px-3 pt-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: '#E8642A' }}>Supersatz</p>
+              )}
+              {plan.slice(item.start, item.end + 1).map((e, offset) => (
+                <div key={e.id} className="flex items-center gap-3 px-3 py-2.5">
+                  <span className="text-xs font-bold w-5 text-center" style={{ color: 'var(--color-text-muted)' }}>
+                    {item.start + offset + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{e.name}</p>
+                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                      {e.sets ?? 3} × {e.rep_count ?? 8} Wdh.
+                      {e.weight_level && ` · ${e.weight_level}`}
+                    </p>
+                    {e.note && (
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-subtle)' }}>{e.note}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
         </div>
@@ -229,7 +252,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
 
   // ── Done ──────────────────────────────────────────────────────────────────
   if (phase === 'done') {
-    const totalSetsAll = exercises.reduce((a, e) => a + (e.sets ?? 3), 0)
+    const totalSetsAll = plan.reduce((a, e) => a + (e.sets ?? 3), 0)
     return (
       <div className="flex flex-col items-center gap-5 py-8 text-center">
         <p style={{ fontSize: 64, lineHeight: 1 }}>🎉</p>
@@ -288,11 +311,14 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
       {/* Exercise + set info */}
       <div className="w-full text-center space-y-1">
         <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#10B981' }}>
-          Übung {exIdx + 1} / {totalExercises}
+          {group.superset ? 'Supersatz' : 'Übung'} {exIdx + 1} / {totalExercises}
         </p>
         <p className="text-2xl font-black" style={{ color: 'var(--color-text)' }}>
           {ex?.name ?? '—'}
         </p>
+        {ex?.note && !isRest && (
+          <p className="text-sm px-4" style={{ color: 'var(--color-text-muted)' }}>{ex.note}</p>
+        )}
         {weight && (
           <span
             className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full"
@@ -318,15 +344,20 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
           </p>
           <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
             {restTypeRef.current === 'set'
-              ? `Nächstes: Satz ${setIdx + 2} / ${totalSets}`
-              : `Nächstes: ${exercises[exIdx + 1]?.name ?? '—'}`}
+              ? `Nächstes: ${plan[group.start]?.name ?? '—'}, Runde ${setIdx + 2} / ${totalSets}`
+              : `Nächstes: ${plan[pendingRef.current?.exIdx ?? exIdx + 1]?.name ?? '—'}`}
           </p>
         </div>
       ) : (
         <div className="flex flex-col items-center gap-1">
           <p className="text-xs font-semibold" style={{ color: 'var(--color-text-muted)' }}>
-            Satz {setIdx + 1} / {totalSets}
+            {group.superset ? 'Runde' : 'Satz'} {setIdx + 1} / {totalSets}
           </p>
+          {group.superset && exIdx < group.end && (
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+              danach ohne Pause: {plan[exIdx + 1]?.name}
+            </p>
+          )}
           <p
             className="font-black"
             style={{ fontSize: 'clamp(80px, 25vw, 110px)', color: '#10B981' }}
@@ -357,7 +388,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
           >
             ✓ Satz geschafft
           </button>
-          {!isLastEx && (
+          {exIdx < plan.length - 1 && (
             <button
               onClick={skipExercise}
               className="px-4 py-4 rounded-2xl text-sm font-semibold active:scale-[0.98] transition-transform"

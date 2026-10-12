@@ -544,6 +544,9 @@ export function WodDetail({ wodName, onBack }: Props) {
                     ) : item.sets && item.rep_count ? (
                       <span className="text-[var(--color-text-muted)]"> · {item.sets}×{item.rep_count}</span>
                     ) : null}
+                    {item.note ? (
+                      <span className="block text-xs text-[var(--color-text-muted)]">{item.note}</span>
+                    ) : null}
                   </span>
                 </li>
               ))}

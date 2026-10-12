@@ -1,4 +1,5 @@
 import type { WizardExercise } from './customWorkouts'
+import { formatHistoryExercises } from './kraftPlan'
 import { TIMER_LABELS, type TimerMode } from './timerLabels'
 
 const BLOCK_LABELS = {
@@ -40,12 +41,7 @@ export function blockColor(block: WorkoutBlock): string {
 export function blockSummary(block: WorkoutBlock): string {
   if (block.kind === 'pause') return `${Math.round(block.seconds / 60)} min`
   if (block.kind === 'krafttraining') {
-    const names = block.exercises.map((exercise) => {
-      const sets = exercise.sets ?? 3
-      const reps = exercise.rep_count ?? 8
-      return `${sets}×${reps} ${exercise.name}`
-    })
-    return names.join(', ') || 'Sätze'
+    return formatHistoryExercises(block.exercises) || 'Sätze'
   }
   if (block.kind === 'emom') return `${block.rounds}× ${block.intervalMin} min`
   if (block.kind === 'tabata') return `${block.rounds}× ${block.workSec}s / ${block.restSec}s`

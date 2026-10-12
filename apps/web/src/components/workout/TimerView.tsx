@@ -665,6 +665,9 @@ export function TimerView({
           {activeExercise.detail && (
             <p className="text-sm font-semibold" style={{ color: modeColor }}>{activeExercise.detail}</p>
           )}
+          {activeExercise.note && (
+            <p className="text-sm text-center px-4" style={{ color: 'var(--color-text-muted)' }}>{activeExercise.note}</p>
+          )}
           {intervalDriven && (
             <NextExercisePreview
               name={nextExName}
@@ -912,7 +915,7 @@ export function TimerView({
                     <span className="text-xs text-[var(--color-text-muted)] shrink-0">{ex.detail}</span>
                   )}
                 </button>
-                <ExerciseInfoButton name={ex.name} detail={ex.detail} />
+                <ExerciseInfoButton name={ex.name} detail={ex.detail} note={ex.note} />
               </div>
             )
           })}

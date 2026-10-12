@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { WizardShell } from '../wizard/WizardShell'
 import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
+import { KraftExerciseEditor } from './KraftExerciseEditor'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { TIMER_LABELS, TIMER_MODE_LIST } from '../../lib/timerLabels'
 import type { TimerMode } from '../../lib/timerLabels'
@@ -228,9 +229,6 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
 
   const modeInfo = TIMER_LABELS[mode]
 
-  const updateExercise = (id: string, patch: Partial<WizardExercise>) =>
-    setExercises((prev) => prev.map((e) => e.id === id ? { ...e, ...patch } : e))
-
   const estimatedKraftMin = isKraft
     ? Math.ceil(
         exercises.reduce((acc, ex) => {
@@ -329,85 +327,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
             Mindestens 1 Übung — Sätze, Reps und Gewicht pro Übung einstellen
           </p>
 
-          {exercises.map((ex, i) => (
-            <div
-              key={ex.id}
-              className="rounded-xl px-3 py-3 space-y-2.5"
-              style={{ backgroundColor: 'var(--color-bg-card)' }}
-            >
-              {/* Name row */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold w-5 text-center flex-shrink-0"
-                  style={{ color: 'var(--color-text-muted)' }}>
-                  {i + 1}
-                </span>
-                <span className="flex-1 text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                  {ex.name}
-                </span>
-                <button
-                  onClick={() => setExercises((prev) => prev.filter((e) => e.id !== ex.id))}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg text-xs"
-                  style={{ color: '#ef4444' }}
-                >✕</button>
-              </div>
-
-              {/* Sätze + Reps */}
-              <div className="flex items-center gap-4 pl-7">
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] uppercase tracking-wider"
-                    style={{ color: 'var(--color-text-muted)' }}>Sätze</span>
-                  <MiniStepper
-                    value={ex.sets ?? 3}
-                    onChange={(v) => updateExercise(ex.id, { sets: v })}
-                    min={1} max={10}
-                  />
-                </div>
-                <span style={{ color: 'var(--color-text-muted)' }}>×</span>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] uppercase tracking-wider"
-                    style={{ color: 'var(--color-text-muted)' }}>Reps</span>
-                  <MiniStepper
-                    value={ex.rep_count ?? 8}
-                    onChange={(v) => updateExercise(ex.id, { rep_count: v })}
-                    min={1} max={30}
-                  />
-                </div>
-              </div>
-
-              {/* Gewicht chips */}
-              <div className="flex gap-2 pl-7">
-                {(['leicht', 'mittel', 'schwer'] as const).map((w) => (
-                  <button
-                    key={w}
-                    onClick={() => updateExercise(ex.id, {
-                      weight_level: ex.weight_level === w ? undefined : w,
-                    })}
-                    className="px-2.5 py-1 rounded-full text-xs font-semibold transition-colors"
-                    style={{
-                      backgroundColor: ex.weight_level === w ? '#10B98120' : 'var(--color-bg-elevated)',
-                      color: ex.weight_level === w ? '#10B981' : 'var(--color-text-muted)',
-                    }}
-                  >
-                    {w.charAt(0).toUpperCase() + w.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {/* Add exercise input */}
-          <ExerciseListEditor
-            items={[]}
-            onChange={(newItems) => {
-              if (newItems.length > 0) {
-                setExercises((prev) => [
-                  ...prev,
-                  { ...newItems[newItems.length - 1], sets: 3, rep_count: 8 },
-                ])
-              }
-            }}
-            fromCatalog
-          />
+          <KraftExerciseEditor exercises={exercises} onChange={setExercises} />
         </div>
       )}
 
