@@ -394,6 +394,8 @@ Ohne gewählte Kachel zeigt die Liste alle sichtbaren Workouts. Eine Kachel filt
 
 Alle Modi nutzen den drift-korrigierten `timer.worker.js` im Hintergrund.
 
+**Teile:** Im letzten Wizard-Schritt, über dem Warm-up, lassen sich weitere Teile anfügen, verschieben und entfernen: Kraft, Pause, EMOM, AMRAP, For Time, Tabata. Die Reihenfolge ist frei. Ab zwei Arbeitsteilen läuft `BlockSession` sie nacheinander, analog zum Warm-up. Zwischen zwei Arbeitsteilen liegt eine Pause (die eingefügte Pause, sonst 60 Sekunden) und fragt „Weiter mit {nächster Teil}“ oder „Überspringen“. Überspringen lässt den nächsten Arbeitsteil aus und schreibt keinen Verlauf. Jeder gelaufene Teil schreibt einen eigenen `wod_history`-Eintrag (`Name · EMOM`). Ein einzelnes Teil bleibt der bisherige Timer. Die Kette liegt in `custom_workouts.config.blocks`.
+
 **CountdownOverlay:** `TimerView` und `WarmupTimer` zeigen vor Timer-Start eine 3-2-1-Go-Einblendung (SVG-Puls-Animation). Die Zählung läuft im selben Worker-Takt; Wake Lock ist während des Countdowns bereits aktiv.
 
 **Screen Wake Lock:** Während der Timer läuft, aktivieren folgende Komponenten die Screen Wake Lock API (`navigator.wakeLock.request('screen')`), um Display-Timeout zu verhindern:
@@ -600,6 +602,7 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 | **Session BE** | **Versand und Admin** — `send-dispatch` schickt Web-Push an die Abos (Erinnerung nach `push_preferences`, Broadcast an alle). E-Mail über Resend ist davon getrennt: Newsletter, Zahlung, Konto, nie die Erinnerung. Morgen-Push nennt die heutigen Routinen. Die Uhrzeit gilt in der Stadt aus den Benachrichtigungen (`push_preferences.city` und `timezone`, Migration 032, Vorschlag via Open-Meteo). Ohne Stadt: Europe/Zurich. Secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `RESEND_API_KEY`. Admin-Seiten Push, Emails, Feedback ersetzen die Platzhalter. Ein Pillar-Abschluss hakt heutige Routinen mit passendem `linked_pillar` ab. `routine_logs` werden beim Öffnen und beim Zurückkehren neu geladen. |
 | **Session BD** | **Kachel bleibt nach dem Workout** — Jeder Abschluss (Ad-hoc, eigenes, Katalog, Kraft) schreibt das Workout lokal in `carveout_pillar_done` und in `wod_history`. `useTodayPillars` und `useWeekPillars` lesen den lokalen Stand mit, `staleTime: 0`, Reload und Fokus laden neu. Auf dem Fertig-Screen steht „Cooldown · Mobilität“ und führt nach `/stretching`. Migration `030_push_preferences.sql` schreibt die Push-Einstellungen fest. |
 | **Session BC** | **Workout-Detail aufgeräumt** — In der Ansicht vor dem Start sind das Warmup-Akkordeon, der Warmup-Knopf neben Start und der Scaling-Block weg. Anpassen, Equipment und Start bleiben. Warmup gibt es weiter im Start-Wizard. |
+| **Session BL** | **Workout-Teile** — Letzter Wizard-Schritt: Teile anfügen, sortieren, entfernen (Kraft, Pause, EMOM, AMRAP, For Time, Tabata). `BlockSession` läuft sie der Reihe nach. Dazwischen Pause mit „Weiter mit …“ oder „Überspringen“. Jeder gelaufene Teil ein eigener History-Eintrag. Ein Teil bleibt der alte Timer. |
 
 ### Offen / Roadmap
 
@@ -665,4 +668,4 @@ Dokumentiert behobene Bugs mit Kontext — damit Regressions erkannt werden und 
 
 ---
 
-*Letzte Aktualisierung: September 2026 — Session BF: Workout des Tages nur im WODs-Tab*
+*Letzte Aktualisierung: Oktober 2026 — Session BL: Workout-Teile in beliebiger Reihenfolge*

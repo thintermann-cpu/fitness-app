@@ -5,7 +5,9 @@ import type { WizardExercise } from '../../lib/customWorkouts'
 import { TIMER_LABELS, TIMER_MODE_LIST } from '../../lib/timerLabels'
 import type { TimerMode } from '../../lib/timerLabels'
 import { emomIntervalCount } from '../../lib/exerciseCatalog'
+import { isChained, isWorkBlock, patchFirstWork, type WorkoutBlock } from '../../lib/workoutBlocks'
 import { WARMUP_SESSIONS, type WarmupRoutineId } from './WarmupTimer'
+import { BlockComposer } from './BlockComposer'
 
 function emomRoundMax(count: number) {
   if (count <= 1) return 30
@@ -35,6 +37,7 @@ export interface TimerInitConfig {
   emomInterval?: number
   emomRounds?: number
   scheme?: string
+  blocks?: WorkoutBlock[]
 }
 
 export interface WizardInitialValues {
@@ -50,6 +53,7 @@ export interface WizardInitialValues {
   emomInterval?: number
   emomRounds?: number
   scheme?: string
+  blocks?: WorkoutBlock[]
 }
 
 interface Props {
@@ -100,6 +104,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
   const [minutes,   setMinutes]   = useState(() => initialValues?.minutes ?? 20)
   const [name,      setName]      = useState(() => initialValues?.name ?? '')
   const [warmup,    setWarmup]    = useState<'none' | WarmupRoutineId | null>(null)
+  const [parts, setParts] = useState<WorkoutBlock[]>(() => initialValues?.blocks ?? [])
 
   // Krafttraining config
   const [restBetweenSets,      setRestBetweenSets]      = useState(() => initialValues?.restBetweenSets      ?? 90)
@@ -125,7 +130,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
 
   const reset = () => {
     setStep(initialStep); setMode(initialValues?.mode ?? 'fortime'); setExercises(initialValues?.exercises ?? []); setScheme(initialValues?.scheme ?? '')
-    setMinutes(20); setName(''); setWarmup(null)
+    setMinutes(20); setName(''); setWarmup(null); setParts(initialValues?.blocks ?? [])
     setRestBetweenSets(90); setRestBetweenExercises(60)
     setTabataWork(20); setTabataRest(10); setTabataRounds(8)
     setEmomInterval(1); setEmomRounds(10)
@@ -147,10 +152,33 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
       cfg.emomRounds = emomRounds
     }
     cfg.scheme = scheme.trim() || undefined
+    if (isChained(parts)) cfg.blocks = parts
     return cfg
   }
 
+  function buildPrimary(): WorkoutBlock {
+    const id = 'primary'
+    const note = scheme.trim() || undefined
+    if (mode === 'krafttraining') {
+      return { id, kind: 'krafttraining', exercises, restBetweenSets, restBetweenExercises }
+    }
+    if (mode === 'emom') {
+      return { id, kind: 'emom', exercises, intervalMin: emomInterval, rounds: emomRounds, scheme: note }
+    }
+    if (mode === 'tabata') {
+      return { id, kind: 'tabata', exercises, workSec: tabataWork, restSec: tabataRest, rounds: tabataRounds, scheme: note }
+    }
+    if (mode === 'amrap') return { id, kind: 'amrap', exercises, minutes, scheme: note }
+    return { id, kind: 'fortime', exercises, minutes, scheme: note }
+  }
+
   const handleNext = () => {
+    if (step === 2) {
+      const primary = buildPrimary()
+      setParts((prev) => (prev.length === 0 ? [primary] : patchFirstWork(prev, primary)))
+      setStep(3)
+      return
+    }
     if (step < lastStep) { setStep((s) => s + 1); return }
 
     const kraftCfg: KraftConfig | undefined = isKraft
@@ -176,7 +204,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
 
   const canNext = (() => {
     if (!isAdhoc && step === 2) return name.trim().length > 0
-    if (step === lastStep) return warmup !== null
+    if (step === lastStep) return warmup !== null && parts.some(isWorkBlock)
     if (isKraft && step === 1) return exercises.length > 0
     return true
   })()
@@ -635,9 +663,11 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
         </div>
       )}
 
-      {/* Step 3: Warmup? — Kraft und die anderen Modi */}
+      {/* Step 3: Teile, dann Warmup */}
       {step === 3 && (
-        <div>
+        <div className="space-y-6">
+          <BlockComposer parts={parts} onChange={setParts} />
+          <div>
           <p className="text-lg font-black mb-2" style={{ color: 'var(--color-text)' }}>🔥 Warmup zuerst?</p>
           <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
             Kurz ist die leichte Runde. Standard ist die bisherige.
@@ -667,6 +697,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
                 </button>
               )
             })}
+          </div>
           </div>
         </div>
       )}

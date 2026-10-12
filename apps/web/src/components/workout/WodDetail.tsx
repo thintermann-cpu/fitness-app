@@ -15,6 +15,9 @@ import { FreeTimerWizard, type KraftConfig, type TimerInitConfig } from './FreeT
 import type { TimerMode } from '../../lib/timerLabels'
 import { TimerView } from './TimerView'
 import { KraftTimerView } from './KraftTimerView'
+import { BlockSession } from './BlockSession'
+import { isChained, isWorkBlock, seedFromBlock } from '../../lib/workoutBlocks'
+import type { WorkoutBlock } from '../../lib/workoutBlocks'
 import { ScoreInput } from './ScoreInput'
 import { WodHistoryList } from './WodHistoryList'
 import { FavoriteButton } from '../ui/FavoriteButton'
@@ -33,6 +36,7 @@ interface LaunchConfig {
   tabataRounds?: number
   emomInterval?: number
   emomRounds?: number
+  blocks?: WorkoutBlock[]
 }
 
 const CW_MODE_LABELS: Record<string, string> = {
@@ -129,6 +133,7 @@ export function WodDetail({ wodName, onBack }: Props) {
       tabataRounds: timerCfg?.tabataRounds,
       emomInterval: timerCfg?.emomInterval,
       emomRounds: timerCfg?.emomRounds,
+      blocks: timerCfg?.blocks,
     })
     if (exercises) setSessionItems(exercises)
     setSessionScheme(timerCfg?.scheme ?? '')
@@ -307,7 +312,13 @@ export function WodDetail({ wodName, onBack }: Props) {
 
         {showTimer && (
           <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2 flex-1 min-h-0 flex flex-col">
-            {(launch?.mode ?? customWorkout.mode) === 'krafttraining' ? (
+            {launch?.blocks && isChained(launch.blocks) ? (
+              <BlockSession
+                blocks={launch.blocks}
+                workoutName={customWorkout.name}
+                onSessionEnd={() => window.dispatchEvent(new CustomEvent('carveout:workout-completed'))}
+              />
+            ) : (launch?.mode ?? customWorkout.mode) === 'krafttraining' ? (
               <KraftTimerView
                 exercises={launch?.kraft?.exercises ?? launch?.exercises ?? customWorkout.exercises}
                 restBetweenSets={launch?.kraft?.restBetweenSets ?? customWorkout.restBetweenSets ?? 90}
@@ -382,6 +393,8 @@ export function WodDetail({ wodName, onBack }: Props) {
             tabataRounds: customWorkout.tabataRounds,
             emomInterval: customWorkout.emomInterval,
             emomRounds: customWorkout.emomRounds ?? (customWorkout.mode === 'emom' ? customWorkout.minutes : undefined),
+            blocks: customWorkout.blocks,
+            ...(customWorkout.blocks?.find(isWorkBlock) ? seedFromBlock(customWorkout.blocks.find(isWorkBlock)!) : {}),
           }}
           onStart={(mode, minutes, withWarmup, kraftConfig, exercises, _name, timerCfg) => {
             beginFromWizard(mode, minutes, withWarmup, kraftConfig, exercises, timerCfg)
@@ -735,7 +748,18 @@ export function WodDetail({ wodName, onBack }: Props) {
       )}
 
       {/* Embedded timer */}
-      {showTimer && launch?.mode === 'krafttraining' && launch.kraft ? (
+      {showTimer && launch?.blocks && isChained(launch.blocks) ? (
+        <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2 flex-1 min-h-0 flex flex-col">
+          <BlockSession
+            blocks={launch.blocks}
+            workoutName={catalogWod.name}
+            onSessionEnd={() => {
+              track('workout_completed', { wod_id: catalogWod.id, duration_min: sessionMinutes, category: catalogWod.category })
+              window.dispatchEvent(new CustomEvent('carveout:workout-completed'))
+            }}
+          />
+        </div>
+      ) : showTimer && launch?.mode === 'krafttraining' && launch.kraft ? (
         <div className="bg-[var(--color-bg-card)] rounded-[var(--radius-lg)] p-2 flex-1 min-h-0 flex flex-col">
           <KraftTimerView
             exercises={launch.kraft.exercises}

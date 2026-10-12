@@ -6,6 +6,7 @@ import type { WarmupRoutineId } from '../components/workout/WarmupTimer'
 import type { TimerMode } from '../lib/timerLabels'
 import type { WizardExercise, CustomWorkout } from '../lib/customWorkouts'
 import { parseWorkoutSearch, workoutMatchesQuery } from '../lib/exerciseCatalog'
+import { blockLabel, isWorkBlock, seedFromBlock } from '../lib/workoutBlocks'
 
 const MODE_LABELS: Record<string, string> = {
   fortime: 'ForTime', amrap: 'AMRAP', emom: 'EMOM',
@@ -52,6 +53,7 @@ export function CustomWorkoutsPage() {
       emomInterval: timerCfg?.emomInterval,
       emomRounds:   timerCfg?.emomRounds,
       scheme:       timerCfg?.scheme ?? editWorkout.scheme,
+      blocks:       timerCfg?.blocks,
     })
     setEditWorkout(null)
   }
@@ -75,6 +77,7 @@ export function CustomWorkoutsPage() {
           w.name,
           ...(w.equipment ?? []),
           ...w.exercises.map((e) => e.name),
+          ...(w.blocks ?? []).flatMap((block) => block.kind === 'pause' ? [] : block.exercises.map((e) => e.name)),
         ].join(' ').toLowerCase()
         return hay.includes(query)
       })
@@ -133,8 +136,9 @@ export function CustomWorkoutsPage() {
       ) : (
         <div className="space-y-1.5 w-full min-w-0">
           {visible.map((w) => {
+            const chain = w.blocks?.filter(isWorkBlock).map((block) => blockLabel(block))
             const meta = [
-              MODE_LABELS[w.mode] ?? w.mode,
+              chain && chain.length > 1 ? chain.join(' → ') : (MODE_LABELS[w.mode] ?? w.mode),
               w.minutes > 0 ? `${w.minutes} min` : '',
               w.exercises.length > 0 ? `${w.exercises.length} Übungen` : '',
             ].filter(Boolean).join(' · ')
@@ -203,6 +207,8 @@ export function CustomWorkoutsPage() {
           emomInterval: editWorkout.emomInterval,
           emomRounds:   editWorkout.emomRounds,
           scheme:       editWorkout.scheme,
+          blocks:       editWorkout.blocks,
+          ...(editWorkout.blocks?.find(isWorkBlock) ? seedFromBlock(editWorkout.blocks.find(isWorkBlock)!) : {}),
         } satisfies WizardInitialValues) : undefined}
         onStart={handleEditSave}
       />

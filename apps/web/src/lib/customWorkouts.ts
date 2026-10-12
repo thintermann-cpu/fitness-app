@@ -1,3 +1,5 @@
+import type { WorkoutBlock } from './workoutBlocks'
+
 export interface WizardExercise {
   id: string
   name: string
@@ -24,6 +26,8 @@ export interface CustomWorkout {
   equipment?: string[]
   /** Shared prescription, e.g. "3 Runden · 21-15-9". */
   scheme?: string
+  /** Ordered parts. A chain is two or more work parts, with optional pauses between them. */
+  blocks?: WorkoutBlock[]
 }
 
 export interface CustomSession {
