@@ -1,5 +1,5 @@
 import type { WizardExercise } from '../../lib/customWorkouts'
-import { groupAt, setGroupSets, toggleSupersetWithNext } from '../../lib/kraftPlan'
+import { exerciseLoad, groupAt, setGroupSets, toggleSupersetWithNext } from '../../lib/kraftPlan'
 import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
 
 interface Props {
@@ -91,6 +91,9 @@ export function KraftExerciseEditor({ exercises, onChange }: Props) {
                   />
                 </div>
               </div>
+              {(exercise.weightKg != null || exercise.weightText) && (
+                <p className="text-xs pl-7 font-semibold" style={{ color: '#E8642A' }}>{exerciseLoad(exercise)}</p>
+              )}
               <div className="flex gap-2 pl-7">
                 {(['leicht', 'mittel', 'schwer'] as const).map((weight) => (
                   <button

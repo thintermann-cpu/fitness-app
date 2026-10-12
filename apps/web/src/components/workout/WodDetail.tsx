@@ -16,6 +16,7 @@ import type { TimerMode } from '../../lib/timerLabels'
 import { TimerView } from './TimerView'
 import { KraftTimerView } from './KraftTimerView'
 import { BlockSession } from './BlockSession'
+import { exerciseLoad } from '../../lib/kraftPlan'
 import { isChained, isWorkBlock, seedFromBlock } from '../../lib/workoutBlocks'
 import type { WorkoutBlock } from '../../lib/workoutBlocks'
 import { ScoreInput } from './ScoreInput'
@@ -248,7 +249,7 @@ export function WodDetail({ wodName, onBack }: Props) {
                       </span>
                       {(ex.sets || ex.rep_count) && (
                         <span className="text-xs text-[var(--color-text-muted)]">
-                          {ex.sets ?? 3}×{ex.rep_count ?? 8}{ex.weight_level ? ` · ${ex.weight_level}` : ''}
+                          {ex.sets ?? 3}×{ex.rep_count ?? 8}{exerciseLoad(ex) ? ` · ${exerciseLoad(ex)}` : ''}
                         </span>
                       )}
                     </div>

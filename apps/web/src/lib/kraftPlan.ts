@@ -76,21 +76,32 @@ export function toggleSupersetWithNext(exercises: WizardExercise[], index: numbe
   ))
 }
 
+export function exerciseLoad(exercise: WizardExercise): string | undefined {
+  if (typeof exercise.weightKg === 'number' && Number.isFinite(exercise.weightKg)) {
+    const rounded = Math.round(exercise.weightKg * 100) / 100
+    const body = Number.isInteger(rounded) ? String(rounded) : String(rounded).replace('.', ',')
+    return `${body} kg`
+  }
+  if (exercise.weightText?.trim()) return exercise.weightText.trim()
+  if (exercise.weight_level) return exercise.weight_level
+  return undefined
+}
+
 function formatOne(exercise: WizardExercise, asKraft: boolean): string {
   const hasScheme = exercise.sets != null || exercise.rep_count != null
   const scheme = asKraft || hasScheme
     ? `${exercise.sets ?? 3}×${exercise.rep_count ?? 8} `
     : ''
   const detail = !scheme && exercise.detail ? ` ${exercise.detail}` : ''
-  const weight = exercise.weight_level ? ` ${exercise.weight_level}` : ''
+  const weight = exerciseLoad(exercise)
   const note = exercise.note?.trim() ? ` — ${exercise.note.trim()}` : ''
-  return `${scheme}${exercise.name}${detail}${weight}${note}`
+  return `${scheme}${exercise.name}${detail}${weight ? ` ${weight}` : ''}${note}`
 }
 
 /** One history line. Kraft shows sets×reps. Metcon keeps the prescription text. Supersets are grouped. */
 export function formatHistoryExercises(exercises: WizardExercise[]): string {
   const kraft = exercises.some((exercise) => (
-    exercise.sets != null || exercise.rep_count != null || exercise.weight_level || exercise.supersetId
+    exercise.sets != null || exercise.rep_count != null || exercise.weight_level || exercise.weightKg != null || exercise.weightText || exercise.supersetId
   ))
   return exerciseGroups(exercises).map((group) => {
     const members = exercises.slice(group.start, group.end + 1).map((exercise) => formatOne(exercise, kraft && group.superset))

@@ -87,6 +87,27 @@ function roleOf(value: unknown, fallback: FlowRole): FlowRole {
   return fallback
 }
 
+function readWeight(value: unknown): { level?: WizardExercise['weight_level']; kg?: number; text?: string } | 'invalid' | undefined {
+  if (value == null || value === '') return undefined
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value) || value <= 0 || value > 500) return 'invalid'
+    return { kg: Math.round(value * 100) / 100 }
+  }
+  if (typeof value !== 'string') return 'invalid'
+  const raw = value.trim()
+  if (!raw) return undefined
+  const key = raw.toLowerCase()
+  if (WEIGHTS[key]) return { level: WEIGHTS[key] }
+  const kg = key.match(/^(\d+(?:[.,]\d+)?)\s*(kg)?$/)
+  if (kg) {
+    const amount = Number(kg[1].replace(',', '.'))
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 500) return 'invalid'
+    return { kg: Math.round(amount * 100) / 100 }
+  }
+  if (raw.length <= 40 && /\d/.test(raw)) return { text: raw }
+  return 'invalid'
+}
+
 function warnName(part: number, name: string, warnings: ImportWarning[]) {
   if (lookupExerciseName(name)) return
   warnings.push({
@@ -193,9 +214,9 @@ function compilePart(raw: unknown, index: number, errors: string[], warnings: Im
       if (!name) errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: Name fehlt.`)
       if (sets == null) errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: sets zwischen 1 und 20.`)
       if (reps == null) errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: reps zwischen 1 und 100.`)
-      const weightRaw = text(pick(row, ['weight', 'weight_level']), 20)?.toLowerCase()
-      if (weightRaw && !WEIGHTS[weightRaw]) {
-        errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: weight ist leicht, mittel oder schwer.`)
+      const weight = readWeight(pick(row, ['weight', 'weightKg', 'weight_level', 'kg']))
+      if (weight === 'invalid') {
+        errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: weight ist eine kg-Angabe, z. B. 80 oder "80 kg", oder leicht, mittel, schwer.`)
       }
       const superset = pick(row, ['supersetWithPrevious', 'superset']) === true
       if (superset && exercises.length === 0) {
@@ -209,7 +230,9 @@ function compilePart(raw: unknown, index: number, errors: string[], warnings: Im
         name,
         sets,
         rep_count: reps,
-        weight_level: weightRaw ? WEIGHTS[weightRaw] : undefined,
+        weight_level: weight && weight !== 'invalid' ? weight.level : undefined,
+        weightKg: weight && weight !== 'invalid' ? weight.kg : undefined,
+        weightText: weight && weight !== 'invalid' ? weight.text : undefined,
         note: text(pick(row, ['note', 'description', 'beschreibung']), 140),
       })
     })
