@@ -104,7 +104,7 @@ function readWeight(value: unknown): { level?: WizardExercise['weight_level']; k
     if (!Number.isFinite(amount) || amount <= 0 || amount > 500) return 'invalid'
     return { kg: Math.round(amount * 100) / 100 }
   }
-  if (raw.length <= 40 && /\d/.test(raw)) return { text: raw }
+  if (raw.length <= 40) return { text: raw }
   return 'invalid'
 }
 
@@ -216,7 +216,7 @@ function compilePart(raw: unknown, index: number, errors: string[], warnings: Im
       if (reps == null) errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: reps zwischen 1 und 100.`)
       const weight = readWeight(pick(row, ['weight', 'weightKg', 'weight_level', 'kg']))
       if (weight === 'invalid') {
-        errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: weight ist eine kg-Angabe, z. B. 80 oder "80 kg", oder leicht, mittel, schwer.`)
+        errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: weight ist zu lang. kg, "80 kg", "2×24 kg", "Bodyweight" oder leicht/mittel/schwer, höchstens 40 Zeichen.`)
       }
       const superset = pick(row, ['supersetWithPrevious', 'superset']) === true
       if (superset && exercises.length === 0) {
