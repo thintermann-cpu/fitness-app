@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
+import { markPillarDone, todayKey } from '../lib/pillarDone'
 
 export interface MeditationLog {
   id: string
@@ -57,6 +58,7 @@ export function useMeditationLogs() {
       duration_min: number
       completed_at?: string
     }): Promise<MeditationLog> => {
+      markPillarDone('meditation')
       const newLog: MeditationLog = {
         id:            crypto.randomUUID(),
         user_id:       user?.id ?? 'local',
@@ -64,7 +66,7 @@ export function useMeditationLogs() {
         technique_id:  entry.technique_id ?? null,
         session_type:  entry.session_type,
         duration_min:  entry.duration_min,
-        completed_at:  entry.completed_at ?? new Date().toISOString().slice(0, 10),
+        completed_at:  entry.completed_at ?? todayKey(),
       }
 
       if (!user) {
@@ -96,6 +98,8 @@ export function useMeditationLogs() {
       void import('../lib/completeLinkedRoutines').then(({ completeLinkedRoutines }) => completeLinkedRoutines('meditation'))
       void queryClient.invalidateQueries({ queryKey: ['routine_logs'] })
       void queryClient.invalidateQueries({ queryKey: ['meditation_logs'] })
+      void queryClient.invalidateQueries({ queryKey: ['today_pillars'] })
+      void queryClient.invalidateQueries({ queryKey: ['week_pillars'] })
     },
   })
 

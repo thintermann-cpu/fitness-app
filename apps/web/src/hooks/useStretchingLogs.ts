@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
+import { markPillarDone, todayKey } from '../lib/pillarDone'
 
 export interface StretchingLog {
   id: string
@@ -57,12 +58,13 @@ export function useStretchingLogs() {
       display_name?: string
       subcategory?: string
     }): Promise<StretchingLog> => {
+      markPillarDone('stretching')
       const meta = { _displayName: entry.display_name, _subcategory: entry.subcategory }
       const newLog = Object.assign({
         id: crypto.randomUUID(),
         user_id: user?.id ?? 'local',
         routine_id: entry.routine_id,
-        completed_at: entry.completed_at ?? new Date().toISOString().slice(0, 10),
+        completed_at: entry.completed_at ?? todayKey(),
         duration_min: entry.duration_min,
       }, meta) as StretchingLog
 
@@ -98,6 +100,8 @@ export function useStretchingLogs() {
     onSuccess: (data) => {
       void import('../lib/completeLinkedRoutines').then(({ completeLinkedRoutines }) => completeLinkedRoutines('stretching'))
       void queryClient.invalidateQueries({ queryKey: ['routine_logs'] })
+      void queryClient.invalidateQueries({ queryKey: ['today_pillars'] })
+      void queryClient.invalidateQueries({ queryKey: ['week_pillars'] })
       const prepend = (old: StretchingLog[] | undefined) =>
         old ? [data, ...old.filter((e) => e.id !== data.id)] : [data]
       queryClient.setQueryData(qk, prepend)

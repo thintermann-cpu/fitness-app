@@ -6,8 +6,7 @@ import { useSessionStore } from '../../store/sessionStore'
 import { useAuthStore } from '../../store/authStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { alignSupersetSets, exerciseGroups, exerciseLoad, groupAt } from '../../lib/kraftPlan'
-
-type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
+import { useWakeLock } from '../../hooks/useWakeLock'
 
 let kraftAudioCtx: AudioContext | null = null
 function beepKraft(freq: number, gainVal: number, dur: number) {
@@ -57,27 +56,15 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   const [setIdx,      setSetIdx]      = useState(0)
   const [timeLeft,    setTimeLeft]    = useState(0)
   const [showCountdown, setShowCountdown] = useState(autoStart)
+  const [restPaused, setRestPaused] = useState(false)
   const restTypeRef      = useRef<'set' | 'exercise'>('set')
   const pendingRef       = useRef<{ exIdx: number; setIdx: number } | null>(null)
   const plan             = useMemo(() => alignSupersetSets(exercises), [exercises])
-  const wakeLockRef      = useRef<{ release: () => Promise<void> } | null>(null)
+  useWakeLock(showCountdown || phase === 'work' || phase === 'rest')
   const navigate         = useNavigate()
   const { addEntry }     = useWodHistory()
   const setSessionActive = useSessionStore((s) => s.setSessionActive)
   const lang             = useAuthStore((s) => s.profile?.language ?? 'de')
-
-  useEffect(() => {
-    const nav = navigator as WakeLockNav
-    if (!nav.wakeLock) return
-    const isActive = phase === 'work' || phase === 'rest'
-    if (isActive) {
-      nav.wakeLock.request('screen').then((s) => { wakeLockRef.current = s }).catch(() => {})
-    } else {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-    return () => { wakeLockRef.current?.release().catch(() => {}); wakeLockRef.current = null }
-  }, [phase])
 
   useEffect(() => {
     setSessionActive(phase !== 'idle')
@@ -102,7 +89,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
 
   // Countdown timer (set-rest or exercise-rest)
   useEffect(() => {
-    if (phase !== 'rest') return
+    if (phase !== 'rest' || restPaused) return
     if (timeLeft <= 0) {
       advanceFromRest()
       return
@@ -112,7 +99,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
     }, 1000)
     return () => clearInterval(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, timeLeft])
+  }, [phase, timeLeft, restPaused])
 
   function advanceFromRest() {
     const next = pendingRef.current
@@ -147,14 +134,17 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
       restTypeRef.current = 'exercise'
       setTimeLeft(restBetweenExercises)
     }
+    setRestPaused(false)
     setPhase('rest')
   }
 
   function skipRest() {
+    setRestPaused(false)
     setTimeLeft(0)
   }
 
   function skipExercise() {
+    setRestPaused(false)
     if (exIdx >= plan.length - 1) {
       finishWorkout()
       return
@@ -375,13 +365,33 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
 
       {/* Buttons */}
       {isRest ? (
-        <button
-          onClick={skipRest}
-          className="px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors"
-          style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
-        >
-          Pause überspringen →
-        </button>
+        <div className="flex flex-col gap-3 w-full">
+          <button
+            type="button"
+            onClick={() => setRestPaused((value) => !value)}
+            className="py-3.5 rounded-2xl font-bold text-base text-white"
+            style={{ backgroundColor: '#3B82F6' }}
+          >
+            {restPaused ? 'Fortsetzen' : 'Pause'}
+          </button>
+          <button
+            onClick={skipRest}
+            className="px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
+          >
+            Pause überspringen →
+          </button>
+          {exIdx < plan.length - 1 && (
+            <button
+              type="button"
+              onClick={skipExercise}
+              className="px-6 py-2.5 rounded-xl text-sm font-semibold"
+              style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
+            >
+              Übung überspringen
+            </button>
+          )}
+        </div>
       ) : (
         <div className="flex gap-3 w-full">
           <button

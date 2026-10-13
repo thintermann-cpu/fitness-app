@@ -3,6 +3,7 @@ import type { SoundKey } from '../../hooks/useAudio'
 import { useAudio } from '../../hooks/useAudio'
 import { useMeditationLogs } from '../../hooks/useMeditationLogs'
 import { useSessionStore } from '../../store/sessionStore'
+import { useWakeLock } from '../../hooks/useWakeLock'
 
 const PILLAR_COLOR = '#9B7FD4'
 
@@ -156,30 +157,13 @@ export function CustomTimer({ lang, onFinish }: Props) {
   const startTimeRef      = useRef(Date.now())
   const lastIntervalRef   = useRef(0)
   const totalSecRef       = useRef(durationMin * 60)
-  const wakeLockRef       = useRef<{ release: () => Promise<void> } | null>(null)
-
-  const isTimerActive = status === 'running' || status === 'prep'
+  const isTimerActive = status === 'prep' || status === 'running' || status === 'paused'
+  useWakeLock(isTimerActive)
   const setSessionActive = useSessionStore((s) => s.setSessionActive)
   useEffect(() => {
     setSessionActive(isTimerActive)
     return () => setSessionActive(false)
   }, [isTimerActive, setSessionActive])
-
-  useEffect(() => {
-    type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
-    const nav = navigator as WakeLockNav
-    if (!nav.wakeLock) return
-    if (isTimerActive) {
-      nav.wakeLock.request('screen').then(s => { wakeLockRef.current = s }).catch(() => {})
-    } else {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-    return () => {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-  }, [isTimerActive])
 
   const circumference = 2 * Math.PI * 44
 

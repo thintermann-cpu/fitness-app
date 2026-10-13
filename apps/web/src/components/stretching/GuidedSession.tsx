@@ -12,6 +12,7 @@ import { exerciseBlurb, exerciseVideoSearchUrl } from '../../lib/exerciseBlurbs'
 import { usePoseFigure } from '../../lib/poseFigure'
 import { NextExercisePreview } from '../shared/NextExercisePreview'
 import { useAnalytics } from '../../hooks/useAnalytics'
+import { useWakeLock } from '../../hooks/useWakeLock'
 
 const PILLAR_COLOR = '#7BC67E'
 const SWITCH_DURATION = 5
@@ -138,30 +139,12 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
 
   const current = orderedExercises[currentIndex]
   const poseFigure = usePoseFigure()
+  useWakeLock(showCountdown || (phase !== 'config' && phase !== 'done'))
   const poseFrames = useMemo(
     () => mobilityFramePaths(current?.name_en, poseFigure),
     [current?.name_en, poseFigure],
   )
   const infoBlurb = exerciseBlurb(current?.name_en, lang)
-
-  // Wake Lock
-  const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
-  const isTimerActive = phase !== 'config' && phase !== 'done' && !paused
-  useEffect(() => {
-    type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
-    const nav = navigator as WakeLockNav
-    if (!nav.wakeLock) return
-    if (isTimerActive) {
-      nav.wakeLock.request('screen').then(s => { wakeLockRef.current = s }).catch(() => {})
-    } else {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-    return () => {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-  }, [isTimerActive])
 
   const setSessionActive = useSessionStore((s) => s.setSessionActive)
   useEffect(() => {

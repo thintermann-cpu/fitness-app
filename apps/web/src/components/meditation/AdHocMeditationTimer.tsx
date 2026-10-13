@@ -3,6 +3,7 @@ import { useAudio } from '../../hooks/useAudio'
 import type { SoundKey } from '../../hooks/useAudio'
 import { useMeditationLogs } from '../../hooks/useMeditationLogs'
 import { useToast } from '../../hooks/useToast'
+import { useWakeLock } from '../../hooks/useWakeLock'
 
 const PILLAR_COLOR = '#9B7FD4'
 type Lang = 'de' | 'en' | 'es'
@@ -49,7 +50,7 @@ export function AdHocMeditationTimer({ duration, sound = 'silence', lang, onFini
   const [timeLeft, setTimeLeft] = useState(totalSec)
   const [status,   setStatus]   = useState<Status>('running')
   const startTimeRef  = useRef(Date.now())
-  const wakeLockRef   = useRef<{ release: () => Promise<void> } | null>(null)
+  useWakeLock(status === 'running' || status === 'paused')
   const circumference = 2 * Math.PI * 44
 
   useEffect(() => { void audio.playGong() }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -64,22 +65,6 @@ export function AdHocMeditationTimer({ duration, sound = 'silence', lang, onFini
     return () => { audio.stopBackground() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, sound])
-
-  useEffect(() => {
-    type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
-    const nav = navigator as WakeLockNav
-    if (!nav.wakeLock) return
-    if (status === 'running') {
-      nav.wakeLock.request('screen').then(s => { wakeLockRef.current = s }).catch(() => {})
-    } else {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-    return () => {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-  }, [status])
 
   const logAndFinish = () => {
     if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
