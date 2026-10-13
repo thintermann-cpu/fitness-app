@@ -5,6 +5,7 @@ import type { SoundKey } from '../../hooks/useAudio'
 import { useAudio } from '../../hooks/useAudio'
 import { useMeditationLogs } from '../../hooks/useMeditationLogs'
 import { useSessionStore } from '../../store/sessionStore'
+import { useWakeLock } from '../../hooks/useWakeLock'
 
 const PILLAR_COLOR = '#9B7FD4'
 
@@ -134,24 +135,7 @@ export function MeditationSession({ meditation, lang, onFinish: _onFinish }: Pro
     (meditation.background_sound as SoundKey | null) ?? 'silence'
   )
   const startTimeRef  = useRef(Date.now())
-  const wakeLockRef   = useRef<{ release: () => Promise<void> } | null>(null)
-
-  const isTimerActive = started && !paused && !finished
-  useEffect(() => {
-    type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
-    const nav = navigator as WakeLockNav
-    if (!nav.wakeLock) return
-    if (isTimerActive) {
-      nav.wakeLock.request('screen').then(s => { wakeLockRef.current = s }).catch(() => {})
-    } else {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-    return () => {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-  }, [isTimerActive])
+  useWakeLock(started && !finished)
 
   const setSessionActive = useSessionStore((s) => s.setSessionActive)
   useEffect(() => {

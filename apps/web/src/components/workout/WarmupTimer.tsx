@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useAudio } from '../../hooks/useAudio'
 import { useToastStore } from '../../store/toastStore'
+import { useWakeLock } from '../../hooks/useWakeLock'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 
 const RING_RADIUS = 70
@@ -89,22 +90,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
 
   const audio    = useAudio()
   const addToast = useToastStore((s) => s.addToast)
-
-  // Wake Lock
-  const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
-  const isTimerActive = (phase === 'exercise' || phase === 'rest') && !paused
-  useEffect(() => {
-    type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
-    const nav = navigator as WakeLockNav
-    if (!nav.wakeLock) return
-    if (isTimerActive) {
-      nav.wakeLock.request('screen').then((s) => { wakeLockRef.current = s }).catch(() => {})
-    } else {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-    return () => { wakeLockRef.current?.release().catch(() => {}); wakeLockRef.current = null }
-  }, [isTimerActive])
+  useWakeLock(showCountdown || phase === 'exercise' || phase === 'rest')
 
   const current      = exercises[currentIdx]
   const phaseTotal   = phase === 'rest' ? restSec : (current?.sek ?? 0)
@@ -132,6 +118,26 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
   function handleClose() {
     resetToIdle()
     onClose()
+  }
+
+  function skipExercise() {
+    setPaused(false)
+    if (currentIdx >= exercises.length - 1) {
+      setPhase('done')
+      if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
+      void audio.playGong()
+      addToast({ type: 'success', message: '🔥 Warmup abgeschlossen!' })
+      return
+    }
+    const next = currentIdx + 1
+    setDone((flags) => {
+      const copy = [...flags]
+      copy[currentIdx] = true
+      return copy
+    })
+    setCurrentIdx(next)
+    setPhase('exercise')
+    setTimeLeft(exercises[next].sek)
   }
 
   function selectRoutine(id: WarmupRoutineId) {
@@ -397,6 +403,13 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
                 style={{ backgroundColor: '#E8642A' }}
               >
                 {paused ? '▶ Weiter' : '⏸ Pause'}
+              </button>
+              <button
+                onClick={skipExercise}
+                className="flex-1 py-3 rounded-xl text-sm font-semibold"
+                style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
+              >
+                Überspringen
               </button>
               <button
                 onClick={resetToIdle}

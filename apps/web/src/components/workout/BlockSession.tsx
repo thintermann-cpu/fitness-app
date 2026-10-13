@@ -11,6 +11,7 @@ import {
   type BlockGate,
   type WorkoutBlock,
 } from '../../lib/workoutBlocks'
+import { useWakeLock } from '../../hooks/useWakeLock'
 import { TimerView } from './TimerView'
 import { KraftTimerView } from './KraftTimerView'
 import { FlowTimerView } from './FlowTimerView'
@@ -55,7 +56,9 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   const [gate, setGate] = useState<BlockGate | null>(opening)
   const [left, setLeft] = useState(() => opening?.pauseSec ?? 0)
   const [finished, setFinished] = useState(false)
+  const [gatePaused, setGatePaused] = useState(false)
   const gateLock = useRef(false)
+  useWakeLock(!finished)
 
   useLayoutEffect(() => {
     setSessionActive(true)
@@ -63,7 +66,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   }, [index, gate, finished, setSessionActive])
 
   useEffect(() => {
-    if (!gate || finished) return
+    if (!gate || finished || gatePaused) return
     if (left <= 0) {
       if (gateLock.current) return
       gateLock.current = true
@@ -79,7 +82,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
     }
     const id = window.setTimeout(() => setLeft((value) => value - 1), 1000)
     return () => window.clearTimeout(id)
-  }, [gate, left, finished, onSessionEnd])
+  }, [gate, left, finished, gatePaused, onSessionEnd])
 
   function finish() {
     gateLock.current = true
@@ -111,6 +114,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
       return
     }
     gateLock.current = false
+    setGatePaused(false)
     setGate(following)
     setLeft(following.pauseSec)
   }
@@ -118,6 +122,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   function handoff(fromIndex: number) {
     const next = gateAfter(blocks, fromIndex)
     gateLock.current = false
+    setGatePaused(false)
     const finishedBlock = blocks[fromIndex]
     if (finishedBlock?.kind === 'flow' && finishedBlock.role === 'warmup' && next && !next.explicit && next.nextIndex >= 0) {
       setIndex(next.nextIndex)
@@ -172,6 +177,14 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
           {next ? `Als Nächstes: ${nextLabel}` : 'Letzte Pause'}
         </p>
         <div className="flex flex-col gap-3 w-full mt-2">
+          <button
+            type="button"
+            onClick={() => setGatePaused((value) => !value)}
+            className="py-3 rounded-2xl font-semibold text-sm"
+            style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
+          >
+            {gatePaused ? 'Fortsetzen' : 'Pause'}
+          </button>
           {next && (
             <button
               type="button"

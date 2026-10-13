@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FlowExercise, FlowRole } from '../../lib/workoutBlocks'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { useStretchingLogs } from '../../hooks/useStretchingLogs'
+import { useWakeLock } from '../../hooks/useWakeLock'
 import { markPillarDone } from '../../lib/pillarDone'
 import { useSessionStore } from '../../store/sessionStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
@@ -52,7 +53,9 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
   const [left, setLeft] = useState(() => stations[0]?.seconds ?? 0)
   const [showCountdown, setShowCountdown] = useState(true)
   const [started, setStarted] = useState(false)
+  const [paused, setPaused] = useState(false)
   const [nonce, setNonce] = useState(0)
+  useWakeLock(true)
   const logged = useRef(false)
   const { addEntry } = useWodHistory()
   const { addLog } = useStretchingLogs()
@@ -67,7 +70,7 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
   }, [setSessionActive])
 
   useEffect(() => {
-    if (!started || showCountdown) return
+    if (!started || showCountdown || paused) return
     if (left > 0) {
       const id = window.setTimeout(() => setLeft((value) => value - 1), 1000)
       return () => window.clearTimeout(id)
@@ -92,7 +95,7 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
     setIndex(next)
     setLeft(stations[next]?.seconds ?? 0)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [left, phase, started, showCountdown, nonce])
+  }, [left, phase, started, showCountdown, paused, nonce])
 
   function complete() {
     if (logged.current) return
@@ -124,11 +127,13 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
   }
 
   function skipRest() {
+    setPaused(false)
     setLeft(0)
     setNonce((value) => value + 1)
   }
 
   function skipStation() {
+    setPaused(false)
     if (index >= stations.length - 1) {
       complete()
       return
@@ -157,15 +162,25 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
       <p className="font-mono font-black" style={{ fontSize: 'clamp(72px, 22vw, 100px)', color }}>
         {formatSecs(left)}
       </p>
-      {phase === 'rest' ? (
-        <button type="button" onClick={skipRest} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
-          Pause überspringen →
+      <div className="flex flex-col gap-3 w-full">
+        <button
+          type="button"
+          onClick={() => setPaused((value) => !value)}
+          className="py-3.5 rounded-2xl font-bold text-base text-white"
+          style={{ backgroundColor: color }}
+        >
+          {paused ? 'Fortsetzen' : 'Pause'}
         </button>
-      ) : (
-        <button type="button" onClick={skipStation} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
-          Übung überspringen
-        </button>
-      )}
+        {phase === 'rest' ? (
+          <button type="button" onClick={skipRest} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
+            Pause überspringen →
+          </button>
+        ) : (
+          <button type="button" onClick={skipStation} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
+            Übung überspringen
+          </button>
+        )}
+      </div>
     </div>
   )
 }

@@ -8,6 +8,7 @@ import { useSessionStore } from '../../store/sessionStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { NextExercisePreview } from '../shared/NextExercisePreview'
 import { ExerciseInfoButton } from './ExerciseInfoButton'
+import { useWakeLock } from '../../hooks/useWakeLock'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { emomIntervalCount } from '../../lib/exerciseCatalog'
 
@@ -189,7 +190,7 @@ export function TimerView({
   const onChainedFinishRef = useRef(onChainedFinish)
   onChainedFinishRef.current = onChainedFinish
   const handedRef = useRef(false)
-  const wakeLockRef = useRef<{ release: () => Promise<void> } | null>(null)
+  useWakeLock(showCountdown || isRunning || isPaused)
   const autoStartedRef = useRef(false)
 
   const navigate          = useNavigate()
@@ -302,25 +303,6 @@ export function TimerView({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComplete])
-
-  // Wake Lock: keep screen on while timer is running
-  useEffect(() => {
-    type WakeLockNav = Navigator & { wakeLock?: { request(t: string): Promise<{ release(): Promise<void> }> } }
-    const nav = navigator as WakeLockNav
-    if (!nav.wakeLock) return
-    if (isRunning) {
-      nav.wakeLock.request('screen')
-        .then(s => { wakeLockRef.current = s })
-        .catch(() => {})
-    } else {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-    return () => {
-      wakeLockRef.current?.release().catch(() => {})
-      wakeLockRef.current = null
-    }
-  }, [isRunning])
 
   const startTimer = useCallback(() => {
     let durationMs: number
@@ -816,19 +798,18 @@ export function TimerView({
 
         {isRunning && (
           <>
-            {mode === 'fortime' ? (
+            <button
+              onClick={handlePause}
+              className="px-6 py-2.5 rounded-2xl font-bold text-base bg-white/15 text-[var(--color-text)] active:scale-95 transition-transform"
+            >
+              Pause
+            </button>
+            {mode === 'fortime' && (
               <button
                 onClick={handleStop}
                 className="px-6 py-2.5 rounded-2xl font-bold text-base bg-[var(--color-success)] text-white active:scale-95 transition-transform"
               >
                 Done
-              </button>
-            ) : (
-              <button
-                onClick={handlePause}
-                className="px-6 py-2.5 rounded-2xl font-bold text-base bg-white/15 text-[var(--color-text)] active:scale-95 transition-transform"
-              >
-                Pause
               </button>
             )}
             <button
@@ -849,6 +830,14 @@ export function TimerView({
             >
               Resume
             </button>
+            {mode === 'fortime' && (
+              <button
+                onClick={handleStop}
+                className="px-6 py-2.5 rounded-2xl font-bold text-base bg-[var(--color-success)] text-white active:scale-95 transition-transform"
+              >
+                Done
+              </button>
+            )}
             <button
               onClick={handleReset}
               className="px-5 py-2.5 rounded-2xl font-bold text-base bg-white/8 text-[var(--color-text-muted)] active:scale-95 transition-transform"

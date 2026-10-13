@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import type { BreathworkTechnique } from '../../hooks/useMeditations'
 import { useAudio } from '../../hooks/useAudio'
 import { useMeditationLogs } from '../../hooks/useMeditationLogs'
+import { useWakeLock } from '../../hooks/useWakeLock'
 
 const PILLAR_COLOR = '#9B7FD4'
 
@@ -83,6 +84,7 @@ export function BreathworkSession({ technique, lang, onFinish }: Props) {
   const [phaseRemaining, setPhaseRemaining] = useState(0)
   const [cyclesDone,     setCyclesDone]     = useState(0)
   const [paused,         setPaused]         = useState(false)
+  useWakeLock(phase !== 'ready' && phase !== 'done')
 
   // Refs to avoid stale closures in the effect
   const phaseRef     = useRef<Phase>('ready')
