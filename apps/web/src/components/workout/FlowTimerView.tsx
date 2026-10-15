@@ -3,6 +3,7 @@ import type { FlowExercise, FlowRole } from '../../lib/workoutBlocks'
 import { useWodHistory } from '../../hooks/useWodHistory'
 import { useStretchingLogs } from '../../hooks/useStretchingLogs'
 import { useWakeLock } from '../../hooks/useWakeLock'
+import { useAudio } from '../../hooks/useAudio'
 import { markPillarDone } from '../../lib/pillarDone'
 import { useSessionStore } from '../../store/sessionStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
@@ -59,6 +60,9 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
   const logged = useRef(false)
   const { addEntry } = useWodHistory()
   const { addLog } = useStretchingLogs()
+  const audio = useAudio()
+  const audioRef = useRef(audio)
+  audioRef.current = audio
   const setSessionActive = useSessionStore((s) => s.setSessionActive)
   const color = role === 'mobility' ? '#7BC67E' : role === 'warmup' ? '#F59E0B' : '#E8642A'
   const title = role === 'mobility' ? 'Mobilität' : role === 'warmup' ? 'Warm-up' : 'Ablauf'
@@ -71,11 +75,18 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
 
   useEffect(() => {
     if (!started || showCountdown || paused) return
+    if (left < 1 || left > 3) return
+    void audio.playBeep()
+  }, [left, started, showCountdown, paused, audio])
+
+  useEffect(() => {
+    if (!started || showCountdown || paused) return
     if (left > 0) {
       const id = window.setTimeout(() => setLeft((value) => value - 1), 1000)
       return () => window.clearTimeout(id)
     }
     if (phase === 'rest') {
+      void audioRef.current.playBeep()
       const next = index + 1
       setIndex(next)
       setPhase('work')
@@ -86,11 +97,13 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
       complete()
       return
     }
+    void audioRef.current.playBeep()
     if (restSec > 0) {
       setPhase('rest')
       setLeft(restSec)
       return
     }
+    void audioRef.current.playBeep()
     const next = index + 1
     setIndex(next)
     setLeft(stations[next]?.seconds ?? 0)
@@ -100,6 +113,7 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
   function complete() {
     if (logged.current) return
     logged.current = true
+    void audioRef.current.playGong()
     const totalSec = stations.reduce((sum, item) => sum + item.seconds, 0) + Math.max(0, stations.length - 1) * restSec
     if (role === 'mobility') {
       markPillarDone('stretching')
@@ -129,6 +143,20 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
   function skipRest() {
     setPaused(false)
     setLeft(0)
+    setNonce((value) => value + 1)
+  }
+
+  function skipUpcoming() {
+    setPaused(false)
+    const upcoming = index + 1
+    if (upcoming >= stations.length - 1) {
+      complete()
+      return
+    }
+    const after = upcoming + 1
+    setPhase('work')
+    setIndex(after)
+    setLeft(stations[after]?.seconds ?? 0)
     setNonce((value) => value + 1)
   }
 
@@ -172,9 +200,14 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
           {paused ? 'Fortsetzen' : 'Pause'}
         </button>
         {phase === 'rest' ? (
-          <button type="button" onClick={skipRest} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
-            Pause überspringen →
-          </button>
+          <>
+            <button type="button" onClick={skipRest} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
+              Pause überspringen →
+            </button>
+            <button type="button" onClick={skipUpcoming} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
+              Übung überspringen
+            </button>
+          </>
         ) : (
           <button type="button" onClick={skipStation} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
             Übung überspringen

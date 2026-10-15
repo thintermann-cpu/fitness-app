@@ -156,6 +156,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
 
   function finishWorkout() {
     if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
+    beepKraft(880, 0.8, 1)
     const totalSetsDone = plan.reduce((acc, e) => acc + (e.sets ?? 3), 0)
     addEntry.mutate({
       wod_name: workoutName ?? 'Krafttraining',

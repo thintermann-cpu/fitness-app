@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useAudioStore } from '../../store/audioStore'
 import { useAnalytics } from '../../hooks/useAnalytics'
+import { useMeditationLogs } from '../../hooks/useMeditationLogs'
 
 type Lang = 'de' | 'en' | 'es'
 type MeditationType = 'breathing' | 'box_breathing' | 'body_scan' | 'focus' | 'open_awareness'
@@ -137,6 +138,8 @@ interface Props {
 export function UnguidedTimer({ lang, onFinish }: Props) {
   const isMuted = useAudioStore((s) => s.isMuted)
   const { track } = useAnalytics()
+  const { addLog } = useMeditationLogs()
+  const loggedRef = useRef(false)
 
   const [meditationType, setMeditationType] = useState<MeditationType>('breathing')
   const [duration,       setDuration]       = useState<Duration>(10)
@@ -177,12 +180,20 @@ export function UnguidedTimer({ lang, onFinish }: Props) {
     if (mode === 'active' && elapsed >= totalSeconds) {
       setMode('done')
       playGong(isMuted)
+      if (!loggedRef.current) {
+        loggedRef.current = true
+        addLog.mutate({
+          session_type: 'meditation',
+          duration_min: Math.max(1, Math.round(elapsed / 60)),
+        })
+      }
     }
-  }, [elapsed, totalSeconds, mode, isMuted])
+  }, [elapsed, totalSeconds, mode, isMuted, addLog])
 
   function start() {
     setElapsed(0)
     lastPhaseLabel.current = null
+    loggedRef.current = false
     setPaused(false)
     setMode('active')
     playGong(isMuted)
