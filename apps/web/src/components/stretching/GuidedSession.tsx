@@ -268,6 +268,12 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, paused, phase, side, current?.id, current?.bilateral, exerciseDuration, pauseDuration, currentIndex, total])
 
+  useEffect(() => {
+    if (paused || (phase !== 'exercise' && phase !== 'rest' && phase !== 'switch')) return
+    if (timeLeft < 1 || timeLeft > 3) return
+    void audioRef.current.playBeep()
+  }, [timeLeft, paused, phase])
+
   // ── Config screen ──────────────────────────────────────────────────────────
   if (phase === 'config') {
     return (

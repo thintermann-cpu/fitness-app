@@ -60,6 +60,26 @@ self.onmessage = ({ data }) => {
       }
       break
 
+    case 'skip': {
+      if (state !== 'running' && state !== 'paused') break
+      const elapsedNow = state === 'paused' ? pausedElapsed : Date.now() - startTime
+      let target = elapsedNow
+      if (mode === 'emom') {
+        target = (Math.floor(elapsedNow / emomIntervalMs) + 1) * emomIntervalMs
+        if (durationMs > 0) target = Math.min(target, durationMs)
+      } else if (mode === 'tabata') {
+        const cycleMs = tabataWorkMs + tabataRestMs
+        target = Math.min(cycleMs * tabataRounds, (Math.floor(elapsedNow / cycleMs) + 1) * cycleMs)
+      } else {
+        break
+      }
+      if (state === 'paused') pausedElapsed = target
+      else startTime = Date.now() - target
+      clearTimeout(tickId)
+      if (state === 'running') scheduleTick()
+      break
+    }
+
     case 'reset':
       state = 'idle'
       clearTimeout(tickId)
@@ -91,18 +111,16 @@ function scheduleTick() {
     return
   }
 
-  // Countdown beep: last 3 seconds of current phase (not for fortime)
-  if (mode !== 'fortime') {
-    const phaseRem = computePhaseRemaining(elapsed, info)
-    if (phaseRem > 0 && phaseRem <= 3000) {
-      const secLeft = Math.ceil(phaseRem / 1000)
-      if (secLeft !== lastCountdownSec) {
-        lastCountdownSec = secLeft
-        self.postMessage({ type: 'beep', beepType: 'countdown' })
-      }
-    } else if (phaseRem > 3000) {
-      lastCountdownSec = -1
+  // Countdown beep: last 3 seconds of the current phase. For Time only when a cap is set.
+  const countdownMs = mode === 'fortime' ? (durationMs > 0 ? info.remaining : 0) : computePhaseRemaining(elapsed, info)
+  if (countdownMs > 0 && countdownMs <= 3000) {
+    const secLeft = Math.ceil(countdownMs / 1000)
+    if (secLeft !== lastCountdownSec) {
+      lastCountdownSec = secLeft
+      self.postMessage({ type: 'beep', beepType: 'countdown' })
     }
+  } else if (countdownMs > 3000) {
+    lastCountdownSec = -1
   }
 
   // Schedule next tick aligned to the next 100 ms boundary

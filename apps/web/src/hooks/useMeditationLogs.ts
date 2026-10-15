@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import { markPillarDone, todayKey } from '../lib/pillarDone'
+import type { RoutineLog } from './useRoutineLogs'
 
 export interface MeditationLog {
   id: string
@@ -94,9 +95,25 @@ export function useMeditationLogs() {
 
       return data as MeditationLog
     },
-    onSuccess: () => {
-      void import('../lib/completeLinkedRoutines').then(({ completeLinkedRoutines }) => completeLinkedRoutines('meditation'))
+    onSuccess: async () => {
+      const { completeLinkedRoutines } = await import('../lib/completeLinkedRoutines')
+      const routineIds = await completeLinkedRoutines('meditation')
+      const today = todayKey()
+      if (routineIds.length) {
+        queryClient.setQueriesData<RoutineLog[] | undefined>(
+          { predicate: (query) => query.queryKey[0] === 'routine_logs' && query.queryKey[2] === today },
+          (old) => {
+            if (!old) return old
+            const known = new Set(old.map((row) => row.routine_id))
+            const extra = routineIds
+              .filter((id) => !known.has(id))
+              .map((id) => ({ id: `linked-${id}`, routine_id: id, date: today, completed: true }))
+            return extra.length ? [...old, ...extra] : old
+          },
+        )
+      }
       void queryClient.invalidateQueries({ queryKey: ['routine_logs'] })
+      void queryClient.invalidateQueries({ queryKey: ['routine_logs_week'] })
       void queryClient.invalidateQueries({ queryKey: ['meditation_logs'] })
       void queryClient.invalidateQueries({ queryKey: ['today_pillars'] })
       void queryClient.invalidateQueries({ queryKey: ['week_pillars'] })

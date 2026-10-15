@@ -369,6 +369,14 @@ export function TimerView({
     setFocusIndex((current) => (current + delta + count) % count)
   }, [exercises])
 
+  const skipCurrentExercise = useCallback(() => {
+    if (mode === 'emom' || mode === 'tabata') {
+      workerRef.current?.postMessage({ type: 'skip' })
+      return
+    }
+    stepExercise(1)
+  }, [mode, stepExercise])
+
   const undoRound = useCallback(() => {
     setDoneRounds((current) => Math.max(0, current - 1))
     setPartialReps(0)
@@ -656,6 +664,16 @@ export function TimerView({
               visible={showNextExercise}
               color={modeColor}
             />
+          )}
+          {exercises!.length > 1 && (
+            <button
+              type="button"
+              onClick={skipCurrentExercise}
+              className="mt-2 px-5 py-2 rounded-xl text-sm font-semibold"
+              style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)', border: 'none' }}
+            >
+              Übung überspringen
+            </button>
           )}
         </div>
       )}

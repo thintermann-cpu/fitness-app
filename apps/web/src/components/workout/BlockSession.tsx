@@ -12,6 +12,7 @@ import {
   type WorkoutBlock,
 } from '../../lib/workoutBlocks'
 import { useWakeLock } from '../../hooks/useWakeLock'
+import { useAudio } from '../../hooks/useAudio'
 import { TimerView } from './TimerView'
 import { KraftTimerView } from './KraftTimerView'
 import { FlowTimerView } from './FlowTimerView'
@@ -59,11 +60,18 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   const [gatePaused, setGatePaused] = useState(false)
   const gateLock = useRef(false)
   useWakeLock(!finished)
+  const audio = useAudio()
 
   useLayoutEffect(() => {
     setSessionActive(true)
     return () => setSessionActive(false)
   }, [index, gate, finished, setSessionActive])
+
+  useEffect(() => {
+    if (!gate || finished || gatePaused) return
+    if (left < 1 || left > 3) return
+    void audio.playBeep()
+  }, [gate, finished, gatePaused, left, audio])
 
   useEffect(() => {
     if (!gate || finished || gatePaused) return
