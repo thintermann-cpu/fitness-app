@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase'
 
 export function AdminEmailsPage() {
   const [subject, setSubject] = useState('CarveOut')
-  const [text, setText] = useState('')
+  const [text, setText] = useState('Dein Training steht schon, bevor du die App öffnest.\n\nWer den Plan im Chat schreibt, startet ihn als JSON: Warm-up, Kraft, Metcon und Mobilität laufen der Reihe nach. Einmal sichern, beim nächsten Mal direkt.\n\nSo geht das: https://carveout.app/session-import')
   const [status, setStatus] = useState<string | null>(null)
 
   async function send() {
