@@ -8,6 +8,23 @@ const CORS = {
 }
 
 const FALLBACK_ZONE = 'Europe/Zurich'
+const SESSION_URL = 'https://carveout.app/session-import'
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function emailHtml(text: string) {
+  const body = escapeHtml(text).replace(/\n/g, '<br>')
+  const footer = text.includes(SESSION_URL)
+    ? ''
+    : `<p><a href="${SESSION_URL}">Training aus dem Chat</a> — ein JSON startet Warm-up, Kraft, Metcon und Mobilität der Reihe nach.</p>`
+  return `<p>${body}</p>${footer}`
+}
 
 type Pref = {
   user_id: string
@@ -107,7 +124,7 @@ Deno.serve(async (req) => {
           from,
           to: [email],
           subject: body.subject || body.title || 'CarveOut',
-          html: `<p>${body.body ?? ''}</p>`,
+          html: emailHtml(body.body ?? ''),
         }),
       })
       if (res.ok) sent += 1

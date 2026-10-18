@@ -19,7 +19,7 @@ export function LandingNav({ lang, onToggleLang, onLogin, onStart }: Props) {
       style={{ backgroundColor: 'rgba(13,13,20,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
     >
       {/* Logo */}
-      <a href="#" className="flex items-center gap-2 shrink-0" aria-label="CarveOut">
+      <a href="/" className="flex items-center gap-2 shrink-0" aria-label="CarveOut">
         <img src="/carveout_logo.jpg" alt="CarveOut" style={{ height: 28, width: 28, objectFit: 'contain', borderRadius: 6 }} />
         <span className="text-sm font-bold tracking-wide" style={{ color: 'var(--color-text)' }}>CarveOut</span>
       </a>

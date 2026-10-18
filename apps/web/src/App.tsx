@@ -9,6 +9,7 @@ import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { OnboardingPage } from './pages/OnboardingPage'
 import { LandingPage } from './pages/LandingPage'
+import { SessionImportPage } from './pages/SessionImportPage'
 import { WorkoutPage } from './pages/WorkoutPage'
 import { CustomWorkoutsPage } from './pages/CustomWorkoutsPage'
 import { SettingsPage } from './pages/SettingsPage'
@@ -117,6 +118,7 @@ function AppContent() {
       {/* Public landing page */}
       <Route path="/impressum"   element={<ImpressumPage />} />
       <Route path="/datenschutz" element={<DatenschutzPage />} />
+      <Route path="/session-import" element={<SessionImportPage />} />
 
       <Route element={<AuthLayout />}>
         <Route path="/login"    element={<LoginPage />} />

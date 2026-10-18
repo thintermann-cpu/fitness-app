@@ -290,9 +290,7 @@ export function WorkoutPage() {
       <div className={`page-frame flex-1 px-4 ${isSessionActive && tab === 'timer' ? 'py-2 pb-2' : 'py-4 pb-24'}`}>
         {tab === 'wods' && (
           <>
-            <TodaysWod />
-
-            <div className="mt-3 flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <button
                 onClick={() => navigate('/workout/custom')}
                 className="text-sm font-semibold"
@@ -300,13 +298,23 @@ export function WorkoutPage() {
               >
                 Meine Workouts{savedWorkouts.length > 0 ? ` (${savedWorkouts.length})` : ''}
               </button>
-              <button
-                onClick={() => setWizardOpen(true)}
-                className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                style={{ backgroundColor: 'color-mix(in srgb, var(--color-pillar-workout) 12%, transparent)', color: 'var(--color-pillar-workout)' }}
-              >
-                + Neues Workout
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setImportOpen(true)}
+                  className="text-xs font-bold px-2.5 py-1 rounded-lg"
+                  style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
+                >
+                  Session einfügen
+                </button>
+                <button
+                  onClick={() => setWizardOpen(true)}
+                  className="text-xs font-bold px-2.5 py-1 rounded-lg"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-pillar-workout) 12%, transparent)', color: 'var(--color-pillar-workout)' }}
+                >
+                  + Neues Workout
+                </button>
+              </div>
             </div>
 
             <div className="py-1.5 flex items-center justify-between gap-3 text-xs" style={{ color: 'var(--color-text-muted)' }}>
@@ -347,7 +355,9 @@ export function WorkoutPage() {
               silentMode={silentMode}
               clearEquipmentTick={clearEquipmentTick}
               onEquipmentSpecifiedChange={setEquipmentSpecified}
-            />
+            >
+              <TodaysWod />
+            </WodList>
           </>
         )}
         {tab === 'timer' && (

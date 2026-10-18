@@ -5,6 +5,7 @@ import { Hero }             from '../components/landing/Hero'
 import { PersonaSection }   from '../components/landing/PersonaSection'
 import { PillarSection }    from '../components/landing/PillarSection'
 import { HowItWorks }       from '../components/landing/HowItWorks'
+import { ChatSessionSection } from '../components/landing/ChatSessionSection'
 import { ResultsTimeline }  from '../components/landing/ResultsTimeline'
 import { PricingSection }   from '../components/landing/PricingSection'
 import { CtaSection }       from '../components/landing/CtaSection'
@@ -49,6 +50,7 @@ export function LandingPage() {
       <PersonaSection  lang={lang} />
       <PillarSection   lang={lang} />
       <HowItWorks      lang={lang} />
+      <ChatSessionSection lang={lang} />
       <ResultsTimeline lang={lang} />
       <PricingSection  lang={lang} />
       <CtaSection      lang={lang} onStart={handleStart} />

@@ -5,8 +5,8 @@ interface Props {
 }
 
 const T = {
-  de: { tagline: 'Deine tägliche Praxis.', privacy: 'Datenschutz', legal: 'Impressum', copyright: '© 2026 CarveOut' },
-  en: { tagline: 'Your daily practice.',   privacy: 'Privacy Policy', legal: 'Legal Notice', copyright: '© 2026 CarveOut' },
+  de: { tagline: 'Deine tägliche Praxis.', privacy: 'Datenschutz', legal: 'Impressum', session: 'Training aus dem Chat', copyright: '© 2026 CarveOut' },
+  en: { tagline: 'Your daily practice.',   privacy: 'Privacy Policy', legal: 'Legal Notice', session: 'Session from chat', copyright: '© 2026 CarveOut' },
 }
 
 export function LandingFooter({ lang, onToggleLang }: Props) {
@@ -25,6 +25,7 @@ export function LandingFooter({ lang, onToggleLang }: Props) {
         </div>
 
         <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--color-text-subtle)' }}>
+          <a href="/session-import" className="hover:text-white transition-colors">{t.session}</a>
           <a href="/datenschutz" className="hover:text-white transition-colors">{t.privacy}</a>
           <a href="/impressum"   className="hover:text-white transition-colors">{t.legal}</a>
           <span>{t.copyright}</span>

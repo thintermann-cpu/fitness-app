@@ -2,7 +2,9 @@
 
 Futter für einen Chatbot. Die App liest genau dieses JSON. Ausgabe des Chatbots: nur das JSON-Objekt, ohne Markdown und ohne Erklärung.
 
-In der App: Training → Timer → Session einfügen. Text einfügen oder die Datei laden. Die Vorschau zeigt die Teile. Fehler blockieren den Start. Ein unbekannter Übungsname ist nur eine Warnung: keine Abbildung, kein hinterlegter Kurztext. Der Hinweis aus `note` bleibt.
+In der App: Training → neben „Neues Workout“, oder Timer → Session einfügen. Dieselbe Übersicht. Text einfügen oder die Datei laden. Name, Reihenfolge, Zeiten und Hinweise lassen sich danach ändern. Ein neues JSON ersetzt diese Änderungen. Fehler blockieren den Start. Ein unbekannter Übungsname ist nur eine Warnung: keine Abbildung, kein hinterlegter Kurztext. Der Hinweis aus `note` bleibt.
+
+Öffentliche Erklärung: `/session-import` (auch im Footer der Startseite und im Newsletter-Text).
 
 „Auch sichern“ speichert die Session. Der nächste Start läuft die Liste direkt ab, ohne den Wizard.
 
