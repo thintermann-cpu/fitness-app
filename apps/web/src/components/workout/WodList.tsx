@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { getWodTypeLabel } from '../../lib/wodTypeLabels'
 import { useWods, pickRandomWod, type Wod } from '../../hooks/useWods'
@@ -80,6 +80,8 @@ interface Props {
   /** Bumped when a location tile should clear the equipment search. */
   clearEquipmentTick?: number
   onEquipmentSpecifiedChange?: (active: boolean) => void
+  /** Sits between the search/filter row and the result list. */
+  children?: ReactNode
 }
 
 export function WodList({
@@ -89,6 +91,7 @@ export function WodList({
   silentMode,
   clearEquipmentTick = 0,
   onEquipmentSpecifiedChange,
+  children,
 }: Props) {
   const lang  = useAuthStore((s) => s.profile?.language ?? 'de')
   const toast = useToast()
@@ -287,6 +290,8 @@ export function WodList({
           )}
         </p>
       )}
+
+      {children}
 
       {/* Count */}
       <p className="text-xs text-[var(--color-text-subtle)]">

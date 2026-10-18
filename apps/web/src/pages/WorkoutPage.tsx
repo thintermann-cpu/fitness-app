@@ -290,9 +290,7 @@ export function WorkoutPage() {
       <div className={`page-frame flex-1 px-4 ${isSessionActive && tab === 'timer' ? 'py-2 pb-2' : 'py-4 pb-24'}`}>
         {tab === 'wods' && (
           <>
-            <TodaysWod />
-
-            <div className="mt-3 flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-2">
               <button
                 onClick={() => navigate('/workout/custom')}
                 className="text-sm font-semibold"
@@ -347,7 +345,9 @@ export function WorkoutPage() {
               silentMode={silentMode}
               clearEquipmentTick={clearEquipmentTick}
               onEquipmentSpecifiedChange={setEquipmentSpecified}
-            />
+            >
+              <TodaysWod />
+            </WodList>
           </>
         )}
         {tab === 'timer' && (
