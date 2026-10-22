@@ -1,3 +1,4 @@
+import type { SoundKey } from '../../hooks/useAudio'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import {
   blockColor,
@@ -52,6 +53,10 @@ export function sessionDraftReady(blocks: WorkoutBlock[]) {
   if (!blocks.some(isWorkBlock)) return false
   return blocks.every((block) => {
     if (block.kind === 'pause') return block.seconds >= 1
+    if (block.kind === 'breath') {
+      return block.name.trim().length > 0 && block.inhaleSec >= 1 && block.exhaleSec >= 1 && block.cycles >= 1
+    }
+    if (block.kind === 'meditation') return block.name.trim().length > 0 && block.minutes >= 1
     if (block.exercises.length === 0) return false
     return block.exercises.every((exercise) => exercise.name.trim().length > 0)
   })
@@ -103,6 +108,14 @@ export function ImportSessionEditor({ name, blocks, onName, onBlocks }: Props) {
             <button type="button" onClick={() => move(index, 1)} disabled={index === blocks.length - 1} aria-label="Teil nach unten" className="w-7 h-7 text-xs" style={{ color: index === blocks.length - 1 ? 'rgba(255,255,255,0.15)' : 'var(--color-text-muted)' }}>↓</button>
             <button type="button" onClick={() => remove(block.id)} disabled={isWorkBlock(block) && workCount <= 1} aria-label="Teil entfernen" className="w-7 h-7 text-xs" style={{ color: isWorkBlock(block) && workCount <= 1 ? 'rgba(255,255,255,0.15)' : '#ef4444' }}>✕</button>
           </div>
+
+          {block.kind === 'breath' && (
+            <BreathFields block={block} onChange={(next) => update(block.id, next)} />
+          )}
+
+          {block.kind === 'meditation' && (
+            <MeditationFields block={block} onChange={(next) => update(block.id, next)} />
+          )}
 
           {block.kind === 'pause' && (
             <NumberRow
@@ -308,6 +321,88 @@ function DetailRow({ exercise, onChange }: { exercise: WizardExercise; onChange:
         placeholder="Hinweis"
         onChange={(event) => onChange({ ...exercise, note: event.target.value.slice(0, 140) || undefined })}
         className="col-span-2 rounded-lg px-2 py-1.5 text-xs outline-none"
+        style={fieldStyle}
+      />
+    </div>
+  )
+}
+
+type BreathBlock = Extract<WorkoutBlock, { kind: 'breath' }>
+type MeditationBlock = Extract<WorkoutBlock, { kind: 'meditation' }>
+
+const SOUND_OPTIONS: { key: SoundKey; label: string }[] = [
+  { key: 'silence', label: 'Stille' },
+  { key: 'bowl', label: 'Schale' },
+  { key: 'rain', label: 'Regen' },
+  { key: 'forest', label: 'Wald' },
+  { key: 'waves', label: 'Wellen' },
+  { key: 'white_noise', label: 'Rauschen' },
+  { key: 'fire', label: 'Feuer' },
+  { key: 'night', label: 'Nacht' },
+  { key: 'wind', label: 'Wind' },
+  { key: 'harp', label: 'Harfe' },
+  { key: 'zen_guitar', label: 'Zen-Gitarre' },
+  { key: 'deep_om', label: 'Deep Om' },
+]
+
+function BreathFields({ block, onChange }: { block: BreathBlock; onChange: (next: BreathBlock) => void }) {
+  return (
+    <div className="space-y-2">
+      <input
+        value={block.name}
+        aria-label="Name der Atmung"
+        onChange={(event) => onChange({ ...block, name: event.target.value.slice(0, 80) })}
+        className="w-full rounded-lg px-2 py-1.5 text-sm outline-none"
+        style={fieldStyle}
+      />
+      <NumberRow label="Einatmen s" value={block.inhaleSec} min={1} max={30} onChange={(inhaleSec) => onChange({ ...block, inhaleSec })} />
+      <NumberRow label="Halten s" value={block.holdInSec} min={0} max={30} onChange={(holdInSec) => onChange({ ...block, holdInSec })} />
+      <NumberRow label="Ausatmen s" value={block.exhaleSec} min={1} max={30} onChange={(exhaleSec) => onChange({ ...block, exhaleSec })} />
+      <NumberRow label="Pause s" value={block.holdOutSec} min={0} max={30} onChange={(holdOutSec) => onChange({ ...block, holdOutSec })} />
+      <NumberRow label="Zyklen" value={block.cycles} min={1} max={80} onChange={(cycles) => onChange({ ...block, cycles })} />
+      <input
+        value={block.note ?? ''}
+        aria-label="Hinweis"
+        placeholder="Hinweis"
+        onChange={(event) => onChange({ ...block, note: event.target.value.slice(0, 140) || undefined })}
+        className="w-full rounded-lg px-2 py-1.5 text-xs outline-none"
+        style={fieldStyle}
+      />
+    </div>
+  )
+}
+
+function MeditationFields({ block, onChange }: { block: MeditationBlock; onChange: (next: MeditationBlock) => void }) {
+  return (
+    <div className="space-y-2">
+      <input
+        value={block.name}
+        aria-label="Name der Meditation"
+        onChange={(event) => onChange({ ...block, name: event.target.value.slice(0, 80) })}
+        className="w-full rounded-lg px-2 py-1.5 text-sm outline-none"
+        style={fieldStyle}
+      />
+      <NumberRow label="Minuten" value={block.minutes} min={1} max={90} onChange={(minutes) => onChange({ ...block, minutes })} />
+      <label className="flex items-center justify-between gap-3">
+        <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Klang</span>
+        <select
+          value={block.sound}
+          aria-label="Klang"
+          onChange={(event) => onChange({ ...block, sound: event.target.value as SoundKey })}
+          className="rounded-lg px-2 py-1 text-sm outline-none"
+          style={fieldStyle}
+        >
+          {SOUND_OPTIONS.map((option) => (
+            <option key={option.key} value={option.key}>{option.label}</option>
+          ))}
+        </select>
+      </label>
+      <input
+        value={block.note ?? ''}
+        aria-label="Hinweis"
+        placeholder="Hinweis"
+        onChange={(event) => onChange({ ...block, note: event.target.value.slice(0, 140) || undefined })}
+        className="w-full rounded-lg px-2 py-1.5 text-xs outline-none"
         style={fieldStyle}
       />
     </div>

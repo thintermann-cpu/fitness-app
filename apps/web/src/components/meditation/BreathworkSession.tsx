@@ -73,9 +73,11 @@ interface Props {
   technique: BreathworkTechnique
   lang: Lang
   onFinish: () => void
+  /** Start on mount and hand the chain the finish, without the done screen. */
+  chained?: boolean
 }
 
-export function BreathworkSession({ technique, lang, onFinish }: Props) {
+export function BreathworkSession({ technique, lang, onFinish, chained = false }: Props) {
   const t          = T[lang]
   const { addLog } = useMeditationLogs()
   const audio      = useAudio()
@@ -102,8 +104,12 @@ export function BreathworkSession({ technique, lang, onFinish }: Props) {
       session_type: 'breathwork',
       duration_min: durationMin,
     })
+    if (chained) {
+      onFinish()
+      return
+    }
     setPhase('done')
-  }, [audio, addLog, technique.id])
+  }, [audio, addLog, technique.id, chained, onFinish])
 
   const handleStart = useCallback(() => {
     void audio.playBeep()
@@ -112,6 +118,13 @@ export function BreathworkSession({ technique, lang, onFinish }: Props) {
     setPhaseRemaining(technique.inhale_sec)
     setPhase('inhale')
   }, [audio, technique.inhale_sec])
+
+  const chainedStart = useRef(false)
+  useEffect(() => {
+    if (!chained || chainedStart.current) return
+    chainedStart.current = true
+    handleStart()
+  }, [chained, handleStart])
 
   // Single effect drives the entire state machine
   useEffect(() => {

@@ -6,7 +6,7 @@ import type { WarmupRoutineId } from '../components/workout/WarmupTimer'
 import type { TimerMode } from '../lib/timerLabels'
 import type { WizardExercise, CustomWorkout } from '../lib/customWorkouts'
 import { parseWorkoutSearch, workoutMatchesQuery } from '../lib/exerciseCatalog'
-import { blockLabel, isWorkBlock, seedFromBlock } from '../lib/workoutBlocks'
+import { blockLabel, blockSearchText, isWorkBlock, seedFromBlock } from '../lib/workoutBlocks'
 
 const MODE_LABELS: Record<string, string> = {
   fortime: 'ForTime', amrap: 'AMRAP', emom: 'EMOM',
@@ -77,7 +77,7 @@ export function CustomWorkoutsPage() {
           w.name,
           ...(w.equipment ?? []),
           ...w.exercises.map((e) => e.name),
-          ...(w.blocks ?? []).flatMap((block) => block.kind === 'pause' ? [] : block.exercises.map((e) => e.name)),
+          ...(w.blocks ?? []).map(blockSearchText),
         ].join(' ').toLowerCase()
         return hay.includes(query)
       })

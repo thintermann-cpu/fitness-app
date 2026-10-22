@@ -16,6 +16,8 @@ import { useAudio } from '../../hooks/useAudio'
 import { TimerView } from './TimerView'
 import { KraftTimerView } from './KraftTimerView'
 import { FlowTimerView } from './FlowTimerView'
+import { BreathworkSession } from '../meditation/BreathworkSession'
+import { AdHocMeditationTimer } from '../meditation/AdHocMeditationTimer'
 import type { WizardExercise } from '../../lib/customWorkouts'
 
 interface Props {
@@ -244,6 +246,44 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
         role={block.role}
         workoutName={entryName}
         onChainedFinish={() => handoff(index)}
+      />
+    )
+  }
+
+  const mindfulLang = lang === 'en' || lang === 'es' ? lang : 'de'
+  if (block.kind === 'breath') {
+    return (
+      <BreathworkSession
+        key={block.id}
+        chained
+        lang={mindfulLang}
+        technique={{
+          id: block.id,
+          name: block.name,
+          description: block.note ?? '',
+          inhale_sec: block.inhaleSec,
+          hold_in_sec: block.holdInSec,
+          exhale_sec: block.exhaleSec,
+          hold_out_sec: block.holdOutSec,
+          cycles: block.cycles,
+          difficulty: 'custom',
+        }}
+        onFinish={() => handoff(index)}
+      />
+    )
+  }
+
+  if (block.kind === 'meditation') {
+    return (
+      <AdHocMeditationTimer
+        key={block.id}
+        chained
+        lang={mindfulLang}
+        duration={block.minutes}
+        sound={block.sound}
+        title={block.name}
+        note={block.note}
+        onFinish={() => handoff(index)}
       />
     )
   }

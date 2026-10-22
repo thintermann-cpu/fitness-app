@@ -1,6 +1,7 @@
 import type { WizardExercise } from './customWorkouts'
 import { formatHistoryExercises } from './kraftPlan'
 import { TIMER_LABELS, type TimerMode } from './timerLabels'
+import type { SoundKey } from '../hooks/useAudio'
 
 const BLOCK_LABELS = {
   pause: 'Pause',
@@ -30,6 +31,8 @@ export type WorkoutBlock =
   | { id: string; kind: 'fortime'; exercises: WizardExercise[]; minutes: number; scheme?: string }
   | { id: string; kind: 'tabata'; exercises: WizardExercise[]; workSec: number; restSec: number; rounds: number; scheme?: string }
   | { id: string; kind: 'flow'; role: FlowRole; restSec: number; exercises: FlowExercise[] }
+  | { id: string; kind: 'breath'; name: string; inhaleSec: number; holdInSec: number; exhaleSec: number; holdOutSec: number; cycles: number; note?: string }
+  | { id: string; kind: 'meditation'; name: string; minutes: number; sound: SoundKey; note?: string }
 
 export interface BlockGate {
   pauseSec: number
@@ -49,6 +52,8 @@ export function blockLabel(block: WorkoutBlock): string {
     if (block.role === 'mobility') return 'Mobilität'
     return 'Ablauf'
   }
+  if (block.kind === 'breath') return block.name || 'Atem'
+  if (block.kind === 'meditation') return block.name || 'Meditation'
   return BLOCK_LABELS[block.kind]
 }
 
@@ -59,6 +64,7 @@ export function blockColor(block: WorkoutBlock): string {
     if (block.role === 'warmup') return '#F59E0B'
     return '#E8642A'
   }
+  if (block.kind === 'breath' || block.kind === 'meditation') return '#9B7FD4'
   return TIMER_LABELS[block.kind].color
 }
 
@@ -74,11 +80,22 @@ export function blockSummary(block: WorkoutBlock): string {
   }
   if (block.kind === 'emom') return `${block.rounds}× ${block.intervalMin} min`
   if (block.kind === 'tabata') return `${block.rounds}× ${block.workSec}s / ${block.restSec}s`
+  if (block.kind === 'breath') return `${block.inhaleSec}-${block.holdInSec}-${block.exhaleSec}-${block.holdOutSec} · ${block.cycles}`
+  if (block.kind === 'meditation') return `${block.minutes} min`
   return `${block.minutes} min`
 }
 
 export function isWorkBlock(block: WorkoutBlock): boolean {
   return block.kind !== 'pause'
+}
+
+/** Names a saved chain should match in the workout search. */
+export function blockSearchText(block: WorkoutBlock): string {
+  if (block.kind === 'pause') return ''
+  if (block.kind === 'breath' || block.kind === 'meditation') {
+    return [block.name, block.note].filter(Boolean).join(' ')
+  }
+  return block.exercises.map((exercise) => exercise.name).join(' ')
 }
 
 export function isChained(blocks: WorkoutBlock[]): boolean {
@@ -97,6 +114,8 @@ export function createBlock(kind: WorkoutBlock['kind']): WorkoutBlock {
   if (kind === 'emom') return { id, kind, exercises: [], intervalMin: 1, rounds: 10 }
   if (kind === 'tabata') return { id, kind, exercises: [], workSec: 20, restSec: 10, rounds: 8 }
   if (kind === 'flow') return { id, kind, role: 'flow', restSec: 10, exercises: [] }
+  if (kind === 'breath') return { id, kind, name: 'Box Breathing', inhaleSec: 4, holdInSec: 4, exhaleSec: 4, holdOutSec: 4, cycles: 8 }
+  if (kind === 'meditation') return { id, kind, name: 'Sitzmeditation', minutes: 10, sound: 'silence' }
   return { id, kind, exercises: [], minutes: kind === 'amrap' ? 12 : 10 }
 }
 
@@ -147,6 +166,8 @@ export function isWorkoutBlock(value: unknown): value is WorkoutBlock {
     || block.kind === 'fortime'
     || block.kind === 'tabata'
     || block.kind === 'flow'
+    || block.kind === 'breath'
+    || block.kind === 'meditation'
 }
 
 export function seedFromBlock(block: WorkoutBlock): {
@@ -207,6 +228,13 @@ export function seedFromBlock(block: WorkoutBlock): {
       tabataRounds: block.rounds,
       scheme: block.scheme,
     }
+  }
+  if (block.kind === 'breath') {
+    const seconds = (block.inhaleSec + block.holdInSec + block.exhaleSec + block.holdOutSec) * block.cycles
+    return { mode: 'fortime', minutes: Math.max(1, Math.round(seconds / 60)), exercises: [] }
+  }
+  if (block.kind === 'meditation') {
+    return { mode: 'fortime', minutes: block.minutes, exercises: [] }
   }
   return { mode: block.kind, minutes: block.minutes, exercises: block.exercises, scheme: block.scheme }
 }

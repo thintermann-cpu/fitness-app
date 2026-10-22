@@ -171,7 +171,8 @@ export function WorkoutPage() {
   function handleImportStart(blocks: WorkoutBlock[], name: string, save: boolean) {
     if (save) {
       const first = blocks.find(isWorkBlock)
-      const mode = first && first.kind !== 'flow' && first.kind !== 'pause' ? first.kind : 'fortime'
+      const timed = first && first.kind !== 'flow' && first.kind !== 'pause' && first.kind !== 'breath' && first.kind !== 'meditation'
+      const mode = timed ? first.kind : 'fortime'
       const exercises = first?.kind === 'flow'
         ? first.exercises.map((exercise) => ({
             id: exercise.id,
@@ -179,7 +180,7 @@ export function WorkoutPage() {
             note: exercise.note,
             detail: `${exercise.seconds}s`,
           }))
-        : first && first.kind !== 'pause'
+        : first && first.kind !== 'pause' && first.kind !== 'breath' && first.kind !== 'meditation'
           ? first.exercises
           : []
       addWorkout.mutate({
