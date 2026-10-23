@@ -14,6 +14,10 @@ interface Props {
   sound?: SoundKey
   lang: Lang
   onFinish: () => void
+  title?: string
+  note?: string
+  /** Log the sit and continue the session, without the done screen. */
+  chained?: boolean
 }
 
 const T = {
@@ -40,7 +44,7 @@ function formatTime(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-export function AdHocMeditationTimer({ duration, sound = 'silence', lang, onFinish }: Props) {
+export function AdHocMeditationTimer({ duration, sound = 'silence', lang, onFinish, title, note, chained = false }: Props) {
   const t          = T[lang] ?? T.de
   const { addLog } = useMeditationLogs()
   const audio      = useAudio()
@@ -74,6 +78,10 @@ export function AdHocMeditationTimer({ duration, sound = 'silence', lang, onFini
     const elapsed = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
     addLog.mutate({ session_type: 'custom_timer', duration_min: elapsed })
     toast.success(t.toastMsg(elapsed))
+    if (chained) {
+      onFinish()
+      return
+    }
     setStatus('done')
   }
 
@@ -118,8 +126,9 @@ export function AdHocMeditationTimer({ duration, sound = 'silence', lang, onFini
     <div className="space-y-8 py-4">
       <div className="text-center">
         <h2 className="text-xl font-bold" style={{ color: PILLAR_COLOR }}>
-          {duration} min
+          {title || `${duration} min`}
         </h2>
+        {note && <p className="text-sm mt-1 text-[var(--color-text-muted)]">{note}</p>}
       </div>
 
       <div className="flex justify-center">

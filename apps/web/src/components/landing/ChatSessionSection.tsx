@@ -7,13 +7,13 @@ const T = {
   de: {
     label: 'AUS DEM CHAT',
     headline: 'Der Plan, den du sowieso machst.',
-    text: 'Wer das Training schon im Chat oder auf dem Zettel hat, setzt es nicht noch einmal im Wizard zusammen. Ein JSON startet Warm-up, Kraft, Metcon und Mobilität der Reihe nach. Einmal sichern, beim nächsten Mal direkt.',
+    text: 'Wer das Training schon im Chat oder auf dem Zettel hat, setzt es nicht noch einmal im Wizard zusammen. Ein JSON startet Warm-up, Kraft, Metcon, Mobilität, Atem und Sitzmeditation der Reihe nach. Einmal sichern, beim nächsten Mal direkt.',
     link: 'Vorteil und Format',
   },
   en: {
     label: 'FROM CHAT',
     headline: 'The plan you were going to write anyway.',
-    text: 'If the session already lives in a chat or on paper, you do not rebuild it in the wizard. JSON starts warm-up, strength, metcon, and mobility in order. Save it once, and the next time it runs straight through.',
+    text: 'If the session already lives in a chat or on paper, you do not rebuild it in the wizard. JSON starts warm-up, strength, metcon, mobility, breath, and a sit in order. Save it once, and the next time it runs straight through.',
     link: 'Why and how',
   },
 }

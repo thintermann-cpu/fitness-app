@@ -14,7 +14,10 @@ Nur die Teile aufnehmen, die die Session braucht. Das Beispiel unten zeigt jedes
 
 - `name`: optional, bis 80 Zeichen. Fehlt er, heisst die Session „Import“.
 - `parts`: Liste, 1 bis 20 Teile. Reihenfolge ist die Ablauffolge.
-- `kind`: `warmup`, `flow`, `kraft`, `pause`, `emom`, `amrap`, `fortime`, `tabata`, `mobility`.
+- `kind`: `warmup`, `flow`, `kraft`, `pause`, `emom`, `amrap`, `fortime`, `tabata`, `mobility`, `breath`, `meditation`.
+- `breath` (auch `atem`, `breathwork`, `atmung`): eine Vier-Phasen-Atmung. Box Breathing ist kein eigenes Feld, sondern `4-4-4-4`. `name` bis 80 Zeichen. `inhaleSec` und `exhaleSec` 1–30. `holdInSec` und `holdOutSec` 0–30, Standard 0. `cycles` 1–80. `note` optional, bis 140 Zeichen. Der Spieler hat eine Einatem-Phase. Ein zweiter Schluck (physiologischer Seufzer) steht im Hinweis.
+- `meditation` (auch `achtsamkeit`, `mindfulness`): `name`, `minutes` 1–90, `sound` optional. Fehlt der Klang, bleibt es still. Bekannte Werte: `silence`, `bowl`, `rain`, `forest`, `waves`, `white_noise`, `fire`, `night`, `wind`, `harp`, `zen_guitar`, `deep_om`. Deutsche Namen gehen auch: `stille`, `schale`, `regen`, `wald`, `wellen`, `rauschen`, `feuer`, `nacht`, `wind`, `harfe`, `gitarre`, `om`. Ein unbekannter Klang ist ein Fehler.
+- Atem und Sitzmeditation sind Arbeitsteile. Ohne gesetzte `pause` kommt dazwischen die 60-Sekunden-Frage. Beide haken Achtsamkeit ab. Der Atem schreibt `breathwork`, die Sitzmeditation `custom_timer`.
 - Warm-up ist ein `flow` mit `role: "warmup"`. Es schreibt keinen Verlauf und geht direkt in den nächsten Teil.
 - `role: "flow"` ist ein Ablauf mit Sekunden und schreibt einen Workout-Verlauf.
 - `role: "mobility"` spielt am Ende mit und hakt den Mobilitäts-Pillar ab.
@@ -120,6 +123,67 @@ Nur die Teile aufnehmen, die die Session braucht. Das Beispiel unten zeigt jedes
 ```
 
 `supersetWithPrevious: false` ist der Normalfall und kann wegfallen. Im Beispiel steht es einmal, damit klar ist, dass Bankdrücken nicht zum Rumänischen Kreuzheben gehört. Rudern hängt an der Bank.
+
+Atem und Sitz in derselben Kette. Box Breathing, 4-7-8, kohärentes Atmen und der physiologische Seufzer sind derselbe Teil `breath`, nur mit anderen Zeiten:
+
+```json
+{
+  "name": "Atem und Sitz",
+  "parts": [
+    {
+      "kind": "breath",
+      "name": "Box Breathing",
+      "inhaleSec": 4,
+      "holdInSec": 4,
+      "exhaleSec": 4,
+      "holdOutSec": 4,
+      "cycles": 8
+    },
+    {
+      "kind": "breath",
+      "name": "4-7-8",
+      "inhaleSec": 4,
+      "holdInSec": 7,
+      "exhaleSec": 8,
+      "holdOutSec": 0,
+      "cycles": 4
+    },
+    {
+      "kind": "breath",
+      "name": "Kohärentes Atmen",
+      "inhaleSec": 6,
+      "holdInSec": 0,
+      "exhaleSec": 6,
+      "holdOutSec": 0,
+      "cycles": 20,
+      "note": "Gleichmässig, ohne Pause"
+    },
+    {
+      "kind": "breath",
+      "name": "Physiologischer Seufzer",
+      "inhaleSec": 4,
+      "holdInSec": 1,
+      "exhaleSec": 8,
+      "holdOutSec": 0,
+      "cycles": 3,
+      "note": "Zweiter kleiner Schluck oben, dann lang aus"
+    },
+    {
+      "kind": "meditation",
+      "name": "Sitzmeditation",
+      "minutes": 10,
+      "sound": "rain",
+      "note": "Auf den Atem achten"
+    },
+    {
+      "kind": "meditation",
+      "name": "Kurze Stille",
+      "minutes": 5,
+      "sound": "silence"
+    }
+  ]
+}
+```
 
 Kleine Session, nur Kraft und danach EMOM:
 

@@ -25,6 +25,22 @@ const EXAMPLE = `{
         { "name": "Burpees", "detail": "8" },
         { "name": "Air Squats", "detail": "12" }
       ]
+    },
+    {
+      "kind": "breath",
+      "name": "Box Breathing",
+      "inhaleSec": 4,
+      "holdInSec": 4,
+      "exhaleSec": 4,
+      "holdOutSec": 4,
+      "cycles": 4
+    },
+    {
+      "kind": "meditation",
+      "name": "Sitzmeditation",
+      "minutes": 5,
+      "sound": "rain",
+      "note": "Nur sitzen"
     }
   ]
 }`
@@ -74,7 +90,7 @@ export function SessionImportSheet({ isOpen, onClose, onStart }: Props) {
               Der Plan, den du sowieso schreibst.
             </p>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-              Warm-up, Kraft, Metcon und Mobilität stehen schon im Chat oder auf dem Zettel. Das JSON ist nur die Übergabe: die App läuft die Teile der Reihe nach, mit Pause, Hinweis und dem Haken für Mobilität. Einmal sichern, und der nächste Start geht direkt los.
+              Warm-up, Kraft, Metcon, Mobilität, Atem und Sitzmeditation stehen schon im Chat oder auf dem Zettel. Das JSON ist nur die Übergabe: die App läuft die Teile der Reihe nach, mit Pause, Hinweis und dem Haken für Mobilität und Achtsamkeit. Einmal sichern, und der nächste Start geht direkt los.
             </p>
             <ol className="text-sm space-y-1" style={{ color: 'var(--color-text)' }}>
               <li>1. Plan im Chat erzeugen lassen, oder die Datei nehmen, die du schon hast.</li>

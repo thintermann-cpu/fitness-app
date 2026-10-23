@@ -1,5 +1,6 @@
 import { lookupExerciseName } from './exerciseCatalog'
 import type { WizardExercise } from './customWorkouts'
+import type { SoundKey } from '../hooks/useAudio'
 import type { FlowExercise, FlowRole, WorkoutBlock } from './workoutBlocks'
 
 export interface ImportWarning {
@@ -63,6 +64,21 @@ function intIn(value: unknown, min: number, max: number): number | null {
   return rounded
 }
 
+const SOUNDS: Record<string, SoundKey> = {
+  silence: 'silence', stille: 'silence', none: 'silence', kein: 'silence',
+  bowl: 'bowl', schale: 'bowl',
+  rain: 'rain', regen: 'rain',
+  forest: 'forest', wald: 'forest',
+  waves: 'waves', wellen: 'waves',
+  white_noise: 'white_noise', whitenoise: 'white_noise', rauschen: 'white_noise',
+  fire: 'fire', feuer: 'fire',
+  night: 'night', nacht: 'night',
+  wind: 'wind',
+  harp: 'harp', harfe: 'harp',
+  zen_guitar: 'zen_guitar', gitarre: 'zen_guitar',
+  deep_om: 'deep_om', om: 'deep_om',
+}
+
 function kindOf(value: unknown): { kind: WorkoutBlock['kind']; role?: FlowRole } | null {
   if (typeof value !== 'string') return null
   const key = value.trim().toLowerCase().replace(/[\s_]+/g, '-')
@@ -75,6 +91,8 @@ function kindOf(value: unknown): { kind: WorkoutBlock['kind']; role?: FlowRole }
   if (key === 'flow' || key === 'ablauf' || key === 'timed') return { kind: 'flow', role: 'flow' }
   if (key === 'warmup' || key === 'warm-up' || key === 'aufwaermen') return { kind: 'flow', role: 'warmup' }
   if (key === 'mobility' || key === 'mobilitaet' || key === 'stretching') return { kind: 'flow', role: 'mobility' }
+  if (key === 'breath' || key === 'atem' || key === 'breathwork' || key === 'atmung') return { kind: 'breath' }
+  if (key === 'meditation' || key === 'achtsamkeit' || key === 'mindfulness') return { kind: 'meditation' }
   return null
 }
 
@@ -160,7 +178,7 @@ function compilePart(raw: unknown, index: number, errors: string[], warnings: Im
   }
   const parsedKind = kindOf(pick(record, ['kind', 'type']))
   if (!parsedKind) {
-    errors.push(`Teil ${partNo}: kind fehlt oder ist unbekannt. Erlaubt: flow, kraft, pause, emom, amrap, fortime, tabata, warmup, mobility.`)
+    errors.push(`Teil ${partNo}: kind fehlt oder ist unbekannt. Erlaubt: flow, kraft, pause, emom, amrap, fortime, tabata, warmup, mobility, breath, meditation.`)
     return null
   }
   const id = crypto.randomUUID()
@@ -169,6 +187,56 @@ function compilePart(raw: unknown, index: number, errors: string[], warnings: Im
     const seconds = intIn(pick(record, ['seconds', 'sek', 'sec']), 1, 3600)
     if (seconds == null) errors.push(`Teil ${partNo}: Pause braucht seconds zwischen 1 und 3600.`)
     return seconds == null ? null : { id, kind: 'pause', seconds }
+  }
+
+  if (parsedKind.kind === 'breath') {
+    const name = text(pick(record, ['name']), 80)
+    const inhaleSec = intIn(pick(record, ['inhaleSec', 'inhale', 'einatmen']), 1, 30)
+    const holdInSec = intIn(pick(record, ['holdInSec', 'holdIn', 'halten']), 0, 30) ?? 0
+    const exhaleSec = intIn(pick(record, ['exhaleSec', 'exhale', 'ausatmen']), 1, 30)
+    const holdOutSec = intIn(pick(record, ['holdOutSec', 'holdOut', 'pauseNachAus']), 0, 30) ?? 0
+    const cycles = intIn(pick(record, ['cycles', 'zyklen']), 1, 80)
+    if (!name) errors.push(`Teil ${partNo}: Name fehlt.`)
+    if (inhaleSec == null) errors.push(`Teil ${partNo}: inhaleSec zwischen 1 und 30.`)
+    if (exhaleSec == null) errors.push(`Teil ${partNo}: exhaleSec zwischen 1 und 30.`)
+    if (cycles == null) errors.push(`Teil ${partNo}: cycles zwischen 1 und 80.`)
+    const holdInRaw = pick(record, ['holdInSec', 'holdIn', 'halten'])
+    const holdOutRaw = pick(record, ['holdOutSec', 'holdOut', 'pauseNachAus'])
+    if (holdInRaw !== undefined && intIn(holdInRaw, 0, 30) == null) errors.push(`Teil ${partNo}: holdInSec zwischen 0 und 30.`)
+    if (holdOutRaw !== undefined && intIn(holdOutRaw, 0, 30) == null) errors.push(`Teil ${partNo}: holdOutSec zwischen 0 und 30.`)
+    if (!name || inhaleSec == null || exhaleSec == null || cycles == null) return null
+    if (holdInRaw !== undefined && intIn(holdInRaw, 0, 30) == null) return null
+    if (holdOutRaw !== undefined && intIn(holdOutRaw, 0, 30) == null) return null
+    return {
+      id,
+      kind: 'breath',
+      name,
+      inhaleSec,
+      holdInSec,
+      exhaleSec,
+      holdOutSec,
+      cycles,
+      note: text(pick(record, ['note', 'description', 'beschreibung']), 140),
+    }
+  }
+
+  if (parsedKind.kind === 'meditation') {
+    const name = text(pick(record, ['name']), 80)
+    const minutes = intIn(pick(record, ['minutes', 'min']), 1, 90)
+    const soundRaw = pick(record, ['sound', 'klang'])
+    const soundKey = typeof soundRaw === 'string' ? SOUNDS[soundRaw.trim().toLowerCase().replace(/[\s-]+/g, '_')] : undefined
+    if (!name) errors.push(`Teil ${partNo}: Name fehlt.`)
+    if (minutes == null) errors.push(`Teil ${partNo}: minutes zwischen 1 und 90.`)
+    if (soundRaw !== undefined && !soundKey) errors.push(`Teil ${partNo}: sound ist unbekannt.`)
+    if (!name || minutes == null || (soundRaw !== undefined && !soundKey)) return null
+    return {
+      id,
+      kind: 'meditation',
+      name,
+      minutes,
+      sound: soundKey ?? 'silence',
+      note: text(pick(record, ['note', 'description', 'beschreibung']), 140),
+    }
   }
 
   if (parsedKind.kind === 'flow') {
