@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface Props {
   isOpen: boolean
@@ -7,6 +7,8 @@ interface Props {
 
 export function CountdownOverlay({ isOpen, onComplete }: Props) {
   const [count, setCount] = useState(5)
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
 
   useEffect(() => {
     if (!isOpen) {
@@ -20,12 +22,10 @@ export function CountdownOverlay({ isOpen, onComplete }: Props) {
       setCount(n)
       if (n <= 0) {
         clearInterval(id)
-        setTimeout(onComplete, 600)
+        setTimeout(() => onCompleteRef.current(), 600)
       }
     }, 1000)
     return () => clearInterval(id)
-  // onComplete ref is stable — intentionally omit from deps to avoid restart on re-render
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   if (!isOpen) return null

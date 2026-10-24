@@ -29,7 +29,7 @@ Nur die Teile aufnehmen, die die Session braucht. Das Beispiel unten zeigt jedes
 - Kraft: `sets` 1–20, `reps` 1–100. `weight` ist eine kg-Angabe (`100`, `"22.5 kg"`, `"82,5 kg"`) oder ein kurzer Text bis 40 Zeichen (`"2x 20-22.5 kg"`, `"Bodyweight"`, `"60/70/80"`). `leicht`, `mittel` und `schwer` gehen weiter. `restBetweenSets` und `restBetweenExercises` in Sekunden, 0–600. Standard 90 und 60.
 - `supersetWithPrevious: true` koppelt die Übung an die direkt davor. Die Sätze gelten für die ganze Gruppe, die Reps bleiben pro Übung. An der ersten Übung eines Teils wird das Flag ignoriert.
 - Pause: `seconds` 1–3600.
-- EMOM: `intervalMin` 1–10, `rounds` 1–60. Pro Übung `detail` für Reps oder Distanz.
+- EMOM: `intervalMin` 1–10, `rounds` 1–60. `rounds` ist die Anzahl der Intervalle und läuft genau so, auch wenn die Zahl kein Vielfaches der Übungen ist. Drei Durchgänge bei vier Übungen sind `rounds` 12. Pro Übung `detail` für Reps oder Distanz.
 - AMRAP und For Time: `minutes`. For Time erlaubt `0` und meint dann kein Zeitlimit. Sonst 1–90. `scheme` ist der Ablauftext, zum Beispiel `3 Runden · 21-15-9`.
 - Tabata: `workSec` und `restSec` 5–180, `rounds` 1–40.
 - Ablauf-Übungen: `seconds` 5–900. `restSec` am Teil ist die Pause zwischen den Übungen, 0–180, Standard 10.
