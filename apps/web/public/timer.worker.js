@@ -18,6 +18,7 @@ let tabataWorkMs   = 20_000
 let tabataRestMs   = 10_000
 let tabataRounds   = 8
 let emomIntervalMs = 60_000
+let emomRounds     = 0
 
 // Track previous tick values for edge detection (beep on transitions)
 let prevInterval      = 0
@@ -33,6 +34,7 @@ self.onmessage = ({ data }) => {
       tabataRestMs      = data.tabataRestMs   ?? 10_000
       tabataRounds      = data.tabataRounds   ?? 8
       emomIntervalMs    = data.emomIntervalMs ?? 60_000
+      emomRounds        = data.emomRounds ?? 0
       startTime         = Date.now()
       pausedElapsed     = 0
       prevInterval      = 0
@@ -159,9 +161,10 @@ function computeTick(elapsed) {
   }
 
   if (mode === 'emom') {
-    const remaining = Math.max(0, durationMs - elapsed)
+    const total     = emomRounds > 0 ? emomIntervalMs * emomRounds : durationMs
+    const remaining = Math.max(0, total - elapsed)
     const interval  = Math.floor(elapsed / emomIntervalMs) + 1
-    const complete  = elapsed >= durationMs
+    const complete  = elapsed >= total
     return { elapsed, remaining, phase: 'work', interval, complete }
   }
 

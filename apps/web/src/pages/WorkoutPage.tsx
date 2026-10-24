@@ -291,31 +291,35 @@ export function WorkoutPage() {
       <div className={`page-frame flex-1 px-4 ${isSessionActive && tab === 'timer' ? 'py-2 pb-2' : 'py-4 pb-24'}`}>
         {tab === 'wods' && (
           <>
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="grid grid-cols-3 gap-1.5 rounded-2xl p-1.5" style={{ backgroundColor: 'var(--color-bg-card)' }}>
               <button
+                type="button"
                 onClick={() => navigate('/workout/custom')}
-                className="text-sm font-semibold"
-                style={{ color: 'var(--color-pillar-workout)' }}
+                className="min-w-0 rounded-xl px-2 py-2.5 text-sm font-semibold leading-tight text-center"
+                style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
               >
                 Meine Workouts{savedWorkouts.length > 0 ? ` (${savedWorkouts.length})` : ''}
               </button>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setImportOpen(true)}
-                  className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                  style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
-                >
-                  Session einfügen
-                </button>
-                <button
-                  onClick={() => setWizardOpen(true)}
-                  className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                  style={{ backgroundColor: 'color-mix(in srgb, var(--color-pillar-workout) 12%, transparent)', color: 'var(--color-pillar-workout)' }}
-                >
-                  + Neues Workout
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setImportOpen(true)}
+                className="min-w-0 rounded-xl px-2 py-2.5 text-sm font-semibold leading-tight text-center"
+                style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
+              >
+                Session einfügen
+              </button>
+              <button
+                type="button"
+                onClick={() => setWizardOpen(true)}
+                className="min-w-0 rounded-xl px-2 py-2.5 text-sm font-semibold leading-tight text-center"
+                style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
+              >
+                Neues Workout
+              </button>
+            </div>
+
+            <div className="mt-3">
+              <TodaysWod />
             </div>
 
             <div className="py-1.5 flex items-center justify-between gap-3 text-xs" style={{ color: 'var(--color-text-muted)' }}>
@@ -356,9 +360,7 @@ export function WorkoutPage() {
               silentMode={silentMode}
               clearEquipmentTick={clearEquipmentTick}
               onEquipmentSpecifiedChange={setEquipmentSpecified}
-            >
-              <TodaysWod />
-            </WodList>
+            />
           </>
         )}
         {tab === 'timer' && (

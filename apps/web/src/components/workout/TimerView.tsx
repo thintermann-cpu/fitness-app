@@ -156,11 +156,14 @@ export function TimerView({
   const [emomRounds,   setEmomRounds]   = useState(initialEmomRounds   ?? 10)
   const emomSlots = Math.max(1, exercises?.length ?? 1)
   const emomRoundMax = emomSlots < 2 ? 30 : Math.max(emomSlots, Math.floor(30 / emomSlots) * emomSlots)
+  // A session import already chose the interval count. Do not fold it into one pass.
+  const explicitEmomRounds = initialEmomRounds != null && initialEmomRounds > 0
 
   useEffect(() => {
+    if (explicitEmomRounds) return
     if (mode !== 'emom' || emomSlots < 2) return
     setEmomRounds((current) => Math.min(emomRoundMax, emomIntervalCount(emomSlots, current)))
-  }, [mode, emomSlots, emomRoundMax])
+  }, [explicitEmomRounds, mode, emomSlots, emomRoundMax])
   // Tabata config
   const [tabataWork,   setTabataWork]   = useState(initialTabataWork   ?? 20)
   const [tabataRest,   setTabataRest]   = useState(initialTabataRest   ?? 10)
@@ -304,6 +307,9 @@ export function TimerView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isComplete])
 
+  const emomRoundsRef = useRef(emomRounds)
+  emomRoundsRef.current = emomRounds
+
   const startTimer = useCallback(() => {
     let durationMs: number
     const workerConfig: Record<string, number> = {}
@@ -315,8 +321,10 @@ export function TimerView({
       workerConfig.tabataRounds  = tabataRounds
     } else if (mode === 'emom') {
       const intervalMs = emomInterval * 60_000
-      durationMs = intervalMs * emomRounds
+      const rounds = emomRoundsRef.current
+      durationMs = intervalMs * rounds
       workerConfig.emomIntervalMs = intervalMs
+      workerConfig.emomRounds = rounds
     } else if (mode === 'fortime') {
       durationMs = (forTimeCap ?? 0) * 60_000
     } else {
