@@ -33,7 +33,7 @@ const T = {
       { title: 'Starten', text: '„Auch sichern“ legt die Session unter Meine Workouts. Der nächste Start überspringt den Wizard.' },
     ],
     partsTitle: 'Was ein Teil sein kann',
-    parts: 'Warm-up, Ablauf mit Sekunden, Kraft mit Sätzen, Pause, EMOM, AMRAP, For Time, Tabata, Mobilität, Atem und Sitzmeditation. Atem ist eine Vier-Phasen-Atmung, zum Beispiel Box Breathing 4-4-4-4. Die Sitzmeditation nimmt Minuten und einen Klang. Beide haken Achtsamkeit ab. Mobilität hakt die eigene Säule ab. Das Warm-up schreibt keinen Verlauf und geht direkt weiter.',
+    parts: 'Warm-up, Ablauf mit Sekunden, Kraft mit Sätzen, Reps oder Halten, Pause, EMOM, AMRAP, For Time, Tabata, Mobilität, Atem und Sitzmeditation. Atem ist eine Vier-Phasen-Atmung, zum Beispiel Box Breathing 4-4-4-4. Die Sitzmeditation nimmt Minuten und einen Klang. Beide haken Achtsamkeit ab. Mobilität hakt die eigene Säule ab. Das Warm-up schreibt keinen Verlauf und geht direkt weiter.',
     exampleTitle: 'Kurzbeispiel',
     app: 'In der App öffnen',
   },
@@ -57,7 +57,7 @@ const T = {
       { title: 'Start', text: '“Also save” keeps the session under My workouts. The next start skips the wizard.' },
     ],
     partsTitle: 'What a part can be',
-    parts: 'Warm-up, a timed flow, strength with sets, a pause, EMOM, AMRAP, For Time, Tabata, mobility, breath, and a sit. Breath is four phases, for example box breathing 4-4-4-4. The sit takes minutes and a sound. Both check off mindfulness. Mobility checks its own pillar. The warm-up writes no history and continues straight on.',
+    parts: 'Warm-up, a timed flow, strength with sets, reps or a hold, a pause, EMOM, AMRAP, For Time, Tabata, mobility, breath, and a sit. Breath is four phases, for example box breathing 4-4-4-4. The sit takes minutes and a sound. Both check off mindfulness. Mobility checks its own pillar. The warm-up writes no history and continues straight on.',
     exampleTitle: 'Short example',
     app: 'Open the app',
   },
@@ -75,7 +75,8 @@ const EXAMPLE = `{
     {
       "kind": "kraft",
       "exercises": [
-        { "name": "Back Squats", "sets": 5, "reps": 5, "weight": 100 }
+        { "name": "Back Squats", "sets": 5, "reps": 5, "weight": 100 },
+        { "name": "Plank", "sets": 3, "seconds": 45 }
       ]
     },
     {

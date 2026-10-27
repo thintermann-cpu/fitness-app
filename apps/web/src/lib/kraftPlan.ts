@@ -76,6 +76,14 @@ export function toggleSupersetWithNext(exercises: WizardExercise[], index: numbe
   ))
 }
 
+/** Sets × reps, a hold in seconds, or both. The fallback 8 reps is only for an old rep exercise. */
+export function kraftWorkLabel(exercise: WizardExercise): string {
+  const sets = exercise.sets ?? 3
+  if (exercise.rep_count == null && exercise.seconds != null) return `${sets} × ${exercise.seconds}s`
+  if (exercise.rep_count != null && exercise.seconds != null) return `${sets} × ${exercise.rep_count} · ${exercise.seconds}s`
+  return `${sets} × ${exercise.rep_count ?? 8}`
+}
+
 export function exerciseLoad(exercise: WizardExercise): string | undefined {
   if (typeof exercise.weightKg === 'number' && Number.isFinite(exercise.weightKg)) {
     const rounded = Math.round(exercise.weightKg * 100) / 100
@@ -88,9 +96,14 @@ export function exerciseLoad(exercise: WizardExercise): string | undefined {
 }
 
 function formatOne(exercise: WizardExercise, asKraft: boolean): string {
-  const hasScheme = exercise.sets != null || exercise.rep_count != null
+  const hold = exercise.rep_count == null && exercise.seconds != null
+  const hasScheme = exercise.sets != null || exercise.rep_count != null || hold
   const scheme = asKraft || hasScheme
-    ? `${exercise.sets ?? 3}×${exercise.rep_count ?? 8} `
+    ? hold
+      ? `${exercise.sets ?? 3}×${exercise.seconds}s `
+      : exercise.rep_count != null && exercise.seconds != null
+        ? `${exercise.sets ?? 3}×${exercise.rep_count} · ${exercise.seconds}s `
+        : `${exercise.sets ?? 3}×${exercise.rep_count ?? 8} `
     : ''
   const detail = !scheme && exercise.detail ? ` ${exercise.detail}` : ''
   const weight = exerciseLoad(exercise)
@@ -101,7 +114,7 @@ function formatOne(exercise: WizardExercise, asKraft: boolean): string {
 /** One history line. Kraft shows sets×reps. Metcon keeps the prescription text. Supersets are grouped. */
 export function formatHistoryExercises(exercises: WizardExercise[]): string {
   const kraft = exercises.some((exercise) => (
-    exercise.sets != null || exercise.rep_count != null || exercise.weight_level || exercise.weightKg != null || exercise.weightText || exercise.supersetId
+    exercise.sets != null || exercise.rep_count != null || exercise.seconds != null || exercise.weight_level || exercise.weightKg != null || exercise.weightText || exercise.supersetId
   ))
   return exerciseGroups(exercises).map((group) => {
     const members = exercises.slice(group.start, group.end + 1).map((exercise) => formatOne(exercise, kraft && group.superset))

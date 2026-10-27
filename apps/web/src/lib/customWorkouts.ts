@@ -6,6 +6,8 @@ export interface WizardExercise {
   detail?: string
   sets?: number
   rep_count?: number
+  /** Isometric hold in seconds. A strength exercise may use this instead of reps. */
+  seconds?: number
   weight_level?: 'leicht' | 'mittel' | 'schwer'
   /** Exact load in kilograms, from a session import. */
   weightKg?: number

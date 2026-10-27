@@ -278,10 +278,19 @@ function compilePart(raw: unknown, index: number, errors: string[], warnings: Im
     rows.forEach((row, rowIndex) => {
       const name = text(pick(row, ['name']), 80)
       const sets = intIn(pick(row, ['sets', 'saetze']), 1, 20)
-      const reps = intIn(pick(row, ['reps', 'rep_count', 'repCount']), 1, 100)
+      const repsRaw = pick(row, ['reps', 'rep_count', 'repCount'])
+      const secondsRaw = pick(row, ['seconds', 'sek', 'sec'])
+      const repsMissing = repsRaw === undefined || repsRaw === null || repsRaw === ''
+      const secondsMissing = secondsRaw === undefined || secondsRaw === null || secondsRaw === ''
+      const reps = repsMissing ? null : intIn(repsRaw, 1, 100)
+      const seconds = secondsMissing ? null : intIn(secondsRaw, 1, 900)
       if (!name) errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: Name fehlt.`)
       if (sets == null) errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: sets zwischen 1 und 20.`)
-      if (reps == null) errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: reps zwischen 1 und 100.`)
+      if (!repsMissing && reps == null) errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: reps zwischen 1 und 100.`)
+      if (!secondsMissing && seconds == null) errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: seconds zwischen 1 und 900.`)
+      if (repsMissing && secondsMissing) {
+        errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: reps zwischen 1 und 100 oder seconds zwischen 1 und 900.`)
+      }
       const weight = readWeight(pick(row, ['weight', 'weightKg', 'weight_level', 'kg']))
       if (weight === 'invalid') {
         errors.push(`Teil ${partNo}, Übung ${rowIndex + 1}: weight ist zu lang. kg, "80 kg", "2×24 kg", "Bodyweight" oder leicht/mittel/schwer, höchstens 40 Zeichen.`)
@@ -290,14 +299,16 @@ function compilePart(raw: unknown, index: number, errors: string[], warnings: Im
       if (superset && exercises.length === 0) {
         warnings.push({ part: partNo, exercise: name ?? 'Übung', message: 'supersetWithPrevious an der ersten Übung wird ignoriert.' })
       }
-      if (!name || sets == null || reps == null) return
+      const doseOk = (repsMissing || reps != null) && (secondsMissing || seconds != null) && (reps != null || seconds != null)
+      if (!name || sets == null || !doseOk) return
       warnName(partNo, name, warnings)
       flags.push(superset && exercises.length > 0)
       exercises.push({
         id: crypto.randomUUID(),
         name,
         sets,
-        rep_count: reps,
+        rep_count: reps ?? undefined,
+        seconds: seconds ?? undefined,
         weight_level: weight && weight !== 'invalid' ? weight.level : undefined,
         weightKg: weight && weight !== 'invalid' ? weight.kg : undefined,
         weightText: weight && weight !== 'invalid' ? weight.text : undefined,

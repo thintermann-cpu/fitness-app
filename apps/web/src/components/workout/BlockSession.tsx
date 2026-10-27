@@ -34,13 +34,17 @@ function formatSecs(total: number) {
 
 function withParsedSets(exercises: WizardExercise[]): WizardExercise[] {
   return exercises.map((exercise) => {
-    if (exercise.sets && exercise.rep_count) return exercise
+    const hold = exercise.rep_count == null && exercise.seconds != null
+    if (exercise.sets && (exercise.rep_count || hold)) return exercise
     const match = `${exercise.detail ?? ''} ${exercise.name}`.match(/(\d+)\s*[x×]\s*(\d+)/)
-    if (!match) return { ...exercise, sets: exercise.sets ?? 3, rep_count: exercise.rep_count ?? 8 }
+    if (!match) {
+      if (hold) return { ...exercise, sets: exercise.sets ?? 3 }
+      return { ...exercise, sets: exercise.sets ?? 3, rep_count: exercise.rep_count ?? 8 }
+    }
     return {
       ...exercise,
       sets: exercise.sets ?? Number(match[1]),
-      rep_count: exercise.rep_count ?? Number(match[2]),
+      rep_count: hold ? undefined : exercise.rep_count ?? Number(match[2]),
     }
   })
 }

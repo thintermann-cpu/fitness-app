@@ -57,6 +57,9 @@ export function sessionDraftReady(blocks: WorkoutBlock[]) {
       return block.name.trim().length > 0 && block.inhaleSec >= 1 && block.exhaleSec >= 1 && block.cycles >= 1
     }
     if (block.kind === 'meditation') return block.name.trim().length > 0 && block.minutes >= 1
+    if (block.kind === 'krafttraining') {
+      return block.exercises.every((exercise) => exercise.name.trim().length > 0 && (exercise.rep_count != null || exercise.seconds != null))
+    }
     if (block.exercises.length === 0) return false
     return block.exercises.every((exercise) => exercise.name.trim().length > 0)
   })
@@ -272,9 +275,14 @@ function FlowRow({ exercise, onChange }: { exercise: FlowExercise; onChange: (ne
   )
 }
 
+function optionalCount(raw: string, min: number, max: number): number | undefined {
+  if (raw.trim() === '') return undefined
+  return clamp(Number(raw), min, max)
+}
+
 function KraftRow({ exercise, onChange }: { exercise: WizardExercise; onChange: (next: WizardExercise) => void }) {
   return (
-    <div className="grid grid-cols-[1fr_3.2rem_3.2rem_4.5rem] gap-2">
+    <div className="grid grid-cols-[1fr_3rem_3rem_3.2rem_4.5rem] gap-2">
       <input
         value={exercise.name}
         aria-label="Übung"
@@ -283,14 +291,15 @@ function KraftRow({ exercise, onChange }: { exercise: WizardExercise; onChange: 
         style={fieldStyle}
       />
       <input type="number" value={exercise.sets ?? 3} min={1} max={20} aria-label="Sätze" onChange={(event) => onChange({ ...exercise, sets: clamp(Number(event.target.value), 1, 20) })} className="rounded-lg px-2 py-1.5 text-sm text-right outline-none" style={fieldStyle} />
-      <input type="number" value={exercise.rep_count ?? 8} min={1} max={100} aria-label="Reps" onChange={(event) => onChange({ ...exercise, rep_count: clamp(Number(event.target.value), 1, 100) })} className="rounded-lg px-2 py-1.5 text-sm text-right outline-none" style={fieldStyle} />
+      <input type="number" value={exercise.rep_count ?? ''} min={1} max={100} aria-label="Reps" placeholder="Reps" onChange={(event) => onChange({ ...exercise, rep_count: optionalCount(event.target.value, 1, 100) })} className="rounded-lg px-2 py-1.5 text-sm text-right outline-none" style={fieldStyle} />
+      <input type="number" value={exercise.seconds ?? ''} min={1} max={900} aria-label="Sekunden" placeholder="s" onChange={(event) => onChange({ ...exercise, seconds: optionalCount(event.target.value, 1, 900) })} className="rounded-lg px-2 py-1.5 text-sm text-right outline-none" style={fieldStyle} />
       <input value={loadLabel(exercise)} aria-label="Last" placeholder="kg" onChange={(event) => onChange(applyLoad(exercise, event.target.value))} className="rounded-lg px-2 py-1.5 text-sm outline-none" style={fieldStyle} />
       <input
         value={exercise.note ?? ''}
         aria-label="Hinweis"
         placeholder="Hinweis"
         onChange={(event) => onChange({ ...exercise, note: event.target.value.slice(0, 140) || undefined })}
-        className="col-span-4 rounded-lg px-2 py-1.5 text-xs outline-none"
+        className="col-span-5 rounded-lg px-2 py-1.5 text-xs outline-none"
         style={fieldStyle}
       />
     </div>

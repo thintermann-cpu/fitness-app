@@ -5,7 +5,7 @@ import { useWodHistory } from '../../hooks/useWodHistory'
 import { useSessionStore } from '../../store/sessionStore'
 import { useAuthStore } from '../../store/authStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
-import { alignSupersetSets, exerciseGroups, exerciseLoad, groupAt } from '../../lib/kraftPlan'
+import { alignSupersetSets, exerciseGroups, exerciseLoad, groupAt, kraftWorkLabel } from '../../lib/kraftPlan'
 import { useWakeLock } from '../../hooks/useWakeLock'
 
 let kraftAudioCtx: AudioContext | null = null
@@ -57,6 +57,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   const [timeLeft,    setTimeLeft]    = useState(0)
   const [showCountdown, setShowCountdown] = useState(autoStart)
   const [restPaused, setRestPaused] = useState(false)
+  const [holdLeft, setHoldLeft] = useState<number | null>(null)
   const restTypeRef      = useRef<'set' | 'exercise'>('set')
   const pendingRef       = useRef<{ exIdx: number; setIdx: number } | null>(null)
   const plan             = useMemo(() => alignSupersetSets(exercises), [exercises])
@@ -80,6 +81,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
   const ex = plan[exIdx]
   const group        = groupAt(plan, exIdx)
   const totalSets    = plan[group.start]?.sets ?? ex?.sets ?? 3
+  const holdOnly     = ex?.rep_count == null && (ex?.seconds ?? 0) > 0
   const reps         = ex?.rep_count ?? 8
   const load         = ex ? exerciseLoad(ex) : undefined
   const levelColor   = ex?.weight_level && ex.weightKg == null && !ex.weightText ? WEIGHT_COLORS[ex.weight_level] : '#E8642A'
@@ -137,6 +139,33 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
     setRestPaused(false)
     setPhase('rest')
   }
+
+  const finishHoldRef = useRef(handleSetDone)
+  finishHoldRef.current = handleSetDone
+
+  useEffect(() => {
+    if (phase !== 'work') {
+      setHoldLeft(null)
+      return
+    }
+    const exercise = plan[exIdx]
+    if (exercise?.rep_count != null || exercise?.seconds == null || exercise.seconds <= 0) {
+      setHoldLeft(null)
+      return
+    }
+    setHoldLeft(exercise.seconds)
+    let left = exercise.seconds
+    const id = window.setInterval(() => {
+      left -= 1
+      if (left <= 3 && left > 0) beepKraft(880, 0.55, 0.12)
+      setHoldLeft(Math.max(0, left))
+      if (left <= 0) {
+        clearInterval(id)
+        finishHoldRef.current()
+      }
+    }, 1000)
+    return () => clearInterval(id)
+  }, [phase, exIdx, setIdx, plan])
 
   function skipRest() {
     setRestPaused(false)
@@ -218,7 +247,7 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{e.name}</p>
                     <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                      {e.sets ?? 3} × {e.rep_count ?? 8} Wdh.
+                      {kraftWorkLabel(e)}{e.rep_count != null && e.seconds == null ? ' Wdh.' : ''}
                       {exerciseLoad(e) && ` · ${exerciseLoad(e)}`}
                     </p>
                     {e.note && (
@@ -356,11 +385,14 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
             className="font-black"
             style={{ fontSize: 'clamp(80px, 25vw, 110px)', color: '#10B981' }}
           >
-            {reps}
+            {holdOnly ? (holdLeft ?? ex?.seconds ?? 0) : reps}
           </p>
           <p className="text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
-            Wiederholungen
+            {holdOnly ? 'Sekunden' : 'Wiederholungen'}
           </p>
+          {!holdOnly && ex?.seconds != null && (
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>{ex.seconds}s halten</p>
+          )}
         </div>
       )}
 

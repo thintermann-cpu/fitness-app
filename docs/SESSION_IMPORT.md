@@ -26,7 +26,7 @@ Nur die Teile aufnehmen, die die Session braucht. Das Beispiel unten zeigt jedes
 - Namen frei. Katalognamen bekommen Abbildung und Kurztext, wenn der Name trifft.
 - `note`: Ausführung, Tempo oder Form. Optional, bis 140 Zeichen.
 - `sides`: nur bei Ablauf-Übungen. `1` oder `2`. Bei `2` läuft die Zeit ein zweites Mal mit „andere Seite“.
-- Kraft: `sets` 1–20, `reps` 1–100. `weight` ist eine kg-Angabe (`100`, `"22.5 kg"`, `"82,5 kg"`) oder ein kurzer Text bis 40 Zeichen (`"2x 20-22.5 kg"`, `"Bodyweight"`, `"60/70/80"`). `leicht`, `mittel` und `schwer` gehen weiter. `restBetweenSets` und `restBetweenExercises` in Sekunden, 0–600. Standard 90 und 60.
+- Kraft: `sets` 1–20. Jede Übung braucht `reps` 1–100 oder `seconds` 1–900, oder beides. Eine Halteübung ohne Wiederholungen lässt `reps` weg und setzt `seconds`. Fehlen beide, ist das JSON ungültig. `weight` ist eine kg-Angabe (`100`, `"22.5 kg"`, `"82,5 kg"`) oder ein kurzer Text bis 40 Zeichen (`"2x 20-22.5 kg"`, `"Bodyweight"`, `"60/70/80"`). `leicht`, `mittel` und `schwer` gehen weiter. `restBetweenSets` und `restBetweenExercises` in Sekunden, 0–600. Standard 90 und 60.
 - `supersetWithPrevious: true` koppelt die Übung an die direkt davor. Die Sätze gelten für die ganze Gruppe, die Reps bleiben pro Übung. An der ersten Übung eines Teils wird das Flag ignoriert.
 - Pause: `seconds` 1–3600.
 - EMOM: `intervalMin` 1–10, `rounds` 1–60. `rounds` ist die Anzahl der Intervalle und läuft genau so, auch wenn die Zahl kein Vielfaches der Übungen ist. Drei Durchgänge bei vier Übungen sind `rounds` 12. Pro Übung `detail` für Reps oder Distanz.
@@ -59,7 +59,8 @@ Nur die Teile aufnehmen, die die Session braucht. Das Beispiel unten zeigt jedes
         { "name": "Back Squats", "sets": 5, "reps": 5, "weight": 100, "note": "3-1-1, Pause unten" },
         { "name": "Romanian Deadlift", "sets": 3, "reps": 8, "weight": "70 kg", "note": "Rücken lang" },
         { "name": "Bench Press", "sets": 3, "reps": 8, "weight": 80, "supersetWithPrevious": false },
-        { "name": "Bent Over Row", "sets": 3, "reps": 8, "weight": "2×24 kg", "supersetWithPrevious": true, "note": "Ellbogen eng" }
+        { "name": "Bent Over Row", "sets": 3, "reps": 8, "weight": "2×24 kg", "supersetWithPrevious": true, "note": "Ellbogen eng" },
+        { "name": "Plank", "sets": 3, "seconds": 45, "note": "Hüfte fest, kein reps-Feld" }
       ]
     },
     { "kind": "pause", "seconds": 180 },

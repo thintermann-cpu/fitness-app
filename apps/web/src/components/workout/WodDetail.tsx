@@ -16,7 +16,7 @@ import type { TimerMode } from '../../lib/timerLabels'
 import { TimerView } from './TimerView'
 import { KraftTimerView } from './KraftTimerView'
 import { BlockSession } from './BlockSession'
-import { exerciseLoad } from '../../lib/kraftPlan'
+import { exerciseLoad, kraftWorkLabel } from '../../lib/kraftPlan'
 import { isChained, isWorkBlock, seedFromBlock } from '../../lib/workoutBlocks'
 import type { WorkoutBlock } from '../../lib/workoutBlocks'
 import { ScoreInput } from './ScoreInput'
@@ -247,9 +247,9 @@ export function WodDetail({ wodName, onBack }: Props) {
                         {ex.name}
                         {ex.detail ? <span className="text-[var(--color-text-muted)]"> · {ex.detail}</span> : null}
                       </span>
-                      {(ex.sets || ex.rep_count) && (
+                      {(ex.sets || ex.rep_count || ex.seconds) && (
                         <span className="text-xs text-[var(--color-text-muted)]">
-                          {ex.sets ?? 3}×{ex.rep_count ?? 8}{exerciseLoad(ex) ? ` · ${exerciseLoad(ex)}` : ''}
+                          {kraftWorkLabel(ex)}{exerciseLoad(ex) ? ` · ${exerciseLoad(ex)}` : ''}
                         </span>
                       )}
                     </div>
@@ -542,8 +542,8 @@ export function WodDetail({ wodName, onBack }: Props) {
                     {item.name}
                     {item.detail ? (
                       <span className="text-[var(--color-text-muted)]"> · {item.detail}</span>
-                    ) : item.sets && item.rep_count ? (
-                      <span className="text-[var(--color-text-muted)]"> · {item.sets}×{item.rep_count}</span>
+                    ) : item.sets || item.rep_count || item.seconds ? (
+                      <span className="text-[var(--color-text-muted)]"> · {kraftWorkLabel(item)}</span>
                     ) : null}
                     {item.note ? (
                       <span className="block text-xs text-[var(--color-text-muted)]">{item.note}</span>
