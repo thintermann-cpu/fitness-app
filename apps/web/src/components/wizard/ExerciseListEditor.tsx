@@ -173,32 +173,45 @@ export function ExerciseListEditor({
       )}
       {fromCatalog && query && (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
+          {showAnyway && (
+            <button
+              type="button"
+              onClick={() => addName(query)}
+              className="w-full text-left px-3 py-2.5"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-pillar-workout) 46%, var(--color-bg-card))',
+                boxShadow: 'inset 3px 0 0 var(--color-pillar-workout)',
+              }}
+            >
+              <span className="block text-[11px] font-bold tracking-wide uppercase" style={{ color: 'var(--color-pillar-workout)' }}>
+                Eigener Name
+              </span>
+              <span className="block text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+                „{query}“ hinzufügen
+              </span>
+            </button>
+          )}
           {suggestions.length === 0 ? (
             <p className="px-3 py-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
               Nicht im Katalog
             </p>
           ) : (
-            suggestions.map((ex) => (
-              <button
-                key={ex.id}
-                type="button"
-                onClick={() => addName(ex.name)}
-                className="w-full text-left px-3 py-2 text-sm"
-                style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
-              >
-                {ex.name}
-              </button>
-            ))
-          )}
-          {showAnyway && (
-            <button
-              type="button"
-              onClick={() => addName(query)}
-              className="w-full text-left px-3 py-2 text-sm font-semibold"
-              style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
-            >
-              Trotzdem „{query}“ hinzufügen
-            </button>
+            <>
+              <p className="px-3 pt-2 pb-1 text-[11px] font-semibold" style={{ color: 'var(--color-text-muted)' }}>
+                Aus dem Katalog
+              </p>
+              {suggestions.map((ex) => (
+                <button
+                  key={ex.id}
+                  type="button"
+                  onClick={() => addName(ex.name)}
+                  className="w-full text-left px-3 py-2 text-sm"
+                  style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
+                >
+                  {ex.name}
+                </button>
+              ))}
+            </>
           )}
         </div>
       )}

@@ -295,8 +295,17 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
       {step === 1 && !isKraft && (
         <div>
           <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Übungen</p>
+          <p
+            className="text-sm font-semibold mb-3 rounded-xl px-3 py-2.5"
+            style={{
+              color: '#fff',
+              backgroundColor: 'var(--color-pillar-workout)',
+            }}
+          >
+            Eigener Name geht auch. Nach dem Tippen steht er ganz oben.
+          </p>
           <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
-            Optional. Die Vorschläge kommen aus dem Katalog. Ein eigener Name geht über „Trotzdem hinzufügen“. Reps und Runden bleiben daneben stehen.
+            Optional. Die Vorschläge kommen aus dem Katalog. Reps und Runden bleiben daneben stehen.
           </p>
           <input
             type="text"
@@ -323,6 +332,15 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
       {step === 1 && isKraft && (
         <div className="space-y-3">
           <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Übungen</p>
+          <p
+            className="text-sm font-semibold mb-3 rounded-xl px-3 py-2.5"
+            style={{
+              color: '#fff',
+              backgroundColor: 'var(--color-pillar-workout)',
+            }}
+          >
+            Eigener Name geht auch. Nach dem Tippen steht er ganz oben.
+          </p>
           <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
             Mindestens 1 Übung — Sätze, Reps und Gewicht pro Übung einstellen
           </p>
