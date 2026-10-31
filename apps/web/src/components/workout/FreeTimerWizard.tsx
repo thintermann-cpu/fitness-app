@@ -296,7 +296,7 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
         <div>
           <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Übungen</p>
           <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>
-            Optional — nur Übungen aus dem Katalog. Reps und Runden bleiben daneben stehen.
+            Optional. Die Vorschläge kommen aus dem Katalog. Ein eigener Name geht über „Trotzdem hinzufügen“. Reps und Runden bleiben daneben stehen.
           </p>
           <input
             type="text"

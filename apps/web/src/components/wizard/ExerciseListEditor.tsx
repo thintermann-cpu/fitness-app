@@ -7,7 +7,7 @@ interface Props {
   onChange: (items: WizardExercise[]) => void
   placeholder?: string
   showAddInput?: boolean
-  /** Only catalog exercises can be added. Free text is rejected. */
+  /** Suggestions stay catalog matches. A unique hit uses the catalog name. Otherwise the typed name can be added. */
   fromCatalog?: boolean
 }
 
@@ -19,23 +19,26 @@ export function ExerciseListEditor({
   fromCatalog = false,
 }: Props) {
   const [input, setInput] = useState('')
-  const suggestions = fromCatalog ? searchExercises(input, 6) : []
-  const accepted = fromCatalog ? acceptExerciseQuery(input) : null
+  const query = input.trim().slice(0, 80)
+  const suggestions = fromCatalog && query ? searchExercises(query, 6) : []
+  const accepted = fromCatalog && query ? acceptExerciseQuery(query) : null
+  const canAddFree = Boolean(query) && !accepted && suggestions.length === 0
+  const canAdd = fromCatalog ? Boolean(accepted) || canAddFree : Boolean(query)
+  const showAnyway = Boolean(query) && (!accepted || accepted.name.toLowerCase() !== query.toLowerCase())
 
   const addName = (name: string) => {
-    const trimmed = name.trim()
+    const trimmed = name.trim().slice(0, 80)
     if (!trimmed) return
     onChange([...items, { id: crypto.randomUUID(), name: trimmed }])
     setInput('')
   }
 
   const add = () => {
-    if (fromCatalog) {
-      if (!accepted) return
+    if (accepted) {
       addName(accepted.name)
       return
     }
-    addName(input)
+    if (!fromCatalog || canAddFree) addName(query)
   }
 
   const updateDetail = (id: string, detail: string) => {
@@ -152,27 +155,27 @@ export function ExerciseListEditor({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && add()}
-            placeholder={fromCatalog ? 'Übung aus dem Katalog…' : placeholder}
+            placeholder={fromCatalog ? 'Übung suchen oder frei eingeben…' : placeholder}
             className="flex-1 bg-transparent text-sm outline-none"
             style={{ color: 'var(--color-text)' }}
             aria-autocomplete={fromCatalog ? 'list' : undefined}
           />
           <button
             onClick={add}
-            disabled={fromCatalog ? !accepted : !input.trim()}
+            disabled={!canAdd}
             className="text-sm font-bold px-2 py-0.5 rounded-lg transition-opacity"
-            style={{ color: '#E8642A', opacity: (fromCatalog ? accepted : input.trim()) ? 1 : 0.35 }}
+            style={{ color: '#E8642A', opacity: canAdd ? 1 : 0.35 }}
             aria-label="Hinzufügen"
           >
             +
           </button>
         </div>
       )}
-      {fromCatalog && input.trim() && (
+      {fromCatalog && query && (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
           {suggestions.length === 0 ? (
             <p className="px-3 py-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Keine Übung im Katalog
+              Nicht im Katalog
             </p>
           ) : (
             suggestions.map((ex) => (
@@ -186,6 +189,16 @@ export function ExerciseListEditor({
                 {ex.name}
               </button>
             ))
+          )}
+          {showAnyway && (
+            <button
+              type="button"
+              onClick={() => addName(query)}
+              className="w-full text-left px-3 py-2 text-sm font-semibold"
+              style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
+            >
+              Trotzdem „{query}“ hinzufügen
+            </button>
           )}
         </div>
       )}
