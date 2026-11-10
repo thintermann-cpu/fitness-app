@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAnalytics } from '../../hooks/useAnalytics'
+import { useAudio } from '../../hooks/useAudio'
 import { useAuthStore } from '../../store/authStore'
 
 const PILLAR_COLOR = '#9B7FD4'
@@ -51,6 +52,7 @@ export function GuidedPlayer() {
   const [progress,  setProgress]  = useState(0)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const { track } = useAnalytics()
+  const sounds = useAudio()
 
   useEffect(() => {
     fetch('/audio/sessions/sessions.json')
@@ -78,7 +80,11 @@ export function GuidedPlayer() {
     audio.addEventListener('timeupdate', () => {
       setProgress(audio.duration > 0 ? audio.currentTime / audio.duration : 0)
     })
-    audio.addEventListener('ended', () => { setPlaying(false); setProgress(0) })
+    audio.addEventListener('ended', () => {
+      setPlaying(false)
+      setProgress(0)
+      void sounds.playGong()
+    })
     audioRef.current = audio
     setActiveId(s.id)
     setProgress(0)

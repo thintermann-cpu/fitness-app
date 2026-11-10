@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useAudioStore } from '../../store/audioStore'
+import { useAudio } from '../../hooks/useAudio'
 import { useAnalytics } from '../../hooks/useAnalytics'
 import { useMeditationLogs } from '../../hooks/useMeditationLogs'
 
@@ -114,22 +115,6 @@ function playPing(isMuted: boolean) {
   } catch {}
 }
 
-function playGong(isMuted: boolean) {
-  if (isMuted) return
-  try {
-    const ctx = new AudioContext()
-    const osc = ctx.createOscillator()
-    const g   = ctx.createGain()
-    osc.connect(g); g.connect(ctx.destination)
-    osc.type = 'sine'
-    osc.frequency.setValueAtTime(432, ctx.currentTime)
-    osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 3.2)
-    g.gain.setValueAtTime(0.6, ctx.currentTime)
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 4.5)
-    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 4.5)
-  } catch {}
-}
-
 interface Props {
   lang: Lang
   onFinish: () => void
@@ -137,6 +122,7 @@ interface Props {
 
 export function UnguidedTimer({ lang, onFinish }: Props) {
   const isMuted = useAudioStore((s) => s.isMuted)
+  const audio = useAudio()
   const { track } = useAnalytics()
   const { addLog } = useMeditationLogs()
   const loggedRef = useRef(false)
@@ -179,7 +165,7 @@ export function UnguidedTimer({ lang, onFinish }: Props) {
   useEffect(() => {
     if (mode === 'active' && elapsed >= totalSeconds) {
       setMode('done')
-      playGong(isMuted)
+      void audio.playGong()
       if (!loggedRef.current) {
         loggedRef.current = true
         addLog.mutate({
@@ -188,7 +174,7 @@ export function UnguidedTimer({ lang, onFinish }: Props) {
         })
       }
     }
-  }, [elapsed, totalSeconds, mode, isMuted, addLog])
+  }, [elapsed, totalSeconds, mode, audio, addLog])
 
   function start() {
     setElapsed(0)
@@ -196,7 +182,7 @@ export function UnguidedTimer({ lang, onFinish }: Props) {
     loggedRef.current = false
     setPaused(false)
     setMode('active')
-    playGong(isMuted)
+    void audio.playGong()
     track('meditation_started', { type: meditationType, duration_min: duration, guided: false })
   }
 

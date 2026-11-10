@@ -29,10 +29,13 @@ const AMBIENT_FILE: Partial<Record<SoundKey, string>> = {
   deep_om:     '/audio/ambient/deep_om.mp3',
 }
 
+const GONG_FILE = '/audio/sessions/meditation-gong.wav'
+
 export function useAudio() {
   const isMuted    = useAudioStore((s) => s.isMuted)
   const ctxRef     = useRef<AudioContext | null>(null)
   const bgAudioRef = useRef<HTMLAudioElement | null>(null)
+  const gongAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const getCtxReady = useCallback(async (): Promise<AudioContext> => {
     if (!ctxRef.current || ctxRef.current.state === 'closed') {
@@ -44,23 +47,39 @@ export function useAudio() {
     return ctxRef.current
   }, [])
 
+  const playGongFallback = useCallback(async () => {
+    const ctx = await getCtxReady()
+    const osc = ctx.createOscillator()
+    const g   = ctx.createGain()
+    osc.connect(g)
+    g.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(432, ctx.currentTime)
+    osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 3.2)
+    g.gain.setValueAtTime(0.7, ctx.currentTime)
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 4.5)
+    osc.start(ctx.currentTime)
+    osc.stop(ctx.currentTime + 4.5)
+  }, [getCtxReady])
+
+  /** Real bowl/gong sample; oscillator only if the file fails. */
   const playGong = useCallback(async () => {
     if (isMuted) return
     try {
-      const ctx = await getCtxReady()
-      const osc = ctx.createOscillator()
-      const g   = ctx.createGain()
-      osc.connect(g)
-      g.connect(ctx.destination)
-      osc.type = 'sine'
-      osc.frequency.setValueAtTime(432, ctx.currentTime)
-      osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 3.2)
-      g.gain.setValueAtTime(0.7, ctx.currentTime)
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 4.5)
-      osc.start(ctx.currentTime)
-      osc.stop(ctx.currentTime + 4.5)
-    } catch {}
-  }, [getCtxReady, isMuted])
+      if (gongAudioRef.current) {
+        gongAudioRef.current.pause()
+        gongAudioRef.current = null
+      }
+      const audio = new Audio(GONG_FILE)
+      audio.volume = 0.85
+      gongAudioRef.current = audio
+      await audio.play()
+    } catch {
+      try {
+        await playGongFallback()
+      } catch {}
+    }
+  }, [isMuted, playGongFallback])
 
   const playBeep = useCallback(async () => {
     if (isMuted) return
@@ -125,6 +144,10 @@ export function useAudio() {
 
   const cleanup = useCallback(() => {
     stopBackground()
+    if (gongAudioRef.current) {
+      gongAudioRef.current.pause()
+      gongAudioRef.current = null
+    }
     if (ctxRef.current && ctxRef.current.state !== 'closed') {
       void ctxRef.current.close()
       ctxRef.current = null
