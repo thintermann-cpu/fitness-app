@@ -57,14 +57,17 @@ function firstWorkIndex(blocks: WorkoutBlock[]): number {
 export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   const navigate = useNavigate()
   const lang = useAuthStore((s) => s.profile?.language ?? 'de')
+  const isDe = lang === 'de'
   const setSessionActive = useSessionStore((s) => s.setSessionActive)
   const opening = blocks[0]?.kind === 'pause' ? gateAfter(blocks, -1) : null
   const [index, setIndex] = useState(() => (opening ? -1 : firstWorkIndex(blocks)))
   const [gate, setGate] = useState<BlockGate | null>(opening)
   const [left, setLeft] = useState(() => opening?.pauseSec ?? 0)
+  const [awaitingConfirm, setAwaitingConfirm] = useState(false)
   const [finished, setFinished] = useState(false)
   const [gatePaused, setGatePaused] = useState(false)
   const gateLock = useRef(false)
+  const confirmChimePlayed = useRef(false)
   useWakeLock(!finished)
   const audio = useAudio()
 
@@ -74,33 +77,39 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   }, [index, gate, finished, setSessionActive])
 
   useEffect(() => {
-    if (!gate || finished || gatePaused) return
+    if (!gate || finished || gatePaused || awaitingConfirm) return
     if (left < 1 || left > 3) return
     void audio.playBeep()
-  }, [gate, finished, gatePaused, left, audio])
+  }, [gate, finished, gatePaused, awaitingConfirm, left, audio])
 
   useEffect(() => {
-    if (!gate || finished || gatePaused) return
+    if (!gate || finished || gatePaused || awaitingConfirm) return
     if (left <= 0) {
-      if (gateLock.current) return
-      gateLock.current = true
+      // Trailing pause with no next block: end the session.
       if (gate.nextIndex < 0) {
+        if (gateLock.current) return
+        gateLock.current = true
         setGate(null)
         setFinished(true)
         onSessionEnd?.()
-      } else {
-        setIndex(gate.nextIndex)
-        setGate(null)
+        return
+      }
+      // Work blocks always need an explicit tap before continuing.
+      setAwaitingConfirm(true)
+      if (!confirmChimePlayed.current) {
+        confirmChimePlayed.current = true
+        void audio.playGong()
       }
       return
     }
     const id = window.setTimeout(() => setLeft((value) => value - 1), 1000)
     return () => window.clearTimeout(id)
-  }, [gate, left, finished, gatePaused, onSessionEnd])
+  }, [gate, left, finished, gatePaused, awaitingConfirm, onSessionEnd, audio])
 
   function finish() {
     gateLock.current = true
     setGate(null)
+    setAwaitingConfirm(false)
     setFinished(true)
     onSessionEnd?.()
   }
@@ -114,6 +123,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
     }
     setIndex(gate.nextIndex)
     setGate(null)
+    setAwaitingConfirm(false)
   }
 
   function skipNext() {
@@ -128,7 +138,9 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
       return
     }
     gateLock.current = false
+    confirmChimePlayed.current = false
     setGatePaused(false)
+    setAwaitingConfirm(false)
     setGate(following)
     setLeft(following.pauseSec)
   }
@@ -136,23 +148,19 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   function handoff(fromIndex: number) {
     const next = gateAfter(blocks, fromIndex)
     gateLock.current = false
+    confirmChimePlayed.current = false
     setGatePaused(false)
-    const finishedBlock = blocks[fromIndex]
-    if (finishedBlock?.kind === 'flow' && finishedBlock.role === 'warmup' && next && !next.explicit && next.nextIndex >= 0) {
-      setIndex(next.nextIndex)
-      setGate(null)
-      return
-    }
+    setAwaitingConfirm(false)
     if (!next) {
       finish()
       return
     }
+    // Always show the gate — including after warmup — so the next block starts only on confirm.
     setGate(next)
     setLeft(next.pauseSec)
   }
 
   if (finished) {
-    const isDe = lang === 'de'
     return (
       <div className="flex flex-col items-center gap-5 py-8 text-center">
         <p style={{ fontSize: 64, lineHeight: 1 }}>🎉</p>
@@ -181,32 +189,59 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   if (gate) {
     const next = gate.nextIndex >= 0 ? blocks[gate.nextIndex] : undefined
     const nextLabel = next ? blockLabel(next) : ''
+    const accent = next ? blockColor(next) : '#60A5FA'
     return (
       <div className="flex flex-col items-center gap-4 py-6 text-center">
-        <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#60A5FA' }}>Pause</p>
-        <p className="font-mono font-black" style={{ fontSize: 'clamp(72px, 22vw, 100px)', color: '#60A5FA' }}>
-          {formatSecs(left)}
+        <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: accent }}>
+          {awaitingConfirm
+            ? (isDe ? 'Bereit?' : 'Ready?')
+            : (isDe ? 'Pause' : 'Rest')}
         </p>
-        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-          {next ? `Als Nächstes: ${nextLabel}` : 'Letzte Pause'}
-        </p>
+        {!awaitingConfirm && (
+          <p className="font-mono font-black" style={{ fontSize: 'clamp(72px, 22vw, 100px)', color: accent }}>
+            {formatSecs(left)}
+          </p>
+        )}
+        {awaitingConfirm && next && (
+          <p className="text-2xl font-black px-2" style={{ color: accent }}>
+            {isDe ? `Weiter mit ${nextLabel}?` : `Continue with ${nextLabel}?`}
+          </p>
+        )}
+        {!awaitingConfirm && (
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            {next
+              ? (isDe ? `Als Nächstes: ${nextLabel}` : `Up next: ${nextLabel}`)
+              : (isDe ? 'Letzte Pause' : 'Final rest')}
+          </p>
+        )}
+        {awaitingConfirm && (
+          <p className="text-sm px-4" style={{ color: 'var(--color-text-muted)' }}>
+            {isDe
+              ? 'Tippe auf Weiter, um den nächsten Teil zu starten.'
+              : 'Tap Continue to start the next part.'}
+          </p>
+        )}
         <div className="flex flex-col gap-3 w-full mt-2">
-          <button
-            type="button"
-            onClick={() => setGatePaused((value) => !value)}
-            className="py-3 rounded-2xl font-semibold text-sm"
-            style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
-          >
-            {gatePaused ? 'Fortsetzen' : 'Pause'}
-          </button>
+          {!awaitingConfirm && (
+            <button
+              type="button"
+              onClick={() => setGatePaused((value) => !value)}
+              className="py-3 rounded-2xl font-semibold text-sm"
+              style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text)' }}
+            >
+              {gatePaused
+                ? (isDe ? 'Fortsetzen' : 'Resume')
+                : (isDe ? 'Pause' : 'Pause')}
+            </button>
+          )}
           {next && (
             <button
               type="button"
               onClick={continueNext}
               className="py-3.5 rounded-2xl font-bold text-base text-white"
-              style={{ backgroundColor: blockColor(next) }}
+              style={{ backgroundColor: accent }}
             >
-              Weiter mit {nextLabel}
+              {isDe ? `Weiter mit ${nextLabel}` : `Continue with ${nextLabel}`}
             </button>
           )}
           {next && (
@@ -216,7 +251,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
               className="py-3 rounded-2xl font-semibold text-sm"
               style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
             >
-              Überspringen
+              {isDe ? 'Überspringen' : 'Skip'}
             </button>
           )}
         </div>
