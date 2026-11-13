@@ -2,11 +2,14 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCustomWorkouts } from '../hooks/useCustomWorkouts'
 import { FreeTimerWizard, type KraftConfig, type TimerInitConfig, type WizardInitialValues } from '../components/workout/FreeTimerWizard'
+import { SavedSessionEditSheet } from '../components/workout/SavedSessionEditSheet'
+import { JsonExportSheet } from '../components/shared/JsonExportSheet'
 import type { WarmupRoutineId } from '../components/workout/WarmupTimer'
 import type { TimerMode } from '../lib/timerLabels'
 import type { WizardExercise, CustomWorkout } from '../lib/customWorkouts'
 import { parseWorkoutSearch, workoutMatchesQuery } from '../lib/exerciseCatalog'
 import { blockLabel, blockSearchText, isWorkBlock, seedFromBlock } from '../lib/workoutBlocks'
+import { sessionJsonFromWorkout, slugFilename } from '../lib/sessionExport'
 
 const MODE_LABELS: Record<string, string> = {
   fortime: 'ForTime', amrap: 'AMRAP', emom: 'EMOM',
@@ -17,6 +20,8 @@ export function CustomWorkoutsPage() {
   const navigate = useNavigate()
   const { data: workouts = [], isLoading, updateWorkout, deleteWorkout } = useCustomWorkouts()
   const [editWorkout, setEditWorkout] = useState<CustomWorkout | null>(null)
+  const [editSession, setEditSession] = useState<CustomWorkout | null>(null)
+  const [exportWorkout, setExportWorkout] = useState<CustomWorkout | null>(null)
   const [search, setSearch] = useState('')
 
   function handleDelete(id: string) {
@@ -25,6 +30,14 @@ export function CustomWorkoutsPage() {
 
   function handleStart(w: CustomWorkout) {
     navigate('/workout', { state: { startWorkout: w } })
+  }
+
+  function openEdit(w: CustomWorkout) {
+    if (w.directStart && w.blocks && w.blocks.some(isWorkBlock)) {
+      setEditSession(w)
+      return
+    }
+    setEditWorkout(w)
   }
 
   function handleEditSave(
@@ -53,7 +66,8 @@ export function CustomWorkoutsPage() {
       emomInterval: timerCfg?.emomInterval,
       emomRounds:   timerCfg?.emomRounds,
       scheme:       timerCfg?.scheme ?? editWorkout.scheme,
-      blocks:       timerCfg?.blocks,
+      blocks:       timerCfg?.blocks ?? editWorkout.blocks,
+      directStart:  editWorkout.directStart,
     })
     setEditWorkout(null)
   }
@@ -85,7 +99,6 @@ export function CustomWorkoutsPage() {
 
   return (
     <div className="page-frame min-h-full bg-[var(--color-bg)] px-4 pt-4 pb-4">
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate('/workout')}
@@ -165,16 +178,23 @@ export function CustomWorkoutsPage() {
                   >
                     ▶
                   </button>
-                  {!w.directStart && (
-                    <button
-                      onClick={() => setEditWorkout(w)}
-                      className="w-8 h-8 rounded-lg text-xs font-semibold"
-                      style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
-                      aria-label="Bearbeiten"
-                    >
-                      ✎
-                    </button>
-                  )}
+                  <button
+                    onClick={() => openEdit(w)}
+                    className="w-8 h-8 rounded-lg text-xs font-semibold"
+                    style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
+                    aria-label="Bearbeiten"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    onClick={() => setExportWorkout(w)}
+                    className="w-8 h-8 rounded-lg text-[10px] font-bold"
+                    style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
+                    aria-label="JSON"
+                    title="JSON"
+                  >
+                    {'{ }'}
+                  </button>
                   <button
                     onClick={() => handleDelete(w.id)}
                     className="w-8 h-8 flex items-center justify-center rounded-lg text-xs"
@@ -190,7 +210,6 @@ export function CustomWorkoutsPage() {
         </div>
       )}
 
-      {/* Edit wizard */}
       <FreeTimerWizard
         key={editWorkout?.id ?? 'closed'}
         isOpen={editWorkout !== null}
@@ -213,6 +232,24 @@ export function CustomWorkoutsPage() {
           ...(editWorkout.blocks?.find(isWorkBlock) ? seedFromBlock(editWorkout.blocks.find(isWorkBlock)!) : {}),
         } satisfies WizardInitialValues) : undefined}
         onStart={handleEditSave}
+      />
+
+      <SavedSessionEditSheet
+        workout={editSession}
+        onClose={() => setEditSession(null)}
+        onSave={(next) => {
+          updateWorkout.mutate(next)
+          setEditSession(null)
+        }}
+      />
+
+      <JsonExportSheet
+        isOpen={exportWorkout !== null}
+        title={exportWorkout?.name ?? 'Workout'}
+        json={exportWorkout ? sessionJsonFromWorkout(exportWorkout) : ''}
+        filename={exportWorkout ? slugFilename(exportWorkout.name) : undefined}
+        accent="#E8642A"
+        onClose={() => setExportWorkout(null)}
       />
     </div>
   )
