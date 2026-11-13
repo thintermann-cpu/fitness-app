@@ -40,11 +40,9 @@ export interface BlockGate {
   nextIndex: number
   /** Work block that "Überspringen" drops. Absent when the pause only ends the session. */
   skipIndex?: number
-  /** True when a Pause part set the length. False is the 60s default between parts. */
+  /** True when a Pause part set the length. False means confirm immediately (pauseSec 0). */
   explicit: boolean
 }
-
-const DEFAULT_GATE_SEC = 60
 
 export function blockLabel(block: WorkoutBlock): string {
   if (block.kind === 'flow') {
@@ -129,8 +127,10 @@ export function patchFirstWork(parts: WorkoutBlock[], primary: WorkoutBlock): Wo
 }
 
 /**
- * Pause between two work parts. An explicit Pause part uses its length.
- * Without one, the gate is 60 seconds. A trailing Pause ends the session.
+ * Gap between two work parts. An explicit Pause part uses its length, then
+ * confirmation is required. Without one, pauseSec is 0 and BlockSession shows
+ * the confirm screen immediately — the next part never starts on its own.
+ * A trailing Pause ends the session after its countdown.
  */
 export function gateAfter(blocks: WorkoutBlock[], afterIndex: number): BlockGate | null {
   let index = afterIndex + 1
@@ -148,7 +148,7 @@ export function gateAfter(blocks: WorkoutBlock[], afterIndex: number): BlockGate
     return { pauseSec: Math.max(1, pause), nextIndex: -1, explicit: true }
   }
   return {
-    pauseSec: explicit ? Math.max(1, pause) : DEFAULT_GATE_SEC,
+    pauseSec: explicit ? Math.max(1, pause) : 0,
     nextIndex: index,
     skipIndex: index,
     explicit,

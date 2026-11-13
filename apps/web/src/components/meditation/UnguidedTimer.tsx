@@ -182,7 +182,7 @@ export function UnguidedTimer({ lang, onFinish }: Props) {
     loggedRef.current = false
     setPaused(false)
     setMode('active')
-    void audio.playGong()
+    void audio.playBeep()
     track('meditation_started', { type: meditationType, duration_min: duration, guided: false })
   }
 

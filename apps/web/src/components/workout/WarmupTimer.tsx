@@ -104,7 +104,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
     setPhase('exercise')
     setTimeLeft(exercises[0].sek)
     setPaused(false)
-    void audio.playGong()
+    void audio.playBeep()
   }
 
   function resetToIdle() {
@@ -125,7 +125,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
     if (currentIdx >= exercises.length - 1) {
       setPhase('done')
       if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
-      void audio.playGong()
+      void audio.playBeep()
       addToast({ type: 'success', message: '🔥 Warmup abgeschlossen!' })
       return
     }
@@ -168,7 +168,7 @@ export function WarmupTimer({ isOpen, onClose, onStartWorkout, routine = 'standa
         } else {
           setPhase('done')
           if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
-          void audio.playGong()
+          void audio.playBeep()
           addToast({ type: 'success', message: '🔥 Warmup abgeschlossen!' })
         }
       } else if (phase === 'rest') {

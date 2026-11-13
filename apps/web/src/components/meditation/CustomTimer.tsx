@@ -172,8 +172,6 @@ export function CustomTimer({ lang, onFinish }: Props) {
     totalSecRef.current    = total
     lastIntervalRef.current = 0
 
-    void audio.playGong()
-
     if (prepSec > 0) {
       setPrepLeft(prepSec)
       setTimeLeft(total)

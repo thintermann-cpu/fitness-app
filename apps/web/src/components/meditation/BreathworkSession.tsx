@@ -98,7 +98,6 @@ export function BreathworkSession({ technique, lang, onFinish, chained = false }
 
   const endSession = useCallback(() => {
     void audio.playComplete()
-    void audio.playGong()
     const durationMin = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 60000))
     addLog.mutate({
       technique_id: technique.id,

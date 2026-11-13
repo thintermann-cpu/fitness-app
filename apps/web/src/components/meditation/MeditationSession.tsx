@@ -143,10 +143,9 @@ export function MeditationSession({ meditation, lang, onFinish: _onFinish }: Pro
     return () => setSessionActive(false)
   }, [started, finished, setSessionActive])
 
-  // Start session: gong + background
+  // Start session: background only — gong plays at the end
   const handleStart = useCallback(() => {
     setStarted(true)
-    void audio.playGong()
     void audio.startBackground(sound)
     startTimeRef.current = Date.now()
   }, [audio, sound])
