@@ -9,11 +9,13 @@ import { StretchingHistory } from '../components/stretching/StretchingHistory'
 import { YogaTab } from '../components/stretching/YogaTab'
 import { FilterBottomSheet } from '../components/ui/FilterBottomSheet'
 import { SessionCreator } from '../components/stretching/SessionCreator'
+import { JsonExportSheet } from '../components/shared/JsonExportSheet'
 import {
   loadCustomSessions,
   deleteCustomSession,
   type CustomSession,
 } from '../lib/customWorkouts'
+import { sessionJsonFromMobility, slugFilename } from '../lib/sessionExport'
 
 const PILLAR_COLOR = '#7BC67E'
 
@@ -115,6 +117,8 @@ export function StretchingPage() {
   const [draftGoal, setDraftGoal] = useState<GoalFilter>('all')
   const [draftDur, setDraftDur] = useState<DurFilter>(0)
   const [creatorOpen, setCreatorOpen] = useState(false)
+  const [editSession, setEditSession] = useState<CustomSession | null>(null)
+  const [exportSession, setExportSession] = useState<CustomSession | null>(null)
   const [savedSessions, setSavedSessions] = useState<CustomSession[]>(() => loadCustomSessions())
 
   const activeFilterCount = (goalFilter !== 'all' ? 1 : 0) + (durFilter !== 0 ? 1 : 0)
@@ -256,7 +260,11 @@ export function StretchingPage() {
                   Eigene Sessions
                 </span>
                 <button
-                  onClick={() => { setSavedSessions(loadCustomSessions()); setCreatorOpen(true) }}
+                  onClick={() => {
+                    setEditSession(null)
+                    setSavedSessions(loadCustomSessions())
+                    setCreatorOpen(true)
+                  }}
                   className="text-xs font-bold px-2.5 py-1 rounded-lg"
                   style={{ backgroundColor: `${PILLAR_COLOR}20`, color: PILLAR_COLOR }}
                 >
@@ -303,6 +311,26 @@ export function StretchingPage() {
                         aria-label="Starten"
                       >
                         ▶
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditSession(s)
+                          setCreatorOpen(true)
+                        }}
+                        className="text-xs flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg font-semibold"
+                        style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
+                        aria-label="Bearbeiten"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        onClick={() => setExportSession(s)}
+                        className="text-[10px] flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg font-bold"
+                        style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
+                        aria-label="JSON"
+                        title="JSON"
+                      >
+                        {'{ }'}
                       </button>
                       <button
                         onClick={() => handleDeleteSession(s.id)}
@@ -466,9 +494,23 @@ export function StretchingPage() {
 
       <SessionCreator
         isOpen={creatorOpen}
-        onClose={() => { setCreatorOpen(false); setSavedSessions(loadCustomSessions()) }}
+        editSession={editSession}
+        onClose={() => {
+          setCreatorOpen(false)
+          setEditSession(null)
+          setSavedSessions(loadCustomSessions())
+        }}
         exercises={exercises}
         onStart={handleCreatorStart}
+      />
+
+      <JsonExportSheet
+        isOpen={exportSession !== null}
+        title={exportSession?.name ?? 'Mobilität'}
+        json={exportSession ? sessionJsonFromMobility(exportSession) : ''}
+        filename={exportSession ? slugFilename(exportSession.name) : undefined}
+        accent={PILLAR_COLOR}
+        onClose={() => setExportSession(null)}
       />
     </div>
   )

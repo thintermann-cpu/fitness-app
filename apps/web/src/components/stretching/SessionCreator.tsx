@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import type { StretchingExercise, StretchingRoutine } from '../../hooks/useStretching'
-import type { WizardExercise } from '../../lib/customWorkouts'
+import type { CustomSession, WizardExercise } from '../../lib/customWorkouts'
 import { saveCustomSession } from '../../lib/customWorkouts'
 import { WizardShell } from '../wizard/WizardShell'
 import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
@@ -12,9 +12,11 @@ interface Props {
   onClose: () => void
   exercises: StretchingExercise[]
   onStart: (routine: StretchingRoutine) => void
+  /** When set, the wizard updates this session instead of creating a new one. */
+  editSession?: CustomSession | null
 }
 
-export function SessionCreator({ isOpen, onClose, exercises, onStart }: Props) {
+export function SessionCreator({ isOpen, onClose, exercises, onStart, editSession = null }: Props) {
   const [step,     setStep]     = useState(0)
   const [search,   setSearch]   = useState('')
   const [selected, setSelected] = useState<WizardExercise[]>([])
@@ -22,6 +24,23 @@ export function SessionCreator({ isOpen, onClose, exercises, onStart }: Props) {
 
   const reset = () => { setStep(0); setSearch(''); setSelected([]); setName('') }
   const handleClose = () => { reset(); onClose() }
+
+  useEffect(() => {
+    if (!isOpen) return
+    if (!editSession) {
+      reset()
+      return
+    }
+    setStep(0)
+    setSearch('')
+    setName(editSession.name)
+    setSelected(
+      editSession.exerciseIds.map((id, index) => ({
+        id,
+        name: editSession.exerciseNames[index] || `Übung ${index + 1}`,
+      })),
+    )
+  }, [isOpen, editSession])
 
   // Step 0: exercise list filtered by search
   const filtered = useMemo(() => {
@@ -61,19 +80,21 @@ export function SessionCreator({ isOpen, onClose, exercises, onStart }: Props) {
     const exerciseNames = selected.map((e) => e.name)
     const durationMin   = Math.max(5, Math.ceil((selected.length * 35) / 60))
 
-    if (name.trim()) {
+    const editing = !!editSession
+    const sessionId = editSession?.id ?? crypto.randomUUID()
+    if (name.trim() || editSession) {
       saveCustomSession({
-        id: crypto.randomUUID(),
-        name: name.trim(),
+        id: sessionId,
+        name: name.trim() || editSession?.name || 'Eigene Session',
         exerciseIds,
         exerciseNames,
-        createdAt: new Date().toISOString(),
+        createdAt: editSession?.createdAt ?? new Date().toISOString(),
       })
     }
 
     const virtualRoutine: StretchingRoutine = {
-      id:           `custom-${crypto.randomUUID()}`,
-      name:         name.trim() || 'Eigene Session',
+      id:           `custom-${sessionId}`,
+      name:         name.trim() || editSession?.name || 'Eigene Session',
       description:  '',
       goal:         'custom',
       difficulty:   'medium',
@@ -84,7 +105,8 @@ export function SessionCreator({ isOpen, onClose, exercises, onStart }: Props) {
 
     reset()
     onClose()
-    onStart(virtualRoutine)
+    // Edit saves only; create still starts the guided session.
+    if (!editing) onStart(virtualRoutine)
   }
 
   const canNext =
@@ -96,12 +118,12 @@ export function SessionCreator({ isOpen, onClose, exercises, onStart }: Props) {
     <WizardShell
       isOpen={isOpen}
       onClose={handleClose}
-      title="Eigene Session"
+      title={editSession ? 'Session bearbeiten' : 'Eigene Session'}
       stepCount={3}
       currentStep={step}
       onBack={() => setStep((s) => s - 1)}
       onNext={handleNext}
-      nextLabel={step === 2 ? '▶ Start' : 'Weiter'}
+      nextLabel={step === 2 ? (editSession ? 'Speichern' : '▶ Start') : 'Weiter'}
       canNext={canNext}
     >
       {/* Step 0: Select exercises */}

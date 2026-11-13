@@ -8,6 +8,8 @@ In der App: Training → neben „Neues Workout“, oder Timer → Session einf�
 
 „Auch sichern“ speichert die Session. Der nächste Start läuft die Liste direkt ab, ohne den Wizard.
 
+Gespeicherte Einträge lassen sich wieder als JSON holen: bei eigenen Workouts, eigenen Mobility-Sessions und Atem-Presets über den Button `{ }` (Kopieren oder Download). Das Format ist dasselbe wie hier — erneut einfügbar über „Session einfügen“.
+
 Nur die Teile aufnehmen, die die Session braucht. Das Beispiel unten zeigt jedes Feld einmal.
 
 ## Regeln

@@ -1,5 +1,11 @@
 import { useState, useCallback } from 'react'
 import type { BreathworkTechnique } from '../../hooks/useMeditations'
+import { JsonExportSheet } from '../shared/JsonExportSheet'
+import {
+  sessionJsonFromBreathPreset,
+  slugFilename,
+  type BreathPresetExport,
+} from '../../lib/sessionExport'
 
 const PILLAR_COLOR = '#9B7FD4'
 const STORAGE_KEY  = 'carveout_custom_breathwork'
@@ -14,6 +20,7 @@ const T = {
     cycles:     'Zyklen',
     duration:   'Gesamtdauer',
     save:       'Als Preset speichern',
+    update:     'Preset aktualisieren',
     saved:      'Gespeichert',
     start:      'Starten',
     sec:        's',
@@ -21,6 +28,8 @@ const T = {
     name:       'Name der Technik',
     savedPresets: 'Gespeicherte Presets',
     delete:     'Löschen',
+    edit:       'Bearbeiten',
+    cancelEdit: 'Neu statt bearbeiten',
   },
   en: {
     title:      'Custom Technique',
@@ -31,6 +40,7 @@ const T = {
     cycles:     'Cycles',
     duration:   'Total duration',
     save:       'Save as preset',
+    update:     'Update preset',
     saved:      'Saved',
     start:      'Start',
     sec:        's',
@@ -38,6 +48,8 @@ const T = {
     name:       'Technique name',
     savedPresets: 'Saved presets',
     delete:     'Delete',
+    edit:       'Edit',
+    cancelEdit: 'New instead of edit',
   },
   es: {
     title:      'Técnica propia',
@@ -48,6 +60,7 @@ const T = {
     cycles:     'Ciclos',
     duration:   'Duración total',
     save:       'Guardar como preset',
+    update:     'Actualizar preset',
     saved:      'Guardado',
     start:      'Iniciar',
     sec:        's',
@@ -55,20 +68,13 @@ const T = {
     name:       'Nombre de técnica',
     savedPresets: 'Presets guardados',
     delete:     'Eliminar',
+    edit:       'Editar',
+    cancelEdit: 'Nuevo en vez de editar',
   },
 }
 
 type Lang = 'de' | 'en' | 'es'
-
-interface SavedPreset {
-  id: string
-  name: string
-  inhale_sec: number
-  hold_in_sec: number
-  exhale_sec: number
-  hold_out_sec: number
-  cycles: number
-}
+type SavedPreset = BreathPresetExport
 
 function loadPresets(): SavedPreset[] {
   try {
@@ -137,8 +143,10 @@ export function CustomBreathworkEditor({ lang, onStart }: Props) {
   const [holdOut, setHoldOut] = useState(0)
   const [cycles,  setCycles]  = useState(10)
   const [name,    setName]    = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
   const [presets, setPresets] = useState<SavedPreset[]>(loadPresets)
+  const [exportPreset, setExportPreset] = useState<SavedPreset | null>(null)
 
   const cycleSec    = inhale + holdIn + exhale + holdOut
   const totalSec    = cycleSec * cycles
@@ -147,7 +155,7 @@ export function CustomBreathworkEditor({ lang, onStart }: Props) {
     : `${Math.floor(totalSec / 60)}${t.min} ${totalSec % 60 > 0 ? `${totalSec % 60}${t.sec}` : ''}`
 
   const buildTechnique = useCallback((): BreathworkTechnique => ({
-    id:           'custom',
+    id:           editingId ?? 'custom',
     name:         name.trim() || t.title,
     description:  '',
     inhale_sec:   inhale,
@@ -156,11 +164,11 @@ export function CustomBreathworkEditor({ lang, onStart }: Props) {
     hold_out_sec: holdOut,
     cycles,
     difficulty:   'custom',
-  }), [name, t.title, inhale, holdIn, exhale, holdOut, cycles])
+  }), [editingId, name, t.title, inhale, holdIn, exhale, holdOut, cycles])
 
   const handleSavePreset = () => {
     const preset: SavedPreset = {
-      id:           crypto.randomUUID(),
+      id:           editingId ?? crypto.randomUUID(),
       name:         name.trim() || t.title,
       inhale_sec:   inhale,
       hold_in_sec:  holdIn,
@@ -168,33 +176,41 @@ export function CustomBreathworkEditor({ lang, onStart }: Props) {
       hold_out_sec: holdOut,
       cycles,
     }
-    const updated = [preset, ...presets].slice(0, 8)
+    const without = presets.filter((p) => p.id !== preset.id)
+    const updated = [preset, ...without].slice(0, 8)
     setPresets(updated)
     savePresets(updated)
+    setEditingId(preset.id)
     setJustSaved(true)
     setTimeout(() => setJustSaved(false), 2000)
   }
 
-  const handleLoadPreset = (p: SavedPreset) => {
+  const handleEditPreset = (p: SavedPreset) => {
     setInhale(p.inhale_sec)
     setHoldIn(p.hold_in_sec)
     setExhale(p.exhale_sec)
     setHoldOut(p.hold_out_sec)
     setCycles(p.cycles)
     setName(p.name)
+    setEditingId(p.id)
+  }
+
+  const handleClearEdit = () => {
+    setEditingId(null)
+    setName('')
   }
 
   const handleDeletePreset = (id: string) => {
     const updated = presets.filter(p => p.id !== id)
     setPresets(updated)
     savePresets(updated)
+    if (editingId === id) handleClearEdit()
   }
 
   return (
     <div className="space-y-4">
       <h3 className="text-base font-bold text-[var(--color-text)]">{t.title}</h3>
 
-      {/* Stepper fields */}
       <div
         className="rounded-[var(--radius-md)] px-4 border border-white/5"
         style={{ backgroundColor: 'var(--color-bg-card)' }}
@@ -206,7 +222,6 @@ export function CustomBreathworkEditor({ lang, onStart }: Props) {
         <StepperField label={t.cycles}  value={cycles}  min={5} max={40} onChange={setCycles}  suffix="" />
       </div>
 
-      {/* Duration preview */}
       <div
         className="flex items-center justify-between rounded-[var(--radius-md)] px-4 py-3"
         style={{ backgroundColor: `${PILLAR_COLOR}15`, border: `1px solid ${PILLAR_COLOR}33` }}
@@ -215,7 +230,6 @@ export function CustomBreathworkEditor({ lang, onStart }: Props) {
         <span className="text-sm font-bold" style={{ color: PILLAR_COLOR }}>{totalMinStr}</span>
       </div>
 
-      {/* Name + save as preset */}
       <div className="flex gap-2">
         <input
           type="text"
@@ -233,11 +247,21 @@ export function CustomBreathworkEditor({ lang, onStart }: Props) {
             color:           justSaved ? '#4CAF50' : PILLAR_COLOR,
           }}
         >
-          {justSaved ? t.saved : t.save}
+          {justSaved ? t.saved : (editingId ? t.update : t.save)}
         </button>
       </div>
 
-      {/* Start button */}
+      {editingId && (
+        <button
+          type="button"
+          onClick={handleClearEdit}
+          className="text-xs underline"
+          style={{ color: 'var(--color-text-muted)' }}
+        >
+          {t.cancelEdit}
+        </button>
+      )}
+
       <button
         onClick={() => onStart(buildTechnique())}
         className="w-full py-4 rounded-[var(--radius-md)] font-bold text-white"
@@ -246,7 +270,6 @@ export function CustomBreathworkEditor({ lang, onStart }: Props) {
         ▶ {t.start}
       </button>
 
-      {/* Saved presets */}
       {presets.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
@@ -255,17 +278,36 @@ export function CustomBreathworkEditor({ lang, onStart }: Props) {
           {presets.map((p) => (
             <div
               key={p.id}
-              className="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-3 border border-white/5"
-              style={{ backgroundColor: 'var(--color-bg-card)' }}
+              className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-3 border border-white/5"
+              style={{
+                backgroundColor: editingId === p.id ? `${PILLAR_COLOR}18` : 'var(--color-bg-card)',
+                borderColor: editingId === p.id ? `${PILLAR_COLOR}55` : undefined,
+              }}
             >
-              <button
-                onClick={() => handleLoadPreset(p)}
-                className="flex-1 text-left"
-              >
-                <p className="text-sm font-semibold text-[var(--color-text)]">{p.name}</p>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-semibold text-[var(--color-text)] truncate">{p.name}</p>
                 <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
                   {p.inhale_sec}–{p.hold_in_sec}–{p.exhale_sec}–{p.hold_out_sec} · {p.cycles}×
                 </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleEditPreset(p)}
+                className="w-8 h-8 rounded-lg text-xs font-semibold"
+                style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
+                aria-label={t.edit}
+              >
+                ✎
+              </button>
+              <button
+                type="button"
+                onClick={() => setExportPreset(p)}
+                className="w-8 h-8 rounded-lg text-[10px] font-bold"
+                style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-muted)' }}
+                aria-label="JSON"
+                title="JSON"
+              >
+                {'{ }'}
               </button>
               <button
                 onClick={() => handleDeletePreset(p.id)}
@@ -277,6 +319,15 @@ export function CustomBreathworkEditor({ lang, onStart }: Props) {
           ))}
         </div>
       )}
+
+      <JsonExportSheet
+        isOpen={exportPreset !== null}
+        title={exportPreset?.name ?? 'Atem'}
+        json={exportPreset ? sessionJsonFromBreathPreset(exportPreset) : ''}
+        filename={exportPreset ? slugFilename(exportPreset.name) : undefined}
+        accent={PILLAR_COLOR}
+        onClose={() => setExportPreset(null)}
+      />
     </div>
   )
 }
