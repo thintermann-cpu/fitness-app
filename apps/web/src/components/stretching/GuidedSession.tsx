@@ -177,7 +177,7 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
     setPhase('exercise')
     setTimeLeft(exerciseDuration)
     setPaused(false)
-    void audioRef.current.playGong()
+    void audioRef.current.playBeep()
     if (routine.subcategory === 'yoga_flow') {
       track('yoga_flow_started', { flow_id: routine.id, flow_name: routine.name, exercise_count: orderedExercises.length })
     }
@@ -204,7 +204,6 @@ export function GuidedSession({ routine, exercises, lang, onFinish, defaultExerc
     })
     if ('vibrate' in navigator) navigator.vibrate([500, 100, 500])
     void audioRef.current.playComplete()
-    void audioRef.current.playGong()
   }
 
   function goBack() {

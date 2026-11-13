@@ -17,12 +17,12 @@ Nur die Teile aufnehmen, die die Session braucht. Das Beispiel unten zeigt jedes
 - `kind`: `warmup`, `flow`, `kraft`, `pause`, `emom`, `amrap`, `fortime`, `tabata`, `mobility`, `breath`, `meditation`.
 - `breath` (auch `atem`, `breathwork`, `atmung`): eine Vier-Phasen-Atmung. Box Breathing ist kein eigenes Feld, sondern `4-4-4-4`. `name` bis 80 Zeichen. `inhaleSec` und `exhaleSec` 1–30. `holdInSec` und `holdOutSec` 0–30, Standard 0. `cycles` 1–80. `note` optional, bis 140 Zeichen. Der Spieler hat eine Einatem-Phase. Ein zweiter Schluck (physiologischer Seufzer) steht im Hinweis.
 - `meditation` (auch `achtsamkeit`, `mindfulness`): `name`, `minutes` 1–90, `sound` optional. Fehlt der Klang, bleibt es still. Bekannte Werte: `silence`, `bowl`, `rain`, `forest`, `waves`, `white_noise`, `fire`, `night`, `wind`, `harp`, `zen_guitar`, `deep_om`. Deutsche Namen gehen auch: `stille`, `schale`, `regen`, `wald`, `wellen`, `rauschen`, `feuer`, `nacht`, `wind`, `harfe`, `gitarre`, `om`. Ein unbekannter Klang ist ein Fehler.
-- Atem und Sitzmeditation sind Arbeitsteile. Ohne gesetzte `pause` kommt dazwischen die 60-Sekunden-Frage. Beide haken Achtsamkeit ab. Der Atem schreibt `breathwork`, die Sitzmeditation `custom_timer`.
+- Atem und Sitzmeditation sind Arbeitsteile. Ohne gesetzte `pause` erscheint sofort die Bestätigung („Bereit?“ / „Weiter mit …“, Piep). Beide haken Achtsamkeit ab. Der Atem schreibt `breathwork`, die Sitzmeditation `custom_timer`. Gong nur nach der Sitzmeditation.
 - Warm-up ist ein `flow` mit `role: "warmup"`. Es schreibt keinen Verlauf; der nächste Teil startet erst nach Bestätigung („Weiter mit …“).
 - `role: "flow"` ist ein Ablauf mit Sekunden und schreibt einen Workout-Verlauf.
 - `role: "mobility"` spielt am Ende mit und hakt den Mobilitäts-Pillar ab.
 - `kind: "warmup"` und `kind: "mobility"` sind Kurzformen und setzen die Rolle selbst.
-- Zwischen zwei Arbeitsteilen ohne `pause` kommt eine 60-Sekunden-Pause; danach muss „Weiter mit …“ bestätigt werden. Eine gesetzte Pause nutzt `seconds` und verlangt dieselbe Bestätigung. Das gilt auch nach dem Warm-up.
+- Zwischen zwei Arbeitsteilen ohne `pause` erscheint sofort „Weiter mit …“ (kein Auto-Start). Eine gesetzte Pause nutzt `seconds`, danach dieselbe Bestätigung. Das gilt auch nach dem Warm-up.
 - Namen frei. Katalognamen bekommen Abbildung und Kurztext, wenn der Name trifft.
 - `note`: Ausführung, Tempo oder Form. Optional, bis 140 Zeichen.
 - `sides`: nur bei Ablauf-Übungen. `1` oder `2`. Bei `2` läuft die Zeit ein zweites Mal mit „andere Seite“.

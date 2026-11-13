@@ -57,8 +57,6 @@ export function AdHocMeditationTimer({ duration, sound = 'silence', lang, onFini
   useWakeLock(status === 'running' || status === 'paused')
   const circumference = 2 * Math.PI * 44
 
-  useEffect(() => { void audio.playGong() }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   // Background sound: start/stop with timer status
   useEffect(() => {
     if (status === 'running' && sound !== 'silence') {

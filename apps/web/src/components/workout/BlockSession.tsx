@@ -63,18 +63,40 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   const [index, setIndex] = useState(() => (opening ? -1 : firstWorkIndex(blocks)))
   const [gate, setGate] = useState<BlockGate | null>(opening)
   const [left, setLeft] = useState(() => opening?.pauseSec ?? 0)
-  const [awaitingConfirm, setAwaitingConfirm] = useState(false)
+  const [awaitingConfirm, setAwaitingConfirm] = useState(() => Boolean(opening && (opening.pauseSec ?? 0) <= 0 && opening.nextIndex >= 0))
   const [finished, setFinished] = useState(false)
   const [gatePaused, setGatePaused] = useState(false)
   const gateLock = useRef(false)
   const confirmChimePlayed = useRef(false)
   useWakeLock(!finished)
   const audio = useAudio()
+  const audioRef = useRef(audio)
+  audioRef.current = audio
 
   useLayoutEffect(() => {
     setSessionActive(true)
     return () => setSessionActive(false)
   }, [index, gate, finished, setSessionActive])
+
+  function playConfirmChime() {
+    if (confirmChimePlayed.current) return
+    confirmChimePlayed.current = true
+    void audioRef.current.playBeep()
+  }
+
+  function enterGate(next: BlockGate) {
+    gateLock.current = false
+    confirmChimePlayed.current = false
+    setGatePaused(false)
+    setGate(next)
+    setLeft(next.pauseSec)
+    if (next.nextIndex >= 0 && next.pauseSec <= 0) {
+      setAwaitingConfirm(true)
+      playConfirmChime()
+    } else {
+      setAwaitingConfirm(false)
+    }
+  }
 
   useEffect(() => {
     if (!gate || finished || gatePaused || awaitingConfirm) return
@@ -96,15 +118,12 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
       }
       // Work blocks always need an explicit tap before continuing.
       setAwaitingConfirm(true)
-      if (!confirmChimePlayed.current) {
-        confirmChimePlayed.current = true
-        void audio.playGong()
-      }
+      playConfirmChime()
       return
     }
     const id = window.setTimeout(() => setLeft((value) => value - 1), 1000)
     return () => window.clearTimeout(id)
-  }, [gate, left, finished, gatePaused, awaitingConfirm, onSessionEnd, audio])
+  }, [gate, left, finished, gatePaused, awaitingConfirm, onSessionEnd])
 
   function finish() {
     gateLock.current = true
@@ -115,7 +134,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   }
 
   function continueNext() {
-    if (!gate || gateLock.current) return
+    if (!gate || gateLock.current || !awaitingConfirm) return
     gateLock.current = true
     if (gate.nextIndex < 0) {
       finish()
@@ -126,8 +145,16 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
     setAwaitingConfirm(false)
   }
 
+  function skipRestToConfirm() {
+    if (!gate || awaitingConfirm || gate.nextIndex < 0) return
+    setGatePaused(false)
+    setLeft(0)
+    setAwaitingConfirm(true)
+    playConfirmChime()
+  }
+
   function skipNext() {
-    if (!gate || gateLock.current) return
+    if (!gate || gateLock.current || !awaitingConfirm) return
     if (gate.skipIndex == null) {
       finish()
       return
@@ -137,27 +164,17 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
       finish()
       return
     }
-    gateLock.current = false
-    confirmChimePlayed.current = false
-    setGatePaused(false)
-    setAwaitingConfirm(false)
-    setGate(following)
-    setLeft(following.pauseSec)
+    enterGate(following)
   }
 
   function handoff(fromIndex: number) {
     const next = gateAfter(blocks, fromIndex)
-    gateLock.current = false
-    confirmChimePlayed.current = false
-    setGatePaused(false)
-    setAwaitingConfirm(false)
     if (!next) {
       finish()
       return
     }
     // Always show the gate — including after warmup — so the next block starts only on confirm.
-    setGate(next)
-    setLeft(next.pauseSec)
+    enterGate(next)
   }
 
   if (finished) {
@@ -234,7 +251,17 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
                 : (isDe ? 'Pause' : 'Pause')}
             </button>
           )}
-          {next && (
+          {!awaitingConfirm && next && (
+            <button
+              type="button"
+              onClick={skipRestToConfirm}
+              className="py-3 rounded-2xl font-semibold text-sm"
+              style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
+            >
+              {isDe ? 'Pause überspringen' : 'Skip rest'}
+            </button>
+          )}
+          {awaitingConfirm && next && (
             <button
               type="button"
               onClick={continueNext}
@@ -244,7 +271,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
               {isDe ? `Weiter mit ${nextLabel}` : `Continue with ${nextLabel}`}
             </button>
           )}
-          {next && (
+          {awaitingConfirm && next && (
             <button
               type="button"
               onClick={skipNext}
