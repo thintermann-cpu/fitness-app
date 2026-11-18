@@ -1,13 +1,16 @@
 import type { SoundKey } from '../../hooks/useAudio'
-import type { WizardExercise } from '../../lib/customWorkouts'
 import {
   blockColor,
   blockLabel,
   blockSummary,
+  createBlock,
   isWorkBlock,
   type FlowExercise,
+  type FlowRole,
   type WorkoutBlock,
 } from '../../lib/workoutBlocks'
+import { ExerciseListEditor } from '../wizard/ExerciseListEditor'
+import { KraftExerciseEditor } from './KraftExerciseEditor'
 
 interface Props {
   name: string
@@ -16,33 +19,29 @@ interface Props {
   onBlocks: (blocks: WorkoutBlock[]) => void
 }
 
+function makeFlow(role: FlowRole): WorkoutBlock {
+  const block = createBlock('flow')
+  if (block.kind !== 'flow') return block
+  return { ...block, role }
+}
+
+const ADDABLE: { label: string; make: () => WorkoutBlock }[] = [
+  { label: 'Warm-up', make: () => makeFlow('warmup') },
+  { label: 'Kraft', make: () => createBlock('krafttraining') },
+  { label: 'AMRAP', make: () => createBlock('amrap') },
+  { label: 'For Time', make: () => createBlock('fortime') },
+  { label: 'EMOM', make: () => createBlock('emom') },
+  { label: 'Tabata', make: () => createBlock('tabata') },
+  { label: 'Mobilität', make: () => makeFlow('mobility') },
+  { label: 'Ablauf', make: () => createBlock('flow') },
+  { label: 'Pause', make: () => createBlock('pause') },
+  { label: 'Atem', make: () => createBlock('breath') },
+  { label: 'Meditation', make: () => createBlock('meditation') },
+]
+
 function clamp(value: number, min: number, max: number) {
   if (!Number.isFinite(value)) return min
   return Math.min(max, Math.max(min, Math.round(value)))
-}
-
-function loadLabel(exercise: WizardExercise) {
-  if (exercise.weightKg != null) return String(exercise.weightKg)
-  if (exercise.weightText) return exercise.weightText
-  if (exercise.weight_level) return exercise.weight_level
-  return ''
-}
-
-function applyLoad(exercise: WizardExercise, raw: string): WizardExercise {
-  const trimmed = raw.trim()
-  if (!trimmed) return { ...exercise, weightKg: undefined, weightText: undefined, weight_level: undefined }
-  const kg = trimmed.match(/^(\d+(?:[.,]\d+)?)(?:\s*kg)?$/i)
-  if (kg) {
-    const amount = Number(kg[1].replace(',', '.'))
-    if (amount > 0 && amount <= 500) {
-      return { ...exercise, weightKg: Math.round(amount * 100) / 100, weightText: undefined, weight_level: undefined }
-    }
-  }
-  const key = trimmed.toLowerCase()
-  if (key === 'leicht' || key === 'mittel' || key === 'schwer') {
-    return { ...exercise, weight_level: key, weightKg: undefined, weightText: undefined }
-  }
-  return { ...exercise, weightText: trimmed.slice(0, 40), weightKg: undefined, weight_level: undefined }
 }
 
 function patchAt(blocks: WorkoutBlock[], id: string, next: WorkoutBlock) {
@@ -58,6 +57,7 @@ export function sessionDraftReady(blocks: WorkoutBlock[]) {
     }
     if (block.kind === 'meditation') return block.name.trim().length > 0 && block.minutes >= 1
     if (block.kind === 'krafttraining') {
+      if (block.exercises.length === 0) return false
       return block.exercises.every((exercise) => exercise.name.trim().length > 0 && (exercise.rep_count != null || exercise.seconds != null))
     }
     if (block.exercises.length === 0) return false
@@ -130,30 +130,21 @@ export function ImportSessionEditor({ name, blocks, onName, onBlocks }: Props) {
             />
           )}
 
-          {block.kind === 'flow' && block.exercises.map((exercise, exerciseIndex) => (
-            <FlowRow
-              key={exercise.id}
-              exercise={exercise}
-              onChange={(next) => update(block.id, {
-                ...block,
-                exercises: block.exercises.map((item, i) => (i === exerciseIndex ? next : item)),
-              })}
+          {block.kind === 'flow' && (
+            <FlowExerciseList
+              exercises={block.exercises}
+              onChange={(exercises) => update(block.id, { ...block, exercises })}
             />
-          ))}
+          )}
 
           {block.kind === 'krafttraining' && (
             <>
               <NumberRow label="Satzpause s" value={block.restBetweenSets} min={0} max={600} onChange={(restBetweenSets) => update(block.id, { ...block, restBetweenSets })} />
-              {block.exercises.map((exercise, exerciseIndex) => (
-                <KraftRow
-                  key={exercise.id}
-                  exercise={exercise}
-                  onChange={(next) => update(block.id, {
-                    ...block,
-                    exercises: block.exercises.map((item, i) => (i === exerciseIndex ? next : item)),
-                  })}
-                />
-              ))}
+              <NumberRow label="Übungspause s" value={block.restBetweenExercises} min={0} max={600} onChange={(restBetweenExercises) => update(block.id, { ...block, restBetweenExercises })} />
+              <KraftExerciseEditor
+                exercises={block.exercises}
+                onChange={(exercises) => update(block.id, { ...block, exercises })}
+              />
             </>
           )}
 
@@ -166,16 +157,11 @@ export function ImportSessionEditor({ name, blocks, onName, onBlocks }: Props) {
                 max={90}
                 onChange={(minutes) => update(block.id, { ...block, minutes })}
               />
-              {block.exercises.map((exercise, exerciseIndex) => (
-                <DetailRow
-                  key={exercise.id}
-                  exercise={exercise}
-                  onChange={(next) => update(block.id, {
-                    ...block,
-                    exercises: block.exercises.map((item, i) => (i === exerciseIndex ? next : item)),
-                  })}
-                />
-              ))}
+              <ExerciseListEditor
+                fromCatalog
+                items={block.exercises}
+                onChange={(exercises) => update(block.id, { ...block, exercises })}
+              />
             </>
           )}
 
@@ -183,16 +169,11 @@ export function ImportSessionEditor({ name, blocks, onName, onBlocks }: Props) {
             <>
               <NumberRow label="Intervall min" value={block.intervalMin} min={1} max={10} onChange={(intervalMin) => update(block.id, { ...block, intervalMin })} />
               <NumberRow label="Runden" value={block.rounds} min={1} max={60} onChange={(rounds) => update(block.id, { ...block, rounds })} />
-              {block.exercises.map((exercise, exerciseIndex) => (
-                <DetailRow
-                  key={exercise.id}
-                  exercise={exercise}
-                  onChange={(next) => update(block.id, {
-                    ...block,
-                    exercises: block.exercises.map((item, i) => (i === exerciseIndex ? next : item)),
-                  })}
-                />
-              ))}
+              <ExerciseListEditor
+                fromCatalog
+                items={block.exercises}
+                onChange={(exercises) => update(block.id, { ...block, exercises })}
+              />
             </>
           )}
 
@@ -201,20 +182,29 @@ export function ImportSessionEditor({ name, blocks, onName, onBlocks }: Props) {
               <NumberRow label="Work s" value={block.workSec} min={5} max={180} onChange={(workSec) => update(block.id, { ...block, workSec })} />
               <NumberRow label="Pause s" value={block.restSec} min={5} max={180} onChange={(restSec) => update(block.id, { ...block, restSec })} />
               <NumberRow label="Runden" value={block.rounds} min={1} max={40} onChange={(rounds) => update(block.id, { ...block, rounds })} />
-              {block.exercises.map((exercise, exerciseIndex) => (
-                <DetailRow
-                  key={exercise.id}
-                  exercise={exercise}
-                  onChange={(next) => update(block.id, {
-                    ...block,
-                    exercises: block.exercises.map((item, i) => (i === exerciseIndex ? next : item)),
-                  })}
-                />
-              ))}
+              <ExerciseListEditor
+                fromCatalog
+                items={block.exercises}
+                onChange={(exercises) => update(block.id, { ...block, exercises })}
+              />
             </>
           )}
         </div>
       ))}
+
+      <div className="flex gap-2 flex-wrap">
+        {ADDABLE.map((item) => (
+          <button
+            key={item.label}
+            type="button"
+            onClick={() => onBlocks([...blocks, item.make()])}
+            className="px-3 py-1.5 rounded-full text-xs font-semibold"
+            style={{ backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text)' }}
+          >
+            + {item.label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -243,6 +233,62 @@ const fieldStyle = {
   border: '1px solid rgba(255,255,255,0.06)',
 }
 
+function FlowExerciseList({
+  exercises,
+  onChange,
+}: {
+  exercises: FlowExercise[]
+  onChange: (exercises: FlowExercise[]) => void
+}) {
+  function add() {
+    onChange([
+      ...exercises,
+      { id: crypto.randomUUID(), name: '', seconds: 40 },
+    ])
+  }
+
+  function remove(id: string) {
+    onChange(exercises.filter((exercise) => exercise.id !== id))
+  }
+
+  function move(index: number, delta: number) {
+    const target = index + delta
+    if (target < 0 || target >= exercises.length) return
+    const next = exercises.slice()
+    const [item] = next.splice(index, 1)
+    next.splice(target, 0, item)
+    onChange(next)
+  }
+
+  return (
+    <div className="space-y-2">
+      {exercises.map((exercise, exerciseIndex) => (
+        <div key={exercise.id} className="space-y-1">
+          <div className="flex items-start gap-1">
+            <div className="flex-1">
+              <FlowRow
+                exercise={exercise}
+                onChange={(next) => onChange(exercises.map((item, i) => (i === exerciseIndex ? next : item)))}
+              />
+            </div>
+            <button type="button" onClick={() => move(exerciseIndex, -1)} disabled={exerciseIndex === 0} aria-label="Übung nach oben" className="w-7 h-7 text-xs mt-1" style={{ color: exerciseIndex === 0 ? 'rgba(255,255,255,0.15)' : 'var(--color-text-muted)' }}>↑</button>
+            <button type="button" onClick={() => move(exerciseIndex, 1)} disabled={exerciseIndex === exercises.length - 1} aria-label="Übung nach unten" className="w-7 h-7 text-xs mt-1" style={{ color: exerciseIndex === exercises.length - 1 ? 'rgba(255,255,255,0.15)' : 'var(--color-text-muted)' }}>↓</button>
+            <button type="button" onClick={() => remove(exercise.id)} aria-label="Übung entfernen" className="w-7 h-7 text-xs mt-1" style={{ color: '#ef4444' }}>✕</button>
+          </div>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="text-xs font-semibold"
+        style={{ color: 'var(--color-pillar-workout)' }}
+      >
+        + Übung hinzufügen
+      </button>
+    </div>
+  )
+}
+
 function FlowRow({ exercise, onChange }: { exercise: FlowExercise; onChange: (next: FlowExercise) => void }) {
   return (
     <div className="grid grid-cols-[1fr_4.5rem] gap-2">
@@ -261,67 +307,6 @@ function FlowRow({ exercise, onChange }: { exercise: FlowExercise; onChange: (ne
         aria-label="Sekunden"
         onChange={(event) => onChange({ ...exercise, seconds: clamp(Number(event.target.value), 5, 900) })}
         className="rounded-lg px-2 py-1.5 text-sm text-right outline-none"
-        style={fieldStyle}
-      />
-      <input
-        value={exercise.note ?? ''}
-        aria-label="Hinweis"
-        placeholder="Hinweis"
-        onChange={(event) => onChange({ ...exercise, note: event.target.value.slice(0, 140) || undefined })}
-        className="col-span-2 rounded-lg px-2 py-1.5 text-xs outline-none"
-        style={fieldStyle}
-      />
-    </div>
-  )
-}
-
-function optionalCount(raw: string, min: number, max: number): number | undefined {
-  if (raw.trim() === '') return undefined
-  return clamp(Number(raw), min, max)
-}
-
-function KraftRow({ exercise, onChange }: { exercise: WizardExercise; onChange: (next: WizardExercise) => void }) {
-  return (
-    <div className="grid grid-cols-[1fr_3rem_3rem_3.2rem_4.5rem] gap-2">
-      <input
-        value={exercise.name}
-        aria-label="Übung"
-        onChange={(event) => onChange({ ...exercise, name: event.target.value.slice(0, 80) })}
-        className="rounded-lg px-2 py-1.5 text-sm outline-none"
-        style={fieldStyle}
-      />
-      <input type="number" value={exercise.sets ?? 3} min={1} max={20} aria-label="Sätze" onChange={(event) => onChange({ ...exercise, sets: clamp(Number(event.target.value), 1, 20) })} className="rounded-lg px-2 py-1.5 text-sm text-right outline-none" style={fieldStyle} />
-      <input type="number" value={exercise.rep_count ?? ''} min={1} max={100} aria-label="Reps" placeholder="Reps" onChange={(event) => onChange({ ...exercise, rep_count: optionalCount(event.target.value, 1, 100) })} className="rounded-lg px-2 py-1.5 text-sm text-right outline-none" style={fieldStyle} />
-      <input type="number" value={exercise.seconds ?? ''} min={1} max={900} aria-label="Sekunden" placeholder="s" onChange={(event) => onChange({ ...exercise, seconds: optionalCount(event.target.value, 1, 900) })} className="rounded-lg px-2 py-1.5 text-sm text-right outline-none" style={fieldStyle} />
-      <input value={loadLabel(exercise)} aria-label="Last" placeholder="kg" onChange={(event) => onChange(applyLoad(exercise, event.target.value))} className="rounded-lg px-2 py-1.5 text-sm outline-none" style={fieldStyle} />
-      <input
-        value={exercise.note ?? ''}
-        aria-label="Hinweis"
-        placeholder="Hinweis"
-        onChange={(event) => onChange({ ...exercise, note: event.target.value.slice(0, 140) || undefined })}
-        className="col-span-5 rounded-lg px-2 py-1.5 text-xs outline-none"
-        style={fieldStyle}
-      />
-    </div>
-  )
-}
-
-function DetailRow({ exercise, onChange }: { exercise: WizardExercise; onChange: (next: WizardExercise) => void }) {
-  return (
-    <div className="grid grid-cols-[1fr_4.5rem] gap-2">
-      <input
-        value={exercise.name}
-        aria-label="Übung"
-        onChange={(event) => onChange({ ...exercise, name: event.target.value.slice(0, 80) })}
-        className="rounded-lg px-2 py-1.5 text-sm outline-none"
-        style={fieldStyle}
-      />
-      <input
-        value={exercise.detail ?? ''}
-        aria-label="Angabe"
-        placeholder="Reps"
-        onChange={(event) => onChange({ ...exercise, detail: event.target.value.slice(0, 40) || undefined })}
-        className="rounded-lg px-2 py-1.5 text-sm outline-none"
         style={fieldStyle}
       />
       <input

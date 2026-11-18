@@ -98,6 +98,24 @@ export function useAudio() {
     } catch {}
   }, [getCtxReady, isMuted])
 
+  /** Longer inter-block cue (~1s). Does not touch ambient/background playback. */
+  const playLongBeep = useCallback(async () => {
+    if (isMuted) return
+    try {
+      const ctx = await getCtxReady()
+      const osc = ctx.createOscillator()
+      const g   = ctx.createGain()
+      osc.connect(g)
+      g.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.value = 880
+      g.gain.setValueAtTime(0.55, ctx.currentTime)
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1)
+      osc.start(ctx.currentTime)
+      osc.stop(ctx.currentTime + 1)
+    } catch {}
+  }, [getCtxReady, isMuted])
+
   const playComplete = useCallback(async () => {
     if (isMuted) return
     try {
@@ -155,7 +173,7 @@ export function useAudio() {
   }, [stopBackground])
 
   return useMemo(
-    () => ({ playGong, playBeep, playComplete, startBackground, stopBackground, cleanup, isMuted }),
-    [playGong, playBeep, playComplete, startBackground, stopBackground, cleanup, isMuted],
+    () => ({ playGong, playBeep, playLongBeep, playComplete, startBackground, stopBackground, cleanup, isMuted }),
+    [playGong, playBeep, playLongBeep, playComplete, startBackground, stopBackground, cleanup, isMuted],
   )
 }

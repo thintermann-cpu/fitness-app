@@ -1,12 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { WorkoutBlock } from '../../lib/workoutBlocks'
 import { parseSessionImport, type SessionImport } from '../../lib/sessionImport'
 import { ImportSessionEditor, sessionDraftReady } from './ImportSessionEditor'
+
+export interface SessionImportDraft {
+  name: string
+  blocks: WorkoutBlock[]
+}
 
 interface Props {
   isOpen: boolean
   onClose: () => void
   onStart: (blocks: WorkoutBlock[], name: string, save: boolean) => void
+  /** Reopen the overview with an existing draft (e.g. back-to-config). */
+  initialDraft?: SessionImportDraft | null
 }
 
 const EXAMPLE = `{
@@ -45,12 +52,26 @@ const EXAMPLE = `{
   ]
 }`
 
-export function SessionImportSheet({ isOpen, onClose, onStart }: Props) {
+export function SessionImportSheet({ isOpen, onClose, onStart, initialDraft }: Props) {
   const [text, setText] = useState('')
   const [parsed, setParsed] = useState<SessionImport | null>(null)
   const [draftName, setDraftName] = useState('')
   const [draftBlocks, setDraftBlocks] = useState<WorkoutBlock[]>([])
   const [save, setSave] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen || !initialDraft || initialDraft.blocks.length === 0) return
+    setDraftName(initialDraft.name)
+    setDraftBlocks(initialDraft.blocks)
+    setParsed({
+      name: initialDraft.name,
+      blocks: initialDraft.blocks,
+      errors: [],
+      warnings: [],
+    })
+    setText('')
+    setSave(false)
+  }, [isOpen, initialDraft])
 
   if (!isOpen) return null
 
