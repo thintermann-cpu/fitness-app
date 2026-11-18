@@ -104,7 +104,9 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
   const [scheme, setScheme] = useState(() => initialValues?.scheme ?? '')
   const [minutes,   setMinutes]   = useState(() => initialValues?.minutes ?? 20)
   const [name,      setName]      = useState(() => initialValues?.name ?? '')
-  const [warmup,    setWarmup]    = useState<'none' | WarmupRoutineId | null>(null)
+  const [warmup,    setWarmup]    = useState<'none' | WarmupRoutineId | null>(() => (
+    initialValues?.blocks && initialValues.blocks.length > 0 ? 'none' : null
+  ))
   const [parts, setParts] = useState<WorkoutBlock[]>(() => initialValues?.blocks ?? [])
 
   // Krafttraining config
@@ -131,10 +133,16 @@ export function FreeTimerWizard({ isOpen, onClose, variant = 'save', title, init
 
   const reset = () => {
     setStep(initialStep); setMode(initialValues?.mode ?? 'fortime'); setExercises(initialValues?.exercises ?? []); setScheme(initialValues?.scheme ?? '')
-    setMinutes(20); setName(''); setWarmup(null); setParts(initialValues?.blocks ?? [])
-    setRestBetweenSets(90); setRestBetweenExercises(60)
-    setTabataWork(20); setTabataRest(10); setTabataRounds(8)
-    setEmomInterval(1); setEmomRounds(10)
+    setMinutes(initialValues?.minutes ?? 20); setName(initialValues?.name ?? '')
+    setWarmup(initialValues?.blocks && initialValues.blocks.length > 0 ? 'none' : null)
+    setParts(initialValues?.blocks ?? [])
+    setRestBetweenSets(initialValues?.restBetweenSets ?? 90)
+    setRestBetweenExercises(initialValues?.restBetweenExercises ?? 60)
+    setTabataWork(initialValues?.tabataWork ?? 20)
+    setTabataRest(initialValues?.tabataRest ?? 10)
+    setTabataRounds(initialValues?.tabataRounds ?? 8)
+    setEmomInterval(initialValues?.emomInterval ?? 1)
+    setEmomRounds(initialValues?.emomRounds ?? 10)
   }
 
   const handleClose = () => { reset(); onClose() }

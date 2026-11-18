@@ -113,7 +113,7 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
   function complete() {
     if (logged.current) return
     logged.current = true
-    void audioRef.current.playGong()
+    void audioRef.current.playLongBeep()
     const totalSec = stations.reduce((sum, item) => sum + item.seconds, 0) + Math.max(0, stations.length - 1) * restSec
     if (role === 'mobility') {
       markPillarDone('stretching')

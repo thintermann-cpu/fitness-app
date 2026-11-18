@@ -24,6 +24,8 @@ interface Props {
   blocks: WorkoutBlock[]
   workoutName?: string
   onSessionEnd?: () => void
+  /** Abort the running session and reopen the previous config UI. */
+  onBackToConfig?: () => void
 }
 
 function formatSecs(total: number) {
@@ -54,10 +56,20 @@ function firstWorkIndex(blocks: WorkoutBlock[]): number {
   return index < 0 ? 0 : index
 }
 
-export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
+export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig }: Props) {
   const navigate = useNavigate()
   const lang = useAuthStore((s) => s.profile?.language ?? 'de')
   const isDe = lang === 'de'
+
+  function requestBackToConfig() {
+    if (!onBackToConfig) return
+    const ok = window.confirm(
+      isDe
+        ? 'Session abbrechen und Einstellungen öffnen?'
+        : 'Abort session and open settings?',
+    )
+    if (ok) onBackToConfig()
+  }
   const setSessionActive = useSessionStore((s) => s.setSessionActive)
   const opening = blocks[0]?.kind === 'pause' ? gateAfter(blocks, -1) : null
   const [index, setIndex] = useState(() => (opening ? -1 : firstWorkIndex(blocks)))
@@ -98,7 +110,9 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
       setAwaitingConfirm(true)
       if (!confirmChimePlayed.current) {
         confirmChimePlayed.current = true
-        void audio.playGong()
+        // Gong only after meditation/breath (played by those children). Between other
+        // blocks use a longer beep so ambient music is not covered by the 5.5s sample.
+        void audio.playLongBeep()
       }
       return
     }
@@ -254,6 +268,16 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
               {isDe ? 'Überspringen' : 'Skip'}
             </button>
           )}
+          {onBackToConfig && (
+            <button
+              type="button"
+              onClick={requestBackToConfig}
+              className="py-2.5 rounded-2xl text-xs font-semibold"
+              style={{ color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg-card)' }}
+            >
+              {isDe ? '← Zurück zur Config' : '← Back to config'}
+            </button>
+          )}
         </div>
       </div>
     )
@@ -262,87 +286,113 @@ export function BlockSession({ blocks, workoutName, onSessionEnd }: Props) {
   const block = blocks[index]
   if (!block || block.kind === 'pause') return null
   const entryName = chainEntryName(workoutName, block)
+  const backLink = onBackToConfig ? (
+    <button
+      type="button"
+      onClick={requestBackToConfig}
+      className="mt-3 w-full py-2.5 rounded-xl text-xs font-semibold"
+      style={{ color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg-card)' }}
+    >
+      {isDe ? '← Zurück zur Config' : '← Back to config'}
+    </button>
+  ) : null
+
   if (block.kind === 'krafttraining') {
     return (
-      <KraftTimerView
-        key={block.id}
-        autoStart
-        exercises={withParsedSets(block.exercises)}
-        restBetweenSets={block.restBetweenSets}
-        restBetweenExercises={block.restBetweenExercises}
-        workoutName={entryName}
-        onChainedFinish={() => handoff(index)}
-      />
+      <div>
+        <KraftTimerView
+          key={block.id}
+          autoStart
+          exercises={withParsedSets(block.exercises)}
+          restBetweenSets={block.restBetweenSets}
+          restBetweenExercises={block.restBetweenExercises}
+          workoutName={entryName}
+          onChainedFinish={() => handoff(index)}
+        />
+        {backLink}
+      </div>
     )
   }
 
   if (block.kind === 'flow') {
     return (
-      <FlowTimerView
-        key={block.id}
-        exercises={block.exercises}
-        restSec={block.restSec}
-        role={block.role}
-        workoutName={entryName}
-        onChainedFinish={() => handoff(index)}
-      />
+      <div>
+        <FlowTimerView
+          key={block.id}
+          exercises={block.exercises}
+          restSec={block.restSec}
+          role={block.role}
+          workoutName={entryName}
+          onChainedFinish={() => handoff(index)}
+        />
+        {backLink}
+      </div>
     )
   }
 
   const mindfulLang = lang === 'en' || lang === 'es' ? lang : 'de'
   if (block.kind === 'breath') {
     return (
-      <BreathworkSession
-        key={block.id}
-        chained
-        lang={mindfulLang}
-        technique={{
-          id: block.id,
-          name: block.name,
-          description: block.note ?? '',
-          inhale_sec: block.inhaleSec,
-          hold_in_sec: block.holdInSec,
-          exhale_sec: block.exhaleSec,
-          hold_out_sec: block.holdOutSec,
-          cycles: block.cycles,
-          difficulty: 'custom',
-        }}
-        onFinish={() => handoff(index)}
-      />
+      <div>
+        <BreathworkSession
+          key={block.id}
+          chained
+          lang={mindfulLang}
+          technique={{
+            id: block.id,
+            name: block.name,
+            description: block.note ?? '',
+            inhale_sec: block.inhaleSec,
+            hold_in_sec: block.holdInSec,
+            exhale_sec: block.exhaleSec,
+            hold_out_sec: block.holdOutSec,
+            cycles: block.cycles,
+            difficulty: 'custom',
+          }}
+          onFinish={() => handoff(index)}
+        />
+        {backLink}
+      </div>
     )
   }
 
   if (block.kind === 'meditation') {
     return (
-      <AdHocMeditationTimer
-        key={block.id}
-        chained
-        lang={mindfulLang}
-        duration={block.minutes}
-        sound={block.sound}
-        title={block.name}
-        note={block.note}
-        onFinish={() => handoff(index)}
-      />
+      <div>
+        <AdHocMeditationTimer
+          key={block.id}
+          chained
+          lang={mindfulLang}
+          duration={block.minutes}
+          sound={block.sound}
+          title={block.name}
+          note={block.note}
+          onFinish={() => handoff(index)}
+        />
+        {backLink}
+      </div>
     )
   }
 
   const mode = block.kind
   return (
-    <TimerView
-      key={block.id}
-      adHocLog
-      initialMode={mode}
-      initialMinutes={mode === 'emom' ? block.intervalMin * block.rounds : mode === 'tabata' ? Math.max(1, Math.round((block.workSec + block.restSec) * block.rounds / 60)) : block.minutes}
-      exercises={block.exercises}
-      scheme={block.scheme}
-      workoutName={entryName}
-      initialEmomInterval={mode === 'emom' ? block.intervalMin : undefined}
-      initialEmomRounds={mode === 'emom' ? block.rounds : undefined}
-      initialTabataWork={mode === 'tabata' ? block.workSec : undefined}
-      initialTabataRest={mode === 'tabata' ? block.restSec : undefined}
-      initialTabataRounds={mode === 'tabata' ? block.rounds : undefined}
-      onChainedFinish={() => handoff(index)}
-    />
+    <div>
+      <TimerView
+        key={block.id}
+        adHocLog
+        initialMode={mode}
+        initialMinutes={mode === 'emom' ? block.intervalMin * block.rounds : mode === 'tabata' ? Math.max(1, Math.round((block.workSec + block.restSec) * block.rounds / 60)) : block.minutes}
+        exercises={block.exercises}
+        scheme={block.scheme}
+        workoutName={entryName}
+        initialEmomInterval={mode === 'emom' ? block.intervalMin : undefined}
+        initialEmomRounds={mode === 'emom' ? block.rounds : undefined}
+        initialTabataWork={mode === 'tabata' ? block.workSec : undefined}
+        initialTabataRest={mode === 'tabata' ? block.restSec : undefined}
+        initialTabataRounds={mode === 'tabata' ? block.rounds : undefined}
+        onChainedFinish={() => handoff(index)}
+      />
+      {backLink}
+    </div>
   )
 }

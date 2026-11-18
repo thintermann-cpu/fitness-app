@@ -17,9 +17,16 @@ import { type CustomWorkout, type WizardExercise } from '../lib/customWorkouts'
 import { type TimerMode } from '../lib/timerLabels'
 import { isChained, isWorkBlock, seedFromBlock, type WorkoutBlock } from '../lib/workoutBlocks'
 import { BlockSession } from '../components/workout/BlockSession'
-import { SessionImportSheet } from '../components/workout/SessionImportSheet'
+import { SessionImportSheet, type SessionImportDraft } from '../components/workout/SessionImportSheet'
 
 type Tab = 'wods' | 'timer' | 'history'
+
+type SessionDraft = {
+  source: 'import' | 'wizard'
+  name: string
+  blocks: WorkoutBlock[]
+  wizardSeed?: WizardInitialValues
+}
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'wods',    label: 'WODs' },
@@ -76,6 +83,8 @@ export function WorkoutPage() {
   const [warmupRoutine, setWarmupRoutine] = useState<WarmupRoutineId>('standard')
   const [showWorkoutCountdown, setShowWorkoutCountdown] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [sessionDraft, setSessionDraft] = useState<SessionDraft | null>(null)
+  const [importDraft, setImportDraft] = useState<SessionImportDraft | null>(null)
   const { data: savedWorkouts = [], addWorkout } = useCustomWorkouts()
   const silentMode = localStorage.getItem('carveout_silent_mode') === 'true'
 
@@ -114,6 +123,30 @@ export function WorkoutPage() {
         blocks:       timerCfg?.blocks,
       })
     }
+    if (timerCfg?.blocks && isChained(timerCfg.blocks)) {
+      setSessionDraft({
+        source: 'wizard',
+        name: workoutName ?? '',
+        blocks: timerCfg.blocks,
+        wizardSeed: {
+          name: workoutName,
+          mode,
+          minutes,
+          exercises: exercises ?? kraftConfig?.exercises,
+          restBetweenSets: kraftConfig?.restBetweenSets,
+          restBetweenExercises: kraftConfig?.restBetweenExercises,
+          tabataWork: timerCfg.tabataWork,
+          tabataRest: timerCfg.tabataRest,
+          tabataRounds: timerCfg.tabataRounds,
+          emomInterval: timerCfg.emomInterval,
+          emomRounds: timerCfg.emomRounds,
+          scheme: timerCfg.scheme,
+          blocks: timerCfg.blocks,
+        },
+      })
+    } else {
+      setSessionDraft(null)
+    }
     setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, adHocLog: true, ...timerCfg })
     setTimerKey((k) => k + 1)
     setTab('timer')
@@ -144,6 +177,30 @@ export function WorkoutPage() {
   }
 
   function handleAdhocStart(mode: TimerMode, minutes: number, withWarmup?: WarmupRoutineId | false, kraftConfig?: KraftConfig, exercises?: WizardExercise[], workoutName?: string, timerCfg?: TimerInitConfig) {
+    if (timerCfg?.blocks && isChained(timerCfg.blocks)) {
+      setSessionDraft({
+        source: 'wizard',
+        name: workoutName ?? '',
+        blocks: timerCfg.blocks,
+        wizardSeed: {
+          name: workoutName,
+          mode,
+          minutes,
+          exercises: exercises ?? kraftConfig?.exercises,
+          restBetweenSets: kraftConfig?.restBetweenSets,
+          restBetweenExercises: kraftConfig?.restBetweenExercises,
+          tabataWork: timerCfg.tabataWork,
+          tabataRest: timerCfg.tabataRest,
+          tabataRounds: timerCfg.tabataRounds,
+          emomInterval: timerCfg.emomInterval,
+          emomRounds: timerCfg.emomRounds,
+          scheme: timerCfg.scheme,
+          blocks: timerCfg.blocks,
+        },
+      })
+    } else {
+      setSessionDraft(null)
+    }
     setTimerConfig({ mode, minutes, kraftConfig, exercises, workoutName, adHocLog: true, ...timerCfg })
     setTimerKey((k) => k + 1)
     setTab('timer')
@@ -153,9 +210,10 @@ export function WorkoutPage() {
     }
   }
 
-  function startBlocks(blocks: WorkoutBlock[], name: string) {
+  function startBlocks(blocks: WorkoutBlock[], name: string, source: SessionDraft['source'] = 'import') {
     setShowWarmupTimer(false)
     setShowWorkoutCountdown(false)
+    setSessionDraft({ source, name, blocks })
     setTimerConfig({
       mode: 'fortime',
       minutes: 0,
@@ -195,12 +253,32 @@ export function WorkoutPage() {
       })
     }
     setImportOpen(false)
-    startBlocks(blocks, name)
+    setImportDraft(null)
+    startBlocks(blocks, name, 'import')
+  }
+
+  function backToConfig() {
+    const draft = sessionDraft
+    setTimerConfig(null)
+    setShowWarmupTimer(false)
+    setShowWorkoutCountdown(false)
+    if (!draft) return
+    if (draft.source === 'import') {
+      setImportDraft({ name: draft.name, blocks: draft.blocks })
+      setImportOpen(true)
+      return
+    }
+    setAdhocPreset(draft.wizardSeed ?? {
+      name: draft.name,
+      blocks: draft.blocks,
+    })
+    setAdhocKey((key) => key + 1)
+    setAdhocOpen(true)
   }
 
   function handleStartSaved(w: CustomWorkout) {
     if (w.directStart && w.blocks && w.blocks.length > 0) {
-      startBlocks(w.blocks, w.name)
+      startBlocks(w.blocks, w.name, 'import')
       return
     }
     const first = w.blocks?.find(isWorkBlock)
@@ -374,6 +452,7 @@ export function WorkoutPage() {
                       blocks={timerConfig.blocks}
                       workoutName={timerConfig.workoutName}
                       onSessionEnd={() => window.dispatchEvent(new CustomEvent('carveout:workout-completed'))}
+                      onBackToConfig={sessionDraft ? backToConfig : undefined}
                     />
                   )
                 ) : timerConfig.mode === 'krafttraining' && timerConfig.kraftConfig ? (
@@ -403,13 +482,15 @@ export function WorkoutPage() {
                     onShowHistory={() => setTab('history')}
                   />
                 )}
-                <button
-                  onClick={() => setTimerConfig(null)}
-                  className="mt-4 w-full py-2.5 rounded-xl text-xs"
-                  style={{ color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg-card)' }}
-                >
-                  ← Neu konfigurieren
-                </button>
+                {!(timerConfig.blocks && (timerConfig.runBlocks || isChained(timerConfig.blocks)) && sessionDraft) && (
+                  <button
+                    onClick={() => setTimerConfig(null)}
+                    className="mt-4 w-full py-2.5 rounded-xl text-xs"
+                    style={{ color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg-card)' }}
+                  >
+                    ← Neu konfigurieren
+                  </button>
+                )}
               </>
             ) : (
               <div className="flex flex-col items-center gap-5 pt-16 pb-8">
@@ -453,13 +534,14 @@ export function WorkoutPage() {
         onStart={handleAdhocStart}
         variant="adhoc"
         title={adhocPreset?.name}
-        initialStep={adhocPreset ? 1 : 0}
+        initialStep={adhocPreset?.blocks && isChained(adhocPreset.blocks) ? 3 : adhocPreset ? 1 : 0}
         initialValues={adhocPreset ?? undefined}
       />
       <SessionImportSheet
         isOpen={importOpen}
-        onClose={() => setImportOpen(false)}
+        onClose={() => { setImportOpen(false); setImportDraft(null) }}
         onStart={handleImportStart}
+        initialDraft={importDraft}
       />
       <WarmupTimer
         isOpen={showWarmupTimer}
