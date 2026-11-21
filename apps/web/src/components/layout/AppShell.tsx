@@ -6,6 +6,8 @@ import { useAudioStore } from '../../store/audioStore'
 import { useAuthStore } from '../../store/authStore'
 import { ToastContainer } from '../ui/ToastContainer'
 import { useSessionStore } from '../../store/sessionStore'
+import { usePreferPortrait } from '../../hooks/usePreferPortrait'
+import { PortraitHint } from '../shared/PortraitHint'
 
 function FavoritesHeaderBtn() {
   const { favorites } = useFavorites()
@@ -69,6 +71,8 @@ export function AppShell() {
   const { profile } = useAuthStore()
   const firstName   = profile?.display_name?.trim().split(' ')[0] ?? ''
   const sessionActive = useSessionStore((s) => s.isSessionActive)
+  const { isLandscape } = usePreferPortrait(sessionActive)
+  const isDe = (profile?.language ?? 'de') === 'de'
 
   return (
     <div className="flex h-svh overflow-hidden" style={{ backgroundColor: 'var(--color-bg)' }}>
@@ -77,6 +81,9 @@ export function AppShell() {
 
       {/* Content area: offset by sidebar width on desktop */}
       <div className="flex flex-col flex-1 min-h-0 min-w-0 lg:pl-[240px]">
+        {sessionActive && (
+          <PortraitHint visible={isLandscape} isDe={isDe} />
+        )}
         {/* Mobile header — hidden while a workout timer is running */}
         {!sessionActive && <div
           className="lg:hidden flex items-center px-3 border-b sticky top-0 z-20"

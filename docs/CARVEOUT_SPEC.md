@@ -106,7 +106,7 @@ apps/web/src/
 │   │   ├── CtaSection.tsx      # Bottom-CTA mit Start-Button
 │   │   └── LandingFooter.tsx   # Footer mit DE/EN-Toggle + Links
 │   ├── layout/
-│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header (52px, bg: --color-bg-card + border): Links: CarveOut-Logo + Name; Rechts: Vorname als Link zu /settings (max-[360px]:hidden, aria-label "Einstellungen") · Mute · Favoriten · Settings-Link; MAIN_ROUTES-Reihenfolge: /home · /routine · /workout · /stretching · /meditation; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge); bei `isSessionActive` sind Mobile-Header und Bottom-Nav ausgeblendet
+│   │   ├── AppShell.tsx       # Layout mit <Outlet />, aktiver Pillar als Context; Mobile-Header (52px, bg: --color-bg-card + border): Links: CarveOut-Logo + Name; Rechts: Vorname als Link zu /settings (max-[360px]:hidden, aria-label "Einstellungen") · Mute · Favoriten · Settings-Link; MAIN_ROUTES-Reihenfolge: /home · /routine · /workout · /stretching · /meditation; Swipe-Navigation (TouchEvent, 50px-Threshold, 30px vertikale Drift-Grenze, active_pillars-aware Route-Reihenfolge); bei `isSessionActive` sind Mobile-Header und Bottom-Nav ausgeblendet; Soft Portrait via `usePreferPortrait` + `PortraitHint` im Querformat
 │   │   ├── BottomNav.tsx      # 4 Tabs (versteckt ab lg): Mein Tag `/` (`--color-pillar-routine`), Training `/workout`, Mobilität `/stretching`, Achtsamkeit `/meditation`. Kein eigener Routine-Tab. Inaktive Pillars weiter ausblendbar.
 │   │   ├── Sidebar.tsx        # Desktop-Sidebar (240px, ab lg); dieselben 4 Punkte wie BottomNav, Mein Tag auf `/`. Footer: ein Link zu /settings.
 │   │   └── AdminLayout.tsx    # Layout-Wrapper für /admin/*
@@ -417,6 +417,8 @@ Alle Modi nutzen den drift-korrigierten `timer.worker.js` im Hintergrund.
 
 **Zurück zur Config:** Während `BlockSession` (JSON-Import und Multi-Block-Wizard) liegt „← Zurück zur Config“ klein unten links (`SessionChromeBar`). Tippen fragt `Übung abbrechen?` (nicht bei Pause/Überspringen, nicht auf dem Fertig-Screen, kein Warnen beim App-Wechsel). Bestätigung öffnet die vorherige Config mit erhaltenem Draft: Import → `SessionImportSheet` mit `initialDraft`; Wizard → `FreeTimerWizard` auf dem Teile-Schritt.
 
+**Soft Portrait:** Solange `sessionStore.isSessionActive`, ruft `usePreferPortrait` best-effort `screen.orientation.lock('portrait')` auf und gibt bei Ablehnung still nach. Liegt das Gerät quer, zeigt `PortraitHint` in `AppShell` einen schließbaren Hinweis (DE/EN). Kein erzwungenes Lock, kein Landscape-Umbruch der Timer-Layouts.
+
 **Beep vor Ende:** `TimerView` (ForTime/AMRAP) und `WarmupTimer` spielen bei `timeLeft === 10` einen kurzen Warnton (880 Hz, Web Audio API). Kein Beep bei EMOM/Tabata (dort regelt der Intervall-Wechsel die Orientierung). Mute-Toggle (`audioStore.isMuted`) unterbindet auch den Beep.
 
 **Vibration:** `TimerView`, `GuidedSession`, `MeditationSession`, `CustomTimer`, `WarmupTimer` rufen `navigator.vibrate()` auf — Intervall: `[200,100,200]`, Ende: `[500,100,500]`. Geräte ohne Vibration-Support werden per Feature-Detection still ignoriert.
@@ -616,6 +618,7 @@ WODs (708 lokal / live 905 total, 287 sichtbar) aktuell nur Deutsch — Überset
 | **Session BX** | **Block-Bestätigung + Meditations-Gong** — `BlockSession`: Übergang zum nächsten Teil immer per Tap („Weiter mit …“), auch nach Warm-up; Countdown startet den nächsten Teil nicht mehr von selbst. `playGong()` spielt `meditation-gong.wav` (Fallback Oszillator). Gong auch bei Breathwork- und Guided-Audio-Ende. |
 | **Session BY** | **Gong nur Mindful + Config zurück + Import-CRUD** — Gate/`FlowTimerView`-Ende: `playLongBeep` statt Gong; Gong nur nach Meditation/Atem. `BlockSession`/`WorkoutPage`: „Zurück zur Config“ mit Draft (`SessionImportSheet.initialDraft` / Wizard Schritt 3). `ImportSessionEditor`: Übungen und Teile manuell hinzufügen/löschen. |
 | **Session BZ** | **Gate-Vorschau + Session-Chrome** — Bestätigungs-Gate listet kommende Übungen (`blockPreviewLines`). `SessionChromeBar`: Config klein links, „Übung überspringen“ rechts. Abbruch-Frage „Übung abbrechen?“ nur beim Verlassen zur Config. |
+| **Session CA** | **Soft Portrait** — Während `isSessionActive` versucht `usePreferPortrait` optional `screen.orientation.lock('portrait')` (still bei Ablehnung). Im Querformat zeigt `PortraitHint` einen schließbaren Hinweis „Besser hochkant…“. Kein Hard-Lock. |
 | **Session BO** | **Import-Gewicht in kg** — `weight` im JSON ist eine kg-Zahl, `"80 kg"`, `"82,5 kg"` oder ein kurzer Text bis 40 Zeichen (`"2×24 kg"`, `"2x 20-22.5 kg"`, `"Bodyweight"`). `leicht` / `mittel` / `schwer` bleiben. Die Last steht im Kraft-Satz, in der Vorschau und in der History (`weightKg` oder `weightText` auf `WizardExercise`). |
 | **Session BP** | **Bildschirm, Pause, Kacheln** — `useWakeLock` hält den Bildschirm für die ganze `BlockSession` wach, auch in der Zwischenpause und während Pause. Warm-up, Mobilität und Ablauf (`FlowTimerView`) sowie die Kraft-Satzpause und For Time lassen sich pausieren; die Übung lässt sich überspringen. Das Standard-Warm-up ebenso. Meditation, Breathwork, eigener Timer und geführte Mobilität haken die Kachel auf Mein Tag ab (`markPillarDone`) und laden `today_pillars` neu. Das Log-Datum ist lokal, nicht UTC. |
 | **Session BQ** | **Töne, Überspringen, Meditations-Routine** — Importierte Warm-ups, Abläufe und Mobilität piepen in den letzten 3 Sekunden, beim Wechsel und mit Gong am Ende. Die Zwischenpause piept mit. „Übung überspringen“ steht an der Übung; bei EMOM und Tabata springt die Uhr ins nächste Intervall. Der Standard-Timer ohne Führung schreibt denselben Meditations-Log. Die verknüpfte Routine (`linked_pillar`) wird abgehakt, bevor Mein Tag neu lädt. |
@@ -690,4 +693,4 @@ Dokumentiert behobene Bugs mit Kontext — damit Regressions erkannt werden und 
 
 ---
 
-*Letzte Aktualisierung: November 2026 — Session BZ: Gate-Vorschau + Session-Chrome*
+*Letzte Aktualisierung: November 2026 — Session CA: Soft Portrait*
