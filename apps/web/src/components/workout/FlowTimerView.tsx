@@ -7,6 +7,8 @@ import { useAudio } from '../../hooks/useAudio'
 import { markPillarDone } from '../../lib/pillarDone'
 import { useSessionStore } from '../../store/sessionStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
+import { SessionChromeBar } from './SessionChromeBar'
+import { useAuthStore } from '../../store/authStore'
 
 interface Props {
   exercises: FlowExercise[]
@@ -14,6 +16,8 @@ interface Props {
   role: FlowRole
   workoutName?: string
   onChainedFinish?: () => void
+  /** Leave the running session and reopen the previous config UI. */
+  onBackToConfig?: () => void
 }
 
 interface Station {
@@ -47,7 +51,8 @@ function formatSecs(total: number) {
   return m > 0 ? `${m}:${String(s).padStart(2, '0')}` : `${s}s`
 }
 
-export function FlowTimerView({ exercises, restSec, role, workoutName, onChainedFinish }: Props) {
+export function FlowTimerView({ exercises, restSec, role, workoutName, onChainedFinish, onBackToConfig }: Props) {
+  const isDe = useAuthStore((s) => s.profile?.language ?? 'de') === 'de'
   const stations = useMemo(() => stationsOf(exercises), [exercises])
   const [index, setIndex] = useState(0)
   const [phase, setPhase] = useState<'work' | 'rest'>('work')
@@ -199,21 +204,17 @@ export function FlowTimerView({ exercises, restSec, role, workoutName, onChained
         >
           {paused ? 'Fortsetzen' : 'Pause'}
         </button>
-        {phase === 'rest' ? (
-          <>
-            <button type="button" onClick={skipRest} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
-              Pause überspringen →
-            </button>
-            <button type="button" onClick={skipUpcoming} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
-              Übung überspringen
-            </button>
-          </>
-        ) : (
-          <button type="button" onClick={skipStation} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
-            Übung überspringen
+        {phase === 'rest' && (
+          <button type="button" onClick={skipRest} className="px-6 py-2.5 rounded-xl text-sm font-semibold" style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}>
+            Pause überspringen →
           </button>
         )}
       </div>
+      <SessionChromeBar
+        onBackToConfig={onBackToConfig}
+        onSkipExercise={started && !showCountdown ? (phase === 'rest' ? skipUpcoming : skipStation) : undefined}
+        isDe={isDe}
+      />
     </div>
   )
 }

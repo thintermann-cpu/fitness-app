@@ -5,6 +5,8 @@ import { useAuthStore } from '../../store/authStore'
 import {
   blockColor,
   blockLabel,
+  blockPreviewLines,
+  blockSummary,
   chainEntryName,
   gateAfter,
   isWorkBlock,
@@ -16,6 +18,7 @@ import { useAudio } from '../../hooks/useAudio'
 import { TimerView } from './TimerView'
 import { KraftTimerView } from './KraftTimerView'
 import { FlowTimerView } from './FlowTimerView'
+import { SessionChromeBar } from './SessionChromeBar'
 import { BreathworkSession } from '../meditation/BreathworkSession'
 import { AdHocMeditationTimer } from '../meditation/AdHocMeditationTimer'
 import type { WizardExercise } from '../../lib/customWorkouts'
@@ -61,15 +64,6 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
   const lang = useAuthStore((s) => s.profile?.language ?? 'de')
   const isDe = lang === 'de'
 
-  function requestBackToConfig() {
-    if (!onBackToConfig) return
-    const ok = window.confirm(
-      isDe
-        ? 'Session abbrechen und Einstellungen öffnen?'
-        : 'Abort session and open settings?',
-    )
-    if (ok) onBackToConfig()
-  }
   const setSessionActive = useSessionStore((s) => s.setSessionActive)
   const opening = blocks[0]?.kind === 'pause' ? gateAfter(blocks, -1) : null
   const [index, setIndex] = useState(() => (opening ? -1 : firstWorkIndex(blocks)))
@@ -78,6 +72,12 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
   const [awaitingConfirm, setAwaitingConfirm] = useState(false)
   const [finished, setFinished] = useState(false)
   const [gatePaused, setGatePaused] = useState(false)
+
+  function requestBackToConfig() {
+    if (!onBackToConfig || finished) return
+    const ok = window.confirm(isDe ? 'Übung abbrechen?' : 'Abort exercise?')
+    if (ok) onBackToConfig()
+  }
   const gateLock = useRef(false)
   const confirmChimePlayed = useRef(false)
   useWakeLock(!finished)
@@ -204,6 +204,12 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
     const next = gate.nextIndex >= 0 ? blocks[gate.nextIndex] : undefined
     const nextLabel = next ? blockLabel(next) : ''
     const accent = next ? blockColor(next) : '#60A5FA'
+    const preview = next && awaitingConfirm ? blockPreviewLines(next) : []
+    // Short meta (rounds/minutes) — skip when the list already carries sets×reps (Kraft/Flow).
+    const summary = next && awaitingConfirm && next.kind !== 'krafttraining' && next.kind !== 'flow'
+      ? blockSummary(next)
+      : ''
+    const scheme = next && awaitingConfirm && 'scheme' in next ? next.scheme : undefined
     return (
       <div className="flex flex-col items-center gap-4 py-6 text-center">
         <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: accent }}>
@@ -227,6 +233,34 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
               ? (isDe ? `Als Nächstes: ${nextLabel}` : `Up next: ${nextLabel}`)
               : (isDe ? 'Letzte Pause' : 'Final rest')}
           </p>
+        )}
+        {awaitingConfirm && next && (
+          <div
+            className="w-full rounded-2xl p-4 text-left space-y-2"
+            style={{ backgroundColor: 'var(--color-bg-card)' }}
+          >
+            {scheme && (
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{scheme}</p>
+            )}
+            {summary && (
+              <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+                {summary}
+              </p>
+            )}
+            {preview.length > 0 && (
+              <div className="space-y-1">
+                {preview.map((line, i) => (
+                  <div key={`${line.name}-${i}`} className="flex items-center gap-2 text-sm">
+                    <span className="w-5 flex-shrink-0 text-xs" style={{ color: 'var(--color-text-muted)' }}>{i + 1}.</span>
+                    <span className="flex-1" style={{ color: 'var(--color-text)' }}>{line.name}</span>
+                    {line.meta && (
+                      <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{line.meta}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         {awaitingConfirm && (
           <p className="text-sm px-4" style={{ color: 'var(--color-text-muted)' }}>
@@ -269,14 +303,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
             </button>
           )}
           {onBackToConfig && (
-            <button
-              type="button"
-              onClick={requestBackToConfig}
-              className="py-2.5 rounded-2xl text-xs font-semibold"
-              style={{ color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg-card)' }}
-            >
-              {isDe ? '← Zurück zur Config' : '← Back to config'}
-            </button>
+            <SessionChromeBar onBackToConfig={requestBackToConfig} isDe={isDe} />
           )}
         </div>
       </div>
@@ -286,47 +313,33 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
   const block = blocks[index]
   if (!block || block.kind === 'pause') return null
   const entryName = chainEntryName(workoutName, block)
-  const backLink = onBackToConfig ? (
-    <button
-      type="button"
-      onClick={requestBackToConfig}
-      className="mt-3 w-full py-2.5 rounded-xl text-xs font-semibold"
-      style={{ color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg-card)' }}
-    >
-      {isDe ? '← Zurück zur Config' : '← Back to config'}
-    </button>
-  ) : null
 
   if (block.kind === 'krafttraining') {
     return (
-      <div>
-        <KraftTimerView
-          key={block.id}
-          autoStart
-          exercises={withParsedSets(block.exercises)}
-          restBetweenSets={block.restBetweenSets}
-          restBetweenExercises={block.restBetweenExercises}
-          workoutName={entryName}
-          onChainedFinish={() => handoff(index)}
-        />
-        {backLink}
-      </div>
+      <KraftTimerView
+        key={block.id}
+        autoStart
+        exercises={withParsedSets(block.exercises)}
+        restBetweenSets={block.restBetweenSets}
+        restBetweenExercises={block.restBetweenExercises}
+        workoutName={entryName}
+        onChainedFinish={() => handoff(index)}
+        onBackToConfig={onBackToConfig ? requestBackToConfig : undefined}
+      />
     )
   }
 
   if (block.kind === 'flow') {
     return (
-      <div>
-        <FlowTimerView
-          key={block.id}
-          exercises={block.exercises}
-          restSec={block.restSec}
-          role={block.role}
-          workoutName={entryName}
-          onChainedFinish={() => handoff(index)}
-        />
-        {backLink}
-      </div>
+      <FlowTimerView
+        key={block.id}
+        exercises={block.exercises}
+        restSec={block.restSec}
+        role={block.role}
+        workoutName={entryName}
+        onChainedFinish={() => handoff(index)}
+        onBackToConfig={onBackToConfig ? requestBackToConfig : undefined}
+      />
     )
   }
 
@@ -351,7 +364,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
           }}
           onFinish={() => handoff(index)}
         />
-        {backLink}
+        <SessionChromeBar onBackToConfig={onBackToConfig ? requestBackToConfig : undefined} isDe={isDe} />
       </div>
     )
   }
@@ -369,30 +382,28 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
           note={block.note}
           onFinish={() => handoff(index)}
         />
-        {backLink}
+        <SessionChromeBar onBackToConfig={onBackToConfig ? requestBackToConfig : undefined} isDe={isDe} />
       </div>
     )
   }
 
   const mode = block.kind
   return (
-    <div>
-      <TimerView
-        key={block.id}
-        adHocLog
-        initialMode={mode}
-        initialMinutes={mode === 'emom' ? block.intervalMin * block.rounds : mode === 'tabata' ? Math.max(1, Math.round((block.workSec + block.restSec) * block.rounds / 60)) : block.minutes}
-        exercises={block.exercises}
-        scheme={block.scheme}
-        workoutName={entryName}
-        initialEmomInterval={mode === 'emom' ? block.intervalMin : undefined}
-        initialEmomRounds={mode === 'emom' ? block.rounds : undefined}
-        initialTabataWork={mode === 'tabata' ? block.workSec : undefined}
-        initialTabataRest={mode === 'tabata' ? block.restSec : undefined}
-        initialTabataRounds={mode === 'tabata' ? block.rounds : undefined}
-        onChainedFinish={() => handoff(index)}
-      />
-      {backLink}
-    </div>
+    <TimerView
+      key={block.id}
+      adHocLog
+      initialMode={mode}
+      initialMinutes={mode === 'emom' ? block.intervalMin * block.rounds : mode === 'tabata' ? Math.max(1, Math.round((block.workSec + block.restSec) * block.rounds / 60)) : block.minutes}
+      exercises={block.exercises}
+      scheme={block.scheme}
+      workoutName={entryName}
+      initialEmomInterval={mode === 'emom' ? block.intervalMin : undefined}
+      initialEmomRounds={mode === 'emom' ? block.rounds : undefined}
+      initialTabataWork={mode === 'tabata' ? block.workSec : undefined}
+      initialTabataRest={mode === 'tabata' ? block.restSec : undefined}
+      initialTabataRounds={mode === 'tabata' ? block.rounds : undefined}
+      onChainedFinish={() => handoff(index)}
+      onBackToConfig={onBackToConfig ? requestBackToConfig : undefined}
+    />
   )
 }

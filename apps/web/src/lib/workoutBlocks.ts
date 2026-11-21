@@ -1,7 +1,12 @@
 import type { WizardExercise } from './customWorkouts'
-import { formatHistoryExercises } from './kraftPlan'
+import { formatHistoryExercises, kraftWorkLabel } from './kraftPlan'
 import { TIMER_LABELS, type TimerMode } from './timerLabels'
 import type { SoundKey } from '../hooks/useAudio'
+
+export interface BlockPreviewLine {
+  name: string
+  meta?: string
+}
 
 const BLOCK_LABELS = {
   pause: 'Pause',
@@ -83,6 +88,39 @@ export function blockSummary(block: WorkoutBlock): string {
   if (block.kind === 'breath') return `${block.inhaleSec}-${block.holdInSec}-${block.exhaleSec}-${block.holdOutSec} · ${block.cycles}`
   if (block.kind === 'meditation') return `${block.minutes} min`
   return `${block.minutes} min`
+}
+
+function wizardExerciseMeta(exercise: WizardExercise): string | undefined {
+  const hold = exercise.rep_count == null && exercise.seconds != null
+  const hasScheme = exercise.sets != null || exercise.rep_count != null || hold
+  if (hasScheme) return kraftWorkLabel(exercise)
+  if (exercise.detail?.trim()) return exercise.detail.trim()
+  if (exercise.seconds != null) return `${exercise.seconds}s`
+  return undefined
+}
+
+/** Exercise rows for the block-confirm screen (name + sets/reps/time). */
+export function blockPreviewLines(block: WorkoutBlock): BlockPreviewLine[] {
+  if (block.kind === 'pause') return []
+  if (block.kind === 'breath') {
+    return [{
+      name: block.name || 'Atem',
+      meta: `${block.inhaleSec}-${block.holdInSec}-${block.exhaleSec}-${block.holdOutSec} · ${block.cycles}`,
+    }]
+  }
+  if (block.kind === 'meditation') {
+    return [{ name: block.name || 'Meditation', meta: `${block.minutes} min` }]
+  }
+  if (block.kind === 'flow') {
+    return block.exercises.map((exercise) => ({
+      name: exercise.name,
+      meta: exercise.sides === 2 ? `${exercise.seconds}s · 2 Seiten` : `${exercise.seconds}s`,
+    }))
+  }
+  return block.exercises.map((exercise) => ({
+    name: exercise.name,
+    meta: wizardExerciseMeta(exercise),
+  }))
 }
 
 export function isWorkBlock(block: WorkoutBlock): boolean {

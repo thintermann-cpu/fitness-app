@@ -8,6 +8,7 @@ import { useSessionStore } from '../../store/sessionStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
 import { NextExercisePreview } from '../shared/NextExercisePreview'
 import { ExerciseInfoButton } from './ExerciseInfoButton'
+import { SessionChromeBar } from './SessionChromeBar'
 import { useWakeLock } from '../../hooks/useWakeLock'
 import type { WizardExercise } from '../../lib/customWorkouts'
 import { emomIntervalCount } from '../../lib/exerciseCatalog'
@@ -32,6 +33,8 @@ interface Props {
   initialEmomRounds?: number
   /** Log this part, then return to the block runner instead of the done screen. */
   onChainedFinish?: () => void
+  /** Leave the running session and reopen the previous config UI. */
+  onBackToConfig?: () => void
 }
 
 interface TickData {
@@ -145,6 +148,7 @@ export function TimerView({
   initialTabataWork, initialTabataRest, initialTabataRounds,
   initialEmomInterval, initialEmomRounds,
   onChainedFinish,
+  onBackToConfig,
 }: Props) {
   const autoStart = !!initialMode
 
@@ -673,16 +677,6 @@ export function TimerView({
               color={modeColor}
             />
           )}
-          {exercises!.length > 1 && (
-            <button
-              type="button"
-              onClick={skipCurrentExercise}
-              className="mt-2 px-5 py-2 rounded-xl text-sm font-semibold"
-              style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)', border: 'none' }}
-            >
-              Übung überspringen
-            </button>
-          )}
         </div>
       )}
 
@@ -935,6 +929,14 @@ export function TimerView({
             )
           })}
         </div>
+      )}
+
+      {live && !isComplete && (
+        <SessionChromeBar
+          onBackToConfig={onBackToConfig}
+          onSkipExercise={(exercises?.length ?? 0) > 1 ? skipCurrentExercise : undefined}
+          isDe={lang === 'de'}
+        />
       )}
     </div>
   )

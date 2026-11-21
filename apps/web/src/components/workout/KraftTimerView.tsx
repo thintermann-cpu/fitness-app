@@ -5,6 +5,7 @@ import { useWodHistory } from '../../hooks/useWodHistory'
 import { useSessionStore } from '../../store/sessionStore'
 import { useAuthStore } from '../../store/authStore'
 import { CountdownOverlay } from '../shared/CountdownOverlay'
+import { SessionChromeBar } from './SessionChromeBar'
 import { alignSupersetSets, exerciseGroups, exerciseLoad, groupAt, kraftWorkLabel } from '../../lib/kraftPlan'
 import { useWakeLock } from '../../hooks/useWakeLock'
 
@@ -34,6 +35,8 @@ interface Props {
   /** Start the countdown immediately and hand the session back when the sets are done. */
   autoStart?: boolean
   onChainedFinish?: () => void
+  /** Leave the running session and reopen the previous config UI. */
+  onBackToConfig?: () => void
 }
 
 type KraftPhase = 'idle' | 'work' | 'rest' | 'done'
@@ -50,7 +53,7 @@ const WEIGHT_COLORS = {
   schwer: '#EF4444',
 }
 
-export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercises, workoutName, onComplete, onShowHistory: _onShowHistory, autoStart = false, onChainedFinish }: Props) {
+export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercises, workoutName, onComplete, onShowHistory: _onShowHistory, autoStart = false, onChainedFinish, onBackToConfig }: Props) {
   const [phase,       setPhase]       = useState<KraftPhase>('idle')
   const [exIdx,       setExIdx]       = useState(0)
   const [setIdx,      setSetIdx]      = useState(0)
@@ -260,13 +263,16 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
           ))}
         </div>
 
-        <button
-          onClick={() => setShowCountdown(true)}
-          className="w-full py-4 rounded-2xl font-bold text-white text-base active:scale-[0.98] transition-transform"
-          style={{ backgroundColor: '#10B981' }}
-        >
-          ▶ Los geht's
-        </button>
+        {!autoStart && (
+          <button
+            onClick={() => setShowCountdown(true)}
+            className="w-full py-4 rounded-2xl font-bold text-white text-base active:scale-[0.98] transition-transform"
+            style={{ backgroundColor: '#10B981' }}
+          >
+            ▶ Los geht's
+          </button>
+        )}
+        <SessionChromeBar onBackToConfig={onBackToConfig} isDe={lang === 'de'} />
       </div>
     )
   }
@@ -414,39 +420,22 @@ export function KraftTimerView({ exercises, restBetweenSets, restBetweenExercise
           >
             Pause überspringen →
           </button>
-          {exIdx < plan.length - 1 && (
-            <button
-              type="button"
-              onClick={skipExercise}
-              className="px-6 py-2.5 rounded-xl text-sm font-semibold"
-              style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
-            >
-              Übung überspringen
-            </button>
-          )}
         </div>
       ) : (
-        <div className="flex gap-3 w-full">
-          <button
-            onClick={handleSetDone}
-            className="flex-1 py-4 rounded-2xl font-bold text-white text-base active:scale-[0.98] transition-transform"
-            style={{ backgroundColor: '#10B981' }}
-          >
-            ✓ Satz geschafft
-          </button>
-          {exIdx < plan.length - 1 && (
-            <button
-              onClick={skipExercise}
-              className="px-4 py-4 rounded-2xl text-sm font-semibold active:scale-[0.98] transition-transform"
-              style={{ backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-muted)' }}
-            >
-              Übung
-              <br />
-              überspringen
-            </button>
-          )}
-        </div>
+        <button
+          onClick={handleSetDone}
+          className="w-full py-4 rounded-2xl font-bold text-white text-base active:scale-[0.98] transition-transform"
+          style={{ backgroundColor: '#10B981' }}
+        >
+          ✓ Satz geschafft
+        </button>
       )}
+
+      <SessionChromeBar
+        onBackToConfig={onBackToConfig}
+        onSkipExercise={exIdx < plan.length - 1 ? skipExercise : undefined}
+        isDe={lang === 'de'}
+      />
     </div>
   )
 }
