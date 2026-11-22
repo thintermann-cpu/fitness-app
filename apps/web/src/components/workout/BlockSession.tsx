@@ -204,12 +204,14 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
     const next = gate.nextIndex >= 0 ? blocks[gate.nextIndex] : undefined
     const nextLabel = next ? blockLabel(next) : ''
     const accent = next ? blockColor(next) : '#60A5FA'
-    const preview = next && awaitingConfirm ? blockPreviewLines(next) : []
-    // Short meta (rounds/minutes) — skip when the list already carries sets×reps (Kraft/Flow).
-    const summary = next && awaitingConfirm && next.kind !== 'krafttraining' && next.kind !== 'flow'
+    // Show the next-part list for the whole gate (pause + confirm). Continue is
+    // available during the countdown, so waiting for awaitingConfirm hid the list.
+    const preview = next ? blockPreviewLines(next) : []
+    const summary = next && next.kind !== 'krafttraining' && next.kind !== 'flow'
       ? blockSummary(next)
       : ''
-    const scheme = next && awaitingConfirm && 'scheme' in next ? next.scheme : undefined
+    const scheme = next && 'scheme' in next ? next.scheme : undefined
+    const showOverview = Boolean(next && (preview.length > 0 || scheme || summary))
     return (
       <div className="flex flex-col items-center gap-4 py-6 text-center">
         <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: accent }}>
@@ -234,7 +236,7 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
               : (isDe ? 'Letzte Pause' : 'Final rest')}
           </p>
         )}
-        {awaitingConfirm && next && (
+        {showOverview && (
           <div
             className="w-full rounded-2xl p-4 text-left space-y-2"
             style={{ backgroundColor: 'var(--color-bg-card)' }}
@@ -250,12 +252,19 @@ export function BlockSession({ blocks, workoutName, onSessionEnd, onBackToConfig
             {preview.length > 0 && (
               <div className="space-y-1">
                 {preview.map((line, i) => (
-                  <div key={`${line.name}-${i}`} className="flex items-center gap-2 text-sm">
-                    <span className="w-5 flex-shrink-0 text-xs" style={{ color: 'var(--color-text-muted)' }}>{i + 1}.</span>
-                    <span className="flex-1" style={{ color: 'var(--color-text)' }}>{line.name}</span>
-                    {line.meta && (
-                      <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{line.meta}</span>
+                  <div key={`${line.name}-${i}`}>
+                    {line.groupLabel && (
+                      <p className="text-[10px] font-bold uppercase tracking-wider pt-1" style={{ color: '#E8642A' }}>
+                        {line.groupLabel}
+                      </p>
                     )}
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="w-5 flex-shrink-0 text-xs" style={{ color: 'var(--color-text-muted)' }}>{i + 1}.</span>
+                      <span className="flex-1" style={{ color: 'var(--color-text)' }}>{line.name}</span>
+                      {line.meta && (
+                        <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{line.meta}</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

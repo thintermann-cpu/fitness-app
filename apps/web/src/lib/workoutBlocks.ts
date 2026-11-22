@@ -1,11 +1,13 @@
 import type { WizardExercise } from './customWorkouts'
-import { formatHistoryExercises, kraftWorkLabel } from './kraftPlan'
+import { exerciseGroups, formatHistoryExercises, kraftWorkLabel } from './kraftPlan'
 import { TIMER_LABELS, type TimerMode } from './timerLabels'
 import type { SoundKey } from '../hooks/useAudio'
 
 export interface BlockPreviewLine {
   name: string
   meta?: string
+  /** Shown once at the start of a linked Kraft group. */
+  groupLabel?: string
 }
 
 const BLOCK_LABELS = {
@@ -99,7 +101,7 @@ function wizardExerciseMeta(exercise: WizardExercise): string | undefined {
   return undefined
 }
 
-/** Exercise rows for the block-confirm screen (name + sets/reps/time). */
+/** Exercise rows for the block gate (name + sets/reps/time; Kraft supersets labeled). */
 export function blockPreviewLines(block: WorkoutBlock): BlockPreviewLine[] {
   if (block.kind === 'pause') return []
   if (block.kind === 'breath') {
@@ -116,6 +118,16 @@ export function blockPreviewLines(block: WorkoutBlock): BlockPreviewLine[] {
       name: exercise.name,
       meta: exercise.sides === 2 ? `${exercise.seconds}s · 2 Seiten` : `${exercise.seconds}s`,
     }))
+  }
+  if (block.kind === 'krafttraining') {
+    return exerciseGroups(block.exercises).flatMap((group) => {
+      const slice = block.exercises.slice(group.start, group.end + 1)
+      return slice.map((exercise, offset) => ({
+        name: exercise.name,
+        meta: wizardExerciseMeta(exercise),
+        groupLabel: group.superset && offset === 0 ? 'Supersatz' : undefined,
+      }))
+    })
   }
   return block.exercises.map((exercise) => ({
     name: exercise.name,
